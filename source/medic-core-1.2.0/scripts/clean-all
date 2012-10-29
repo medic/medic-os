@@ -1,0 +1,25 @@
+#!/bin/bash
+
+check_args()
+{
+  true
+}
+
+clean_all()
+{
+  for i in *; do
+    if [ -d "$i" -a -f "$i/Makefile" ]; then
+      ( cd "$i" && make clean && make distclean )
+    fi
+  done
+}
+
+main()
+{
+  check_args "$@"
+  clean_all
+}
+
+main "$@"
+exit $?
+

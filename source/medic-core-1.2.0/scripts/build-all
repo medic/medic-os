@@ -1,0 +1,504 @@
+#!/bin/bash
+
+main()
+{
+  local prefix="$1"
+  local pkg_start="`echo "$2" | sed 's/\//-/g;'`"
+  local pkg_start_version="$3"
+  local pkg_stop="`echo "$4" | sed 's/\//-/g;'`"
+  local pkg_stop_version="$5"
+  local bits="$6"
+  local parallel="$7"
+
+  check_args "$@" || usage
+
+  local build_cpu=''
+  local build_arch=''
+  local build_platform=''
+  local build_extra_options=''
+
+  local cpu='Intel'
+  local uname="`uname -s`"
+  local stdarg="--prefix=\"$prefix\""
+
+  # Detect machine word size
+  if [ -z "$bits" ]; then
+    if [ "`uname -m | grep 64$`" ]; then
+      bits='64'
+    else
+      bits='32'
+    fi
+  fi
+
+  # Detect architecture/platform
+  if [ "$cpu" = 'Intel' ]; then
+    if [ "$uname" = 'Darwin' ]; then
+        if [ "$bits" -eq 64 ]; then
+          build_cpu='x64'
+          build_platform="darwin64-x86_64-cc"
+          build_arch="x86_64-apple-darwin10.0.0"
+          build_extra_options="--enable-darwin-64bit"
+        else
+          build_cpu='ia32'
+          build_platform="darwin-i386-cc"
+          build_arch="i386-apple-darwin10.0.0"
+          build_extra_options="--enable-darwin-32bit"
+        fi
+    elif [ "$uname" = 'Linux' ]; then
+        if [ "$bits" -eq 64 ]; then
+          build_cpu='x64'
+          build_platform="linux-elf"
+          build_arch="x86_64-linux-gnu"
+        else
+          build_cpu='ia32'
+          build_platform="linux-elf"
+          build_arch="i586-linux-gnu"
+        fi
+    fi
+  fi
+
+  if [ -z "$build_cpu" -o -z "$build_arch" -o -z "$build_platform" ]; then
+    echo 'Unable to detect platform/architecture; aborting' >&2
+    exit 111
+  fi
+
+  echo >&2
+  echo "Building for $bits-bit $cpu CPU on $uname..." >&2
+
+  initialize &&
+  \
+  setup_environment "$prefix" \
+    "$pkg_start" "$pkg_start_version" "$pkg_stop" \
+      "$pkg_stop_version" "$uname" "$cpu" "$bits" "$parallel" &&
+  \
+  build_autoconf 'pv' "$stdarg" &&
+  \
+  (disable_parallelism && simple_cflags &&
+      build_autoconf 'zlib' "--shared $stdarg") &&
+  \
+  remove_static_libraries 'z' &&
+  \
+  build_autoconf 'ncurses' "$stdarg --with-shared" &&
+  \
+  remove_static_libraries 'ncurses' 'ncurses_g' 'form' \
+    'form_g' 'menu' 'menu_g' 'ncurses++' 'ncurses_g' 'panel' 'panel_g' &&
+  \
+  build_autoconf 'lzo' "$stdarg --enable-shared --disable-static" &&
+  build_autoconf 'lrzip' "$stdarg" &&
+  \
+  build_autoconf 'diffutils' "$stdarg" &&
+  build_autoconf 'patch' "$stdarg" &&
+  \
+  build_autoconf 'libxml2' \
+    "--enable-static=no --enable-shared=yes $stdarg" &&
+  \
+  build_autoconf 'libxslt' \
+    "--enable-static=no --enable-shared=yes \
+    --with-libxml-prefix=\"$prefix\" $stdarg" &&
+  \
+  (disable_parallelism && \
+    build_config 'openssl' "shared no-asm zlib-dynamic $stdarg") &&
+  \
+  build_autoconf 'openssh' \
+    "$stdarg --sysconfdir=\"$prefix/etc/ssh\" \
+     --with-zlib=\"$prefix\" --with-ssl-dir=\"$prefix\"" &&
+  \
+  remove_static_libraries 'crypto' 'ssl' &&
+  \
+  build_autoconf 'rsync' "$stdarg" &&
+  \
+  build_autoconf 'libidn' "$stdarg" &&
+  remove_static_libraries 'idn' &&
+  \
+  (disable_library_path && build_autoconf 'readline' \
+    "$stdarg --build=\"$build_arch\" --enable-static=no --enable-shared=yes") &&
+  \
+  build_autoconf 'curl' \
+    "$stdarg --with-ssl=\"$prefix\" \
+    --with-zlib=\"$prefix\" --with-libidn=\"$prefix\"" &&
+  \
+  remove_static_libraries 'curl' &&
+  build_autoconf 'icu/source' "$stdarg" &&
+  \
+  (simple_cflags && build_autoconf 'node' \
+    "$stdarg --shared-zlib \
+    --shared-zlib-includes='$prefix/include' \
+    --shared-zlib-libpath='$prefix/lib' --shared-openssl \
+    --shared-openssl-includes='$prefix/include' \
+    --shared-openssl-libpath='$prefix/lib' --dest-cpu='$build_cpu'") &&
+  \
+  # For js-1.8.5 or higher:
+  (disable_parallelism &&
+    build_autoconf 'js/src' "$stdarg --host=\"$build_arch\"") &&
+  \
+  move_libraries 'move-libraries' "$prefix" 'lib64' &&
+  remove_static_libraries 'js' &&
+  \
+  build_autoconf 'erlang' \
+    "$stdarg $build_extra_options --enable-kernel-poll \
+    --enable-dynamic-ssl-lib --enable-shared-zlib='$prefix' \
+    --with-ssl='$prefix' --enable-m${bits}-build" &&
+  \
+  fix_erlang_dso_linkage "$bits" &&
+  \
+  build_autoconf 'couchdb' \
+    "$stdarg --with-js-lib-name=mozjs185 \
+      --with-erlang='$prefix/lib/erlang/usr/include' \
+      --with-js-include='$prefix/include' --with-js-lib='$prefix/lib'" &&
+  \
+  build_simple 'nodeunit' "$prefix" &&
+  build_simple 'nodelint' "$prefix" &&
+  build_npm_local 'kanso' "$prefix" &&
+  \
+  build_ant 'ant' "$prefix" &&
+  build_maven 'maven' "$prefix" &&
+  build_lucene 'lucene' "$prefix" &&
+  build_couchdb_lucene 'couchdb-lucene' "$prefix" &&
+  \
+  clean_target 'clean-target' "$prefix"
+}
+
+logger()
+{
+  local name="$1"
+  local line=0
+
+  local safe_name="`echo "$name" | sed 's/\//-/g;' 2>/dev/null`"
+  local expected_lines="`cat "stats/$safe_name.count" 2>/dev/null`"
+
+  if [ -z "$expected_lines" ]; then
+    expected_lines=0
+  fi
+
+  pv -h &>/dev/null
+
+  if [ $? -eq 0 ]; then
+    while read x; do
+      line=$[$line + 1]
+      if [ "$line" -le "$expected_lines" ]; then
+        echo "$x"
+      else
+        echo "$x" >> "logs/$safe_name-$timestamp.log"
+      fi
+    done | pv -petl -i 0.5 -N "$safe_name" -s "$expected_lines" \
+      > "logs/$safe_name-$timestamp.log"
+
+    local date="`date +'at %I:%M:%S%P on %m/%d/%Y'`"
+    printf "\033[1A\r\033[K\r%9s: Installation completed %s\n" \
+      "$name" "$date" >&2
+  else
+    while read i; do
+      line=$[$line + 1]
+      echo "$i" >> "logs/$safe_name-$timestamp.log"
+      echo -ne "\r$line lines processed... "
+    done
+    echo 'done.'
+  fi
+}
+
+build_autoconf()
+{
+  local name="$1"
+  local configure_args="$2"
+  local make_args="$3"
+  local make_install_args="$4"
+
+  should_run "$name" || return 0
+
+  (cd "$name" \
+    && sh -c "./configure $configure_args" \
+    && sh -c "$MAKE $make_args" \
+    && sh -c "$MAKE install $make_install_args") 2>&1 | logger "$name"
+}
+
+build_config()
+{
+  local name="$1"
+  local config_args="$2"
+  local make_args="$3"
+  local make_install_args="$4"
+
+  should_run "$name" || return 0
+
+  (cd "$name" \
+    && echo "./Configure $config_args $CFLAGS $build_platform" \
+    && sh -c "./Configure $config_args $CFLAGS $build_platform" \
+    && sh -c "$MAKE $make_args" \
+    && sh -c "$MAKE install $make_install_args") 2>&1 | logger "$name"
+}
+
+fix_erlang_dso_linkage()
+{
+  local bits="$1"
+  local name='fix-erlang-dso-linkage'
+
+  should_run "$name" || return 0
+
+  (cd 'erlang' && erl_top="`pwd`" &&
+   for dir in wx crypto asn1 runtime_tools; do
+     (cd "lib/$dir/c_src" &&
+       $MAKE clean opt ERL_TOP="$erl_top" LD="gcc -m$bits")
+   done && $MAKE install) 2>&1 | logger "$name"
+}
+
+remove_static_libraries()
+{
+  while [ "$#" -gt 0 ]; do
+    local library_name="$1"
+    shift 1
+    rm -f "$prefix/lib/lib$library_name.a"
+  done
+}
+
+build_simple()
+{
+  local name="$1"
+  local prefix="$2"
+  local make_args="$3"
+
+  should_run "$name" || return 0
+
+  (cd "$name" \
+    && sh -c "$MAKE $make_args CFLAGS=\"$CFLAGS\" LDFLAGS=\"$LDFLAGS\"" \
+    && sh -c "$MAKE $make_args install PREFIX=\"$prefix\"") 2>&1 | logger "$name"
+}
+
+build_npm_local()
+{
+  local name="$1"
+  local prefix="$2"
+
+  should_run "$name" || return 0
+  (cd "$name" &&
+    "$prefix/bin/npm" install -g) 2>&1 | logger "$name"
+}
+
+build_npm_remote()
+{
+  local name="$1"
+  local prefix="$2"
+
+  should_run "$name" || return 0
+  ("$prefix/bin/npm" install -g "$name") 2>&1 | logger "$name"
+}
+
+build_ant()
+{
+  local name="$1"
+  local prefix="$2"
+
+  should_run "$name" || return 0
+
+  (cd "$name" &&
+    sh ./build.sh -Ddist.dir="$prefix/java" dist) 2>&1 | logger "$name"
+}
+
+build_maven()
+{
+  local name="$1"
+  local prefix="$2"
+
+  should_run "$name" || return 0
+
+  (cd "$name" &&
+    yes 'yes' | M2_HOME="$prefix/java" \
+        "$prefix/java/bin/ant") 2>&1 | logger "$name"
+}
+
+build_lucene()
+{
+  local name="$1"
+  local prefix="$2"
+
+  should_run "$name" || return 0
+
+  (cd "$name" &&
+    "$prefix/java/bin/ant" ivy-bootstrap \
+        -Divy_install_path="$prefix/java/lib" &&
+    "$prefix/java/bin/ant" compile jar \
+        -lib "$prefix/java/lib" &&
+    cp build/core/*.jar "$prefix/java/lib") 2>&1 | logger "$name"
+}
+
+build_couchdb_lucene()
+{
+  local name="$1"
+  local prefix="$2"
+
+  should_run "$name" || return 0
+
+  (cd "$name" &&
+    "$prefix/java/bin/mvn" && mkdir -p 'target/output' &&
+        (cd 'target/output' && for i in ../couchdb-lucene-*.tar.gz; do
+            tar xvzf "$i" && cp -Rv couchdb-lucene-*/* "$prefix/java";
+        done); rm -rf 'target/output') 2>&1 | logger "$name"
+}
+
+clean_target()
+{
+  local name="$1"
+  local prefix="$2"
+
+  should_run "$name" || return 0
+
+  ( (cd "$prefix" &&
+     rm -rf Library) &&
+    \
+    (cd "$prefix/java" &&
+      rm -f LICENSE* NOTICE* README* \
+        INSTALL* KEYS* WHATSNEW* *.xml) &&
+    \
+    (cd "$prefix/java/bin" &&
+      rm -f runant.p? *.bat *.cmd m2.conf) &&
+    \
+    (cd "$prefix/lib/erlang/lib" &&
+      rm -rf megaco-* wx-* hipe-*) ) 2>&1 | logger "$name"
+}
+
+initialize()
+{
+  run_status_file="`tempfile`"
+  last_pkg_file="`tempfile`"
+  last_version_file="`tempfile`"
+
+  trap cleanup EXIT
+}
+
+cleanup()
+{
+  rm -f "$run_status_file" "$last_pkg_file" "$last_version_file"
+}
+
+should_run()
+{
+  local pkg="`echo "$1" | sed 's/\//-/g;'`"
+  local version="$2"
+
+  local run_status="`cat "$run_status_file"`"
+
+  local last_pkg="`cat "$last_pkg_file"`"
+  local last_version="`cat "$last_version_file"`"
+
+  if [ "$run_status" -eq 0 ]; then
+    if [ "$pkg_stop" -a "$last_pkg $last_version" = "$pkg_stop $pkg_stop_version" ]; then
+      run_status='1'
+      echo -n "$run_status" > "$run_status_file"
+    fi
+  else
+    if [ "$pkg_start" -a "$pkg $version" = "$pkg_start $pkg_start_version" ]; then
+      run_status='0'
+      echo -n "$run_status" > "$run_status_file"
+    fi
+  fi;
+
+  if [ "$run_status" -ne 0 ]; then
+    echo -n "Note: Skipping package \`$pkg" >&2
+    [ "$version" ] && echo -n "-$version" >&2
+    echo "'" >&2
+  fi
+
+  echo -n "$pkg" > "$last_pkg_file"
+  echo -n "$version" > "$last_version_file"
+
+  return "$run_status"
+}
+
+disable_parallelism()
+{
+  export MAKE="`echo "$MAKE" | sed 's/--\?j\(obs\)\? *[0-9]\+//g;'`"
+}
+
+simple_cflags()
+{
+  export CFLAGS="$CFLAGS_SIMPLE"
+  export CXXFLAGS="$CFLAGS_SIMPLE"
+}
+
+disable_library_path()
+{
+  unset LD_LIBRARY_PATH
+  unset DYLD_LIBRARY_PATH
+}
+
+move_libraries()
+{
+  local name="$1"
+  local prefix="$2"
+  local dir="$3"
+
+  should_run "$name" || return 0
+
+  (cd "$prefix" &&
+    if [ -d "$dir" ]; then \
+        mv "$dir"/* lib/ && rmdir "$dir"; fi) 2>&1 | logger "$name"
+}
+
+setup_environment()
+{
+  prefix="$1"
+  pkg_start="$2"
+  pkg_start_version="$3"
+  pkg_stop="$4"
+  pkg_stop_version="$5"
+  uname="$6"
+  cpu="$7"
+  bits="$8"
+  parallel="$9"
+
+  timestamp="`date +%Y%m%d-%H%M%S`"
+
+  if [ "$pkg_start" ]; then
+    echo -n 1 > "$run_status_file"
+  else
+    echo -n 0 > "$run_status_file"
+  fi
+
+  #export MAKE='gmake'
+  #export GNUMAKE='gmake'
+  export CC='gcc'
+  export CXX='g++'
+  export MAKE='make'
+  export GNUMAKE='make'
+  export PATH="$prefix/bin:$PATH"
+  export LD_LIBRARY_PATH="$prefix/lib:$LD_LIBRARY_PATH"
+  export DYLD_LIBRARY_PATH="$prefix/lib:$DYLD_LIBRARY_PATH"
+
+  if [ "$parallel" ]; then
+    export MAKE="$MAKE -j$parallel"
+  fi
+
+  if [ "$uname" = 'Darwin' -a "$cpu" = 'Intel' -a "$bits" -eq 32 ]; then
+    export LDFLAGS="-arch i386 -L$prefix/lib"
+  else
+    export LDFLAGS="-L$prefix/lib"
+    #export LDFLAGS="$LDFLAGS -R$prefix/lib"
+  fi
+
+  export CFLAGS_SIMPLE="-Os -m$bits -fstack-protector-all"
+  export CFLAGS_INCLUDE="-I$prefix/include -L$prefix/lib"
+  #CFLAGS_INCLUDE="$CFLAGS_INCLUDE -R$prefix/lib"
+
+  export CFLAGS="$CFLAGS_SIMPLE $CFLAGS_INCLUDE"
+  export CXXFLAGS="$CFLAGS"
+}
+
+check_args()
+{
+  local prefix="$1"
+
+  [ -d "$prefix" ] 
+}
+
+usage()
+{
+  echo
+  echo "Usage:" >&2
+  echo "  $0 root-directory" >&2
+  echo
+
+  exit 111
+}
+
+main "$@"
+exit $?
+
