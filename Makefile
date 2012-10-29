@@ -5,8 +5,9 @@ clean:
 	rm -f output/image.iso
 
 iso-image: initrd-image medic-core-pkg java-pkg
-	cd iso && mkisofs -J -R -V 'VM Startup Disk' -o ../image.iso \
-		-no-emul-boot -boot-load-size 4 -boot-info-table \
+	cd iso && mkisofs -J -R -V 'VM Startup Disk' \
+		-boot-load-size 4 -boot-info-table \
+		-o ../output/image.iso -no-emul-boot \
 		-b boot/isolinux/isolinux.bin -c boot/isolinux/boot.cat .
 
 initrd-image:

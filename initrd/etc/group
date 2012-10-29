@@ -1,0 +1,8 @@
+root:x:0:
+lp:x:7:lp
+nogroup:x:65534:
+staff:x:50:
+concierge:x:100:concierge
+sshd:x:1000:
+tc:x:1001:
+couchdb:x:1002:
