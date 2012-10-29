@@ -1,0 +1,8 @@
+#!/bin/sh
+
+merge_environment()
+{
+  local version='1.0.0'
+  export PACKAGE_ROOT="$prefix/medic-core/v$version"
+}
+

@@ -4,7 +4,7 @@ all: iso-image
 clean:
 	rm -f output/image.iso
 
-iso-image: initrd-image medic-core-pkg java-pkg
+iso-image: initrd-image medic-core-pkg java-pkg concierge-pkg
 	cd iso && mkisofs -J -R -V 'VM Startup Disk' \
 		-boot-load-size 4 -boot-info-table \
 		-o ../output/image.iso -no-emul-boot \
@@ -13,6 +13,10 @@ iso-image: initrd-image medic-core-pkg java-pkg
 initrd-image:
 	cd initrd && \
 		find * | cpio -o -H newc | gzip -c9 > ../iso/boot/image.gz
+
+concierge-pkg:
+	cd packages/concierge && \
+		tar -cJf ../../iso/packages/concierge-v1000-x86.tar.xz *
 
 java-pkg:
 	cd packages/java && \

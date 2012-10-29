@@ -1,0 +1,4 @@
+#!/bin/sh
+
+rm -rf /srv/software/concierge/v1.0.0
+

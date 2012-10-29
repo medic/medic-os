@@ -92,7 +92,8 @@ main()
   echo "Software update started at `date`" >> "$log" 2>&1
 
   update_package 'java' "$is_newly_initialized" >> "$log" 2>&1 &&
-  update_package 'medic-core' "$is_newly_initialized" >> "$log" 2>&1 \
+  update_package 'medic-core' "$is_newly_initialized" >> "$log" 2>&1 &&
+  update_package 'concierge' "$is_newly_initialized" >> "$log" 2>&1 \
     || fatal 'Failed to extract required software from ISO image'
 
   merge_package_environment 'medic-core' &&
