@@ -14,6 +14,7 @@ app.configure(function () {
   app.use(express.bodyParser());
 
   app.set('views', __dirname + '/views');
+  app.use('/static', express.static(__dirname + '/static'));
 
   app.use(express.session({
     secret: '2f6f99e7102059d7acb40bbe4fa8cf547ea18f96'
@@ -34,6 +35,10 @@ app.get('/', function (req, res) {
 app.get('/setup', function (req, res) {
 
   res.render('setup/index.hbs', {
+    title: (
+      'Set Administrative Password: ' +
+      'Medic Mobile Virtual Server Configuration'
+    ),
     data: {
       key: req.flash('key')
     },

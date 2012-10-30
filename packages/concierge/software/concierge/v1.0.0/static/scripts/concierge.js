@@ -44,12 +44,26 @@ var button_hover = function (_elts) {
   });
 };
 
+var button_submit = function (_form_elt, _elts) {
+
+  $(_elts).each(function (_i, _elt) {
+
+    var elt = $(_elt);
+
+    elt.click(function () {
+      $(_form_elt).submit();
+    });
+  });
+};
+
 jQuery(function ($) {
 
   resize_handler();
   button_hover('#save');
   textarea_focus('#key');
+  button_submit('#form', '#save');
   $(window).resize(resize_handler);
 
 });
+
 

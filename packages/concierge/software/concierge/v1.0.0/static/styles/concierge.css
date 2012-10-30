@@ -18,16 +18,16 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-size: 12pt;
+  font-size: 11pt;
   font-family: "Droid Sans";
 }
 body {
-  background-image: url('../images/texture.png');
-  background-image: image-set(
+  background: url('../images/texture.png');
+  background: image-set(
     url('../images/texture.png') 1x,
     url('../images/texture-hires.png') 2x
   );
-  background-image: -webkit-image-set(
+  background: -webkit-image-set(
     url('../images/texture.png') 1x,
     url('../images/texture-hires.png') 2x
   );
@@ -40,22 +40,22 @@ body {
   height: 10em;
 }
 .logo {
-  height: 10.5em;
+  height: 11em;
   width: 100%;
   opacity: 0.4;
   background: url('../images/medic-logo.svg');
   background-repeat: no-repeat;
   background-position: center;
-  background-size: auto 10.5em;
+  background-size: auto 11em;
 }
 
-.login input, .login textarea{
+.login input, .login textarea {
   font-size: 1.15em;
 }
 .login, .login-background {
   width: 70%;
   bottom: 10em;
-  top: 15em;
+  top: 16em;
   left: 15%;
   min-height: 20em;
   position: absolute;
@@ -85,10 +85,11 @@ body {
 }
 .login-status {
   position: absolute;
-  top: 15em;
-  width: 100%;
+  top: 14em;
+  width: 70%;
+  padding-left: 15%;
   text-align: center;
-  font-size: 0.85em;
+  font-size: 0.95em;
   color: #eee;
   opacity: 0.8;
   z-index: 0;
@@ -101,9 +102,11 @@ input {
   border-radius: 1em;
   border: solid 1px #333;
   background-color: #fff;
+
 }
 input, .textarea-wrapper {
   box-shadow: 0 0 0.5em #555;
+  opacity: 0.8;
 }
 input, textarea {
   outline: none;
@@ -132,6 +135,7 @@ textarea.full {
 }
 input:focus, .textarea-focus {
   box-shadow: 0 0 0.75em #d00;
+  opacity: 0.95;
 }
 
 .indent {
@@ -181,30 +185,33 @@ label {
   line-height: 1.25em;
   font-size: 2.5em;
 }
-.circle {
+.button .circle {
   width: 3em;
   height: 3em;
   opacity: 0.5;
   border-radius: 2em;
   border: solid 0.25em #000;
 }
-.label {
+.button .label {
   color: #000;
   opacity: 0.5;
+  font-size: 0.9em;
+  font-weight: bold;
   padding-top: 0.25em;
+}
+.hover .label {
+  text-shadow: 0 0 0.5em #000;
 }
 .hover .icon, .hover .label {
   color: #fff;
 }
 .hover .circle {
   border-color: #fff;
-  box-shadow: 0 0 0.5em #fff;
+  box-shadow: 0 0 1em #000;
 }
-
 .icon-lock-open:before {
   content: 'B';
 }
-
 .icon-lock-closed:before {
   content: 'A';
 }
