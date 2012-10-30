@@ -1,5 +1,6 @@
 #!/bin/sh
 
 chown -R couchdb.staff \
+  /srv/settings/medic-core/couchdb \
   /srv/storage/medic-core/couchdb /srv/storage/medic-core/couchdb-lucene
 

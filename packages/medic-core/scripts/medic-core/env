@@ -7,8 +7,8 @@ merge_environment()
   local java_version='1.7.9'
 
   local prefix="$1"
-  local root="$prefix/medic-core/$version/$cpu"
-  local java_root="$prefix/java/$java_version/$cpu"
+  local root="$prefix/medic-core/v$version/$cpu"
+  local java_root="$prefix/java/v$java_version/$cpu"
 
   export PACKAGE_ROOT="$root"
 

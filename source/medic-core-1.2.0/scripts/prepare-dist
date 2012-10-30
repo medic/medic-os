@@ -1,5 +1,5 @@
 
-prefix='/srv/software/medic-core/1.2.0/x86'
+prefix='/srv/software/medic-core/v1.2.0/x86'
 
 (cd "$prefix" &&
   rm -rf lib/*.a lib/python?.? lib/erlang/usr lib/erlang/Install info \

@@ -1,4 +1,4 @@
 #!/bin/sh
 
-(cd /srv/software/java && rm -f 1.7 && ln -sf 1.7.9 1.7)
+(cd /srv/software/java && rm -f v1.7 && ln -sf v1.7.9 v1.7)
 

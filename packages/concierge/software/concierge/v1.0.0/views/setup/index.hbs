@@ -1,15 +1,23 @@
-<!DOCTYPE html>
 
-<html>
-  <head>
-    <title></title>
-  </head>
-  <body>
-    <form action="/setup/password" method="post">
-      <input type="password" name="value" />
-      <input type="password" name="confirm" />
-      <input type="submit" />
-    </form>
-  </body>
-</html>
+<form action="/setup/password" method="post">
+  <div class="row">
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" />
+  </div>
+  <div class="row">
+    <label for="confirmation">Password Confirmation</label>
+    <input type="password" id="confirmation" name="confirmation" />
+  </div>
+  <div class="row">
+    <label for="confirmation">Public Key (Optional)</label>
+    <textarea id="key" name="key" rows="4">{{{data.key}}}</textarea>
+  </div>
+  <div class="row">
+    <input class="submit" type="submit" value="Set Password" />
+  </div>
+</form>
+<p>
+  <span class="error">{{{messages.error}}}</span>
+  <span class="success">{{{messages.success}}}</span>
+</p>
 
