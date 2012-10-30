@@ -1,0 +1,31 @@
+#!/bin/sh
+
+source '/boot/include/supervisor'
+
+main()
+{
+  local package="$1"
+  shift 1
+  
+  for service in "$@"; do
+    supervisor_service_down "$package" "$service" \
+      || fatal "Failed to shut down service '$service' in '$package'"
+  done
+  
+  return 0
+}
+
+warn()
+{
+  echo "Warning: $*" 2>&1
+}
+
+fatal()
+{
+  echo "Fatal: $*" 2>&1
+  exit 1
+}
+
+main "$@"
+exit "$?"
+

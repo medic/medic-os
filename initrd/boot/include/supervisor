@@ -10,20 +10,37 @@ _supervisor_process()
   local pkg_supervise_dir="$supervise_dir/$package"
   local log="$pkg_supervise_dir/logs/$service.log"
 
-  trap '_supervisor_process_trap "$package" "$service"' SIGTERM SIGINT
+  trap 'supervisor_resync_service "$package" "$service"' HUP
+  trap '_supervisor_termination_trap "$package" "$service"' TERM
 
   while true; do
 
-    rm -f "$pkg_supervise_dir/status/*.pid" &&
+    rm -f "$pkg_supervise_dir/status/$package.pid" &&
     mkdir -p "$pkg_supervise_dir/status" "$pkg_supervise_dir/logs"
 
+    # Is service down?
+    #   If so, block on the FIFO; a write is our signal to resume.
+    
+    local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
+    
+    if [ -p "$svc_down_fifo" ]; then
+      read < "$svc_down_fifo" &>/dev/null
+      rm -f "$svc_down_fifo"
+    fi
+    
+    # Fork-and-exec:
+    #  This attempts to start the supervised process.
+        
     (exec "/srv/scripts/$package/run/$service" >> "$log" 2>&1) &
 
     local pid="$!"
-    echo "$pid" > "$pkg_supervise_dir/status/$service.pid" && wait "$pid"
+    local pid_file="$pkg_supervise_dir/status/$service.pid"
+    
+    echo "$pid" > "$pid_file" &&
+    wait "$pid" &&
+    rm -f "$pid_file"
 
     local status="$?"
-    rm -f "$pkg_supervise_dir/status/$service.pid"
     
     if [ "$status" -eq 0 ]; then
       echo "`date`: Service '$service' in package '$package'" \
@@ -38,18 +55,42 @@ _supervisor_process()
   done
 }
 
-_supervisor_process_trap()
+supervisor_resync_service()
+{
+  local package="$1"
+  local service="$2"
+
+  local pkg_supervise_dir="$supervise_dir/$package"
+  local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
+
+  if supervisor_is_service_running "$package" "$service"; then
+    if [ -p "$svc_down_fifo" ]; then
+      supervisor_terminate_service "$package" "$service"
+    fi
+  fi
+  
+  return 0
+}
+
+_supervisor_termination_trap()
+{
+  local package="$1"
+  local service="$2"
+
+  supervisor_terminate_service "$package" "$service"
+  exit 111
+}
+  
+supervisor_terminate_service()
 {
   local package="$1"
   local service="$2"
 
   local pkg_supervise_dir="$supervise_dir/$package"
   local pid="`cat "$pkg_supervise_dir/status/$service.pid" 2>/dev/null`"
-
+  
   rm -f "$pkg_supervise_dir/status/$service.pid" &&
   kill -TERM "$pid" 2>/dev/null
-
-  exit 1
 }
 
 _start_supervisor_process()
@@ -57,14 +98,22 @@ _start_supervisor_process()
   local package="$1"
   local service="$2"
 
-  trap '_terminate_supervisor_process "$package" "$service"' \
-    SIGINT SIGTERM
+  local ppid_dir="$supervise_dir/$package/status"
+  local ppid_file="$ppid_dir/$service.ppid"
 
-  _supervisor_process "$package" "$service" &
+  if supervisor_is_service_watched "$package" "$service"; then
+    return 1
+  fi
+    
+  trap '_terminate_supervisor_process "$package" "$service"' TERM
+
+  _supervisor_process "$package" "$service" &>/dev/null &
 
   local pid="$!"
-  mkdir -p "$supervise_dir/$package/status" &&
-  echo "$pid" > "$supervise_dir/$package/status/$service.ppid"
+  mkdir -p "$ppid_dir" &&
+  echo "$pid" > "$ppid_file"
+  
+  return "$?"
 }
 
 _terminate_supervisor_process()
@@ -72,11 +121,17 @@ _terminate_supervisor_process()
   local package="$1"
   local service="$2"
   
-  local pid_file="$supervise_dir/$package/status/$service.ppid"
-  local pid="`cat "$pid_file" 2>/dev/null`"
+  local ppid_file="$supervise_dir/$package/status/$service.ppid"
   
-  rm -f "$pid_file" &&
-  kill -TERM "$pid" 2>/dev/null
+  if ! supervisor_is_service_watched "$package" "$service"; then
+    return 1
+  fi
+  
+  local ppid="`cat "$ppid_file" 2>/dev/null`" &&
+  rm -f "$ppid_file" &&
+  kill -TERM "$ppid" 2>/dev/null
+  
+  return "$?"
 }
 
 _pidfile_has_active_process()
@@ -99,14 +154,93 @@ _pidfile_has_active_process()
 supervisor_start()
 {
   local package="$1"
+  local rv='0'
 
   for service in "/srv/scripts/$package/run"/*; do
-    if [ -x "$service" ]; then
-      _start_supervisor_process "$package" "`basename "$service"`" \
-        || warn "Failed to start supervisor for '$package/$service'"
+  
+    if [ "$service" != '*' -a -x "$service" ]; then
+      service="`basename "$service"`"
+      _start_supervisor_process "$package" "$service"
+      
+      if [ "$?" -ne 0 ]; then
+        rv="$(($rv + 1))"
+        warn "Failed to start supervisor for '$package/$service'"
+      fi
     fi
   done
 
+  return "$rv"
+}
+
+supervisor_stop()
+{
+  local package="$1"
+  local rv='0'
+  
+  for service in "/srv/scripts/$package/run"/*; do
+  
+    if [ "$service" != '*' -a -x "$service" ]; then
+      service="`basename "$service"`"
+      _terminate_supervisor_process "$package" "$service"
+      
+      if [ "$?" -ne 0 ]; then
+        rv="$(($rv + 1))"
+        warn "Failed to stop '$package/$service'"
+      fi
+    fi
+  done
+  
+  return "$rv"
+}
+
+supervisor_service_down()
+{
+  local package="$1"
+  local service="$2"
+
+  local pkg_supervise_dir="$supervise_dir/$package"
+  local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
+  
+  if ! supervisor_is_service_watched "$package" "$service"; then
+    return 1 # Supervisor not running
+  fi
+  
+  if [ -p "$svc_down_fifo" ]; then
+    return 2 # Already down
+  fi
+
+  local ppid="`cat "$pkg_supervise_dir/status/$service.ppid"`"
+  
+  rm -f "$svc_down_fifo" && mkfifo -m 0600 "$svc_down_fifo" &&
+  kill -HUP "$ppid"
+  
+  if [ "$?" -ne 0 ]; then
+    return 3 # FIFO / signal failure
+  fi
+    
+  return 0 # Success
+}
+
+supervisor_service_up()
+{
+  local package="$1"
+  local service="$2"
+
+  local pkg_supervise_dir="$supervise_dir/$package"
+  local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
+  
+  if ! supervisor_is_service_watched "$package" "$service"; then
+    return 1 # Supervisor not running
+  fi
+  
+  if ! [ -p "$svc_down_fifo" ]; then
+    return 2 # Service is up or currently restarting
+  fi
+ 
+  # Write to the FIFO:
+  #   This unblocks `_supervisor_process` and starts the service.
+  
+  echo '1' > "$svc_down_fifo" || return 3
   return 0
 }
 
@@ -183,12 +317,5 @@ supervisor_is_service_running()
 
 }
 
-supervisor_stop()
-{
-  local package="$1"
-  local service="$2"
-
-  _terminate_supervisor_process "$package" "$service"
-}
 
 
