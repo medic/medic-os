@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Set Administrative Password: Medic Mobile Virtual Server Configuration</title>
+    <link rel="stylesheet" type="text/css" href="static/styles/concierge.css" />
+    <script type="text/javascript" src="static/scripts/jquery-1.8.2.min.js"></script>
+    <script type="text/javascript" src="static/scripts/concierge.js"></script>
+  </head>
+  <body>
+    <div class="logo-wrapper">
+      <div class="logo">
+      </div>
+    </div>
+    <div class="login-background">
+    </div>
+    <div class="login">
+      <div class="login-top">
+        <div class="rows">
+            <div class="row">
+              <label for="password">New Administrative Password</label>
+              <input class="full" type="password" id="password" />
+            </div>
+            <div class="row">
+              <label for="confirmation">Confirm Administrative Password</label>
+              <input class="full" type="password" id="confirmation" />
+            </div>
+        </div>
+        <div class="indent">
+          <div class="label-hint">Optional</div>
+          <label for="key">OpenSSH-Formatted Public Key(s)</label>
+        </div>
+      </div>
+      <div class="login-bottom">
+        <div class="textarea-wrapper">
+          <textarea id="key" class="full" spellcheck="false"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="login-status">
+      Please select an administrative password for your new virtual server.<br />
+    </div>
+    <div class="buttons">
+      <div id="save" class="button">
+        <div class="circle">
+          <div class="icon icon-lock-open"></div>
+        </div>
+        <div class="label">Save</div>
+      </div>
+    </div>
+  </body>
+</html>
+

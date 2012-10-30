@@ -270,6 +270,23 @@ supervisor_list_all_services()
   return 0
 }
 
+supervisor_list_runnable_services()
+{
+  local package="$1"
+  local pkg_supervise_dir="$supervise_dir/$package"
+
+  for service in "/srv/scripts/$package/run"/*; do
+    service="`basename "$service"`"
+    if [ "$service" != '*' ]; then
+      if ! [ -p "$pkg_supervise_dir/status/$service.down" ]; then
+      	echo "$service"
+      fi
+    fi
+  done
+
+  return 0
+}
+
 supervisor_list_watched_services()
 {
   local package="$1"
@@ -293,7 +310,9 @@ supervisor_list_running_services()
   for service in "$supervise_dir/$package/status"/*.pid; do
     service="`basename "$service" .pid`"
     if [ "$service" != '*' ]; then
-      echo "$service"
+      if supervisor_is_service_running "$package" "$service"; then
+      	echo "$service"
+      fi
     fi
   done
 
@@ -314,8 +333,6 @@ supervisor_is_service_running()
   local service="$2"
 
   _pidfile_has_active_process "$supervise_dir/$package/status/$service.pid"
-
 }
-
 
 

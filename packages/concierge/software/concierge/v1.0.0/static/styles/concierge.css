@@ -1,0 +1,211 @@
+
+@font-face {
+  font-style: normal;
+  font-weight: normal;
+  font-family: 'fontello';
+  src: url("../fonts/fontello.eot");
+  src: url("../fonts/fontello.eot?#iefix") format('embedded-opentype'),
+       url("../fonts/fontello.woff") format('woff'),
+       url("../fonts/fontello.ttf") format('truetype'),
+       url("../fonts/fontello.svg#fontello") format('svg');
+}
+
+.icon {
+  font-family: 'fontello';
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-size: 12pt;
+  font-family: "Droid Sans";
+}
+body {
+  background-image: url('../images/texture.png');
+  background-image: image-set(
+    url('../images/texture.png') 1x,
+    url('../images/texture-hires.png') 2x
+  );
+  background-image: -webkit-image-set(
+    url('../images/texture.png') 1x,
+    url('../images/texture-hires.png') 2x
+  );
+}
+
+.logo-wrapper {
+  width: 100%;
+  padding-top: 2%;
+  text-align: center;
+  height: 10em;
+}
+.logo {
+  height: 10.5em;
+  width: 100%;
+  opacity: 0.4;
+  background: url('../images/medic-logo.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: auto 10.5em;
+}
+
+.login input, .login textarea{
+  font-size: 1.15em;
+}
+.login, .login-background {
+  width: 70%;
+  bottom: 10em;
+  top: 15em;
+  left: 15%;
+  min-height: 20em;
+  position: absolute;
+  overflow: hidden;
+  border-radius: 2em;
+}
+.login-background {
+  z-index: 10;
+  border: solid 1px #000;
+  background-color: #fff;
+  opacity: 0.2;
+  box-shadow: 0.35em 0.35em 1em #000;
+}
+.login-top, .login-bottom {
+  z-index: 100;
+  width: 100%;
+  left: 0;
+}
+.login-top {
+  border-radius: 2em 2em 0 0;
+  position: absolute;
+  top: 0;
+}
+.login-bottom {
+  border-radius: 0 0 2em 2em;
+  position: absolute;
+}
+.login-status {
+  position: absolute;
+  top: 15em;
+  width: 100%;
+  text-align: center;
+  font-size: 0.85em;
+  color: #eee;
+  opacity: 0.8;
+  z-index: 0;
+  text-shadow: 0.15em 0.15em 0.1em #000;
+}
+
+input {
+  padding: 0.5em;
+  margin-top: 0.25em;
+  border-radius: 1em;
+  border: solid 1px #333;
+  background-color: #fff;
+}
+input, .textarea-wrapper {
+  box-shadow: 0 0 0.5em #555;
+}
+input, textarea {
+  outline: none;
+}
+.textarea-wrapper {
+  border: solid 1px #111;
+  border-radius: 1.5em;
+  padding: 1em;
+  background-color: #fff;
+  position: absolute;
+  top: 0.5em;
+  left: 2.5em;
+  right: 2.5em;
+  bottom: 2em;
+}
+input.full {
+  width: 100%;
+}
+textarea.full {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  resize: none;
+}
+input:focus, .textarea-focus {
+  box-shadow: 0 0 0.75em #d00;
+}
+
+.indent {
+  padding-left: 2.5em;
+}
+.rows {
+  padding: 1.5em 0 1em 2em;
+}
+.row {
+  margin: 0 3.5em 0 0.5em;
+  padding: 0 0 0.5em 0;
+  position: relative;
+}
+
+label {
+  padding: 0.25em 2em 0 0.25em;
+  color: #fff;
+  display: block;
+  text-shadow: 0 0 0.5em #000;
+}
+.label-hint {
+  position: absolute;
+  right: 2.5em;
+  color: #ccc;
+  text-shadow: 0 0 0.5em #000;
+  font-size: 0.85em;
+  padding: 0.5em 1em 0 0;
+}
+
+.buttons {
+  position: absolute;
+  text-align: center;
+  bottom: 2.5em;
+  width: 100%;
+}
+.button, .circle {
+  margin-left: auto;
+  margin-right: auto;
+}
+.button {
+  width: 5em;
+  cursor: pointer;
+  text-shadow: 0.15em 0.15em 0.2em #555;
+}
+.button .icon {
+  color: #000;
+  line-height: 1.25em;
+  font-size: 2.5em;
+}
+.circle {
+  width: 3em;
+  height: 3em;
+  opacity: 0.5;
+  border-radius: 2em;
+  border: solid 0.25em #000;
+}
+.label {
+  color: #000;
+  opacity: 0.5;
+  padding-top: 0.25em;
+}
+.hover .icon, .hover .label {
+  color: #fff;
+}
+.hover .circle {
+  border-color: #fff;
+  box-shadow: 0 0 0.5em #fff;
+}
+
+.icon-lock-open:before {
+  content: 'B';
+}
+
+.icon-lock-closed:before {
+  content: 'A';
+}
+

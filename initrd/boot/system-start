@@ -18,8 +18,10 @@ main()
   local found_device=''
   local found_version=''
 
-  echo -ne '\n'
+  set_cursor 0
+  set_console_blanking 0
   stty -echo 2>/dev/null
+
   startup_message 'Starting up...'
 
   echo "Storage initialization started at `date`" >> "$log" 2>&1
@@ -96,9 +98,6 @@ main()
   update_package 'concierge' "$is_newly_initialized" >> "$log" 2>&1 \
     || fatal 'Failed to extract required software from ISO image'
 
-  merge_package_environment 'medic-core' &&
-  tput civis &>/dev/null
-
   startup_message 'Checking authentication database...'
 
   persist_authentication_database >> "$log" 2>&1 \
@@ -122,11 +121,10 @@ main()
 
   startup_message 'Starting services...'
 
-  supervisor_start 'medic-core' \
+  supervisor_start 'medic-core' && supervisor_start 'concierge' \
     || fatal 'Failed to start required network services'
 
-  startup_message "Server is available at $ip_address"
-
+  startup_message "Server is now available at $ip_address"
   return 0
 }
 

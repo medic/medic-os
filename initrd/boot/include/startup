@@ -1,5 +1,34 @@
 #!/bin/sh
 
+set_console_blanking()
+{
+  local minutes="$1"
+
+  echo -ne "\033[9;$minutes]\033[14;$minutes]" > /dev/console
+}
+
+set_cursor()
+{
+  local direction="$1"
+
+  if [ "$direction" -eq 0 ]; then
+    echo -ne '\033[?25l'
+  else
+    echo -ne '\033[?25h'
+  fi
+}
+
+set_bold()
+{
+  local direction="$1"
+  
+  if [ "$direction" -eq 0 ]; then
+    echo -ne '\033[0m'
+  else
+    echo -ne '\033[1m'
+  fi
+}
+
 startup_message()
 {
   local text="$1"
