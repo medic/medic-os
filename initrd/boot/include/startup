@@ -261,7 +261,7 @@ discover_ip_address()
 
 persist_authentication_database()
 {
-  local sys_settings_dir='/srv/settings/system'
+  local sys_settings_dir='/srv/settings/system/core'
 
   mkdir -p "$sys_settings_dir"
 

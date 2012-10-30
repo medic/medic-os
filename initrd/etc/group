@@ -6,3 +6,4 @@ concierge:x:100:concierge
 sshd:x:1000:
 tc:x:1001:
 couchdb:x:1002:
+couchdb-lucene:x:1003:
