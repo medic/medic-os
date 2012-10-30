@@ -1,0 +1,12 @@
+#!/bin/sh
+
+user='tc'
+
+prefix="/home/$user/.ssh"
+authorized_keys="$prefix/authorized_keys"
+
+mkdir -p "$prefix" &&
+touch "$authorized_keys" &&
+chmod 0600 "$authorized_keys" &&
+exec sh -c "cat >> '$authorized_keys'"
+

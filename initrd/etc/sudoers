@@ -13,5 +13,5 @@
 # User privilege specification
 root    	ALL=(ALL) ALL
 tc		ALL=NOPASSWD: ALL 
-concierge	ALL=NOPASSWD: /usr/bin/passwd
+concierge	ALL=NOPASSWD: /usr/bin/passwd, (tc) /srv/scripts/concierge/private/ssh-addkey
 

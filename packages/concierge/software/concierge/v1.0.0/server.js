@@ -64,9 +64,8 @@ app.post('/setup/password', function (req, res) {
       add_openssh_public_key(req, key, function (_was_added) {
 
         if (_was_added) {
-          req.flash(
-            'success', 'Password and public key successfully set'
-          );
+          req.flash('key', null);
+          req.flash('success', 'Password and public key successfully set');
 	}
 
         return res.redirect('/setup');
@@ -106,8 +105,27 @@ var trim = function (_string) {
  */
 var add_openssh_public_key = function (_req, _key, _callback) {
 
-  console.log(_key);
-  return _callback(true);
+  /* Add data to OpenSSH's authorized_keys file:
+       This feature requires the `ssh-addkey` script and sudo privileges. */
+
+  var passwd = child.spawn(
+    'sudo', [ '-u', 'tc', '/srv/scripts/concierge/private/ssh-addkey' ],
+      { stdio: 'pipe' }
+  );
+
+  passwd.stdin.write(_key);
+  passwd.stdin.end();
+
+  passwd.on('exit', function (_code, _signal) {
+
+    if (_code != 0) {
+      _req.flash('error', 'Failed to add public key(s): internal error');
+      return _callback(false);
+    }
+
+    return _callback(true);
+  });
+
 };
 
 /**
