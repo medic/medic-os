@@ -8,7 +8,10 @@ main()
   local numerator='0'
   local denominator='0'
   
-  set_cursor 0 && set_console_blanking 0
+  set_echo 0
+  set_cursor 0
+  trap 'true' INT
+  set_console_blanking 0
 
   while true; do
     for i in `supervisor_list_all_packages`; do
@@ -17,7 +20,6 @@ main()
       numerator="$(($numerator + running_services))"
       denominator="$(($denominator + runnable_services))"
     done
-    echo -ne "$running_services / $runnable_services\r"
     sleep 1
   done
 

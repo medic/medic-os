@@ -1,5 +1,16 @@
 #!/bin/sh
 
+set_echo()
+{
+  local direction="$1"
+
+  if [ "$direction" -eq 0 ]; then
+    stty -echo 2>/dev/null
+  else
+    stty echo 2>/dev/null
+  fi
+}
+
 set_console_blanking()
 {
   local minutes="$1"
