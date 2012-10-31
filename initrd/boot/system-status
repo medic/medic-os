@@ -1,0 +1,39 @@
+#!/bin/sh
+
+source '/boot/include/startup'
+source '/boot/include/supervisor'
+
+main()
+{
+  merge_package_environment 'medic-core'
+
+  stty -echo 2>/dev/null
+  tput civis 2>/dev/null
+
+  while true; do
+    for i in `supervisor_list_all_packages`; do
+      total_services="`supervisor_list_all_services "$i" | wc -l`"
+      running_services="`supervisor_list_running_services "$i" | wc -l`"
+    done
+    sleep 5
+  done
+
+  return 0
+}
+
+warn()
+{
+  echo "Warning: $*" 2>&1
+}
+
+fatal()
+{
+  echo "Fatal: $*" 2>&1
+
+  sleep 10
+  exit 1
+}
+
+main
+exit "$?"
+

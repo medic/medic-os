@@ -1,0 +1,30 @@
+#!/bin/sh
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv/software
+
+  for type in rsa dsa ecdsa; do
+    local key_file="$PACKAGE_ROOT/etc/ssh/ssh_host_${type}_key"
+
+    if ! [ -f "$key_file" ]; then
+      ssh-keygen -q -t "$type" -N '' -f "$key_file"
+    fi
+  done
+
+  return "$?"
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+

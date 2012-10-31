@@ -1,0 +1,197 @@
+#!/bin/sh
+
+supervise_dir="/srv/storage/system/supervisor"
+system_supervise_dir="$supervise_dir/system"
+
+_supervisor_process()
+{
+  local package="$1"
+  local service="$2"
+
+  local pkg_supervise_dir="$supervise_dir/$package"
+  local log="$pkg_supervise_dir/logs/$service.log"
+
+  trap '_supervisor_process_trap "$package" "$service"' SIGTERM SIGINT
+
+  while true; do
+
+    rm -f "$pkg_supervise_dir/state/*.pid" &&
+    mkdir -p "$pkg_supervise_dir/state" "$pkg_supervise_dir/logs"
+
+    (exec "/srv/scripts/$package/run/$service" >> "$log" 2>&1) &
+
+    local pid="$!"
+    echo "$pid" > "$pkg_supervise_dir/state/$service.pid" && wait "$pid"
+
+    local status="$?"
+    rm -f "$pkg_supervise_dir/state/$service.pid"
+    
+    if [ "$status" -eq 0 ]; then
+      echo "`date`: Service '$service' in package '$package'" \
+        "exited normally (pid was '$pid')" >> "$log"
+    else
+      echo "`date`: Service '$service' in package '$package'" \
+        "exited with non-zero status $status (pid was '$pid')" >> "$log"
+      sleep 5
+    fi
+
+    echo "`date`: Restarting service '$service' in '$package'" >> "$log"
+  done
+}
+
+_supervisor_process_trap()
+{
+  local package="$1"
+  local service="$2"
+
+  local pkg_supervise_dir="$supervise_dir/$package"
+  local pid="`cat "$pkg_supervise_dir/state/$service.pid" 2>/dev/null`"
+
+  rm -f "$pkg_supervise_dir/state/$service.pid" &&
+  kill -TERM "$pid" 2>/dev/null
+
+  exit 1
+}
+
+_start_supervisor_process()
+{
+  local package="$1"
+  local service="$2"
+
+  trap '_terminate_supervisor_process "$package" "$service"' \
+    SIGINT SIGTERM
+
+  _supervisor_process "$package" "$service" &
+
+  local pid="$!"
+  mkdir -p "$system_supervise_dir/$package" &&
+  echo "$pid" > "$system_supervise_dir/$package/$service.pid"
+}
+
+_terminate_supervisor_process()
+{
+  local package="$1"
+  local service="$2"
+  
+  local pid_file="$system_supervise_dir/$package/$service.pid"
+  local pid="`cat "$pid_file" 2>/dev/null`"
+  
+  rm -f "$pid_file" &&
+  kill -TERM "$pid" 2>/dev/null
+}
+
+_pidfile_has_active_process()
+{
+  local pid_file="$1"
+
+  if ! [ -f "$pid_file" ]; then
+    return 1
+  fi
+
+  local pid="`cat "$pid_file" 2>/dev/null`"
+
+  if ! [ -d "/proc/$pid" ]; then
+    return 2
+  fi
+
+  return 0
+}
+
+supervisor_start()
+{
+  local package="$1"
+
+  mkdir -p "$system_supervise_dir"
+
+  for service in "/srv/scripts/$package/run"/*; do
+    if [ -x "$service" ]; then
+      _start_supervisor_process "$package" "`basename "$service"`" \
+        || warn "Failed to start supervisor for '$package/$service'"
+    fi
+  done
+
+  return 0
+}
+
+supervisor_list_all_packages()
+{
+  for package in "/srv/scripts"/*; do
+    package="`basename "$package"`"
+    if [ "$package" != '*' -a "$package" != 'system' ]; then
+      echo "$package"
+    fi
+  done
+  
+  return 0
+}
+
+supervisor_list_all_services()
+{
+  local package="$1"
+
+  for service in "/srv/scripts/$package/run"/*; do
+    service="`basename "$service"`"
+    if [ "$service" != '*' ]; then
+      echo "$service"
+    fi
+  done
+
+  return 0
+}
+
+supervisor_list_started_services()
+{
+  local package="$1"
+
+  # List services where supervisor is running
+  for service in "$system_supervise_dir/$package"/*.pid; do
+    service="`basename "$service" .pid`"
+    if [ "$service" != '*' ]; then
+      echo "$service"
+    fi
+  done
+
+  return 0
+}
+
+supervisor_list_running_services()
+{
+  local package="$1"
+
+  # List services where intended process is running
+  for service in "$supervise_dir/$package/state"/*.pid; do
+    service="`basename "$service" .pid`"
+    if [ "$service" != '*' ]; then
+      echo "$service"
+    fi
+  done
+
+  return 0
+}
+
+supervisor_is_started()
+{
+  local package="$1"
+  local service="$2"
+
+  _pidfile_has_active_process "$system_supervise_dir/$package/$service.pid"
+}
+
+supervisor_is_running()
+{
+  local package="$1"
+  local service="$2"
+
+  _pidfile_has_active_process "$supervise_dir/$package/state/$service.pid"
+
+}
+
+supervisor_stop()
+{
+  local package="$1"
+  local service="$2"
+
+  _terminate_supervisor_process "$package" "$service"
+}
+
+

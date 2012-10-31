@@ -1,0 +1,21 @@
+#!/bin/sh
+
+merge_environment()
+{
+  local cpu='x86'
+  local version='1.2.0'
+  local java_version='1.7.9'
+
+  local prefix="$1"
+  local root="$prefix/medic-core/$version/$cpu"
+  local java_root="$prefix/java/$java_version/$cpu"
+
+  export PACKAGE_ROOT="$root"
+
+  export PATH="$root/bin:$root/sbin:$PATH"
+  export LD_LIBRARY_PATH="$root/lib:$LD_LIBRARY_PATH"
+
+  export JAVA_HOME="$java_root"
+  export PATH="$java_root/bin:$java_root/java/bin:$PATH"
+}
+

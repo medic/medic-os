@@ -1,0 +1,279 @@
+#!/bin/sh
+
+startup_message()
+{
+  local text="$1"
+
+  local columns="`stty -a |
+    sed -n '/columns / s/^.*\?columns \+\([0-9]\+\).*$/\1/p;`"
+
+  local maximum="$(($columns - 2))"
+
+  if [ "${#text}" -gt "$maximum" ]; then
+    text="`echo "$text" | sed "s/^ *\\(.\\{0,$maximum\\}\\).*$/\\1/g;"`"
+  fi
+
+  local length=$((${#text} / 2));
+  local indent=$((($columns / 2) - (${#text} / 2)));
+
+  echo -ne '\r'
+
+  for i in `seq 1 "$columns"`; do
+    echo -n ' ';
+  done
+
+  echo -ne '\r'
+  
+  for i in `seq 1 "$indent"`; do
+    echo -n ' ';
+  done
+
+  echo -ne "$text"
+}
+
+is_storage_valid()
+{
+  local device="$1"
+  
+  dd if="$device" bs=4096 count=1 &>/dev/null
+  return "$?"
+}
+
+is_storage_empty()
+{
+  local device="$1"
+  
+  local rv="`dd if="$device" bs=4096 count=16 2>/dev/null \
+    | hexdump -v | head -n4096 | grep -v '^[0-9a-f]\+ [ 0]\+$'`"
+    
+  [ -z "$rv" ]
+  return "$?"
+}
+
+disconnect_storage()
+{
+  local device="$1"
+  
+  umount -f /srv 2>/dev/null
+  swapoff "${device}1" 2>/dev/null
+
+  return 0
+}
+
+find_storage()
+{
+  local device="$1"
+
+  disconnect_storage "$device"
+  
+  swapon -p16 "${device}1" 2>/dev/null &&
+    mkdir -p /srv && mount "${device}2" /srv 2>/dev/null
+
+  if [ "$?" -ne 0 ]; then
+    disconnect_storage "$device"
+    return 1
+  fi
+ 
+  local version="`cat /srv/receipts/system/version 2>/dev/null`"
+
+  if [ "$?" -ne 0 -o "$version" -le 0 ] &>/dev/null; then
+    disconnect_storage "$device"
+    return 2
+  fi
+
+  echo "$version"
+  return 0
+}
+
+initialize_storage()
+{
+  local device="$1"
+  local swap_size="$2"
+  local version="$3"
+
+  disconnect_storage "$device"
+   
+  echo -e "o\\nn\\np\\n1\\n1\\n+${swap_size}M" \
+    "\\nt\\n82\\nn\\np\\n2\\n\\n\\np\\nw" \
+      | fdisk "$device" &&
+  \
+  sleep 2 &&
+  mkswap "${device}1" && swapon -p16 "${device}1" &&
+  mkfs.ext4 "${device}2" && mkdir -p /srv && mount "${device}2" /srv &&
+  \
+  mkdir -p /srv/software /srv/storage \
+    /srv/receipts/system /srv/scripts &&
+  \
+  echo "$version" > /srv/receipts/system/version && sync
+
+  return "$?"
+}
+
+mount_source_image()
+{
+  local device="$1"
+
+  unmount_source_image  
+  mkdir -p /mnt/image && mount "$device" /mnt/image
+  
+  return "$?"
+}
+
+unmount_source_image()
+{
+  umount -f /mnt/image 2>/dev/null
+  return "$?"
+}
+
+install_package()
+{
+  local package="$1"
+  local version="`cat "/mnt/image/packages/$package.version" 2>/dev/null`"
+
+  if ! [ "$version" -gt 0 ] &>/dev/null; then
+    return 1
+  fi
+
+  mkdir -p "/srv/receipts/$package" &&
+    echo -n "$version" > "/srv/receipts/$package/version"
+
+  if [ "$?" -ne 0 ]; then
+    rm -f "/srv/receipts/$package/version"
+    return 2
+  fi
+
+  mkdir -p "/srv/receipts/$package" "/srv/scripts/$package" &&
+    (cd /srv && xz -dc "/mnt/image/packages/$package-v$version-x86.tar.xz" \
+      | tar -xvf - > "/srv/receipts/$package/manifest") && sync
+
+  if [ "$?" -ne 0 ]; then
+    rm -f "/srv/receipts/$package"
+    return 3
+  fi
+
+  if [ -x "/srv/scripts/$package/install" ]; then
+
+    "/srv/scripts/$package/install" \
+      || warn "Installation script for package '$package' failed"
+
+    sync
+    
+    if [ "$?" -ne 0 ]; then
+      rm -rf "/srv/receipts/$package"
+      return 4
+    fi
+
+  fi
+
+  return 0
+}
+
+remove_package()
+{
+  local package="$1"
+
+  if [ -x "/srv/scripts/$package/remove" ]; then
+
+    "/srv/scripts/$package/remove" \
+      || warn "Removal script for package '$package' failed"
+
+    rm -rf "/srv/receipts/$package"
+
+  fi
+
+  sync
+
+  if [ "$?" -gt 0 ]; then
+    return 2
+  fi
+
+  return 0
+}
+
+update_package()
+{
+  local package="$1"
+  local force_reinstall="$2"
+
+  local v_new="`cat "/mnt/image/packages/$package.version" 2>/dev/null`"
+  local v_existing="`cat "/srv/receipts/$package/version" 2>/dev/null`"
+
+  if ! [ "$v_new" -gt 0 ] &>/dev/null; then
+    return 1
+  fi
+
+  if [ "$v_existing" -gt 0 -a "$v_existing" -lt "$v_new" ] &>/dev/null; then
+    remove_package "$package"
+    force_reinstall='t'
+  fi
+
+  if [ "$force_reinstall" ]; then
+    install_package "$package" || return 2
+  fi
+
+  setup_package "$package"
+  return 0
+}
+
+merge_package_environment()
+{
+  local package="$1"
+
+  local env_file="/srv/scripts/$package/env"
+
+  if [ -f "$env_file" ]; then
+    source "$env_file"
+    merge_environment /srv/software &>/dev/null
+    unset merge_environment
+  fi
+}
+
+setup_package()
+{
+  for script in /srv/scripts/$package/setup/*; do
+    if [ -x "$script" ]; then
+      "$script" \
+        || warn "Setup script '$script' for package '$package' failed"
+    fi
+  done
+
+  return 0
+}
+
+update_system()
+{
+  local version="$1"
+
+  echo "$version" > /srv/receipts/system/version
+  return "$?"
+}
+
+discover_ip_address()
+{
+  ip='[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'
+
+  ifconfig eth0 |
+    sed -n "/^ *inet \+\(addr:\)\?/ \
+      s/^ *inet \+\(addr:\)\? *\(${ip}\).*$/\2/p;"
+
+  return "$?"
+}
+
+persist_authentication_database()
+{
+  local sys_settings_dir='/srv/settings/system'
+
+  mkdir -p "$sys_settings_dir"
+
+  for file in passwd shadow group; do
+    if ! [ -f "$sys_settings_dir/$file" ]; then
+      cp "/etc/$file" "$sys_settings_dir/$file" \
+        || return 1
+    fi
+    ln -sf "$sys_settings_dir/$file" "/etc/$file" \
+      || return 2
+  done
+
+  return 0
+}
+

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+rm -rf /srv/software/medic-core/1.2.0/x86
+

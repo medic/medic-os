@@ -1,0 +1,157 @@
+#!/bin/sh
+
+local log='/var/log/system-start.log'
+
+source '/boot/include/startup'
+source '/boot/include/supervisor'
+
+main()
+{
+  local version='100'
+  local swap_size='1024'
+
+  local scan_devices='
+    /dev/hda /dev/sda /dev/hdb /dev/sdb
+      /dev/hdc /dev/sdc /dev/hdd /dev/sdd
+  '
+
+  local found_device=''
+  local found_version=''
+
+  echo -ne '\n'
+  stty -echo 2>/dev/null
+  startup_message 'Starting up...'
+
+  echo "Storage initialization started at `date`" >> "$log" 2>&1
+
+  mount_source_image /dev/sr0 \
+    || fatal 'Failed to mount the ISO image; possible problem with VM CD-ROM'
+
+  # Look for existing storage:
+  #   Use the first valid virtual disk that we find, provided
+  #   it wasn't initialized by a future version of this script.
+
+  startup_message 'Locating startup disk...'
+
+  for device in `echo -n "$scan_devices"`; do
+    local v="`find_storage "$device"`"
+    
+    if [ "$?" -eq 0 -a "$v" -le "$version" ] &>/dev/null; then
+      found_version="$v"
+      found_device="$device"
+      break;
+    fi
+  done
+
+  # Can't find storage:
+  #   Find the first virtual disk that contains all zeros in the
+  #   area where a disk label or partition table should be. This
+  #   disk should be safe to initialize and use for programs/data.
+
+  local is_newly_initialized=''
+  startup_message 'Checking for persistent storage...'
+
+  if [ -z "$found_version" ]; then
+    for device in `echo -n "$scan_devices"`; do
+      if is_storage_valid "$device" && is_storage_empty "$device"; then
+      
+        initialize_storage "$device" "$swap_size" "$version" \
+          >> "$log" 2>&1
+
+        if [ "$?" -eq 0 ]; then
+          found_device="$device"
+          found_version="$version"
+          is_newly_initialized='t'
+          break
+        fi
+
+      fi
+    done
+  fi
+
+  # Disk found?
+  #   If so, check its version and update its software if necessary.
+
+  if [ -z "$found_device" ]; then
+    fatal 'Failed to find a suitable disk; check VM configuration'
+  fi
+
+  if [ "$found_version" -lt "$version" ]; then
+    update_system "$version" \
+      || fatal 'Failed to update base system; please contact support.'
+  fi
+
+  startup_message 'Setting up software...'
+  
+  # Update binaries:
+  #   Unconditionally update the binaries on persistent storage.
+  #   All user data is kept outside of /srv/software, so this step
+  #   will simply ensure that we are using known-good binaries. It
+  #   won't erase any user data, databases, indexes, or other files.
+
+  echo "Software update started at `date`" >> "$log" 2>&1
+
+  update_package 'java' "$is_newly_initialized" >> "$log" 2>&1 &&
+  update_package 'medic-core' "$is_newly_initialized" >> "$log" 2>&1 \
+    || fatal 'Failed to extract required software from ISO image'
+
+  merge_package_environment 'medic-core' &&
+  tput civis &>/dev/null
+
+  startup_message 'Checking authentication database...'
+
+  persist_authentication_database >> "$log" 2>&1 \
+    || fatal 'Failed to initialize authentication database'
+
+  local ip_address=''
+  startup_message 'Setting up network connection...'
+
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    ip_address="`discover_ip_address 2> "$log"`"
+    if [ "$?" -ne 0 -o -z "$ip_address" ]; then
+      sleep 2
+    else
+      break
+    fi
+  done
+
+  if ! [ "$ip_address" ]; then
+    fatal 'Failed to obtain an IP address via DHCP for this virtual machine'
+  fi
+
+  startup_message 'Starting services...'
+
+  supervisor_start 'medic-core' \
+    || fatal 'Failed to start required network services'
+
+  startup_message "Server is available at $ip_address"
+
+  return 0
+}
+
+warn()
+{
+  echo -e "Warning triggered at `date`:\n  $*" >> "$log" 2>&1
+}
+
+fatal()
+{
+  clear
+  echo -ne '\n\n'
+  echo 'A serious error has occurred.' >&2
+  echo 'The virtual machine cannot start properly at this time.' >&2
+  echo "Details: $*." >&2
+  echo >&2
+  echo 'Please contact technical support and provide this error message.' >&2
+
+  while true; do
+    read line
+    if [ "$line" = "continue" ]; then
+      exit 1
+    fi
+  done
+}
+
+main
+exit "$?"
+
