@@ -44,14 +44,27 @@ var button_hover = function (_elts) {
   });
 };
 
-var button_submit = function (_form_elt, _elts) {
+var button_submit = function (_submit_elt, _elts) {
+
+  var submit_elt = $(_submit_elt);
+  var form_elt = submit_elt.parents('form').first();
+  
+  var toggle_image = function (_elt) {
+    $(_elt).find('.icon-lock-open')
+      .removeClass('icon-lock-open').addClass('icon-lock-closed');
+  };
 
   $(_elts).each(function (_i, _elt) {
 
     var elt = $(_elt);
 
     elt.click(function () {
-      $(_form_elt).submit();
+      toggle_image(elt);
+      
+      setTimeout(function () {  
+        submit_elt.click();
+      }, 100);
+      
     });
   });
 };
@@ -61,7 +74,7 @@ jQuery(function ($) {
   resize_handler();
   button_hover('#save');
   textarea_focus('#key');
-  button_submit('#form', '#save');
+  button_submit('#submit', '#save');
   $(window).resize(resize_handler);
 
 });

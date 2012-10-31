@@ -33,6 +33,11 @@ body {
   );
 }
 
+.hidden {
+  visibility: hidden;
+  position: absolute;
+}
+
 .logo-wrapper {
   width: 100%;
   padding-top: 2%;
@@ -106,7 +111,7 @@ input {
 }
 input, .textarea-wrapper {
   box-shadow: 0 0 0.5em #555;
-  opacity: 0.8;
+  opacity: 0.5;
 }
 input, textarea {
   outline: none;
