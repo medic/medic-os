@@ -78,6 +78,12 @@ main()
   \
   remove_static_libraries 'z' &&
   \
+  build_autoconf 'libusb' \
+    "$stdarg --enable-static=no --enable-shared=yes" &&
+  \
+  build_autoconf 'libusb-compat' \
+    "$stdarg --enable-static=no --enable-shared=yes" &&
+  \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
   \
   remove_static_libraries 'ncurses' 'ncurses_g' 'form' \
@@ -466,6 +472,7 @@ setup_environment()
   export PATH="$prefix/bin:$PATH"
   export LD_LIBRARY_PATH="$prefix/lib:$LD_LIBRARY_PATH"
   export DYLD_LIBRARY_PATH="$prefix/lib:$DYLD_LIBRARY_PATH"
+  export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
 
   if [ "$parallel" ]; then
     export MAKE="$MAKE -j$parallel"
