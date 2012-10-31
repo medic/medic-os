@@ -1,10 +1,9 @@
-
 This project is currently under development, and does not yet have a stable
 release.
 
 Due to size restrictions, the source code for the Linux kernel, CouchDB,
 Node.js, OpenSSH, and their dependencies are not directly included in this
-repository. For a full source tree with everything included, see here:
+repository. For a full source tree with pre-built binaries, see here:
 
   https://scri.pt/get/vm-toaster-src-20121031.tar.xz
 
