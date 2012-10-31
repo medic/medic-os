@@ -1,12 +1,11 @@
-
 You'll need to build the medic-core package from source, and then place the
 resulting tree of binaries in to this directory. Change your current working
 directory to the root of this repository, then run something like this:
 
   $ cd source/medic-core/
   $ make ROOT=/srv/software/medic-core/1.2.0/x86 BITS=32 PARALLEL=4
-  $ cd ../../
+  $ ./scripts/prepare-dist
+
+  $ cd ../..
   $ mv /srv/software/medic-core/* packages/medic-core/software/medic-core/
   $ rm -f packages/medic-core/README
-
-
