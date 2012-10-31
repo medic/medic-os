@@ -14,16 +14,36 @@ main()
   set_console_blanking 0
 
   while true; do
+  
+    local numerator='0';
+    local denominator='0';
+    
     for i in `supervisor_list_all_packages`; do
-      runnable_services="`supervisor_list_runnable_services "$i" | wc -l`"
-      running_services="`supervisor_list_running_services "$i" | wc -l`"
-      numerator="$(($numerator + running_services))"
-      denominator="$(($denominator + runnable_services))"
+      local runnable_services="`supervisor_list_runnable_services "$i" | wc -l`"
+      local running_services="`supervisor_list_running_services "$i" | wc -l`"
+      
+      numerator="$(($numerator + $running_services))"
+      denominator="$(($denominator + $runnable_services))"
     done
+    
+    delta="$(($denominator - $numerator))"
+      
+    if [ "$delta" -le 0 ]; then
+      startup_message "All services are running normally"
+    else
+      set_bold 1
+      if [ "$delta" -gt 1 ]; then
+        startup_message "There is a problem with $delta services"
+      else
+        startup_message "There is a problem with one service"
+      fi
+      set_bold 0
+    fi
+    
     sleep 1
+    
   done
 
-  set_cursor 1
   return 0
 }
 

@@ -141,6 +141,10 @@ main()
   \
   fix_erlang_dso_linkage "$bits" &&
   \
+  build_autoconf 'gammu' \
+    "$stdarg --enable-shared --without-gnapplet \
+     --disable-backup --without-completion --enable-protection" &&
+  \
   build_autoconf 'couchdb' \
     "$stdarg --with-js-lib-name=mozjs185 \
       --with-erlang='$prefix/lib/erlang/usr/include' \

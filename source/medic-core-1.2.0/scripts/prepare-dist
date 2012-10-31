@@ -3,8 +3,8 @@ prefix='/srv/software/medic-core/v1.2.0/x86'
 
 (cd "$prefix" &&
   rm -rf lib/*.a lib/python?.? lib/erlang/usr lib/erlang/Install info \
-    include man java/manual share/man share/gtk-doc share/doc share/info \
-    share/emacs ssl/man ssl/misc etc/ssh_host* libexec/ssh-keysign)
+    include man java/manual share/man share/gtk-doc share/doc doc \
+    share/info share/emacs ssl etc/ssh_host* libexec/ssh-keysign)
 
 (cd "$prefix/lib/erlang/lib" && mkdir -p .save &&
   mv crypto-* inets-* kernel-* os_mon-* public_key-* \
