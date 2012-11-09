@@ -1,0 +1,13 @@
+--- busybox-1.19.0/loginutils/chpasswd.c	2011-08-11 00:23:58.000000000 +0000
++++ busybox-1.19.0_chpasswd_patch/loginutils/chpasswd.c	2011-08-31 02:53:35.126663494 +0000
+@@ -81,8 +81,8 @@
+ 			bb_info_msg("Password for '%s' changed", name);
+ 		logmode = LOGMODE_STDIO;
+ 		free(name);
+-		if (!(opt & OPT_ENC))
+-			free(pass);
++		//if (!(opt & OPT_ENC))
++		//	free(pass);
+ 	}
+ 	return EXIT_SUCCESS;
+ }

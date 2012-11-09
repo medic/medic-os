@@ -8,6 +8,7 @@ detect()
   source "$base/../env" &&
   merge_environment /srv/software
 
+  local user='gammu'
   local service='gammu'
   local package='medic-core'
 
@@ -30,7 +31,7 @@ detect()
 
     if [ "$?" -eq 0 ]; then
       local device="/dev/ttyUSB$i"
-      chown gammu "$device"
+      chown "$user:$user" "$device"
       echo "$device"
       return 0
     fi;
