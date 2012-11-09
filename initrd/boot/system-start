@@ -1,7 +1,8 @@
 #!/bin/sh
 
-local log='/var/log/system-start.log'
+local log='/var/log/start.log'
 
+source '/boot/include/cursor'
 source '/boot/include/startup'
 source '/boot/include/supervisor'
 
@@ -22,7 +23,7 @@ main()
   set_console_blanking 0
   stty -echo 2>/dev/null
 
-  startup_message 'Starting up...'
+  display_centered 'Starting up...'
 
   echo "Storage initialization started at `date`" >> "$log" 2>&1
 
@@ -33,7 +34,7 @@ main()
   #   Use the first valid virtual disk that we find, provided
   #   it wasn't initialized by a future version of this script.
 
-  startup_message 'Locating startup disk...'
+  display_centered 'Locating startup disk...'
 
   for device in `echo -n "$scan_devices"`; do
     local v="`find_storage "$device"`"
@@ -51,7 +52,7 @@ main()
   #   disk should be safe to initialize and use for programs/data.
 
   local is_newly_initialized=''
-  startup_message 'Checking for persistent storage...'
+  display_centered 'Checking for persistent storage...'
 
   if [ -z "$found_version" ]; then
     for device in `echo -n "$scan_devices"`; do
@@ -83,7 +84,7 @@ main()
       || fatal 'Failed to update base system; please contact support.'
   fi
 
-  startup_message 'Setting up software...'
+  display_centered 'Setting up software...'
   
   # Update binaries:
   #   Unconditionally update the binaries on persistent storage.
@@ -93,18 +94,19 @@ main()
 
   echo "Software update started at `date`" >> "$log" 2>&1
 
-  update_package 'java' "$is_newly_initialized" >> "$log" 2>&1 &&
+  update_package 'system' "$is_newly_initialized" >> "$log" 2>&1 &&
   update_package 'medic-core' "$is_newly_initialized" >> "$log" 2>&1 &&
+  update_package 'java' "$is_newly_initialized" >> "$log" 2>&1 &&
   update_package 'concierge' "$is_newly_initialized" >> "$log" 2>&1 \
     || fatal 'Failed to extract required software from ISO image'
 
-  startup_message 'Checking authentication database...'
+  display_centered 'Checking authentication database...'
 
   persist_authentication_database >> "$log" 2>&1 \
     || fatal 'Failed to initialize authentication database'
 
   local ip_address=''
-  startup_message 'Setting up network connection...'
+  display_centered 'Setting up network connection...'
 
   for i in 1 2 3 4 5 6 7 8 9 10; do
     ip_address="`discover_ip_address 2> "$log"`"
@@ -119,12 +121,14 @@ main()
     fatal 'Failed to obtain an IP address via DHCP for this virtual machine'
   fi
 
-  startup_message 'Starting services...'
+  display_centered 'Starting services...'
 
-  supervisor_start 'medic-core' && supervisor_start 'concierge' \
+  supervisor_start 'system' &&
+  supervisor_start 'concierge' &&
+  supervisor_start 'medic-core' \
     || fatal 'Failed to start required network services'
 
-  startup_message "Server is now available at $ip_address"
+  display_centered "Server is now available at $ip_address"
   return 0
 }
 

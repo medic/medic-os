@@ -1,5 +1,6 @@
 #!/bin/sh
 
+is_restart_event=''
 supervise_dir="/srv/storage/system/supervisor"
 
 _supervisor_process()
@@ -10,7 +11,8 @@ _supervisor_process()
   local pkg_supervise_dir="$supervise_dir/$package"
   local log="$pkg_supervise_dir/logs/$service.log"
 
-  trap 'supervisor_resync_service "$package" "$service"' HUP
+  trap '_supervisor_resync_trap "$package" "$service"' HUP
+  trap '_supervisor_restart_trap "$package" "$service"' USR1
   trap '_supervisor_termination_trap "$package" "$service"' TERM
 
   while true; do
@@ -48,14 +50,37 @@ _supervisor_process()
     else
       echo "`date`: Service '$service' in package '$package'" \
         "exited with non-zero status $status (pid was '$pid')" >> "$log"
-      sleep 5
+
+      if [ "$is_restart_event" ]; then
+        is_restart_event=''
+      else
+        sleep 5
+      fi
     fi
 
     echo "`date`: Restarting service '$service' in '$package'" >> "$log"
   done
 }
 
-supervisor_resync_service()
+_supervisor_termination_trap()
+{
+  local package="$1"
+  local service="$2"
+
+  supervisor_terminate_service "$package" "$service"
+  exit 111
+}
+
+_supervisor_restart_trap()
+{
+  local package="$1"
+  local service="$2"
+
+  is_restart_event='true'
+  supervisor_terminate_service "$package" "$service"
+}
+
+_supervisor_resync_trap()
 {
   local package="$1"
   local service="$2"
@@ -72,15 +97,6 @@ supervisor_resync_service()
   return 0
 }
 
-_supervisor_termination_trap()
-{
-  local package="$1"
-  local service="$2"
-
-  supervisor_terminate_service "$package" "$service"
-  exit 111
-}
-  
 supervisor_terminate_service()
 {
   local package="$1"
@@ -198,21 +214,20 @@ supervisor_service_down()
   local package="$1"
   local service="$2"
 
-  local pkg_supervise_dir="$supervise_dir/$package"
-  local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
-  
   if ! supervisor_is_service_watched "$package" "$service"; then
     return 1 # Supervisor not running
   fi
   
-  if [ -p "$svc_down_fifo" ]; then
-    return 2 # Already down
+  if supervisor_is_service_down "$package" "$service"; then
+    return 2 # Service is already down
   fi
 
+  local pkg_supervise_dir="$supervise_dir/$package"
   local ppid="`cat "$pkg_supervise_dir/status/$service.ppid"`"
+  local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
   
   rm -f "$svc_down_fifo" && mkfifo -m 0600 "$svc_down_fifo" &&
-  kill -HUP "$ppid"
+  kill -HUP "$ppid" 2>/dev/null
   
   if [ "$?" -ne 0 ]; then
     return 3 # FIFO / signal failure
@@ -226,22 +241,72 @@ supervisor_service_up()
   local package="$1"
   local service="$2"
 
-  local pkg_supervise_dir="$supervise_dir/$package"
-  local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
-  
   if ! supervisor_is_service_watched "$package" "$service"; then
     return 1 # Supervisor not running
   fi
-  
-  if ! [ -p "$svc_down_fifo" ]; then
-    return 2 # Service is up or currently restarting
+
+  if ! supervisor_is_service_down "$package" "$service"; then
+    return 2 # Service is already up
   fi
  
   # Write to the FIFO:
   #   This unblocks `_supervisor_process` and starts the service.
   
+  local pkg_supervise_dir="$supervise_dir/$package"
+  local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
+
   echo '1' > "$svc_down_fifo" || return 3
   return 0
+}
+
+supervisor_service_restart()
+{
+  local package="$1"
+  local service="$2"
+
+  if ! supervisor_is_service_watched "$package" "$service"; then
+    return 1 # Supervisor not running
+  fi
+  
+  if supervisor_is_service_down "$package" "$service"; then
+    return 2 # Service is down
+  fi
+
+  if ! supervisor_is_service_running "$package" "$service"; then
+    return 3 # Service is already starting
+  fi
+
+  local pkg_supervise_dir="$supervise_dir/$package"
+  local ppid="`cat "$pkg_supervise_dir/status/$service.ppid"`"
+
+  kill -USR1 "$ppid" 2>/dev/null
+
+  if [ "$?" -ne 0 ]; then
+    return 4 # Signal failure
+  fi
+
+  return 0 # Success
+}
+
+supervisor_service_reload()
+{
+  local package="$1"
+  local service="$2"
+
+  if ! supervisor_is_service_running "$package" "$service"; then
+    return 1 # Service is down or currently starting
+  fi
+
+  local pkg_supervise_dir="$supervise_dir/$package"
+  local pid="`cat "$pkg_supervise_dir/status/$service.pid"`"
+
+  kill -HUP "$pid" 2>/dev/null
+
+  if [ "$?" -ne 0 ]; then
+    return 2 # Signal failure
+  fi
+
+  return 0 # Success
 }
 
 supervisor_list_all_packages()
@@ -335,4 +400,11 @@ supervisor_is_service_running()
   _pidfile_has_active_process "$supervise_dir/$package/status/$service.pid"
 }
 
+supervisor_is_service_down()
+{
+  local package="$1"
+  local service="$2"
+
+  [ -p "$supervise_dir/$package/status/$service.down" ]
+}
 

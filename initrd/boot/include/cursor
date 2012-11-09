@@ -1,0 +1,103 @@
+#!/bin/sh
+
+set_echo()
+{
+  local direction="$1"
+
+  if [ "$direction" -eq 0 ]; then
+    stty -echo 2>/dev/null
+  else
+    stty echo 2>/dev/null
+  fi
+}
+
+set_console_blanking()
+{
+  local minutes="$1"
+
+  echo -ne "\033[9;$minutes]\033[14;$minutes]" > /dev/console
+}
+
+set_cursor()
+{
+  local direction="$1"
+
+  if [ "$direction" -eq 0 ]; then
+    echo -ne '\033[?25l'
+  else
+    echo -ne '\033[?25h'
+  fi
+}
+
+set_bold()
+{
+  local direction="$1"
+  
+  if [ "$direction" -eq 0 ]; then
+    echo -ne '\033[0m'
+  else
+    echo -ne '\033[1m'
+  fi
+}
+
+save_cursor()
+{
+  echo -ne '\033[s'
+}
+
+restore_cursor()
+{
+  echo -ne '\033[u'
+}
+
+move_cursor()
+{
+  local axis="$1"
+  local count="$2"
+
+  if [ "$axis" -eq 'y' ]; then
+    if [ "$count" -lt 0 ]; then
+      echo -ne "\033[$((0 - $count))B"
+    else
+      echo -ne "\033[${count}A"
+    fi
+  else
+    if [ "$count" -lt 0 ]; then
+      echo -ne "\033[$((0 - $count))D"
+    else
+      echo -ne "\033[${count}C"
+    fi
+  fi
+}
+
+clear_after_cursor()
+{
+  echo -ne '\033[K'
+}
+
+display_centered()
+{
+  local text="$1"
+
+  local columns="`stty -a |
+    sed -n '/columns / s/^.*\?columns \+\([0-9]\+\).*$/\1/p;'`"
+
+  local maximum="$(($columns - 2))"
+
+  if [ "${#text}" -gt "$maximum" ]; then
+    text="`echo "$text" | sed "s/^ *\\(.\\{0,$maximum\\}\\).*$/\\1/g;"`"
+  fi
+
+  local length=$((${#text} / 2));
+  local indent=$((($columns / 2) - (${#text} / 2)));
+
+  echo -ne '\r'
+  clear_after_cursor
+  
+  for i in `seq 1 "$indent"`; do
+    echo -n ' ';
+  done
+
+  echo -ne "$text"
+}
+

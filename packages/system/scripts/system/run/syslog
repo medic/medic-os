@@ -1,0 +1,22 @@
+#!/bin/sh
+
+start()
+{
+  local logs_dir='/srv/storage/system/logs'
+  local syslog_file="$logs_dir/messages.log"
+
+  mkdir -p "$logs_dir" &&
+  \
+  exec syslogd -n -O "$syslog_file" -b 4 \
+    >> "$syslog_file" 2>&1
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+

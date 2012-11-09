@@ -1,5 +1,6 @@
 #!/bin/sh
 
+source '/boot/include/cursor'
 source '/boot/include/startup'
 source '/boot/include/supervisor'
 
@@ -29,13 +30,13 @@ main()
     delta="$(($denominator - $numerator))"
       
     if [ "$delta" -le 0 ]; then
-      startup_message "All services are running normally"
+      display_centered "All services are running normally"
     else
       set_bold 1
       if [ "$delta" -gt 1 ]; then
-        startup_message "There is a problem with $delta services"
+        display_centered "There is a problem with $delta services"
       else
-        startup_message "There is a problem with one service"
+        display_centered "There is a problem with one service"
       fi
       set_bold 0
     fi
