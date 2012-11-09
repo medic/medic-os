@@ -1,0 +1,48 @@
+#!/bin/sh
+
+detect()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv/software
+
+  local service='gammu'
+  local package='medic-core'
+
+  local storage_dir="/srv/storage/$package/$service"
+  local settings_dir="/srv/settings/$package/$service"
+  local settings_file="$settings_dir/autodetect.conf"
+  
+  local logs_dir="$storage_dir/logs"
+  local log="$logs_dir/autodetect.log"
+  
+  for i in `seq 0 9`; do
+
+    rm -f "$settings_file" && mkdir -p "$logs_dir" &&
+    echo "Auto-detect running for '/dev/ttyUSB$i' at `date`" >> "$log" &&
+    \
+    sed "s/ttyUSBX/ttyUSB$i/g;" < "$settings_file.template" \
+      > "$settings_file" 2>/dev/null &&
+    \
+    gammu -c "$settings_file" identify >> "$log" 2>&1
+
+    if [ "$?" -eq 0 ]; then
+      echo "/dev/ttyUSB$i"
+      return 0
+    fi;
+   done
+
+  return 1
+}
+
+main()
+{
+  detect
+  return "$?"
+}
+
+main
+exit "$?"
+

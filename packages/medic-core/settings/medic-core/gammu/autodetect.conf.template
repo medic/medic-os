@@ -1,0 +1,5 @@
+
+[gammu]
+  Connection = at
+  Device = /dev/ttyUSBX
+
