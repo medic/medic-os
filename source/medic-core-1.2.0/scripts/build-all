@@ -84,6 +84,16 @@ main()
   build_autoconf 'libusb-compat' \
     "$stdarg --enable-static=no --enable-shared=yes" &&
   \
+  if [ "$build_platform" = 'linux-elf' ]; then
+    build_autoconf 'usbutils' "$stdarg" &&
+    \
+    build_make 'usb-modeswitch' \
+      'install-static' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\"" 'y' &&
+    \
+    build_make 'usb-modeswitch-data' \
+      'install' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\""
+  fi &&
+  \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
   \
   remove_static_libraries 'ncurses' 'ncurses_g' 'form' \
@@ -156,8 +166,8 @@ main()
       --with-erlang='$prefix/lib/erlang/usr/include' \
       --with-js-include='$prefix/include' --with-js-lib='$prefix/lib'" &&
   \
-  build_simple 'nodeunit' "$prefix" &&
-  build_simple 'nodelint' "$prefix" &&
+  build_make_install 'nodeunit' "$prefix" &&
+  build_make_install 'nodelint' "$prefix" &&
   build_npm_local 'kanso' "$prefix" &&
   \
   build_ant 'ant' "$prefix" &&
@@ -260,7 +270,24 @@ remove_static_libraries()
   done
 }
 
-build_simple()
+build_make()
+{
+  local name="$1"
+  local target="$2"
+  local make_args="$3"
+  local include_flags="$4"
+
+  should_run "$name" || return 0
+
+  if [ "$include_flags" ]; then
+    make_args="$make_args CFLAGS=\"$CFLAGS\" LDFLAGS=\"$LDFLAGS\""
+  fi
+
+  (cd "$name" \
+    && sh -c "$MAKE $target $make_args") 2>&1 | logger "$name"
+}
+
+build_make_install()
 {
   local name="$1"
   local prefix="$2"
@@ -270,7 +297,7 @@ build_simple()
 
   (cd "$name" \
     && sh -c "$MAKE $make_args CFLAGS=\"$CFLAGS\" LDFLAGS=\"$LDFLAGS\"" \
-    && sh -c "$MAKE $make_args install PREFIX=\"$prefix\"") 2>&1 | logger "$name"
+    && sh -c "$MAKE install $make_args PREFIX=\"$prefix\"") 2>&1 | logger "$name"
 }
 
 build_npm_local()
