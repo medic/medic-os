@@ -31,13 +31,13 @@ monitor()
       if [ "$?" -eq 0 ]; then
         touch "$settings_dir/detecting"
         echo "Possible device(s) found, running autodetection at `date`" >&2
-      fi
 
-      device="`"$base/gammu-autodetect"`"
+        device="`"$base/gammu-autodetect"`"
       
-      if [ "$device" ]; then
-        echo "$device" > "$settings_dir/detected"
-        echo "Auto-detect found device '$device' at `date`" >&2
+        if [ "$device" ]; then
+          echo "$device" > "$settings_dir/detected"
+          echo "Auto-detect found device '$device' at `date`" >&2
+        fi
       fi
       
       rm -f "$settings_dir/detecting"
