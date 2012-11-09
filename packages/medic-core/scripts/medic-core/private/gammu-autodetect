@@ -29,7 +29,9 @@ detect()
     gammu -c "$settings_file" identify >> "$log" 2>&1
 
     if [ "$?" -eq 0 ]; then
-      echo "/dev/ttyUSB$i"
+      local device="/dev/ttyUSB$i"
+      chown gammu "$device"
+      echo "$device"
       return 0
     fi;
    done

@@ -5,14 +5,18 @@ start()
   local self="`realpath "$0"`"
   local base="`dirname "$self"`"
 
-  local device="`"$base/../private/gammu-autodetect"`"
+  local logs_dir='/srv/storage/medic-core/gammu/logs'
   local config_file='/srv/settings/medic-core/gammu/autodetect.conf'
+  local device="`"$base/../private/gammu-autodetect"`"
 
   source "$base/../env" &&
   merge_environment /srv/software &&
   \
-  exec sudo su -c "gammu-smsd -c \"$config_file\"" gammu \
-    >> '/srv/storage/medic-core/gammu/logs/gammu-smsd.log' 2>&1
+  touch "$logs_dir/gammu-smsd.log" &&
+  chown gammu:staff "$logs_dir/gammu-smsd.log" &&
+  \
+  exec sudo su -c "exec gammu-smsd -c \"$config_file\"" gammu \
+    >> "$logs_dir/gammu-smsd.log" 2>&1
 }
 
 main()
