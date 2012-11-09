@@ -1,0 +1,24 @@
+#!/bin/sh
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  local service='gammu'
+  local package='medic-core'
+  local logs_dir="/srv/storage/$package/$service/logs"
+  
+  exec "$base/../private/gammu-monitor" \
+    >> "$logs_dir/gammu-monitor.log" 2>&1
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+

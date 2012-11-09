@@ -1,0 +1,61 @@
+#!/bin/sh
+
+monitor()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv/software
+
+  local package='medic-core'
+  local service='gammu'
+  
+  local settings_dir="/srv/storage/$package/$service/monitor"
+  mkdir -p "$settings_dir"
+
+  local last_device=''
+ 
+  while true; do
+    local device="`"$base/gammu-status" gammu`"
+    
+    if [ -z "$device" ]; then
+      rm -f "$settings_dir/detected"
+      
+      if [ "$last_device" ]; then
+        echo "Device '$last_device' was lost at `date`" >&2
+      fi
+      
+      "$base/gammu-status" &>/dev/null
+
+      if [ "$?" -eq 0 ]; then
+        touch "$settings_dir/detecting"
+        echo "Possible device(s) found, running autodetection at `date`" >&2
+      fi
+
+      device="`"$base/gammu-autodetect"`"
+      
+      if [ "$device" ]; then
+        echo "$device" > "$settings_dir/detected"
+        echo "Auto-detect found device '$device' at `date`" >&2
+      fi
+      
+      rm -f "$settings_dir/detecting"
+    fi
+
+    last_device="$device"    
+    sleep 1
+  done
+  
+  return 1
+}
+
+main()
+{
+  monitor
+  return "$?"
+}
+
+main
+exit "$?"
+
