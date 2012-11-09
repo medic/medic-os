@@ -11,7 +11,6 @@ persist_ssh_user_configuration_files()
   mkdir -p "$ssh_dot_dir" "$ssh_settings_dir"
 
   for file in "$@"; do
-
     local src_path="$ssh_dot_dir/authorized_keys"
     local target_path="$ssh_settings_dir/authorized_keys"
     
@@ -27,11 +26,14 @@ persist_ssh_user_configuration_files()
   done
 }
 
-chown -R couchdb.staff \
+chown -R couchdb:staff \
   /srv/settings/medic-core/couchdb /srv/storage/medic-core/couchdb
 
-chown -R couchdb-lucene.staff \
+chown -R couchdb-lucene:staff \
   /srv/storage/medic-core/couchdb-lucene
+
+chown -R gammu:staff \
+  /srv/storage/medic-core/gammu /srv/settings/medic-core/gammu
 
 persist_ssh_user_configuration_files tc authorized_keys
 

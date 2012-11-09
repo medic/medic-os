@@ -1,0 +1,26 @@
+#!/bin/sh
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  local device="`"$base/../private/gammu-autodetect"`"
+  local config_file='/srv/settings/medic-core/gammu/autodetect.conf'
+
+  source "$base/../env" &&
+  merge_environment /srv/software &&
+  \
+  exec sudo su -c "gammu-smsd -c \"$config_file\"" gammu \
+    >> '/srv/storage/medic-core/gammu/logs/gammu-smsd.log' 2>&1
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+
