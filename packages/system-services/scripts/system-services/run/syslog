@@ -2,7 +2,7 @@
 
 start()
 {
-  local logs_dir='/srv/storage/system/logs'
+  local logs_dir='/srv/storage/system-services/logs'
   local syslog_file="$logs_dir/messages.log"
 
   mkdir -p "$logs_dir" &&

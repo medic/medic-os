@@ -8,7 +8,7 @@ main()
 {
   local numerator='0'
   local denominator='0'
-  
+
   set_echo 0
   set_cursor 0
   trap 'true' INT
@@ -16,36 +16,74 @@ main()
 
   while true; do
   
-    local numerator='0';
-    local denominator='0';
-    
-    for i in `supervisor_list_all_packages`; do
-      local runnable_services="`supervisor_list_runnable_services "$i" | wc -l`"
-      local running_services="`supervisor_list_running_services "$i" | wc -l`"
-      
-      numerator="$(($numerator + $running_services))"
-      denominator="$(($denominator + $runnable_services))"
-    done
-    
-    delta="$(($denominator - $numerator))"
-      
-    if [ "$delta" -le 0 ]; then
-      display_centered "All services are running normally"
-    else
-      set_bold 1
-      if [ "$delta" -gt 1 ]; then
-        display_centered "There is a problem with $delta services"
-      else
-        display_centered "There is a problem with one service"
-      fi
-      set_bold 0
+    save_cursor_position
+
+    if display_services; then
+      echo && echo && display_connectivity
     fi
-    
+
+    clear_text 'y'
+    restore_cursor_position
     sleep 1
-    
+
   done
 
   return 0
+}
+
+display_connectivity()
+{
+  local base_dir='/srv/storage/medic-core/gammu/monitor';
+
+  if [ -f "$base_dir/detected" ]; then
+    display_centered "One GSM modem is installed and functioning properly."
+    return 0
+  elif [ -f "$base_dir/detecting" ]; then
+    set_bold 1
+    display_centered "Detected one GSM modem; configuring device..."
+    set_bold 0
+  else
+    set_bold 1
+    display_centered "No GSM hardware is currently available."
+    set_bold 0
+  fi
+}
+
+display_services()
+{
+  local numerator='0';
+  local denominator='0';
+
+  for i in `supervisor_list_all_packages`; do
+
+    local runnable_services="`
+      supervisor_list_runnable_services "$i" | wc -l
+    `"
+    local running_services="`
+      supervisor_list_running_services "$i" | wc -l
+    `"
+    numerator="$(($numerator + $running_services))"
+    denominator="$(($denominator + $runnable_services))"
+  done
+    
+  delta="$(($denominator - $numerator))"
+
+  if [ "$delta" -le 0 ]; then
+    display_centered "All system services are running normally."
+    return 0
+  else
+    set_bold 1
+    if [ "$delta" -gt 1 ]; then
+      display_centered "Problem: There are $delta services functioning improperly."
+    else
+      display_centered "Problem: There is one service functioning improperly."
+    fi
+    set_bold 0
+    echo && display_centered "This condition might be resolved by rebooting."
+    echo && display_centered "If this message persists, please contact support."
+  fi
+ 
+  return 1
 }
 
 warn()

@@ -8,7 +8,7 @@ source '/boot/include/supervisor'
 
 main()
 {
-  local version='100'
+  local version='1000'
   local swap_size='1024'
 
   local scan_devices='
@@ -94,10 +94,10 @@ main()
 
   echo "Software update started at `date`" >> "$log" 2>&1
 
-  update_package 'system' "$is_newly_initialized" >> "$log" 2>&1 &&
+  update_package 'system-services' "$is_newly_initialized" >> "$log" 2>&1 &&
   update_package 'medic-core' "$is_newly_initialized" >> "$log" 2>&1 &&
-  update_package 'java' "$is_newly_initialized" >> "$log" 2>&1 &&
-  update_package 'concierge' "$is_newly_initialized" >> "$log" 2>&1 \
+  update_package 'concierge' "$is_newly_initialized" >> "$log" 2>&1 &&
+  update_package 'java' "$is_newly_initialized" >> "$log" 2>&1 \
     || fatal 'Failed to extract required software from ISO image'
 
   display_centered 'Checking authentication database...'
@@ -108,7 +108,7 @@ main()
   local ip_address=''
   display_centered 'Setting up network connection...'
 
-  for i in 1 2 3 4 5 6 7 8 9 10; do
+  for i in `seq 1 10`; do
     ip_address="`discover_ip_address 2> "$log"`"
     if [ "$?" -ne 0 -o -z "$ip_address" ]; then
       sleep 2
@@ -123,9 +123,8 @@ main()
 
   display_centered 'Starting services...'
 
-  supervisor_start 'system' &&
-  supervisor_start 'concierge' &&
-  supervisor_start 'medic-core' \
+  supervisor_start 'system-services' &&
+  supervisor_start 'medic-core' && supervisor_start 'concierge' \
     || fatal 'Failed to start required network services'
 
   display_centered "Server is now available at $ip_address"
@@ -146,13 +145,15 @@ fatal()
   echo "Details: $*." >&2
   echo >&2
   echo 'Please contact technical support and provide this error message.' >&2
+  echo
 
-  while true; do
-    read line
-    if [ "$line" = "continue" ]; then
-      exit 1
-    fi
-  done
+  sleep 15
+  
+  set_echo 1
+  set_cursor 1
+
+  echo 'Attempting to start recovery console...'
+  exec /bin/login -f root 2>/dev/null
 }
 
 main

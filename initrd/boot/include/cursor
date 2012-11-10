@@ -40,12 +40,12 @@ set_bold()
   fi
 }
 
-save_cursor()
+save_cursor_position()
 {
   echo -ne '\033[s'
 }
 
-restore_cursor()
+restore_cursor_position()
 {
   echo -ne '\033[u'
 }
@@ -70,9 +70,22 @@ move_cursor()
   fi
 }
 
-clear_after_cursor()
+clear_text()
 {
-  echo -ne '\033[K'
+  local axis="$1"
+  local is_backward="$2"
+
+  if [ "$axis" = 'y' ]; then
+    axis='J'
+  else
+    axis='K'
+  fi
+    
+  if [ "$is_backward" ]; then
+    is_backward='1'
+  fi
+
+  echo -ne "\\033[${is_backward}${axis}"
 }
 
 display_centered()
@@ -92,7 +105,7 @@ display_centered()
   local indent=$((($columns / 2) - (${#text} / 2)));
 
   echo -ne '\r'
-  clear_after_cursor
+  clear_text 'x'
   
   for i in `seq 1 "$indent"`; do
     echo -n ' ';

@@ -4,7 +4,10 @@ all: iso-image
 clean:
 	rm -f output/image.iso
 
-iso-image: initrd-image medic-core-pkg java-pkg concierge-pkg system-pkg
+distclean: clean
+	rm -f iso/packages/*.tar.xz iso/boot/image.gz
+
+iso-image: initrd-image medic-core-pkg java-pkg concierge-pkg system-services-pkg
 	cd iso && mkisofs -J -R -V 'VM Startup Disk' \
 		-boot-load-size 4 -boot-info-table \
 		-o ../output/image.iso -no-emul-boot \
@@ -26,7 +29,7 @@ medic-core-pkg:
 	cd packages/medic-core && \
 		tar -cJf ../../iso/packages/medic-core-v1200-x86.tar.xz *
 
-system-pkg:
-	cd packages/system && \
-		tar -cJf ../../iso/packages/system-v1000-x86.tar.xz *
+system-services-pkg:
+	cd packages/system-services && \
+		tar -cJf ../../iso/packages/system-services-v1000-x86.tar.xz *
 
