@@ -1,8 +1,11 @@
 
+MAKE ?= make
+QMAKE := ${MAKE} --no-print-directory
+
 all: iso-image
 
 compile:
-	@(cd source && make)
+	@(cd source && ${QMAKE})
 
 packages: medic-core-pkg concierge-pkg java-pkg system-services-pkg
 
@@ -10,15 +13,15 @@ clean:
 	rm -f output/image.iso
 
 distclean: clean
-	(cd source && make clean)
+	(cd source && ${MAKE} clean)
 	rm -f iso/packages/*.tar.xz iso/boot/image.gz
 
 iso-image: initrd-image packages
 	@echo -n 'Creating ISO image... '
-	@cd iso && mkisofs -J -R -V 'VM Startup Disk' \
-		-boot-load-size 4 -boot-info-table \
-		-o ../output/image.iso -no-emul-boot \
-		-b boot/isolinux/isolinux.bin -c boot/isolinux/boot.cat .
+	@cd iso && mkisofs -J -R -V 'Medic Mobile Virtual Appliance' \
+		-boot-load-size 4 -boot-info-table -o ../output/image.iso \
+		-no-emul-boot -b boot/isolinux/isolinux.bin \
+		-c boot/isolinux/boot.cat . &>/dev/null
 	@echo 'done.'
 
 initrd-image:

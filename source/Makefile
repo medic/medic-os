@@ -50,8 +50,9 @@ build-kernel: build-pv
 			'cd linux && ${PMAKE} bzImage && ${PMAKE} modules'
 
 copy-kernel:
-	cp linux/arch/x86/boot/bzImage ../iso/boot/kernel && \
-	(cd linux && ${MAKE} modules_install INSTALL_MOD_PATH=../../initrd/)
+	@cp linux/arch/x86/boot/bzImage ../iso/boot/kernel && \
+	(cd linux && ${MAKE} modules_install \
+		INSTALL_MOD_PATH=../../initrd/ >/dev/null)
 
 
 medic-core: build-medic-core copy-medic-core
@@ -64,10 +65,12 @@ build-medic-core:
 		${QMAKE} ROOT='${ROOT}' BITS='${BITS}' PARALLEL='${PARALLEL}')
 
 copy-medic-core:
-	(cd medic-core && ./scripts/prepare-dist && \
+	@echo -n "Copying files for 'medic-core'... "
+	@(cd medic-core && ./scripts/prepare-dist && \
 		mkdir -p ../../packages/medic-core/software && \
 		rm -rf ../../packages/medic-core/software/medic-core && \
 		cp -R /srv/software/medic-core ../../packages/medic-core/software/medic-core)
+	@echo 'done.'
 
 
 busybox: build-busybox copy-busybox
@@ -80,7 +83,9 @@ build-busybox: build-pv
 	./scripts/logger busybox 'cd busybox && ${PMAKE}'
 
 copy-busybox:
-	(cd busybox && cp busybox ../../initrd/bin/busybox)
+	@echo -n "Copying files for 'busybox'... "
+	@(cd busybox && cp busybox ../../initrd/bin/busybox)
+	@echo 'done.'
 
 
 syslinux: build-syslinux copy-syslinux
@@ -92,8 +97,10 @@ build-syslinux: build-pv
 	@./scripts/logger syslinux 'cd syslinux && ${PMAKE}'
 
 copy-syslinux:
-	(cd syslinux && \
+	@echo -n "Copying files for 'syslinux'... "
+	@(cd syslinux && \
 		cp core/isolinux.bin ../../iso/boot/isolinux/isolinux.bin)
+	@echo 'done.'
 
 
 stats: recalculate-stats
