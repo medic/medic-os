@@ -1,0 +1,49 @@
+#!/bin/bash
+
+fatal()
+{
+  echo "$0: fatal: $*" >&2
+  exit 1
+}
+
+source 'medic-core/scripts/include/logger' 2>/dev/null \
+    || fatal 'Unable to load logging library; retry from root directory'
+
+usage()
+{
+  echo
+  echo "Usage:" >&2
+  echo "  $0 name command [args...]" >&2
+  echo
+
+  exit 111
+}
+
+check_args()
+{
+  local name="$1"
+  shift 1
+
+  local command="$1"
+  shift 1
+
+  [ "$name" -a "$command" ]
+}
+
+main()
+{
+  local name="$1"
+  shift 1
+
+  check_args "$name" "$@" || usage
+
+  load_timestamp \
+    || fatal 'Unable to load last timestamp; retry from root directory'
+
+  (exec sh -c "$*") 2>&1 | logger "$name"
+  return ${PIPESTATUS[0]}
+}
+
+main "$@"
+exit "$?"
+

@@ -1,5 +1,14 @@
 #!/bin/bash
 
+fatal()
+{
+  echo "$0: fatal: $*" >&2
+  exit 1
+}
+
+source 'scripts/include/logger' 2>/dev/null \
+    || fatal 'Unable to load logging library; retry from root directory'
+
 main()
 {
   local prefix="$1"
@@ -62,9 +71,6 @@ main()
     exit 111
   fi
 
-  echo >&2
-  echo "Building for $bits-bit $cpu CPU on $uname..." >&2
-
   initialize &&
   \
   setup_environment "$prefix" \
@@ -101,6 +107,8 @@ main()
   \
   build_autoconf 'lzo' "$stdarg --enable-shared --disable-static" &&
   build_autoconf 'lrzip' "$stdarg" &&
+  build_autoconf 'lzma' "$stdarg" && remove_static_libraries 'lzmadec' &&
+  build_autoconf 'xdelta' "$stdarg" &&
   \
   build_autoconf 'diffutils' "$stdarg" &&
   build_autoconf 'patch' "$stdarg" &&
@@ -155,7 +163,8 @@ main()
     --enable-dynamic-ssl-lib --enable-shared-zlib='$prefix' \
     --with-ssl='$prefix' --enable-m${bits}-build" &&
   \
-  fix_erlang_dso_linkage "$bits" &&
+  (disable_parallelism && \
+    fix_erlang_dso_linkage "$bits") &&
   \
   build_autoconf 'gammu' \
     "$stdarg --enable-shared --without-gnapplet \
@@ -178,44 +187,6 @@ main()
   clean_target 'clean-target' "$prefix"
 }
 
-logger()
-{
-  local name="$1"
-  local line=0
-
-  local safe_name="`echo "$name" | sed 's/\//-/g;' 2>/dev/null`"
-  local expected_lines="`cat "stats/$safe_name.count" 2>/dev/null`"
-
-  if [ -z "$expected_lines" ]; then
-    expected_lines=0
-  fi
-
-  pv -h &>/dev/null
-
-  if [ $? -eq 0 ]; then
-    while read x; do
-      line=$[$line + 1]
-      if [ "$line" -le "$expected_lines" ]; then
-        echo "$x"
-      else
-        echo "$x" >> "logs/$safe_name-$timestamp.log"
-      fi
-    done | pv -petl -i 0.5 -N "$safe_name" -s "$expected_lines" \
-      > "logs/$safe_name-$timestamp.log"
-
-    local date="`date +'at %I:%M:%S%P on %m/%d/%Y'`"
-    printf "\033[1A\r\033[K\r%9s: Installation completed %s\n" \
-      "$name" "$date" >&2
-  else
-    while read i; do
-      line=$[$line + 1]
-      echo "$i" >> "logs/$safe_name-$timestamp.log"
-      echo -ne "\r$line lines processed... "
-    done
-    echo 'done.'
-  fi
-}
-
 build_autoconf()
 {
   local name="$1"
@@ -229,6 +200,8 @@ build_autoconf()
     && sh -c "./configure $configure_args" \
     && sh -c "$MAKE $make_args" \
     && sh -c "$MAKE install $make_install_args") 2>&1 | logger "$name"
+
+  check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_config()
@@ -245,6 +218,8 @@ build_config()
     && sh -c "./Configure $config_args $CFLAGS $build_platform" \
     && sh -c "$MAKE $make_args" \
     && sh -c "$MAKE install $make_install_args") 2>&1 | logger "$name"
+  
+  check_status "$name" "${PIPESTATUS[0]}"
 }
 
 fix_erlang_dso_linkage()
@@ -259,6 +234,8 @@ fix_erlang_dso_linkage()
      (cd "lib/$dir/c_src" &&
        $MAKE clean opt ERL_TOP="$erl_top" LD="gcc -m$bits")
    done && $MAKE install) 2>&1 | logger "$name"
+  
+   check_status "$name" "${PIPESTATUS[0]}"
 }
 
 remove_static_libraries()
@@ -285,6 +262,8 @@ build_make()
 
   (cd "$name" \
     && sh -c "$MAKE $target $make_args") 2>&1 | logger "$name"
+   
+  check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_make_install()
@@ -298,6 +277,8 @@ build_make_install()
   (cd "$name" \
     && sh -c "$MAKE $make_args CFLAGS=\"$CFLAGS\" LDFLAGS=\"$LDFLAGS\"" \
     && sh -c "$MAKE install $make_args PREFIX=\"$prefix\"") 2>&1 | logger "$name"
+  
+  check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_npm_local()
@@ -306,8 +287,11 @@ build_npm_local()
   local prefix="$2"
 
   should_run "$name" || return 0
+
   (cd "$name" &&
     "$prefix/bin/npm" install -g) 2>&1 | logger "$name"
+  
+  check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_npm_remote()
@@ -317,6 +301,8 @@ build_npm_remote()
 
   should_run "$name" || return 0
   ("$prefix/bin/npm" install -g "$name") 2>&1 | logger "$name"
+  
+  check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_ant()
@@ -328,6 +314,8 @@ build_ant()
 
   (cd "$name" &&
     sh ./build.sh -Ddist.dir="$prefix/java" dist) 2>&1 | logger "$name"
+  
+  check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_maven()
@@ -340,6 +328,8 @@ build_maven()
   (cd "$name" &&
     yes 'yes' | M2_HOME="$prefix/java" \
         "$prefix/java/bin/ant") 2>&1 | logger "$name"
+  
+  check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_lucene()
@@ -355,6 +345,8 @@ build_lucene()
     "$prefix/java/bin/ant" compile jar \
         -lib "$prefix/java/lib" &&
     cp build/core/*.jar "$prefix/java/lib") 2>&1 | logger "$name"
+  
+  check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_couchdb_lucene()
@@ -365,10 +357,13 @@ build_couchdb_lucene()
   should_run "$name" || return 0
 
   (cd "$name" &&
-    "$prefix/java/bin/mvn" && mkdir -p 'target/output' &&
-        (cd 'target/output' && for i in ../couchdb-lucene-*.tar.gz; do
+    "$prefix/java/bin/mvn" && mkdir -p 'target/output' && (
+	cd 'target/output' && for i in ../couchdb-lucene-*.tar.gz; do
             tar xvzf "$i" && cp -Rv couchdb-lucene-*/* "$prefix/java";
-        done); rm -rf 'target/output') 2>&1 | logger "$name"
+        done
+    ); rm -rf 'target/output') 2>&1 | logger "$name"
+  
+  check_status "$name" "${PIPESTATUS[0]}"
 }
 
 clean_target()
@@ -401,6 +396,23 @@ initialize()
   trap cleanup EXIT
 }
 
+check_status()
+{
+  local name="$1"
+  local pipe_status="$2"
+
+  if [ "$pipe_status" -ne 0 ]; then
+    echo >&2
+    echo "A failure occurred while building '$name':" >&2
+    echo "  Subprocess exited with a status code of $pipe_status." >&2
+    echo "  Please check the source tree for problems and retry." >&2
+    echo >&2
+    exit "$pipe_status"
+  fi
+
+  true
+}
+
 cleanup()
 {
   rm -f "$run_status_file" "$last_pkg_file" "$last_version_file"
@@ -427,12 +439,6 @@ should_run()
       echo -n "$run_status" > "$run_status_file"
     fi
   fi;
-
-  if [ "$run_status" -ne 0 ]; then
-    echo -n "Note: Skipping package \`$pkg" >&2
-    [ "$version" ] && echo -n "-$version" >&2
-    echo "'" >&2
-  fi
 
   echo -n "$pkg" > "$last_pkg_file"
   echo -n "$version" > "$last_version_file"
