@@ -19,7 +19,10 @@ main()
     save_cursor_position
 
     if display_services; then
-      echo && echo && display_connectivity
+      echo &&
+      echo && display_connectivity &&
+      echo && echo && display_activity_indicator 10 &&
+      echo
     fi
 
     clear_text 'y'
@@ -74,9 +77,9 @@ display_services()
   else
     set_bold 1
     if [ "$delta" -gt 1 ]; then
-      display_centered "Problem: There are $delta services functioning improperly."
+      display_centered "Problem: $delta services are functioning improperly."
     else
-      display_centered "Problem: There is one service functioning improperly."
+      display_centered "Problem: A single service is functioning improperly."
     fi
     set_bold 0
     echo && display_centered "This condition might be resolved by rebooting."
