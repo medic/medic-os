@@ -114,3 +114,40 @@ display_centered()
   echo -ne "$text"
 }
 
+
+activity_frame='0'
+activity_direction='1'
+
+display_activity_indicator()
+{
+  local final_activity_frame="$1"
+  shift 1
+
+  if [ "$activity_frame" -le 1 ]; then
+    activity_direction='1'
+  elif [ "$activity_frame" -ge "$final_activity_frame" ]; then
+    activity_direction='0'
+  fi
+
+  if [ "$activity_direction" -eq 0 ]; then
+    activity_frame="$(($activity_frame - 1))"
+  else
+    activity_frame="$(($activity_frame + 1))"
+  fi
+
+  local line=''
+
+  for i in `seq 2 "$activity_frame"`; do
+    line="$line   "
+  done
+
+  line="$line."
+  
+  for i in `seq "$(($activity_frame + 1))" "$final_activity_frame"`; do
+    line="$line   "
+  done
+
+  display_centered " $line "
+  echo -ne '\r'
+}
+
