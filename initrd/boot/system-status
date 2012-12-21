@@ -19,15 +19,14 @@ main()
     save_cursor_position
 
     if display_services; then
-      echo &&
-      echo && display_connectivity &&
-      echo && echo && display_activity_indicator 10 &&
+      echo && echo && echo && display_connectivity
+      move_cursor 'y' 4 && display_activity_indicator 4
       echo
     fi
 
     clear_text 'y'
     restore_cursor_position
-    sleep 1
+    usleep 500000
 
   done
 
@@ -39,15 +38,15 @@ display_connectivity()
   local base_dir='/srv/storage/medic-core/gammu/monitor';
 
   if [ -f "$base_dir/detected" ]; then
-    display_centered "One GSM modem is installed and functioning properly."
+    display_centered "Modem is attached and functioning normally."
     return 0
   elif [ -f "$base_dir/detecting" ]; then
     set_bold 1
-    display_centered "Detected one GSM modem; configuring device..."
+    display_centered "Detected a USB GSM modem; configuring device..."
     set_bold 0
   else
     set_bold 1
-    display_centered "No GSM hardware is currently available."
+    display_centered "Warning: No supported GSM modem attached."
     set_bold 0
   fi
 }
@@ -79,10 +78,10 @@ display_services()
     if [ "$delta" -gt 1 ]; then
       display_centered "Problem: $delta services are functioning improperly."
     else
-      display_centered "Problem: A single service is functioning improperly."
+      display_centered "Problem: One service is functioning improperly."
     fi
     set_bold 0
-    echo && display_centered "This condition might be resolved by rebooting."
+    echo && display_centered "This condition might be resolved by rebooting the VM."
     echo && display_centered "If this message persists, please contact support."
   fi
  

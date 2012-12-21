@@ -55,11 +55,11 @@ move_cursor()
   local axis="$1"
   local count="$2"
 
-  if [ "$axis" -eq 'y' ]; then
+  if [ "$axis" = 'y' ]; then
     if [ "$count" -lt 0 ]; then
-      echo -ne "\033[$((0 - $count))B"
+      echo -ne "\033[$((0 - $count))A"
     else
-      echo -ne "\033[${count}A"
+      echo -ne "\033[${count}B"
     fi
   else
     if [ "$count" -lt 0 ]; then

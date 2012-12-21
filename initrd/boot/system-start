@@ -127,7 +127,7 @@ main()
   supervisor_start 'medic-core' && supervisor_start 'concierge' \
     || fatal 'Failed to start required network services'
 
-  display_centered "Server is listening on $ip_address"
+  display_centered "Server is listening on $ip_address."
   return 0
 }
 
