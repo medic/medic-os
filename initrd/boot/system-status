@@ -17,10 +17,9 @@ main()
   while true; do
   
     save_cursor_position
-    echo
 
     if display_services; then
-      echo && display_connectivity
+      echo && echo && display_connectivity
     fi
 
     clear_text 'y'
