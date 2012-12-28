@@ -148,12 +148,13 @@ fatal()
   echo
 
   sleep 15
-  
+  read line
+
   set_echo 1
   set_cursor 1
 
   echo 'Attempting to start recovery console...'
-  exec /bin/login -f root 2>/dev/null
+  exec /sbin/getty -nl /bin/sh 38400 tty1
 }
 
 main
