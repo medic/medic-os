@@ -2,7 +2,7 @@
 MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 
-all: iso-image
+all: packages iso-image
 
 compile:
 	@(cd source && ${QMAKE})
@@ -16,7 +16,7 @@ distclean: clean
 	(cd source && ${MAKE} clean)
 	rm -f iso/packages/*.tar.xz iso/boot/image.gz
 
-iso-image: initrd-image packages
+iso-image: initrd-image
 	@echo -n 'Creating ISO image... '
 	@cd iso && mkisofs -J -R -V 'Medic Mobile Virtual Appliance' \
 		-boot-load-size 4 -boot-info-table -o ../output/image.iso \
