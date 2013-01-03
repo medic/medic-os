@@ -51,10 +51,10 @@ install_package()
     path="`determine_iso_package_path "$package"`"
   fi
 
-  if ! [ "$path" ]; then
+  if ! [ -r "$path" ]; then
     return 1
   fi
-echo "$path" >> /var/log/path
+
   mkdir -p "/srv/receipts/$package" &&
     echo -n "$version" > "/srv/receipts/$package/version"
 
