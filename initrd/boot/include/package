@@ -55,6 +55,8 @@ install_package()
     return 1
   fi
 
+  local version="`determine_iso_package_version "$package"`"
+
   mkdir -p "/srv/receipts/$package" &&
     echo -n "$version" > "/srv/receipts/$package/version"
 

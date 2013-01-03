@@ -27,7 +27,7 @@ main()
 
     clear_text 'y'
     restore_cursor_position
-    usleep 250000
+    sleep 1
 
   done
 
