@@ -209,6 +209,16 @@ supervisor_stop()
   return "$rv"
 }
 
+supervisor_reset()
+{
+  if [ -d "$supervise_dir" ]; then
+    find "$supervise_dir" -type f -name '*.pid' -o -name '*.ppid' \
+      -exec rm -f {} \;
+  fi
+
+  return 0
+}
+
 supervisor_service_down()
 {
   local package="$1"

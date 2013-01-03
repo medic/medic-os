@@ -1,0 +1,148 @@
+#!/bin/sh
+
+
+determine_new_package_version()
+{
+  local package="$1"
+  local version="`cat "/mnt/image/packages/$package.version" 2>/dev/null`"
+
+  if ! [ "$version" -gt 0 ]; then
+    warn "Couldn't determine version for new package '$path'"
+    return 1
+  fi
+
+  echo "$version"
+}
+
+determine_installed_package_version()
+{
+  local package="$1"
+  local version="`cat "/srv/receipts/$package/version" 2>/dev/null`"
+
+  if ! [ "$version" -gt 0 ]; then
+    warn "Couldn't determine version for installed package '$package'"
+    return 1
+  fi
+
+  echo "$version"
+}
+
+install_package()
+{
+  local package="$1"
+  local version="`determine_new_package_version "$package"`"
+
+  if ! [ "$version" -gt 0 ] &>/dev/null; then
+    return 1
+  fi
+
+  mkdir -p "/srv/receipts/$package" &&
+    echo -n "$version" > "/srv/receipts/$package/version"
+
+  if [ "$?" -ne 0 ]; then
+    rm -f "/srv/receipts/$package/version"
+    return 2
+  fi
+
+  mkdir -p "/srv/receipts/$package" "/srv/scripts/$package" &&
+    (cd /srv && xz -dc "/mnt/image/packages/$package-v$version-x86.tar.xz" \
+      | tar -xvf - > "/srv/receipts/$package/manifest") && sync
+
+  if [ "$?" -ne 0 ]; then
+    rm -f "/srv/receipts/$package"
+    return 3
+  fi
+
+  if [ -x "/srv/scripts/$package/install" ]; then
+
+    "/srv/scripts/$package/install" \
+      || warn "Installation script for package '$package' failed"
+
+    sync
+    
+    if [ "$?" -ne 0 ]; then
+      rm -rf "/srv/receipts/$package"
+      return 4
+    fi
+
+  fi
+
+  return 0
+}
+
+remove_package()
+{
+  local package="$1"
+
+  if [ -x "/srv/scripts/$package/remove" ]; then
+
+    "/srv/scripts/$package/remove" \
+      || warn "Removal script for package '$package' failed"
+
+    rm -rf "/srv/receipts/$package"
+
+  fi
+
+  sync
+
+  if [ "$?" -gt 0 ]; then
+    return 2
+  fi
+
+  return 0
+}
+
+update_package()
+{
+  local package="$1"
+  local force_reinstall="$2"
+
+  local v_new="`determine_new_package_version "$package"`"
+  local v_existing="`determine_installed_package_version "$package"`"
+
+  if ! [ "$v_new" -gt 0 ] &>/dev/null; then
+    return 1
+  fi
+
+  if [ "$v_existing" -gt 0 -a "$v_existing" -lt "$v_new" ] &>/dev/null; then
+    v_existing='0'
+    remove_package "$package"
+  fi
+
+  if ! [ "$v_existing" -gt 0 ]; then
+    force_reinstall='t'
+  fi
+
+  if [ "$force_reinstall" ]; then
+    install_package "$package" || return 2
+  fi
+
+  setup_package "$package"
+  return 0
+}
+
+merge_package_environment()
+{
+  local package="$1"
+
+  local env_file="/srv/scripts/$package/env"
+
+  if [ -f "$env_file" ]; then
+    source "$env_file"
+    merge_environment /srv/software &>/dev/null
+    unset merge_environment
+  fi
+}
+
+setup_package()
+{
+  for script in /srv/scripts/$package/setup/*; do
+    if [ -x "$script" ]; then
+      "$script" \
+        || warn "Setup script '$script' for package '$package' failed"
+    fi
+  done
+
+  return 0
+}
+

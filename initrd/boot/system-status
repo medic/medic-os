@@ -19,14 +19,15 @@ main()
     save_cursor_position
 
     if display_services; then
-      echo && echo && echo && display_connectivity
-      move_cursor 'y' 4 && display_activity_indicator 4
+      echo && display_centered ''
+      echo && display_connectivity
+      move_cursor 'y' 2 && display_activity_indicator 6
       echo
     fi
 
     clear_text 'y'
     restore_cursor_position
-    usleep 500000
+    usleep 250000
 
   done
 
@@ -39,7 +40,6 @@ display_connectivity()
 
   if [ -f "$base_dir/detected" ]; then
     display_centered "Modem is attached and functioning normally."
-    return 0
   elif [ -f "$base_dir/detecting" ]; then
     set_bold 1
     display_centered "Detected a USB GSM modem; configuring device..."
@@ -49,6 +49,9 @@ display_connectivity()
     display_centered "Warning: No supported GSM modem attached."
     set_bold 0
   fi
+
+  echo && display_centered
+  return 0
 }
 
 display_services()
@@ -70,7 +73,11 @@ display_services()
     
   delta="$(($denominator - $numerator))"
 
-  if [ "$delta" -le 0 ]; then
+  if [ "$denominator" -le 0 ]; then
+    set_bold 1
+    display_centered "No usable system services could be located."
+    set_bold 0
+  elif [ "$delta" -le 0 ]; then
     display_centered "All system services are running normally."
     return 0
   else
@@ -81,10 +88,12 @@ display_services()
       display_centered "Problem: One service is functioning improperly."
     fi
     set_bold 0
-    echo && display_centered "This condition might be resolved by rebooting the VM."
-    echo && display_centered "If this message persists, please contact support."
   fi
- 
+
+  echo
+  echo && display_centered "This condition might be resolved by rebooting the VM."
+  echo && display_centered "If this message persists, please contact support."
+
   return 1
 }
 
