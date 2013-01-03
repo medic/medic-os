@@ -39,7 +39,7 @@ display_connectivity()
   local base_dir='/srv/storage/medic-core/gammu/monitor';
 
   if [ -f "$base_dir/detected" ]; then
-    display_centered "Modem is attached and functioning normally."
+    display_centered "Modem is attached and functioning properly."
   elif [ -f "$base_dir/detecting" ]; then
     set_bold 1
     display_centered "Detected a USB GSM modem; configuring device..."
