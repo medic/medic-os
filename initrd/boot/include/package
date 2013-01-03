@@ -2,68 +2,77 @@
 
 set -o pipefail
 
-determine_iso_package_architecture()
+extract_package_metadata()
 {
-  echo 'x86'
-}
-
-determine_iso_package_version()
-{
-  local package="$1"
-  local version="`cat "/mnt/image/packages/$package.version" 2>/dev/null`"
-
-  if ! [ "$version" -gt 0 ]; then
-    warn "Couldn't determine version for new package '$path'"
-    return 1
-  fi
-
-  echo "$version"
-}
-
-determine_iso_package_path()
-{
-  local package="$1"
-
-  local version="`determine_iso_package_version "$package"`"
-  local architecture="`determine_iso_package_architecture "$package"`"
-
-  echo "/mnt/image/packages/$package-v$version-$architecture.vpkg"
-}
-
-determine_installed_package_version()
-{
-  local package="$1"
-  local version="`cat "/srv/receipts/$package/version" 2>/dev/null`"
-
-  if ! [ "$version" -gt 0 ]; then
-    warn "Couldn't determine version for installed package '$package'"
-    return 1
-  fi
-
-  echo "$version"
-}
-
-install_package()
-{
-  local package="$1"
-  local path="$2"
-
-  if ! [ "$path" ]; then
-    path="`determine_iso_package_path "$package"`"
-  fi
+  local path="$1"
+  local metadata_key="$2"
 
   if ! [ -r "$path" ]; then
     return 1
   fi
 
-  local version="`determine_iso_package_version "$package"`"
+  ar -p "$path" "$metadata_key" 2>/dev/null
+  return "$?"
+}
+
+extract_package_name()
+{
+  local path="$1"
+
+  extract_package_metadata "$path" 'name'
+  return "$?"
+}
+
+extract_package_version()
+{
+  local path="$1"
+
+  extract_package_metadata "$path" 'version'
+  return "$?"
+}
+
+extract_package_digest()
+{
+  local path="$1"
+  local digest_type="$2"
+
+  if ! [ "$digest_type" ]; then
+    digest_type='sha512'
+  fi
+
+  extract_package_metadata "$path" "digest-$digest_type"
+  return "$?"
+}
+
+retrieve_installed_package_version()
+{
+  local package="$1"
+
+  cat "/srv/receipts/$package/version" 2>/dev/null
+  return "$?"
+}
+
+install_package()
+{
+  local path="$1"
+
+  if ! [ -r "$path" ]; then
+    return 1
+  fi
+
+  local package="`extract_package_name "$path"`" &&
+  local version="`extract_package_version "$path"`"
+
+  if [ "$?" -ne 0 ]; then
+    return 2
+  fi
 
   mkdir -p "/srv/receipts/$package" &&
     echo -n "$version" > "/srv/receipts/$package/version"
 
   if [ "$?" -ne 0 ]; then
     rm -f "/srv/receipts/$package/version"
-    return 2
+    return 3
   fi
 
   mkdir -p "/srv/receipts/$package" "/srv/scripts/$package" &&
@@ -72,7 +81,7 @@ install_package()
 
   if [ "$?" -ne 0 ]; then
     rm -f "/srv/receipts/$package"
-    return 3
+    return 4
   fi
 
   if [ -x "/srv/scripts/$package/install" ]; then
@@ -84,7 +93,7 @@ install_package()
     
     if [ "$?" -ne 0 ]; then
       rm -rf "/srv/receipts/$package"
-      return 4
+      return 5
     fi
 
   fi
@@ -116,27 +125,32 @@ remove_package()
 
 update_package()
 {
-  local package="$1"
+  local path="$1"
   local force_reinstall="$2"
 
-  local v_new="`determine_iso_package_version "$package"`"
-  local v_existing="`determine_installed_package_version "$package"`"
+  local package="`extract_package_name "$path"`" &&
+  local v_new="`extract_package_version "$path"`" &&
+  local v_prev="`retrieve_installed_package_version "$package"`"
 
-  if ! [ "$v_new" -gt 0 ] &>/dev/null; then
+  if [ "$?" -ne 0 ]; then
     return 1
   fi
 
-  if [ "$v_existing" -gt 0 -a "$v_existing" -lt "$v_new" ] &>/dev/null; then
-    v_existing=''
+  if ! [ "$v_new" -gt 0 ] &>/dev/null; then
+    return 2
+  fi
+
+  if [ "$v_prev" -gt 0 -a "$v_prev" -lt "$v_new" ] &>/dev/null; then
+    v_prev=''
     remove_package "$package"
   fi
 
-  if ! [ "$v_existing" -gt 0 ]; then
+  if ! [ "$v_prev" -gt 0 ] &>/dev/null; then
     force_reinstall='t'
   fi
 
   if [ "$force_reinstall" ]; then
-    install_package "$package" || return 2
+    install_package "$path" || return 3
   fi
 
   setup_package "$package"

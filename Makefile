@@ -12,10 +12,10 @@ packages: medic-core-pkg concierge-pkg java-pkg system-services-pkg
 clean:
 	rm -f output/image.iso
 	rm -rf staging/packages
+	rm -f iso/packages/*.vpkg iso/boot/image.gz
 
 distclean: clean
 	(cd source && ${MAKE} clean)
-	rm -f iso/packages/*.vpkg iso/boot/image.gz
 
 iso-image: initrd-image
 	@echo -n 'Creating ISO image... '

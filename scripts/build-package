@@ -33,7 +33,7 @@ main()
   local architecture='x86'
   local staging_dir="staging/packages/$package"
 
-  if ! [ "$package" -o "$version" ]; then
+  if [ $# -gt 2 -o -z "$package" -o -z "version" ]; then
     usage
   fi
 
@@ -47,8 +47,11 @@ main()
   (cd "packages/$package" &&
     tar -cf - * | xz -9ec > "../../$staging_dir/package.tar.xz") &&
   \
+  # Store the package's base name as metadata
+  echo "$package" > "$staging_dir/name" &&
+  \
   # Regenerate version information
-  echo -n "$version" > "$staging_dir/version" &&
+  echo "$version" > "$staging_dir/version" &&
   \
   # Regenerate cryptographic digests
   for type in md5 sha1 sha256 sha512; do
@@ -59,9 +62,6 @@ main()
   # Combine data and metadata to produce package
   (cd "$staging_dir" &&
     ar -rcs "../../../iso/packages/$package-v$version-$architecture.vpkg" *) &&
-  \
-  # Add default-version information to the ISO
-  echo "$version" > "iso/packages/$package.version"
 
   if [ "$?" -ne 0 ]; then
     fatal "Package creation step for '$package' failed"
