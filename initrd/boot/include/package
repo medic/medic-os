@@ -1,7 +1,12 @@
 #!/bin/sh
 
 
-determine_new_package_version()
+determine_iso_package_architecture()
+{
+  echo 'x86'
+}
+
+determine_iso_package_version()
 {
   local package="$1"
   local version="`cat "/mnt/image/packages/$package.version" 2>/dev/null`"
@@ -12,6 +17,16 @@ determine_new_package_version()
   fi
 
   echo "$version"
+}
+
+determine_iso_package_path()
+{
+  local package="$1"
+
+  local version="`determine_iso_package_version "$package"`"
+  local architecture="`determine_iso_package_architecture "$package"`"
+
+  echo "/mnt/image/packages/$package-v$version-$architecture.vpkg"
 }
 
 determine_installed_package_version()
@@ -30,12 +45,16 @@ determine_installed_package_version()
 install_package()
 {
   local package="$1"
-  local version="`determine_new_package_version "$package"`"
+  local path="$2"
 
-  if ! [ "$version" -gt 0 ] &>/dev/null; then
-    return 1
+  if ! [ "$path" ]; then
+    path="`determine_iso_package_path "$package"`"
   fi
 
+  if ! [ "$path" ]; then
+    return 1
+  fi
+echo "$path" >> /var/log/path
   mkdir -p "/srv/receipts/$package" &&
     echo -n "$version" > "/srv/receipts/$package/version"
 
@@ -45,7 +64,7 @@ install_package()
   fi
 
   mkdir -p "/srv/receipts/$package" "/srv/scripts/$package" &&
-    (cd /srv && xz -dc "/mnt/image/packages/$package-v$version-x86.tar.xz" \
+    (cd /srv && ar -p "$path" package.tar.xz | xz -dc \
       | tar -xvf - > "/srv/receipts/$package/manifest") && sync
 
   if [ "$?" -ne 0 ]; then
@@ -97,7 +116,7 @@ update_package()
   local package="$1"
   local force_reinstall="$2"
 
-  local v_new="`determine_new_package_version "$package"`"
+  local v_new="`determine_iso_package_version "$package"`"
   local v_existing="`determine_installed_package_version "$package"`"
 
   if ! [ "$v_new" -gt 0 ] &>/dev/null; then
@@ -105,7 +124,7 @@ update_package()
   fi
 
   if [ "$v_existing" -gt 0 -a "$v_existing" -lt "$v_new" ] &>/dev/null; then
-    v_existing='0'
+    v_existing=''
     remove_package "$package"
   fi
 

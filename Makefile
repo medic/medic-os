@@ -11,14 +11,15 @@ packages: medic-core-pkg concierge-pkg java-pkg system-services-pkg
 
 clean:
 	rm -f output/image.iso
+	rm -rf staging/packages
 
 distclean: clean
 	(cd source && ${MAKE} clean)
-	rm -f iso/packages/*.tar.xz iso/boot/image.gz
+	rm -f iso/packages/*.vpkg iso/boot/image.gz
 
 iso-image: initrd-image
 	@echo -n 'Creating ISO image... '
-	@cd iso && mkisofs -J -R -V 'Medic Mobile Virtual Appliance' \
+	@cd iso && mkisofs -J -R -V 'Medic Mobile VM' \
 		-boot-load-size 4 -boot-info-table -o ../output/image.iso \
 		-no-emul-boot -b boot/isolinux/isolinux.bin \
 		-c boot/isolinux/boot.cat . &>/dev/null
@@ -33,25 +34,21 @@ initrd-image:
 
 concierge-pkg:
 	@echo -n "Compressing package 'concierge'... "
-	@cd packages/concierge && \
-		tar -cf - * | xz -9ec > ../../iso/packages/concierge-v1000-x86.tar.xz
+	@scripts/build-package 'concierge' 1000
 	@echo 'done.'
 
 java-pkg:
 	@echo -n "Compressing package 'java'... "
-	@cd packages/java && \
-		tar -cf - * | xz -9ec > ../../iso/packages/java-v1790-x86.tar.xz
+	@scripts/build-package 'java' 1790
 	@echo 'done.'
 
 medic-core-pkg:
 	@echo -n "Compressing package 'medic-core'... "
-	@cd packages/medic-core && \
-		tar -cf - * | xz -9ec > ../../iso/packages/medic-core-v1200-x86.tar.xz
+	@scripts/build-package 'medic-core' 1200
 	@echo 'done.'
 
 system-services-pkg:
 	@echo -n "Compressing package 'system-services'... "
-	@cd packages/system-services && \
-		tar -cf - * | xz -9ec > ../../iso/packages/system-services-v1000-x86.tar.xz
+	@scripts/build-package 'system-services' 1000
 	@echo 'done.'
 
