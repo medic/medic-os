@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -o pipefail
+
 is_restart_event=''
 supervise_dir="/srv/storage/system/supervisor"
 
