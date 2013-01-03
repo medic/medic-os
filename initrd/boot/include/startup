@@ -75,8 +75,9 @@ initialize_storage()
   mkdir -p /srv/software /srv/storage \
     /srv/receipts/system /srv/scripts &&
   \
-  echo "$version" > /srv/receipts/system/version && sync
-
+  echo "$version" > /srv/receipts/system/version
+  
+  sync
   return "$?"
 }
 
@@ -130,6 +131,14 @@ persist_authentication_database()
       || return 2
   done
 
+  sync
   return 0
+}
+
+synchronize_disks()
+{
+  for i in `seq 1 3`; do
+    sync && sleep 1
+  done
 }
 
