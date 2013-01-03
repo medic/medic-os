@@ -5,7 +5,11 @@ source '/boot/include/supervisor'
 main()
 {
   local rv='0'
-  
+
+  if [ $# -le 0 ]; then
+    usage
+  fi
+
   for package in "$@"; do
     supervisor_stop "$package"
     local status="$?"
@@ -28,6 +32,12 @@ fatal()
 {
   echo "Fatal: $*" 2>&1
   exit 1
+}
+
+usage()
+{
+  echo "Usage: $0 package-name..." >&2
+  exit 111
 }
 
 main "$@"

@@ -33,6 +33,10 @@ main()
   local architecture='x86'
   local staging_dir="staging/packages/$package"
 
+  if ! [ "$package" -o "$version" ]; then
+    usage
+  fi
+
   # Clear package staging directory
   rm -rf "$staging_dir" && mkdir -p "$staging_dir" &&
   \
@@ -75,6 +79,12 @@ fatal()
 {
   echo "Fatal: $*" 2>&1
   exit 1
+}
+
+usage()
+{
+  echo "Usage: $1 package-name version-number"
+  exit 2
 }
 
 main "$@"
