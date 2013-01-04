@@ -32,7 +32,7 @@ fatal()
 
 usage()
 {
-  echo "Usage: $0 package-name service-name..."
+  echo "Usage: $0 <package-name> <service-name>..."
   exit 111
 }
 
