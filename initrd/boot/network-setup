@@ -1,0 +1,34 @@
+#!/bin/sh
+
+main()
+{
+  if [ $# -le 0 ]; then
+    usage
+  fi
+
+  return 0
+}
+
+warn()
+{
+  echo "Warning: $*" 2>&1
+}
+
+fatal()
+{
+  echo "Fatal: $*" 2>&1
+  exit 1
+}
+
+usage()
+{
+  echo "Usage:" >&2
+  echo "  $0 static <ip-address> <netmask>" >&2
+  echo "  $0 dns <ip-address>..." >&2
+  echo "  $0 auto" >&2
+  exit 111
+}
+
+main "$@"
+exit "$?"
+
