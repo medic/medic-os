@@ -16,6 +16,7 @@ clean:
 
 distclean: clean
 	(cd source && ${MAKE} clean)
+	rm -rf iso/boot/kernel initrd/lib/modules/*
 
 iso-image: initrd-image
 	@echo -n 'Creating ISO image... '
