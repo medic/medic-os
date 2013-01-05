@@ -142,7 +142,7 @@ main()
     --with-zlib=\"$prefix\" --with-libidn=\"$prefix\"" &&
   \
   remove_static_libraries 'curl' &&
-  build_autoconf 'icu/source' "$stdarg" &&
+  build_autoconf 'icu' "$stdarg" &&
   \
   (simple_cflags && build_autoconf 'node' \
     "$stdarg --shared-zlib \
@@ -153,7 +153,7 @@ main()
   \
   # For js-1.8.5 or higher:
   (disable_parallelism &&
-    build_autoconf 'js/src' "$stdarg --host=\"$build_arch\"") &&
+    build_autoconf 'js' "$stdarg --host=\"$build_arch\"") &&
   \
   move_libraries 'move-libraries' "$prefix" 'lib64' &&
   remove_static_libraries 'js' &&
