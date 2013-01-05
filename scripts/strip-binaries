@@ -2,13 +2,23 @@
 
 main()
 {
+  if [ $# -le 0 ]; then
+    usage
+  fi
+
   for type in 'executable' 'shared object'; do
-    find . -type f | xargs file \
+    find "$@" -type f | xargs file \
       | grep -F "$type" | grep ELF | cut -f1 -d: \
         | xargs strip --strip-unneeded 2>/dev/null
   done
 }
 
-main
+usage()
+{
+  echo "Usage: $0 <base_directory>..." >&2
+  exit 111
+}
+
+main "$@"
 exit "$?"
 

@@ -7,7 +7,7 @@ all: packages iso-image
 compile:
 	@(cd source && ${QMAKE})
 
-packages: medic-core-pkg concierge-pkg java-pkg system-services-pkg
+packages: medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg
 
 clean:
 	rm -f output/image.iso
@@ -53,3 +53,7 @@ system-services-pkg:
 	@scripts/build-package 'system-services' 1000
 	@echo 'done.'
 
+vm-tools-pkg:
+	@echo -n "Compressing package 'vm-tools'... "
+	@scripts/build-package 'vm-tools' 9200
+	@echo 'done.'

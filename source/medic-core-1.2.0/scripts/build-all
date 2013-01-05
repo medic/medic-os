@@ -119,7 +119,7 @@ main()
     builder_fix_erlang_dso_linkage "$bits") &&
   \
   build_autoconf 'gammu' \
-    "$stdarg --enable-shared --without-gnapplet \
+    "$stdarg --enable-shared --without-glib --without-gnapplet \
      --disable-backup --without-completion --enable-protection" &&
   \
   build_autoconf 'couchdb' \

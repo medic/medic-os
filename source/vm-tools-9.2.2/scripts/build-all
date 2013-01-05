@@ -41,7 +41,9 @@ main()
     "$stdarg --with-kernel-release='$kernel_version' \
      --with-linuxdir='$kernel_module_path' \
      --without-x --without-gtk2 --without-pam \
-     --without-procps --without-icu --without-dnet"
+     --without-procps --without-icu --without-dnet" &&
+  \
+  builder_remove_static_libraries 'vmtools' 'hgfs' 'guestlib'
 
   if [ "$?" -ne 0 ]; then
     fatal 'One or more build steps failed; aborting'
