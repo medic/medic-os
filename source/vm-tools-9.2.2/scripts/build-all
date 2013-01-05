@@ -31,6 +31,11 @@ main()
       "$pkg_stop_version" "$uname" "$cpu" "$bits" "$parallel" &&
   \
   build_autoconf 'pv' "$stdarg" &&
+  build_autoconf 'zlib' "$stdarg" &&
+  builder_remove_static_libraries 'z' &&
+  build_autoconf 'libffi' "$stdarg" &&
+  builder_remove_static_libraries 'ffi' &&
+  build_autoconf 'glib' "$stdarg" &&
   \
   build_autoconf 'open-vm-tools' \
     "$stdarg --with-kernel-release='$kernel_version' \

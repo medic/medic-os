@@ -2,9 +2,11 @@
 BITS ?= 32
 PARALLEL ?= 16
 
-MEDIC_CORE_ROOT := /srv/software/medic-core/v1.2.0/x86
 VM_TOOLS_ROOT := /srv/software/vm-tools/v9.2.2/x86
-PATH := ${PATH}:${ROOT}/bin
+MEDIC_CORE_ROOT := /srv/software/medic-core/v1.2.0/x86
+
+PATH := ${PATH}:${VM_TOOLS_ROOT}/bin
+PATH := ${PATH}:${MEDIC_CORE_ROOT}/bin
 
 MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
@@ -67,7 +69,7 @@ clean-vm-tools:
 	(cd vm-tools && ${MAKE} clean)
 
 build-vm-tools: copy-kernel
-	(cd vm-tools && ${QMAKE} \
+	@(cd vm-tools && ${QMAKE} \
 		KERNEL_VERSION='${KERNEL_VERSION}' \
 		KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' \
 		ROOT='${VM_TOOLS_ROOT}' PARALLEL='${PARALLEL}' BITS='${BITS}')
