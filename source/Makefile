@@ -2,7 +2,8 @@
 BITS ?= 32
 PARALLEL ?= 16
 
-ROOT := /srv/software/medic-core/v1.2.0/x86
+MEDIC_CORE_ROOT := /srv/software/medic-core/v1.2.0/x86
+VM_TOOLS_ROOT := /srv/software/vm-tools/v9.2.2/x86
 PATH := ${PATH}:${ROOT}/bin
 
 MAKE ?= make
@@ -36,7 +37,7 @@ pv: build-pv
 
 build-pv:
 	@(cd medic-core && echo && \
-		${QMAKE} ROOT='${ROOT}' START='pv' STOP='pv' \
+		${QMAKE} ROOT='${MEDIC_CORE_ROOT}' START='pv' STOP='pv' \
 			BITS='${BITS}' PARALLEL='${PARALLEL}')
 
 
@@ -63,24 +64,21 @@ copy-kernel:
 vm-tools: build-vm-tools copy-vm-tools
 
 clean-vm-tools:
-	(cd open-vm-tools && make clean; true)
+	(cd vm-tools && ${MAKE} clean)
 
 build-vm-tools: copy-kernel
-	@(cd open-vm-tools && \
-		../scripts/logger ../vm-tools \
-		    	'./configure --with-kernel-release="${KERNEL_VERSION}" \
-			 --prefix=/srv/software/vm-tools/9.2.2/x86 \
-			 --with-linuxdir="${KERNEL_MODULE_PATH}" --without-x \
-			 --without-gtk2 --without-pam --without-procps \
-			 --without-icu --without-dnet && make && make install')
+	(cd vm-tools && ${QMAKE} \
+		KERNEL_VERSION='${KERNEL_VERSION}' \
+		KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' \
+		ROOT='${VM_TOOLS_ROOT}' PARALLEL='${PARALLEL}' BITS='${BITS}')
 
 copy-vm-tools:
 	@echo -n "Copying files for 'vm-tools'... "
 	@(cd medic-core && \
 		mkdir -p ../../packages/vm-tools/software && \
-		rm -rf ../../packages/vm-tools/software/vmware-tools && \
-		cp -R /srv/software/vmware-tools \
-			../../packages/vmware-tools/software/vmware-tools)
+		rm -rf ../../packages/vm-tools/software/vm-tools && \
+		cp -R /srv/software/vm-tools \
+			../../packages/vm-tools/software/vm-tools)
 	@echo 'done.'
 
 
@@ -91,7 +89,8 @@ clean-medic-core:
 
 build-medic-core:
 	@(cd medic-core && \
-		${QMAKE} ROOT='${ROOT}' BITS='${BITS}' PARALLEL='${PARALLEL}')
+		${QMAKE} ROOT='${MEDIC_CORE_ROOT}' \
+		BITS='${BITS}' PARALLEL='${PARALLEL}')
 
 copy-medic-core:
 	@echo -n "Copying files for 'medic-core'... "
