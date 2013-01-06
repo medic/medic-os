@@ -1,2 +1,4 @@
 #!/bin/sh
 
+exec shutdown -h -P now
+

@@ -140,7 +140,7 @@ copy-syslinux:
 
 
 finalize-initrd:
-	for symlink in source build; do \
+	@for symlink in source build; do \
 		rm -f "../initrd/lib/modules/${KERNEL_VERSION}/$$symlink"; \
 	done
 

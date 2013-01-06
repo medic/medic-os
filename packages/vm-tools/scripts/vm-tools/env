@@ -1,0 +1,16 @@
+#!/bin/sh
+
+merge_environment()
+{
+  local cpu='x86'
+  local version='9.2.2'
+
+  local prefix="$1"
+  local root="$prefix/vm-tools/v$version/$cpu"
+
+  export PACKAGE_ROOT="$root"
+
+  export PATH="$root/bin:$root/sbin:$PATH"
+  export LD_LIBRARY_PATH="$root/lib:$LD_LIBRARY_PATH"
+}
+
