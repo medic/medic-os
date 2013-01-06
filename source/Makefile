@@ -76,7 +76,7 @@ build-vm-tools: copy-kernel
 
 copy-vm-tools:
 	@echo -n "Copying files for 'vm-tools'... "
-	@(cd medic-core && \
+	@(cd vm-tools && ./scripts/prepare-dist \
 		mkdir -p ../../packages/vm-tools/software && \
 		rm -rf ../../packages/vm-tools/software/vm-tools && \
 		cp -R /srv/software/vm-tools \

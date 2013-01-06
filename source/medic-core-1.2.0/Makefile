@@ -8,9 +8,6 @@ clean-logs:
 
 clean: clean-logs
 	./scripts/clean-all; \
-	(cd icu/source && make clean); \
-	(cd js/src && make distclean); \
-	(cd js/src && make -f Makefile.ref clean); \
 	find . \( \( -name '*.o' -o -name '*.a' \) -a -type f \) -exec rm -f {} \;
 
 stats: recalculate-stats
