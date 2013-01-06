@@ -72,8 +72,8 @@ initialize_storage()
   mkswap "${device}1" && swapon -p16 "${device}1" &&
   mkfs.ext4 "${device}2" && mkdir -p /srv && mount "${device}2" /srv &&
   \
-  mkdir -p /srv/software /srv/storage \
-    /srv/receipts/system /srv/scripts &&
+  mkdir -p /srv/software /srv/storage /srv/scripts \
+    /srv/settings/system /srv/receipts/system &&
   \
   echo "$version" > /srv/receipts/system/version
   
@@ -133,6 +133,15 @@ persist_authentication_database()
 
   sync
   return 0
+}
+
+attempt_manual_network_configuration()
+{
+  if [ -f /srv/settings/system/network/ip ]; then
+    envdir /boot/include/scripts/static-ip apply
+  fi
+
+  return "$?"
 }
 
 synchronize_disks()

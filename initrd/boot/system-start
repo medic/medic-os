@@ -6,6 +6,33 @@ source '/boot/include/startup'
 source '/boot/include/package'
 source '/boot/include/supervisor'
 
+
+wait_for_ip_address()
+{
+  local timeout="$1"
+
+  if [ -z "$timeout" ]; then
+    timeout='20'
+  fi
+
+  for i in `seq 1 "$timeout"`; do
+    local ip_address="`discover_ip_address 2>> "$log"`"
+    if [ "$?" -ne 0 -o -z "$ip_address" ]; then
+      sleep 1
+    else
+      break
+    fi
+  done
+
+  if [ -z "$ip_address" ]; then
+    return 1
+  fi
+
+  echo "$ip_address"
+  return 0
+}
+
+
 main()
 {
   local version='1000'
@@ -86,11 +113,9 @@ main()
 
   display_centered 'Setting up software...'
   
-  # Update binaries:
-  #   Unconditionally update the binaries on persistent storage.
-  #   All user data is kept outside of /srv/software, so this step
-  #   will simply ensure that we are using known-good binaries. It
-  #   won't erase any user data, databases, indexes, or other files.
+  # Update packages:
+  #   Update each package necessary for proper startup; the `update_package`
+  #   function will avoid overwriting existing binaries if it's able to.
 
   echo "Software update started at `date`" >> "$log" 2>&1
 
@@ -109,7 +134,6 @@ main()
     local percent_packages="$((100 * $finished_packages / $total_packages))"
 
     display_centered "Setting up software ($percent_packages% complete)..."
-
   done
 
   echo "Software update finished at `date`" >> "$log" 2>&1
@@ -121,17 +145,16 @@ main()
   local ip_address=''
   display_centered 'Setting up network connection...'
 
-  for i in `seq 1 10`; do
-    ip_address="`discover_ip_address 2> "$log"`"
-    if [ "$?" -ne 0 -o -z "$ip_address" ]; then
-      sleep 2
-    else
-      break
-    fi
-  done
+  ip_address="`wait_for_ip_address`"
 
-  if ! [ "$ip_address" ]; then
-    fatal 'Failed to obtain an IP address via DHCP for this virtual machine'
+  if [ $? -ne 0 ]; then
+    display_centered 'Checking for alternate network configuration...' &&
+    attempt_manual_network_configuration &&
+    ip_address="`wait_for_ip_address`"
+
+    if [ $? -ne 0 ]; then
+      fatal 'Failed to obtain an IP address for this virtual machine'
+    fi
   fi
 
   display_centered 'Starting services...'
