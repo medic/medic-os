@@ -160,6 +160,7 @@ main()
   display_centered 'Starting services...'
 
   supervisor_reset &&
+  supervisor_start 'vm-tools' &&
   supervisor_start 'system-services' &&
   supervisor_start 'medic-core' && supervisor_start 'concierge' \
     || fatal 'Failed to start required network services'

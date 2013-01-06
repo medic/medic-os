@@ -138,7 +138,8 @@ persist_authentication_database()
 attempt_manual_network_configuration()
 {
   if [ -f /srv/settings/system/network/static ]; then
-    envdir /boot/include/scripts/static-ip apply
+    envdir /srv/settings/system/network \
+      /boot/include/scripts/static-ip apply
   fi
 
   return "$?"
