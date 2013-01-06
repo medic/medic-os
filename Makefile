@@ -57,3 +57,8 @@ vm-tools-pkg:
 	@echo -n "Compressing package 'vm-tools'... "
 	@scripts/build-package 'vm-tools' 9200
 	@echo 'done.'
+
+convert-boot-logo:
+	pngtopnm kernel/boot-logo/logo_medic_clut224.png | ppmquant 224 \
+		| pnmtoplainpnm > kernel/boot-logo/logo_medic_clut224.ppm
+

@@ -137,7 +137,7 @@ persist_authentication_database()
 
 attempt_manual_network_configuration()
 {
-  if [ -f /srv/settings/system/network/ip ]; then
+  if [ -f /srv/settings/system/network/static ]; then
     envdir /boot/include/scripts/static-ip apply
   fi
 

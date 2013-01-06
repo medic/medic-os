@@ -37,11 +37,12 @@ main()
   builder_remove_static_libraries 'ffi' &&
   build_autoconf 'glib' "$stdarg" &&
   \
-  build_autoconf 'open-vm-tools' \
+  (disable_parallelism &&
+   build_autoconf 'open-vm-tools' \
     "$stdarg --with-kernel-release='$kernel_version' \
      --with-linuxdir='$kernel_module_path' \
      --without-x --without-gtk2 --without-pam \
-     --without-procps --without-icu --without-dnet" &&
+     --without-procps --without-icu --without-dnet") &&
   \
   builder_remove_static_libraries 'vmtools' 'hgfs' 'guestlib'
 

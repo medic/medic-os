@@ -16,7 +16,7 @@ KERNEL_VERSION := 3.6.11
 KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/lib/modules/${KERNEL_VERSION}")
 
 
-all: build copy
+all: build copy finalize
 
 
 build: build-all
@@ -27,6 +27,11 @@ build-all: build-syslinux build-kernel build-vm-tools build-busybox build-medic-
 copy: copy-all
 
 copy-all: copy-syslinux copy-kernel copy-vm-tools copy-busybox copy-medic-core
+
+
+finalize: finalize-all
+
+finalize-all: finalize-initrd
 
 
 clean: clean-all
@@ -62,7 +67,6 @@ copy-kernel:
 		INSTALL_MOD_PATH=../../initrd/ >/dev/null)
 
 
-
 vm-tools: build-vm-tools copy-vm-tools
 
 clean-vm-tools:
@@ -72,7 +76,8 @@ build-vm-tools: copy-kernel
 	@(cd vm-tools && ${QMAKE} \
 		KERNEL_VERSION='${KERNEL_VERSION}' \
 		KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' \
-		ROOT='${VM_TOOLS_ROOT}' PARALLEL='${PARALLEL}' BITS='${BITS}')
+		ROOT='${VM_TOOLS_ROOT}' PARALLEL='${PARALLEL}' BITS='${BITS}') && \
+	depmod -a -b ../initrd '${KERNEL_VERSION}'
 
 copy-vm-tools:
 	@echo -n "Copying files for 'vm-tools'... "
@@ -133,6 +138,11 @@ copy-syslinux:
 		cp core/isolinux.bin ../../iso/boot/isolinux/isolinux.bin)
 	@echo 'done.'
 
+
+finalize-initrd:
+	for symlink in source build; do \
+		rm -f "../initrd/lib/modules/${KERNEL_VERSION}/$$symlink"; \
+	done
 
 stats: recalculate-stats
 
