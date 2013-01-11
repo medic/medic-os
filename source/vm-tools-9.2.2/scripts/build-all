@@ -31,10 +31,15 @@ main()
       "$pkg_stop_version" "$uname" "$cpu" "$bits" "$parallel" &&
   \
   build_autoconf 'pv' "$stdarg" &&
-  build_autoconf 'zlib' "$stdarg" &&
+  \
+  (disable_parallelism && simple_cflags &&
+      build_autoconf 'zlib' "--shared $stdarg") &&
+  \
   builder_remove_static_libraries 'z' &&
+  \
   build_autoconf 'libffi' "$stdarg" &&
   builder_remove_static_libraries 'ffi' &&
+  \
   build_autoconf 'glib' "$stdarg" &&
   \
   (disable_parallelism &&
