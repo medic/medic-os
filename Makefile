@@ -2,12 +2,14 @@
 MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 
+
 all: packages iso-image
 
 compile:
 	@(cd source && ${QMAKE})
 
 packages: medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg
+
 
 clean:
 	rm -f output/image.iso
@@ -17,6 +19,7 @@ clean:
 distclean: clean
 	(cd source && ${MAKE} clean)
 	rm -rf initrd/lib/modules/*
+
 
 iso-image: initrd-image
 	@echo -n 'Creating ISO image... '
