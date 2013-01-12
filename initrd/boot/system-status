@@ -61,14 +61,14 @@ display_services()
 
   for i in `supervisor_list_all_packages`; do
 
-    local runnable_services="`
-      supervisor_list_runnable_services "$i" | wc -l
+    local expected_services="`
+      supervisor_list_expected_services "$i" | wc -l
     `"
     local running_services="`
       supervisor_list_running_services "$i" | wc -l
     `"
     numerator="$(($numerator + $running_services))"
-    denominator="$(($denominator + $runnable_services))"
+    denominator="$(($denominator + $expected_services))"
   done
     
   delta="$(($denominator - $numerator))"

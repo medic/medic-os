@@ -143,7 +143,7 @@ _terminate_supervisor_process()
 _pidfile_has_active_process()
 {
   local pid_file="$1"
-
+  
   if ! [ -f "$pid_file" ]; then
     return 1
   fi
@@ -361,32 +361,49 @@ supervisor_list_all_services()
   return 0
 }
 
-supervisor_list_runnable_services()
+supervisor_list_services_filtered()
 {
   local package="`basename "$1"`"
-  local pkg_supervise_dir="$supervise_dir/$package"
-
-  for service in "/srv/scripts/$package/run"/*; do
-    service="`basename "$service"`"
-    if [ "$service" != '*' ]; then
-      if ! [ -p "$pkg_supervise_dir/status/$service.down" ]; then
-      	echo "$service"
-      fi
+  shift 1
+  
+  supervisor_list_all_services "$package" | while read service; do
+    if "$@" "$package" "$service"; then
+      echo "$service"
     fi
   done
 
   return 0
 }
 
+supervisor_list_expected_services()
+{
+  local package="`basename "$1"`"
+
+  supervisor_list_services_filtered \
+    "$package" supervisor_is_service_expected
+}
+
+supervisor_list_down_services()
+{
+  local package="`basename "$1"`"
+  
+  supervisor_list_services_filtered \
+    "$package" supervisor_is_service_down
+}
+
 supervisor_list_watched_services()
 {
   local package="`basename "$1"`"
 
-  # List services where supervisor is running
+  # List services where supervisor is running:
+  #   Loop over control data to avoid iterating through everything.
+  
   for service in "$supervise_dir/$package/status"/*.ppid; do
-    service="`basename "$service" .pid`"
+    service="`basename "$service" .ppid`"
     if [ "$service" != '*' ]; then
-      echo "$service"
+      if supervisor_is_service_watched "$package" "$service"; then
+        echo "$service"
+      fi
     fi
   done
 
@@ -397,7 +414,9 @@ supervisor_list_running_services()
 {
   local package="`basename "$1"`"
 
-  # List services where intended process is running
+  # List services where intended process is running:
+  #   Loop over control data to avoid iterating through everything.
+  
   for service in "$supervise_dir/$package/status"/*.pid; do
     service="`basename "$service" .pid`"
     if [ "$service" != '*' ]; then
@@ -414,8 +433,9 @@ supervisor_is_service_watched()
 {
   local package="`basename "$1"`"
   local service="`basename "$2"`"
-
-  _pidfile_has_active_process "$supervise_dir/$package/status/$service.ppid"
+  
+  _pidfile_has_active_process \
+    "$supervise_dir/$package/status/$service.ppid"
 }
 
 supervisor_is_service_running()
@@ -423,7 +443,8 @@ supervisor_is_service_running()
   local package="`basename "$1"`"
   local service="`basename "$2"`"
 
-  _pidfile_has_active_process "$supervise_dir/$package/status/$service.pid"
+  _pidfile_has_active_process \
+    "$supervise_dir/$package/status/$service.pid"
 }
 
 supervisor_is_service_down()
@@ -434,4 +455,9 @@ supervisor_is_service_down()
   [ -p "$supervise_dir/$package/status/$service.down" ]
 }
 
+supervisor_is_service_expected()
+{
+  supervisor_is_service_down "$@"
+  [ "$?" -ne 0 ]
+}
 
