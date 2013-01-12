@@ -4,43 +4,40 @@ source '/boot/include/supervisor'
 
 main()
 {
-  local rv='0'
-
   if [ $# -le 0 ]; then
     usage
   fi
 
-  for package in "$@"; do
-    supervisor_stop "$package"
-    local status="$?"
-    
-    if [ "$status" -ne 0 ]; then
-      rv="$(($rv + $status))"
-      warn "Failed to stop one or more services in package '$package'"
-    fi
-  done
+  local package="$1"
+  shift 1
+  
+  supervisor_stop "$package" "$@"
+  local rv="$?"
+
+  if [ "$rv" -ne 0 ]; then
+    warn "Failed to stop one or more specified services"
+  fi
   
   return "$rv"
 }
 
 warn()
 {
-  echo "Warning: $*" 2>&1
+  echo "Warning: $*" >&2
 }
 
 fatal()
 {
-  echo "Fatal: $*" 2>&1
+  echo "Fatal: $*" >&2
   exit 1
 }
 
 usage()
 {
-  echo "Usage: $0 <package-name>..." >&2
+  echo "Usage: $0 <package-name> [service-name]..." >&2
   exit 111
 }
 
 main "$@"
 exit "$?"
-
 

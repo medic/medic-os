@@ -37,7 +37,7 @@ finalize-all: finalize-initrd
 clean: clean-all
 
 clean-all: clean-syslinux clean-kernel clean-vm-tools clean-busybox clean-medic-core
-	rm -f logs/timestamp
+	rm -f logs/*
 
 
 pv: build-pv
