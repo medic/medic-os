@@ -81,7 +81,8 @@ build-vm-tools: copy-kernel
 
 copy-vm-tools:
 	@echo -n "Copying files for 'vm-tools'... "
-	@(cd vm-tools && ./scripts/prepare-dist \
+	@(cd vm-tools &&
+		./scripts/prepare-dist '${VM_TOOLS_ROOT}' \
 		mkdir -p ../../packages/vm-tools/software && \
 		rm -rf ../../packages/vm-tools/software/vm-tools && \
 		cp -R /srv/software/vm-tools \
@@ -101,7 +102,8 @@ build-medic-core:
 
 copy-medic-core:
 	@echo -n "Copying files for 'medic-core'... "
-	@(cd medic-core && ./scripts/prepare-dist && \
+	@(cd medic-core && \
+		./scripts/prepare-dist '${MEDIC_CORE_ROOT}' && \
 		mkdir -p ../../packages/medic-core/software && \
 		rm -rf ../../packages/medic-core/software/medic-core && \
 		cp -R /srv/software/medic-core \

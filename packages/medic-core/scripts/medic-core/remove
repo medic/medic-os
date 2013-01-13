@@ -1,4 +1,13 @@
 #!/bin/sh
 
-rm -rf /srv/software/medic-core/v1.2.0/x86
+remove()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/env" &&
+  merge_environment '/srv/software'
+
+  rm -rf "$PACKAGE_ROOT"
+}
 

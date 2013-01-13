@@ -1,5 +1,11 @@
+#!/bin/sh
 
-prefix='/srv/software/medic-core/v1.2.0/x86'
+prefix="$1"
+
+if ! [ -d "$prefix" ]; then
+  echo "Usage: $0 <prefix>" >&2
+  exit 111
+fi
 
 (cd "$prefix" &&
   rm -rf lib/*.a lib/python?.? lib/erlang/usr lib/erlang/Install info \
@@ -32,3 +38,4 @@ prefix='/srv/software/medic-core/v1.2.0/x86'
    ln -sf ../../../../../storage/medic-core/couchdb-lucene/logs java/logs &&
  rm -rf java/indexes &&
    ln -sf ../../../../../storage/medic-core/couchdb-lucene/indexes java/indexes)
+
