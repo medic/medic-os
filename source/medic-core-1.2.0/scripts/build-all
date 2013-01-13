@@ -48,7 +48,14 @@ main()
       'install-static' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\"" 'y' &&
     \
     build_make 'usb-modeswitch-data' \
-      'install' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\""
+      'install' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\"" &&
+    \
+    build_autoconf 'acl' \
+	"$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib' &&
+    \
+    build_autoconf 'attr' \
+      "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib'
+
   fi &&
   \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
