@@ -2,7 +2,9 @@
 all:
 	@mkdir -p '$(ROOT)' && \
 	./scripts/build-all '$(ROOT)' '$(START)' '$(START_VERSION)' \
-		'$(STOP)' '$(STOP_VERSION)' '$(BITS)' '$(PARALLEL)' && \
+		'$(STOP)' '$(STOP_VERSION)' '$(BITS)' '$(PARALLEL)'
+
+gardenize:
 	./scripts/gardenize-couchdb '$(ROOT)'
 
 clean-logs:

@@ -97,8 +97,8 @@ clean-medic-core:
 
 build-medic-core:
 	@(cd medic-core && \
-		${QMAKE} ROOT='${MEDIC_CORE_ROOT}' \
-		BITS='${BITS}' PARALLEL='${PARALLEL}')
+		${QMAKE} all gardenize ROOT='${MEDIC_CORE_ROOT}' \
+			BITS='${BITS}' PARALLEL='${PARALLEL}')
 
 copy-medic-core:
 	@echo -n "Copying files for 'medic-core'... "
