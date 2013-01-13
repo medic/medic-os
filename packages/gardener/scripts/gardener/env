@@ -1,0 +1,10 @@
+#!/bin/sh
+
+merge_environment()
+{
+  local version='1.0.0'
+
+  local prefix="$1"
+  export PACKAGE_ROOT="$prefix/gardener/v$version"
+}
+

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 self="`readlink -f "$0"`"
-base_dir="`dirname "$self"`/../../medic-core/"
+base_dir="`dirname "$self"`/../../medic-core"
 
 source "$base_dir/scripts/include/logger" 3>/dev/null &&
 source "$base_dir/scripts/include/builder" 2>/dev/null \

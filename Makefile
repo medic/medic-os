@@ -61,6 +61,11 @@ vm-tools-pkg:
 	@scripts/build-package 'vm-tools' 9200
 	@echo 'done.'
 
+gardener-pkg:
+	@echo -n "Compressing package 'gardener'... "
+	@scripts/build-package 'gardener' 1000
+	@echo 'done.'
+
 convert-boot-logo:
 	pngtopnm kernel/boot-logo/logo_medic_clut224.png | ppmquant 224 \
 		| pnmtoplainpnm > kernel/boot-logo/logo_medic_clut224.ppm

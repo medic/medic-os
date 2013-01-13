@@ -1,0 +1,17 @@
+
+self="`readlink -f "$0"`"
+base_dir="`dirname "$self"`/.."
+
+main()
+{
+  local m='node_modules'
+  local prefix="$base_dir/packages/gardener/software/gardener/v1.0.0"
+
+  rm -rf "$prefix/$m/gardener/$m/npm/$m/node-gyp"
+  rm -rf "$prefix/$m/gardener/$m/url/$m/punycode/vendor/requirejs/tests"
+  rm -rf "$prefix/$m/gardener/$m/url/$m/punycode/vendor/requirejs/dist/fonts"
+}
+
+main
+exit "$?"
+

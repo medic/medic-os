@@ -1,0 +1,26 @@
+#!/bin/sh
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/../../medic-core/env" &&
+  merge_environment /srv/software &&
+  \
+  source "$base/../env" &&
+  merge_environment /srv/software &&
+  \
+  exec nohup node "$PACKAGE_ROOT/server.js" \
+    >> '/srv/storage/gardener/logs/startup.log' 2>&1
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+

@@ -158,12 +158,12 @@ main()
   fi
 
   display_centered 'Starting services...'
+  supervisor_reset
 
-  supervisor_reset &&
-  supervisor_start 'vm-tools' &&
-  supervisor_start 'system-services' &&
-  supervisor_start 'medic-core' && supervisor_start 'concierge' \
-    || fatal 'Failed to start required network services'
+  for pkg in vm-tools system-services medic-core concierge gardener; do
+    supervisor_start "$pkg" \
+      || fatal "Failed to start required network service '$pkg'"
+  done
 
   display_centered 'Synchronizing disks...'
   synchronize_disks
