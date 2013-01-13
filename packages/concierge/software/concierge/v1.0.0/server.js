@@ -140,7 +140,7 @@ var store_system_password = function (_req, _password, _callback) {
 
   var path = '/srv/storage/concierge/passwd/system';
 
-  fs.open(path, 'w', function (_err, _fd) {
+  fs.open(path, 'w', 0640, function (_err, _fd) {
 
     if (_err) {
       _req.flash('error', "Internal error: file open failed");
