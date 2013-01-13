@@ -1,7 +1,10 @@
-all:
+all: copy-futon-logo
 	@mkdir -p '$(ROOT)' && \
 	./scripts/build-all '$(ROOT)' '$(START)' '$(START_VERSION)' \
 		'$(STOP)' '$(STOP_VERSION)' '$(BITS)' '$(PARALLEL)'
+
+copy-futon-logo:
+	@cp images/futon-logo-medic.png couchdb/share/www/image/logo.png
 
 clean-logs:
 	rm -f logs/*.log

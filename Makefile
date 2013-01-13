@@ -8,7 +8,7 @@ all: packages iso-image
 compile:
 	@(cd source && ${QMAKE})
 
-packages: medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg
+packages: medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg
 
 
 clean:
