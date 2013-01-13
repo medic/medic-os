@@ -6,7 +6,7 @@ start()
   local base="`dirname "$self"`"
 
   source "$base/../env" &&
-  merge_environment /srv/software &&
+  merge_environment /srv &&
   \
   echo "$PACKAGE_ROOT/lib" >> /etc/ld.so.conf &&
   ldconfig

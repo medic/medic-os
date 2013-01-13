@@ -2,13 +2,18 @@
 
 merge_environment()
 {
+  local name='vm-tools'
+
   local cpu='x86'
   local version='9.2.2'
 
   local prefix="$1"
-  local root="$prefix/vm-tools/v$version/$cpu"
+  local root="$prefix/software/$name/v$version/$cpu"
 
   export PACKAGE_ROOT="$root"
+  export PACKAGE_SCRIPTS="$prefix/scripts/$name"
+  export PACKAGE_STORAGE="$prefix/storage/$name"
+  export PACKAGE_SETTINGS="$prefix/settings/$name"
 
   export PATH="$root/bin:$root/sbin:$PATH"
   export LD_LIBRARY_PATH="$root/lib:$LD_LIBRARY_PATH"

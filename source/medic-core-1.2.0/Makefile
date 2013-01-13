@@ -5,7 +5,7 @@ all:
 		'$(STOP)' '$(STOP_VERSION)' '$(BITS)' '$(PARALLEL)'
 
 gardenize:
-	./scripts/gardenize-couchdb '$(ROOT)'
+	@./scripts/gardenize-couchdb '$(ROOT)'
 
 clean-logs:
 	rm -f logs/*.log

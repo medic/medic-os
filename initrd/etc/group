@@ -8,3 +8,5 @@ tc:x:1001:
 couchdb:x:1002:
 couchdb-lucene:x:1003:
 gammu:x:1004:
+gardener:x:1005:
+concierge-auth:x:1006:concierge,gardener

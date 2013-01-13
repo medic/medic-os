@@ -6,10 +6,10 @@ start()
   local base="`dirname "$self"`"
 
   source "$base/../env" &&
-  merge_environment '/srv/software' &&
+  merge_environment /srv &&
   \
   exec nohup "`which sshd`" -D \
-    >> '/srv/storage/medic-core/openssh/logs/startup.log' 2>&1
+    >> "$PACKAGE_STORAGE/openssh/logs/startup.log" 2>&1
 }
 
 main()

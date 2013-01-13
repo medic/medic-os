@@ -6,23 +6,23 @@ install()
   local self="`realpath "$0"`"
   local base="`dirname "$self"`"
 
-  local storage_dir='/srv/storage/medic-core'
-  local settings_dir='/srv/settings/medic-core'
-
   source "$base/env" &&
-  merge_environment '/srv/software'
+  merge_environment /srv
 
   chown -R couchdb:staff \
-    "$settings_dir/couchdb" "$storage_dir/couchdb"
+    "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb"
 
   chown -R couchdb-lucene:staff \
-    "$storage_dir/couchdb-lucene"
+    "$PACKAGE_STORAGE/couchdb-lucene"
 
   chown -R gammu:staff \
-    "$storage_dir/gammu" "$settings_dir/gammu"
+    "$PACKAGE_STORAGE/gammu" "$PACKAGE_SETTINGS/gammu"
 
-  persist_ssh_user_configuration_files tc authorized_keys
-  install_default_couchdb_databases "$PACKAGE_ROOT" "$storage_dir"
+  persist_ssh_user_configuration_files \
+    tc "$PACKAGE_SETTINGS" authorized_keys
+
+  install_default_couchdb_databases \
+    "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
 }
 
 
@@ -36,7 +36,8 @@ install_default_couchdb_databases()
     local dst="$storage_dir/couchdb/data/$garden_db"
 
     if ! [ -f "$dst" ]; then
-	cp -a "$src" "$dst" || return "$?"
+	cp -a "$src" "$dst" && chown couchdb:couchdb "$dst" \
+	  || return "$?"
     fi
   done
 
@@ -47,10 +48,11 @@ install_default_couchdb_databases()
 persist_ssh_user_configuration_files()
 {
   local user="$1"
-  shift 1
+  local package_settings_dir="$2"
+  shift 2
   
   local ssh_dot_dir="/home/$user/.ssh"
-  local ssh_settings_dir="/srv/settings/medic-core/openssh/user/$user"
+  local ssh_settings_dir="$package_settings_dir/openssh/user/$user"
 
   mkdir -p "$ssh_dot_dir" "$ssh_settings_dir" \
     || return "$?"

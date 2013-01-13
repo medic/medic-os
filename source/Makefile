@@ -81,7 +81,7 @@ build-vm-tools: copy-kernel
 
 copy-vm-tools:
 	@echo -n "Copying files for 'vm-tools'... "
-	@(cd vm-tools &&
+	@(cd vm-tools && \
 		./scripts/prepare-dist '${VM_TOOLS_ROOT}' \
 		mkdir -p ../../packages/vm-tools/software && \
 		rm -rf ../../packages/vm-tools/software/vm-tools && \

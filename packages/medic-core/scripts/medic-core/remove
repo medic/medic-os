@@ -6,8 +6,11 @@ remove()
   local base="`dirname "$self"`"
 
   source "$base/env" &&
-  merge_environment '/srv/software'
+  merge_environment /srv
 
   rm -rf "$PACKAGE_ROOT"
 }
+
+remove "$@"
+exit "$?"
 

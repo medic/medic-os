@@ -6,13 +6,13 @@ start()
   local base="`dirname "$self"`"
 
   source "$base/../../medic-core/env" &&
-  merge_environment /srv/software &&
+  merge_environment /srv &&
   \
   source "$base/../env" &&
-  merge_environment /srv/software &&
+  merge_environment /srv &&
   \
   exec nohup node "$PACKAGE_ROOT/server.js" \
-    >> '/srv/storage/concierge/logs/startup.log' 2>&1
+    >> "$PACKAGE_STORAGE/logs/startup.log" 2>&1
 }
 
 main()

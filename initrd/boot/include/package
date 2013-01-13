@@ -175,7 +175,7 @@ package_merge_environment()
 
   if [ -f "$env_file" ]; then
     source "$env_file"
-    merge_environment /srv/software &>/dev/null
+    merge_environment /srv &>/dev/null
     unset merge_environment
   fi
 }

@@ -61,7 +61,10 @@ vm-tools-pkg:
 	@scripts/build-package 'vm-tools' 9200
 	@echo 'done.'
 
-gardener-pkg:
+gardener-shrink:
+	@./scripts/gardener-shrink
+
+gardener-pkg: gardener-shrink
 	@echo -n "Compressing package 'gardener'... "
 	@scripts/build-package 'gardener' 1000
 	@echo 'done.'
