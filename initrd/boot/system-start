@@ -114,7 +114,7 @@ main()
   display_centered 'Setting up software...'
   
   # Update packages:
-  #   Update each package necessary for proper startup; the `update_package`
+  #   Update each package necessary for proper startup; the `package_update`
   #   function will avoid overwriting existing binaries if it's able to.
 
   echo "Software update started at `date`" >> "$log" 2>&1
@@ -127,7 +127,7 @@ main()
   done
 
   for package_path in /mnt/image/packages/*.vpkg; do
-    update_package "$package_path" "$is_newly_initialized" \
+    package_update "$package_path" "$is_newly_initialized" \
       || fatal 'Failed to extract required software from ISO image'
 
     finished_packages="$(($finished_packages + 1))"

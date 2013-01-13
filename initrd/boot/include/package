@@ -2,7 +2,7 @@
 
 set -o pipefail
 
-extract_package_metadata()
+package_extract_metadata()
 {
   local path="$1"
   local metadata_key="$2"
@@ -15,23 +15,23 @@ extract_package_metadata()
   return "$?"
 }
 
-extract_package_name()
+package_extract_name()
 {
   local path="$1"
 
-  extract_package_metadata "$path" 'name'
+  package_extract_metadata "$path" 'name'
   return "$?"
 }
 
-extract_package_version()
+package_extract_version()
 {
   local path="$1"
 
-  extract_package_metadata "$path" 'version'
+  package_extract_metadata "$path" 'version'
   return "$?"
 }
 
-extract_package_digest()
+package_extract_digest()
 {
   local path="$1"
   local digest_type="$2"
@@ -40,11 +40,11 @@ extract_package_digest()
     digest_type='sha512'
   fi
 
-  extract_package_metadata "$path" "digest-$digest_type"
+  package_extract_metadata "$path" "digest-$digest_type"
   return "$?"
 }
 
-retrieve_installed_package_version()
+package_retrieve_installed_version()
 {
   local package="$1"
 
@@ -52,7 +52,7 @@ retrieve_installed_package_version()
   return "$?"
 }
 
-install_package()
+package_install()
 {
   local path="$1"
 
@@ -60,8 +60,8 @@ install_package()
     return 1
   fi
 
-  local package="`extract_package_name "$path"`" &&
-  local version="`extract_package_version "$path"`"
+  local package="`package_extract_name "$path"`" &&
+  local version="`package_extract_version "$path"`"
 
   if [ "$?" -ne 0 ]; then
     return 2
@@ -101,7 +101,7 @@ install_package()
   return 0
 }
 
-remove_package()
+package_remove()
 {
   local package="`basename "$1"`"
 
@@ -133,14 +133,14 @@ remove_package()
   return 0
 }
 
-update_package()
+package_update()
 {
   local path="$1"
   local force_reinstall="$2"
 
-  local package="`extract_package_name "$path"`" &&
-  local v_new="`extract_package_version "$path"`" &&
-  local v_prev="`retrieve_installed_package_version "$package"`"
+  local package="`package_extract_name "$path"`" &&
+  local v_new="`package_extract_version "$path"`" &&
+  local v_prev="`package_retrieve_installed_version "$package"`"
 
   if [ "$?" -ne 0 ]; then
     return 1
@@ -152,7 +152,7 @@ update_package()
 
   if [ "$v_prev" -gt 0 -a "$v_prev" -lt "$v_new" ] &>/dev/null; then
     v_prev=''
-    remove_package "$package"
+    package_remove "$package"
   fi
 
   if ! [ "$v_prev" -gt 0 ] &>/dev/null; then
@@ -160,14 +160,14 @@ update_package()
   fi
 
   if [ "$force_reinstall" ]; then
-    install_package "$path" || return 3
+    package_install "$path" || return 3
   fi
 
-  setup_package "$package"
+  package_setup "$package"
   return 0
 }
 
-merge_package_environment()
+package_merge_environment()
 {
   local package="$1"
 
@@ -180,7 +180,7 @@ merge_package_environment()
   fi
 }
 
-setup_package()
+package_setup()
 {
   local package="`basename "$1"`"
 

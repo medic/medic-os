@@ -8,6 +8,11 @@ main()
     usage
   fi
 
+  for package in "$@"; do
+    package_remove "$package" \
+      || fatal "Failed to remove package '$package'"
+  done
+
   return 0
 }
 

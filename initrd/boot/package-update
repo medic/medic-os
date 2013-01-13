@@ -8,6 +8,11 @@ main()
     usage
   fi
 
+  for package in "$@"; do
+    package_update "$package" \
+      || fatal "Failed to update package '$package'"
+  done
+
   return 0
 }
 

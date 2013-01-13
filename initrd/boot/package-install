@@ -8,6 +8,11 @@ main()
     usage
   fi
 
+  for path in "$@"; do
+    package_install "$path" \
+      || fatal "Failed to install package '$path'"
+  done
+
   return 0
 }
 
