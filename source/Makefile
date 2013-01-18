@@ -61,7 +61,7 @@ build-kernel: build-pv
 		./scripts/logger linux \
 			'cd linux && ${PMAKE} bzImage && ${PMAKE} modules'
 
-copy-kernel:
+copy-kernel: build-vm-tools
 	@cp linux/arch/x86/boot/bzImage ../iso/boot/kernel && \
 	(cd linux && ${MAKE} modules_install \
 		INSTALL_MOD_PATH=../../initrd/ >/dev/null)

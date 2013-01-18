@@ -10,16 +10,16 @@ compile:
 
 packages: medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg
 
-
 clean:
 	rm -f output/image.iso
 	rm -rf staging/packages
-	rm -f iso/packages/*.vpkg iso/boot/image.gz iso/boot/kernel
 
 distclean: clean
 	(cd source && ${MAKE} clean)
 	rm -rf initrd/lib/modules/*
 
+clean-iso:
+	rm -f iso/packages/*.vpkg iso/boot/image.gz iso/boot/kernel
 
 iso-image: initrd-image
 	@echo -n 'Creating ISO image... '
