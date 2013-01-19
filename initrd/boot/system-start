@@ -46,6 +46,7 @@ main()
   local found_device=''
   local found_version=''
 
+  set_bold 1
   set_cursor 0
   set_console_blanking 0
   stty -echo 2>/dev/null
@@ -167,8 +168,8 @@ main()
 
   display_centered 'Synchronizing disks...'
   synchronize_disks
+  set_bold 0
 
-  display_centered "Server is listening on $ip_address."
   return 0
 }
 

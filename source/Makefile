@@ -21,7 +21,7 @@ all: build copy finalize
 
 build: build-all
 
-build-all: build-syslinux build-kernel build-vm-tools build-busybox build-medic-core
+build-all: build-syslinux build-kernel install-kernel-modules build-vm-tools build-busybox build-medic-core
 
 
 copy: copy-all
@@ -48,7 +48,7 @@ build-pv:
 			BITS='${BITS}' PARALLEL='${PARALLEL}')
 
 
-kernel: build-kernel copy-kernel
+kernel: build-kernel copy-kernel build-vm-tools
 
 clean-kernel:
 	(cd linux && ${MAKE} clean)
@@ -61,9 +61,11 @@ build-kernel: build-pv
 		./scripts/logger linux \
 			'cd linux && ${PMAKE} bzImage && ${PMAKE} modules'
 
-copy-kernel: build-vm-tools
-	@cp linux/arch/x86/boot/bzImage ../iso/boot/kernel && \
-	(cd linux && ${MAKE} modules_install \
+copy-kernel:
+	@cp linux/arch/x86/boot/bzImage ../iso/boot/kernel
+
+install-kernel-modules:
+	@(cd linux && ${MAKE} modules_install \
 		INSTALL_MOD_PATH=../../initrd/ >/dev/null)
 
 
@@ -72,7 +74,7 @@ vm-tools: build-vm-tools copy-vm-tools
 clean-vm-tools:
 	(cd vm-tools && ${MAKE} clean)
 
-build-vm-tools: copy-kernel
+build-vm-tools: install-kernel-modules
 	@(cd vm-tools && ${QMAKE} \
 		KERNEL_VERSION='${KERNEL_VERSION}' \
 		KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' \

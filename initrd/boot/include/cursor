@@ -33,9 +33,9 @@ set_cursor()
 
 set_bold()
 {
-  local direction="$1"
+  local state="$1"
   
-  if [ "$direction" -eq 0 ]; then
+  if [ "$state" -eq 0 ]; then
     echo -ne '\033[0m'
   else
     echo -ne '\033[1m'
