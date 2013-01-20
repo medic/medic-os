@@ -67,7 +67,7 @@ build-kernel: build-pv
 	@(cd linux && \
 		cp ../../kernel/boot-logo/logo-medic.ppm \
 			./drivers/video/logo/logo_linux_clut224.ppm && \
-		cp "../../kernel/dot-config-${KERNEL_VERSION}-pax" .config) && \
+		cp "../../kernel/dot-config-${KERNEL_VERSION}-grsec" .config) && \
 		./scripts/logger linux \
 			'cd linux && ${PMAKE} bzImage && ${PMAKE} modules'
 
@@ -124,7 +124,7 @@ copy-medic-core:
 
 set-pax-flags:
 	@echo -n "Setting executable flags... "
-	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czm \
+	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
 		'${JAVA_PKG_ROOT}/bin/java' 2>/dev/null
 	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
 		'${MEDIC_CORE_PKG_ROOT}/bin/node' 2>/dev/null
