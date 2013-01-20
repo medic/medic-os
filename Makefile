@@ -18,8 +18,8 @@ clean:
 	rm -rf staging/packages
 
 distclean: clean
-	(cd source && ${MAKE} clean)
 	rm -rf initrd/lib/modules/*
+	(cd source && ${MAKE} clean)
 
 clean-iso:
 	rm -f iso/packages/*.vpkg iso/boot/image.gz iso/boot/kernel
@@ -73,6 +73,8 @@ gardener-pkg: gardener-shrink
 	@echo 'done.'
 
 convert-boot-logo:
-	pngtopnm kernel/boot-logo/logo_medic_clut224.png | ppmquant 224 \
-		| pnmtoplainpnm > kernel/boot-logo/logo_medic_clut224.ppm
+	for file in logo-medic logo-medic-gray; do \
+		pngtopnm "kernel/boot-logo/$$file.png" | ppmquant 224 2>/dev/null \
+			| pnmtoplainpnm > "kernel/boot-logo/$$file.ppm"; \
+	done
 

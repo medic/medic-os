@@ -1,9 +1,19 @@
 
+CPU ?= x86
 BITS ?= 32
 PARALLEL ?= 16
 
-VM_TOOLS_ROOT := /srv/software/vm-tools/v9.2.2/x86
-MEDIC_CORE_ROOT := /srv/software/medic-core/v1.2.0/x86
+JAVA_VERSION := 1.7.9
+VM_TOOLS_VERSION := 9.2.2
+MEDIC_CORE_VERSION := 1.2.0
+
+VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${CPU}
+MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
+
+PKG_DIR := ../packages
+JAVA_PKG_ROOT := ${PKG_DIR}/java/software/java/v${JAVA_VERSION}/${CPU}
+VM_TOOLS_PKG_ROOT := ${PKG_DIR}/vm-tools/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
+MEDIC_CORE_PKG_ROOT := ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
 
 PATH := ${PATH}:${VM_TOOLS_ROOT}/bin
 PATH := ${PATH}:${MEDIC_CORE_ROOT}/bin
@@ -12,7 +22,7 @@ MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
-KERNEL_VERSION := 3.6.11
+KERNEL_VERSION := 3.7.3
 KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/lib/modules/${KERNEL_VERSION}")
 
 
@@ -26,7 +36,7 @@ build-all: build-syslinux build-kernel install-kernel-modules build-vm-tools bui
 
 copy: copy-all
 
-copy-all: copy-syslinux copy-kernel copy-vm-tools copy-busybox copy-medic-core
+copy-all: copy-syslinux copy-kernel copy-vm-tools copy-busybox copy-medic-core set-pax-flags
 
 
 finalize: finalize-all
@@ -48,16 +58,16 @@ build-pv:
 			BITS='${BITS}' PARALLEL='${PARALLEL}')
 
 
-kernel: build-kernel copy-kernel build-vm-tools
+kernel: build-kernel copy-kernel install-kernel-modules build-vm-tools
 
 clean-kernel:
 	(cd linux && ${MAKE} clean)
 
 build-kernel: build-pv
 	@(cd linux && \
-		cp ../../kernel/boot-logo/logo_medic_clut224.ppm \
+		cp ../../kernel/boot-logo/logo-medic.ppm \
 			./drivers/video/logo/logo_linux_clut224.ppm && \
-		cp "../../kernel/dot-config-${KERNEL_VERSION}" .config) && \
+		cp "../../kernel/dot-config-${KERNEL_VERSION}-pax" .config) && \
 		./scripts/logger linux \
 			'cd linux && ${PMAKE} bzImage && ${PMAKE} modules'
 
@@ -112,6 +122,15 @@ copy-medic-core:
 			../../packages/medic-core/software/medic-core)
 	@echo 'done.'
 
+set-pax-flags:
+	@echo -n "Setting executable flags... "
+	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czm \
+		'${JAVA_PKG_ROOT}/bin/java' 2>/dev/null
+	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
+		'${MEDIC_CORE_PKG_ROOT}/bin/node' 2>/dev/null
+	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czrm \
+		'${MEDIC_CORE_PKG_ROOT}/bin/couchjs' 2>/dev/null
+	@echo 'done.'
 
 busybox: build-busybox copy-busybox
 

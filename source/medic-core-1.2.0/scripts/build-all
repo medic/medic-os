@@ -54,7 +54,9 @@ main()
 	"$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib' &&
     \
     build_autoconf 'attr' \
-      "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib'
+      "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib' &&
+    \
+    build_make_install 'paxctl' "$prefix" "DESTDIR=\"$prefix\""
 
   fi &&
   \

@@ -5,6 +5,16 @@ check_args()
   true
 }
 
+fix_modules()
+{
+  find open-vm-tools/modules/linux \
+    -type f -a -name Makefile.kernel | while read path; do
+  
+    (cd "`dirname "$path"`" &&
+      ln -sf Makefile.kernel Makefile.normal)
+  done
+}
+
 clean_all()
 {
   for i in *; do
@@ -16,6 +26,7 @@ clean_all()
 
 main()
 {
+  fix_modules
   check_args "$@"
   clean_all
 }

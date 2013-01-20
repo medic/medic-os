@@ -228,8 +228,8 @@ supervisor_stop()
 supervisor_reset()
 {
   if [ -d "$supervise_dir" ]; then
-    find "$supervise_dir" -type f -name '*.pid' -o -name '*.ppid' \
-      -exec rm -f {} \;
+    find "$supervise_dir" \( -type p -a -name '*.down' \) \
+	-o -name '*.pid' -o -name '*.ppid' -exec rm -f {} \;
   fi
 
   return 0

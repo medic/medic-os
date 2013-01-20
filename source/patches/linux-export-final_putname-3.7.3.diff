@@ -1,0 +1,10 @@
+--- linux/fs/namei.c	2013-01-19 06:30:30.740000216 -0800
++++ linux/fs/namei.c	2013-01-19 06:30:32.860000251 -0800
+@@ -126,6 +126,7 @@
+ 		__putname(name);
+ 	}
+ }
++EXPORT_SYMBOL(final_putname);
+ 
+ #define EMBEDDED_NAME_MAX	(PATH_MAX - sizeof(struct filename))
+ 
