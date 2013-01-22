@@ -24,7 +24,7 @@ distclean: clean
 clean-iso:
 	rm -f iso/packages/*.vpkg iso/boot/image.gz iso/boot/kernel
 
-iso-image: initrd-image
+iso-image: initrd-image verify-packages strip-binaries
 	@echo -n 'Creating ISO image... '
 	@cd iso && mkisofs -J -R -V 'Medic Mobile VM' \
 		-boot-load-size 4 -boot-info-table -o ../output/image.iso \
@@ -38,6 +38,12 @@ initrd-image:
 		find * | cpio -o -H newc 2>/dev/null | gzip -c9 \
 			> ../iso/boot/image.gz
 	@echo 'done.'
+
+strip-binaries:
+	@./scripts/strip-binaries packages
+
+verify-packages:
+	@./scripts/verify-packages
 
 concierge-pkg:
 	@echo -n "Compressing package 'concierge'... "
@@ -64,10 +70,10 @@ vm-tools-pkg:
 	@scripts/build-package 'vm-tools' 9200
 	@echo 'done.'
 
-gardener-shrink:
-	@./scripts/gardener-shrink
+shrink-gardener:
+	@./scripts/shrink-gardener
 
-gardener-pkg: gardener-shrink
+gardener-pkg: shrink-gardener
 	@echo -n "Compressing package 'gardener'... "
 	@scripts/build-package 'gardener' 1000
 	@echo 'done.'

@@ -1,0 +1,88 @@
+#/bin/sh
+
+self="`readlink -f "$0"`"
+base_dir="`dirname "$self"`/.."
+
+check_binaries()
+{
+  local package="$1"
+  local dir="$2"
+  shift 2
+
+  local pkg_base="$base_dir/packages/$package/software/$package"
+
+  for binary in "$@"; do
+    local file="`
+      find "$pkg_base"/*/*/"$dir/$binary" -prune 2>/dev/null \
+        | head -n1 
+    `"
+    if ! [ -x "$file" ]; then
+      warn "Unable to find binary '$binary' in package '$package'"
+      return 1
+    fi
+  done
+
+  return 0
+}
+
+check_libraries()
+{
+  local package="$1"
+  shift 1
+
+  local pkg_base="$base_dir/packages/$package/software/$package"
+
+  for library in "$@"; do
+    local file="`
+      find "$pkg_base"/*/*/"lib/lib$library"*.so.* -prune 2>/dev/null \
+        | head -n1
+    `"
+    if ! [ -f "$file" ]; then
+      warn "Unable to find library '$library' in package '$package'"
+      return 1
+    fi
+  done
+
+  return 0
+}
+
+
+main()
+{
+  check_libraries 'medic-core' \
+    z curl acl attr idn usb ssl crypto xml2 lzmadec lzo2 \
+    menu history form panel ncurses exslt icudata xml2 exslt \
+      || fatal 'Failed to find a required library in medic-core'
+
+  check_binaries 'medic-core' 'sbin' sshd paxctl \
+    || fatal 'Failed to find a required binary in medic-core/sbin'
+
+  check_binaries 'medic-core' 'bin' \
+    node couchdb erl gammu curl ssh rsync lrzip lzma xdelta3 \
+    diff patch xsltproc getfacl getfattr openssl kanso npm nodelint \
+      || fatal 'Failed to find a required binary in medic-core/bin'
+
+  check_binaries 'java' 'bin' java \
+    || fatal 'Failed to find a required binary in java/bin'
+
+  check_binaries 'vm-tools' 'bin' vmtoolsd \
+    || fatal 'Failed to find a required binary in vm-tools/bin'
+
+  return 0
+}
+
+warn()
+{
+  echo "Warning: $*" 2>&1
+}
+
+fatal()
+{
+  echo "Fatal: $*" 2>&1
+  exit 1
+}
+
+
+main
+exit "$?"
+

@@ -1,6 +1,10 @@
 #/bin/sh
 
-busybox_manifest='/root/vm-toaster/busybox/manifest-1.20.2'
+self="`readlink -f "$0"`"
+base_dir="`dirname "$self"`/.."
+
+busybox_version='1.20.2'
+busybox_manifest="$base_dir/busybox/manifest-$busybox_version"
 
 main()
 {
@@ -52,6 +56,6 @@ main()
   done < "$busybox_manifest"
 }
 
-cd initrd && main
+cd "$base_dir/initrd" && main
 exit "$?"
 
