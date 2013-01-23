@@ -36,7 +36,7 @@ build-all: build-syslinux build-kernel install-kernel-modules build-vm-tools bui
 
 copy: copy-all
 
-copy-all: copy-syslinux copy-kernel copy-vm-tools copy-busybox copy-medic-core set-pax-flags
+copy-all: set-pax-flags copy-syslinux copy-kernel copy-vm-tools copy-busybox copy-medic-core
 
 
 finalize: finalize-all

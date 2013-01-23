@@ -90,13 +90,12 @@ package_install()
     "/srv/scripts/$package/install" \
       || warn "Installation script for package '$package' failed"
 
-    sync
-    
     if [ "$?" -ne 0 ]; then
       rm -rf "/srv/receipts/$package"
       return 5
     fi
 
+    sync
   fi
 
   return 0
@@ -108,16 +107,12 @@ package_remove()
 
   if [ -x "/srv/scripts/$package/remove" ]; then
 
-    supervisor_stop "$package"
-    
-    if [ "$?" -ne 0 ]; then
+    if ! supervisor_stop "$package"; then
       warn "Failed to stop services for package '$package'"
       return 1
     fi
     
-    "/srv/scripts/$package/remove"
-    
-    if [ "$?" -ne 0 ]; then
+    if ! "/srv/scripts/$package/remove"; then
       warn "Removal script for '$package' exited with non-zero status"
       return 2
     fi

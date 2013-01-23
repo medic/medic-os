@@ -15,6 +15,7 @@ merge_environment()
   export PACKAGE_ROOT="$root"
   export PACKAGE_SCRIPTS="$prefix/scripts/$name"
   export PACKAGE_STORAGE="$prefix/storage/$name"
+  export PACKAGE_SOFTWARE="$prefix/software/$name"
   export PACKAGE_SETTINGS="$prefix/settings/$name"
 
   export PATH="$root/bin:$root/sbin:$PATH"

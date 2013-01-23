@@ -5,8 +5,8 @@ source '/boot/include/supervisor'
 show_package()
 {
   local package="`basename "$1"`"
+
   echo "Package '$package':"
-  
 }
 
 show_services()
@@ -37,7 +37,7 @@ show_services()
     	echo -n 'Problem'
     fi
     
-    echo -n ' ('
+    echo -n ' (flags: '
 
     # Dump all attributes out 
     for attribute in $attributes; do

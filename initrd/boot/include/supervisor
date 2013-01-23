@@ -538,7 +538,6 @@ supervisor_is_service_disabled()
   [ -f "$supervise_dir/$package/status/$service.disabled" ]
 }
 
-
 supervisor_is_service_watched()
 {
   local package="`basename "$1"`"
@@ -585,6 +584,7 @@ supervisor_package_exists()
 
   return 0
 }
+
 supervisor_service_exists()
 {
   local package="`basename "$1"`"

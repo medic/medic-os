@@ -14,7 +14,7 @@ main()
   move_cursor 'y' -1
   set_console_blanking 0
   
-  trap '' INT STOP HUP TERM
+  trap '' INT STOP HUP QUIT TERM
 
   local ip_address="`discover_ip_address`"
 
