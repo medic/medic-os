@@ -36,7 +36,7 @@ build-all: build-syslinux build-kernel install-kernel-modules build-vm-tools bui
 
 copy: copy-all
 
-copy-all: set-pax-flags copy-syslinux copy-kernel copy-vm-tools copy-busybox copy-medic-core
+copy-all: copy-syslinux copy-kernel copy-vm-tools copy-busybox copy-medic-core set-pax-flags
 
 
 finalize: finalize-all
@@ -123,14 +123,14 @@ copy-medic-core:
 	@echo 'done.'
 
 set-pax-flags:
-	@echo -n "Setting executable flags... "
-	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
-		'${JAVA_PKG_ROOT}/bin/java' 2>/dev/null
-	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
-		'${MEDIC_CORE_PKG_ROOT}/bin/node' 2>/dev/null
-	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czrm \
-		'${MEDIC_CORE_PKG_ROOT}/bin/couchjs' 2>/dev/null
-	@echo 'done.'
+	@echo -n "Setting executable flags... " && \
+	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
+		'${JAVA_PKG_ROOT}/bin/java' 2>/dev/null && \
+	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
+		'${MEDIC_CORE_PKG_ROOT}/bin/node' 2>/dev/null && \
+	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czrm \
+		'${MEDIC_CORE_PKG_ROOT}/lib/couchdb/bin/couchjs' 2>/dev/null && \
+	echo 'done.'
 
 busybox: build-busybox copy-busybox
 

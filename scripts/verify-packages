@@ -3,6 +3,23 @@
 self="`readlink -f "$0"`"
 base_dir="`dirname "$self"`/.."
 
+check_pax()
+{
+  local package="$1"
+  local file="$2"
+  shift 1
+
+  local pax_dir="/srv/software/medic-core/v1.2.0/x86/sbin"
+  local pkg_base="$base_dir/packages/$package/software/$package"
+
+  if ! "$pax_dir/paxctl" -v "$pkg_base"/*/*/"$file" &>/dev/null; then
+    warn "Unable to find required pax header in '$file'"
+    return 1
+  fi
+
+  return 0
+}
+
 check_binaries()
 {
   local package="$1"
@@ -49,6 +66,12 @@ check_libraries()
 
 main()
 {
+  check_pax 'medic-core' 'bin/node' 'lib/couchdb/bin/couchjs' \
+    || fatal 'Failed to find pax header in medic-core binaries'
+
+  check_pax 'java' 'bin/java' \
+    || fatal 'Failed to find pax header in java binaries'
+
   check_libraries 'medic-core' \
     z curl acl attr idn usb ssl crypto xml2 lzmadec lzo2 \
     menu history form panel ncurses exslt icudata xml2 exslt \
