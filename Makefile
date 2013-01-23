@@ -40,10 +40,14 @@ initrd-image:
 	@echo 'done.'
 
 strip-binaries:
+	@echo -n "Removing unnecessary symbols... "
 	@./scripts/strip-binaries packages
+	@echo 'done.'
 
 verify-packages:
+	@echo -n "Verifying package contents... "
 	@./scripts/verify-packages
+	@echo 'done.'
 
 concierge-pkg:
 	@echo -n "Compressing package 'concierge'... "

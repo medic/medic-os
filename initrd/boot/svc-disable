@@ -2,13 +2,13 @@
 
 source '/boot/include/supervisor'
 
-up()
+disable()
 {
   local package="$1"
   local service="$2"
 
-  supervisor_service_up "$package" "$service" \
-    || fatal "Failed to start service '$service' in '$package'"
+  supervisor_service_disable "$package" "$service" \
+    || fatal "Failed to disable service '$package/$service'"
 
   return 0
 }
@@ -23,12 +23,12 @@ main()
   fi
 
   if [ "$#" -le 0 ]; then
-    supervisor_list_unexpected_services "$package" | while read service; do
-      up "$package" "$service"
+    supervisor_list_expected_services "$package" | while read service; do
+      disable "$package" "$service"
     done
   else
     for service in "$@"; do
-      up "$package" "$service"
+      disable "$package" "$service"
     done
   fi
     

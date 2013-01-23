@@ -107,8 +107,10 @@ _start_supervisor_process()
   local ppid_dir="$supervise_dir/$package/status"
   local ppid_file="$ppid_dir/$service.ppid"
 
+  supervisor_service_exists "$package" "$service" || return 1
+
   if supervisor_is_service_watched "$package" "$service"; then
-    return 1
+    return 2
   fi
     
   trap '_terminate_supervisor_process "$package" "$service"' TERM
@@ -127,14 +129,22 @@ _terminate_supervisor_process()
   local package="$1"
   local service="$2"
   
-  local ppid_file="$supervise_dir/$package/status/$service.ppid"
+  supervisor_service_exists "$package" "$service" || return 1
+
+  local pkg_status_dir="$supervise_dir/$package/status"
+  local ppid_file="$pkg_status_dir/$service.ppid"
   
   if ! supervisor_is_service_watched "$package" "$service"; then
-    return 1
+    return 2
   fi
   
-  local ppid="`cat "$ppid_file" 2>/dev/null`" &&
-  rm -f "$ppid_file" &&
+  local ppid="`cat "$ppid_file" 2>/dev/null`"
+
+  if ! [ "$ppid" ]; then
+    return 3
+  fi
+
+  rm -f "$ppid_file" "$pkg_status_dir/$service.down" &&
   kill -TERM "$ppid" 2>/dev/null
   
   return "$?"
@@ -150,8 +160,12 @@ _pidfile_has_active_process()
 
   local pid="`cat "$pid_file" 2>/dev/null`"
 
-  if ! [ -d "/proc/$pid" ]; then
+  if ! [ "$pid" ]; then
     return 2
+  fi
+
+  if ! [ -d "/proc/$pid" ]; then
+    return 3
   fi
 
   return 0
@@ -162,11 +176,15 @@ _supervisor_terminate_service()
   local package="$1"
   local service="$2"
 
-  local pkg_supervise_dir="$supervise_dir/$package"
-  local pid="`cat "$pkg_supervise_dir/status/$service.pid" 2>/dev/null`"
-  
-  rm -f "$pkg_supervise_dir/status/$service.pid" &&
-  kill -TERM "$pid" 2>/dev/null
+  local pkg_status_dir="$supervise_dir/$package/status"
+  local pid_file="$pkg_status_dir/$service.pid"
+
+  local pid="`cat "$pid_file" 2>/dev/null`"
+
+  if [ "$pid" ]; then
+    rm -f "$pid_file" &&
+    kill -TERM "$pid" 2>/dev/null
+  fi
 }
 
 _supervisor_apply()
@@ -183,25 +201,28 @@ _supervisor_apply()
     warn "Unable to locate package '$package'"
     return 255
   fi
-  
+
+  supervisor_package_exists "$package" || return 255
+
   if [ "$#" -le 0 ]; then
     services="/srv/scripts/$package/run"/*
   fi
 
   for service in $services; do
   
-    service="`basename "$service"`"
-    
+    local service="`basename "$service"`"
+
     if [ "$#" -le 0 -a "$service" = '*' ]; then
       warn "Unable to locate any services for package '$package'"
       return 255
     fi
 
-    if ! [ -x "/srv/scripts/$package/run/$service" ]; then
-      warn "Unable to locate service '$package/$service'"
-      return 255
+    supervisor_service_exists "$package" "$service" || return 255
+
+    if supervisor_is_service_disabled "$package" "$service"; then
+      continue
     fi
-    
+
     "$function" "$package" "$service"
       
     if [ "$?" -ne 0 ]; then
@@ -235,17 +256,66 @@ supervisor_reset()
   return 0
 }
 
+supervisor_service_disable()
+{
+  local package="`basename "$1"`"
+  local service="`basename "$2"`"
+
+  supervisor_service_exists "$package" "$service" || return 1
+    
+  if supervisor_is_service_disabled "$package" "$service"; then
+    warn "Service '$package/$service' is already disabled"
+    return 2
+  fi
+
+  if supervisor_is_service_watched "$package" "$service"; then
+    if ! supervisor_stop "$package" "$service"; then
+      warn "Failed to stop supervisor for '$package/$service'"
+      return 3
+    fi
+  fi
+  
+  touch "$supervise_dir/$package/status/$service.disabled"
+  return 0
+}
+
+supervisor_service_enable()
+{
+  local package="`basename "$1"`"
+  local service="`basename "$2"`"
+
+  supervisor_service_exists "$package" "$service" || return 1
+
+  if ! supervisor_is_service_disabled "$package" "$service"; then
+    warn "Service '$package/$service' is not currently disabled"
+    return 2
+  fi
+
+  rm -f "$supervise_dir/$package/status/$service.disabled"
+
+  if ! supervisor_start "$package" "$service"; then
+    warn "Failed to start supervisor for '$package/$service'"
+    return 3
+  fi
+
+  return 0
+}
+
 supervisor_service_down()
 {
   local package="`basename "$1"`"
   local service="`basename "$2"`"
 
+  supervisor_service_exists "$package" "$service" || return 1
+
   if ! supervisor_is_service_watched "$package" "$service"; then
-    return 1 # Supervisor not running
+    warn "Supervisor is not running for '$package/$service'"
+    return 2
   fi
   
   if supervisor_is_service_down "$package" "$service"; then
-    return 2 # Service is already down
+    warn "Service '$package/$service' is already down"
+    return 3
   fi
 
   local pkg_supervise_dir="$supervise_dir/$package"
@@ -256,10 +326,10 @@ supervisor_service_down()
   kill -HUP "$ppid" 2>/dev/null
   
   if [ "$?" -ne 0 ]; then
-    return 3 # FIFO / signal failure
+    return 4 # FIFO / signal failure
   fi
     
-  return 0 # Success
+  return 0
 }
 
 supervisor_service_up()
@@ -267,21 +337,30 @@ supervisor_service_up()
   local package="`basename "$1"`"
   local service="`basename "$2"`"
 
+  supervisor_service_exists "$package" "$service" || return 1
+
+  if supervisor_is_service_disabled "$package" "$service"; then
+    warn "Service '$package/$service' is currently disabled"
+    return 2
+  fi
+
   if ! supervisor_is_service_watched "$package" "$service"; then
-    return 1 # Supervisor not running
+    warn "Supervisor is not running for '$package/$service'"
+    return 3
   fi
 
   if ! supervisor_is_service_down "$package" "$service"; then
-    return 2 # Service is already up
+    warn "Service '$package/$service' is already running"
+    return 4
   fi
- 
+
   # Write to the FIFO:
   #   This unblocks `_supervisor_process` and starts the service.
   
   local pkg_supervise_dir="$supervise_dir/$package"
   local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
 
-  echo '1' > "$svc_down_fifo" || return 3
+  echo '1' > "$svc_down_fifo" || return 5
   return 0
 }
 
@@ -290,16 +369,26 @@ supervisor_service_restart()
   local package="`basename "$1"`"
   local service="`basename "$2"`"
 
+  supervisor_service_exists "$package" "$service" || return 1
+
+  if supervisor_is_service_disabled "$package" "$service"; then
+    warn "Service '$package/$service' is currently disabled"
+    return 2
+  fi
+
   if ! supervisor_is_service_watched "$package" "$service"; then
-    return 1 # Supervisor not running
+    warn "Supervisor is not running for '$package/$service'"
+    return 3
   fi
   
   if supervisor_is_service_down "$package" "$service"; then
-    return 2 # Service is down
+    warn "Service '$package/$service' is down"
+    return 4
   fi
 
   if ! supervisor_is_service_running "$package" "$service"; then
-    return 3 # Service is already starting
+    warn "Service '$package/$service' is not currently running"
+    return 5
   fi
 
   local pkg_supervise_dir="$supervise_dir/$package"
@@ -308,10 +397,10 @@ supervisor_service_restart()
   kill -USR1 "$ppid" 2>/dev/null
 
   if [ "$?" -ne 0 ]; then
-    return 4 # Signal failure
+    return 6 # Signal failure
   fi
 
-  return 0 # Success
+  return 0
 }
 
 supervisor_service_reload()
@@ -319,8 +408,11 @@ supervisor_service_reload()
   local package="`basename "$1"`"
   local service="$2"
 
+  supervisor_service_exists "$package" "$service" || return 1
+
   if ! supervisor_is_service_running "$package" "$service"; then
-    return 1 # Service is down or currently starting
+    warn "Service '$package/$service' is not currently running"
+    return 2
   fi
 
   local pkg_supervise_dir="$supervise_dir/$package"
@@ -329,10 +421,10 @@ supervisor_service_reload()
   kill -HUP "$pid" 2>/dev/null
 
   if [ "$?" -ne 0 ]; then
-    return 2 # Signal failure
+    return 3 # Signal failure
   fi
 
-  return 0 # Success
+  return 0
 }
 
 supervisor_list_all_packages()
@@ -383,6 +475,15 @@ supervisor_list_expected_services()
     "$package" supervisor_is_service_expected
 }
 
+supervisor_list_unexpected_services()
+{
+  local package="`basename "$1"`"
+
+  supervisor_list_services_filtered \
+    "$package" ! supervisor_is_service_expected
+}
+
+
 supervisor_list_down_services()
 {
   local package="`basename "$1"`"
@@ -429,6 +530,15 @@ supervisor_list_running_services()
   return 0
 }
 
+supervisor_is_service_disabled()
+{
+  local package="`basename "$1"`"
+  local service="`basename "$2"`"
+  
+  [ -f "$supervise_dir/$package/status/$service.disabled" ]
+}
+
+
 supervisor_is_service_watched()
 {
   local package="`basename "$1"`"
@@ -457,7 +567,33 @@ supervisor_is_service_down()
 
 supervisor_is_service_expected()
 {
-  supervisor_is_service_down "$@"
-  [ "$?" -ne 0 ]
+  supervisor_service_exists "$@" || return 1
+  supervisor_is_service_down "$@" && return 2
+  supervisor_is_service_disabled "$@" && return 3
+
+  return 0
 }
 
+supervisor_package_exists()
+{
+  local package="`basename "$1"`"
+
+  if ! [ -d "/srv/scripts/$package" ]; then
+    warn "Package '$package' does not exist"
+    return 1
+  fi
+
+  return 0
+}
+supervisor_service_exists()
+{
+  local package="`basename "$1"`"
+  local service="`basename "$2"`"
+
+  if ! [ -x "/srv/scripts/$package/run/$service" ]; then
+    warn "Service '$package/$service' does not exist"
+    return 1
+  fi
+
+  return 0
+}

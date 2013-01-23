@@ -2,20 +2,37 @@
 
 source '/boot/include/supervisor'
 
+reload()
+{
+  local package="$1"
+  local service="$2"
+
+  supervisor_service_reload "$package" "$service" \
+    || fatal "Failed to reload configuration for '$package/$service'"
+
+  return 0
+}
+
+
 main()
 {
   local package="$1"
   shift 1
   
-  if [ $# -le 0 -o -z "$package" ]; then
+  if [ -z "$package" ]; then
     usage
   fi
 
-  for service in "$@"; do
-    supervisor_service_reload "$package" "$service" \
-      || fatal "Failed to reload configuration for '$package/$service'"
-  done
-  
+  if [ "$#" -le 0 ]; then
+    supervisor_list_expected_services "$package" | while read service; do
+      reload "$package" "$service"
+    done
+  else
+    for service in "$@"; do
+      reload "$package" "$service"
+    done
+  fi
+ 
   return 0
 }
 

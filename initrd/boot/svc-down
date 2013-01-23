@@ -2,20 +2,36 @@
 
 source '/boot/include/supervisor'
 
+down()
+{
+  local package="$1"
+  local service="$2"
+
+  supervisor_service_down "$package" "$service" \
+    || fatal "Failed to shut down service '$package/$service'"
+
+  return 0
+}
+
 main()
 {
   local package="$1"
   shift 1
 
-  if [ $# -le 0 -o -z "$package" ]; then
+  if [ -z "$package" ]; then
     usage
   fi
 
-  for service in "$@"; do
-    supervisor_service_down "$package" "$service" \
-      || fatal "Failed to shut down service '$service' in '$package'"
-  done
-  
+  if [ "$#" -le 0 ]; then
+    supervisor_list_expected_services "$package" | while read service; do
+      down "$package" "$service"
+    done
+  else
+    for service in "$@"; do
+      down "$package" "$service"
+    done
+  fi
+    
   return 0
 }
 
@@ -32,7 +48,7 @@ fatal()
 
 usage()
 {
-  echo "Usage: $0 <package-name> <service-name>..."
+  echo "Usage: $0 <package-name> [service-name]..."
   exit 111
 }
 
