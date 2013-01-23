@@ -8,8 +8,8 @@ check_args()
 clean_all()
 {
   for i in *; do
-    if [ -d "$i" -a -f "$i/Makefile" ]; then
-      ( cd "$i" && make clean && make distclean )
+    if [ -h "$i" -a -f "$i/Makefile" ]; then
+      ( cd "$i" && make clean )
     fi
   done
 }

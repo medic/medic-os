@@ -1,39 +1,85 @@
 #!/bin/sh
 
+
+install()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/env" &&
+  merge_environment /srv
+
+  chown -R couchdb:staff \
+    "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb"
+
+  chown -R couchdb-lucene:staff \
+    "$PACKAGE_STORAGE/couchdb-lucene"
+
+  chown -R gammu:staff \
+    "$PACKAGE_STORAGE/gammu" "$PACKAGE_SETTINGS/gammu"
+
+  persist_ssh_user_configuration_files \
+    tc "$PACKAGE_SETTINGS" authorized_keys
+
+  install_default_couchdb_databases \
+    "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
+}
+
+
+install_default_couchdb_databases()
+{
+  local package_root="$1"
+  local storage_dir="$2"
+
+  for garden_db in dashboard.couch; do
+    local src="$package_root/share/couchdb/garden/$garden_db"
+    local dst="$storage_dir/couchdb/data/$garden_db"
+
+    if ! [ -f "$dst" ]; then
+	cp -a "$src" "$dst" && chown couchdb:couchdb "$dst" \
+	  || return "$?"
+    fi
+  done
+
+  return 0
+}
+
+
 persist_ssh_user_configuration_files()
 {
   local user="$1"
-  shift 1
+  local package_settings_dir="$2"
+  shift 2
   
   local ssh_dot_dir="/home/$user/.ssh"
-  local ssh_settings_dir="/srv/settings/medic-core/openssh/user/$user"
+  local ssh_settings_dir="$package_settings_dir/openssh/user/$user"
 
-  mkdir -p "$ssh_dot_dir" "$ssh_settings_dir"
+  mkdir -p "$ssh_dot_dir" "$ssh_settings_dir" \
+    || return "$?"
 
   for file in "$@"; do
     local src_path="$ssh_dot_dir/authorized_keys"
     local target_path="$ssh_settings_dir/authorized_keys"
     
-    touch "$target_path"
+    touch "$target_path" \
+      || return "$?"
 
     if [ -f "$src_path" ]; then
-      cat "$src_path" >> "target_path"
+      cat "$src_path" >> "target_path" \
+        || return "$?"
     fi
 
     rm -f "$src_path" &&
     ln -sf "$target_path" "$src_path" &&
-    chown "$user.staff" "$target_path"
+    chown "$user.staff" "$target_path" \
+      || return "$?"
   done
+
+  return 0
 }
 
-chown -R couchdb:staff \
-  /srv/settings/medic-core/couchdb /srv/storage/medic-core/couchdb
 
-chown -R couchdb-lucene:staff \
-  /srv/storage/medic-core/couchdb-lucene
+install "$@"
+exit "$?"
 
-chown -R gammu:staff \
-  /srv/storage/medic-core/gammu /srv/settings/medic-core/gammu
-
-persist_ssh_user_configuration_files tc authorized_keys
 

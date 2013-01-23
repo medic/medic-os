@@ -1,10 +1,37 @@
 #!/bin/sh
 
-local log='/var/log/start.log'
-
+source '/boot/include/logger'
 source '/boot/include/cursor'
 source '/boot/include/startup'
+source '/boot/include/package'
 source '/boot/include/supervisor'
+
+
+wait_for_ip_address()
+{
+  local timeout="$1"
+
+  if [ -z "$timeout" ]; then
+    timeout='20'
+  fi
+
+  for i in `seq 1 "$timeout"`; do
+    local ip_address="`discover_ip_address 2>> "$log"`"
+    if [ "$?" -ne 0 -o -z "$ip_address" ]; then
+      sleep 1
+    else
+      break
+    fi
+  done
+
+  if [ -z "$ip_address" ]; then
+    return 1
+  fi
+
+  echo "$ip_address"
+  return 0
+}
+
 
 main()
 {
@@ -19,6 +46,7 @@ main()
   local found_device=''
   local found_version=''
 
+  set_bold 1
   set_cursor 0
   set_console_blanking 0
   stty -echo 2>/dev/null
@@ -86,20 +114,30 @@ main()
 
   display_centered 'Setting up software...'
   
-  # Update binaries:
-  #   Unconditionally update the binaries on persistent storage.
-  #   All user data is kept outside of /srv/software, so this step
-  #   will simply ensure that we are using known-good binaries. It
-  #   won't erase any user data, databases, indexes, or other files.
+  # Update packages:
+  #   Update each package necessary for proper startup; the `package_update`
+  #   function will avoid overwriting existing binaries if it's able to.
 
   echo "Software update started at `date`" >> "$log" 2>&1
 
-  update_package 'system-services' "$is_newly_initialized" >> "$log" 2>&1 &&
-  update_package 'medic-core' "$is_newly_initialized" >> "$log" 2>&1 &&
-  update_package 'concierge' "$is_newly_initialized" >> "$log" 2>&1 &&
-  update_package 'java' "$is_newly_initialized" >> "$log" 2>&1 \
-    || fatal 'Failed to extract required software from ISO image'
+  local total_packages='0'
+  local finished_packages='0'
 
+  for package_path in /mnt/image/packages/*.vpkg; do
+    total_packages="$(($total_packages + 1))"
+  done
+
+  for package_path in /mnt/image/packages/*.vpkg; do
+    package_update "$package_path" "$is_newly_initialized" \
+      || fatal 'Failed to extract required software from ISO image'
+
+    finished_packages="$(($finished_packages + 1))"
+    local percent_packages="$((100 * $finished_packages / $total_packages))"
+
+    display_centered "Setting up software ($percent_packages% complete)..."
+  done
+
+  echo "Software update finished at `date`" >> "$log" 2>&1
   display_centered 'Checking authentication database...'
 
   persist_authentication_database >> "$log" 2>&1 \
@@ -108,26 +146,30 @@ main()
   local ip_address=''
   display_centered 'Setting up network connection...'
 
-  for i in `seq 1 10`; do
-    ip_address="`discover_ip_address 2> "$log"`"
-    if [ "$?" -ne 0 -o -z "$ip_address" ]; then
-      sleep 2
-    else
-      break
-    fi
-  done
+  ip_address="`wait_for_ip_address`"
 
-  if ! [ "$ip_address" ]; then
-    fatal 'Failed to obtain an IP address via DHCP for this virtual machine'
+  if [ $? -ne 0 ]; then
+    display_centered 'Checking for alternate network configuration...' &&
+    attempt_manual_network_configuration &&
+    ip_address="`wait_for_ip_address`"
+
+    if [ $? -ne 0 ]; then
+      fatal 'Failed to obtain an IP address for this virtual machine'
+    fi
   fi
 
   display_centered 'Starting services...'
+  supervisor_reset
 
-  supervisor_start 'system-services' &&
-  supervisor_start 'medic-core' && supervisor_start 'concierge' \
-    || fatal 'Failed to start required network services'
+  for pkg in vm-tools system-services medic-core concierge gardener; do
+    supervisor_start "$pkg" \
+      || fatal "Failed to start required network service '$pkg'"
+  done
 
-  display_centered "Server is listening on $ip_address."
+  display_centered 'Synchronizing disks...'
+  synchronize_disks
+  set_bold 0
+
   return 0
 }
 
@@ -140,7 +182,7 @@ fatal()
 {
   clear
   echo -ne '\n\n'
-  echo 'A serious error has occurred.' >&2
+  echo 'An unrecoverable error has occurred.' >&2
   echo 'The virtual machine cannot start properly at this time.' >&2
   echo "Details: $*." >&2
   echo >&2

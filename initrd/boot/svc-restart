@@ -7,6 +7,10 @@ main()
   local package="$1"
   shift 1
   
+  if [ $# -le 0 -o -z "$package" ]; then
+    usage
+  fi
+
   for service in "$@"; do
     supervisor_service_restart "$package" "$service" \
       || fatal "Failed to restart service '$service' in '$package'"
@@ -24,6 +28,12 @@ fatal()
 {
   echo "Fatal: $*" 2>&1
   exit 1
+}
+
+usage()
+{
+  echo "Usage: $0 <package-name> <service-name>..."
+  exit 111
 }
 
 main "$@"

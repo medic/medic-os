@@ -1,0 +1,56 @@
+#!/bin/sh
+
+source '/boot/include/supervisor'
+
+main()
+{
+  local package="`basename "$1"`"
+  local attribute="$2"
+
+  if [ "$package" = '-h' -o "$package" = '--help' ]; then
+    usage
+  fi
+  
+  if [ -z "$package" ]; then
+    supervisor_list_all_packages
+  else
+    case "$attribute" in
+      watched|expected|running|down)
+        ;;
+      '')
+        attribute='all' ;;
+      *)
+        warn "Service attribute '$attribute' does not exist"
+        usage
+    esac
+   
+    "supervisor_list_${attribute}_services" "$package"
+  fi
+
+  if [ "$?" -ne 0 ]; then
+    warn "Failed to one or more specified services"
+  fi
+  
+  return "$?"
+}
+
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 1
+}
+
+usage()
+{
+  echo "Usage: $0 [package-name [watched|expected|running|down]]" >&2
+  exit 111
+}
+
+main "$@"
+exit "$?"
+

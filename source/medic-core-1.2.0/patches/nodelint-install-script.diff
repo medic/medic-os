@@ -1,5 +1,5 @@
---- Makefile~	2012-10-10 19:54:40.000000000 -0700
-+++ Makefile	2012-10-10 19:54:45.000000000 -0700
+--- nodelint-devel/Makefile	2012-10-10 19:54:40.000000000 -0700
++++ nodelint-devel/Makefile	2012-10-10 19:54:45.000000000 -0700
 @@ -30,11 +30,11 @@
  	perl -pi -e 's{path\.join\(SCRIPT_DIRECTORY, '\''jslint/jslint\.js'\''\)}{"$(PACKAGEDATADIR)/jslint.js"}' $(BUILDDIR)/nodelint
  

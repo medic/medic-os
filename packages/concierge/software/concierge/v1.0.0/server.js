@@ -3,6 +3,7 @@ var child = require('child_process'),
     flash = require('connect-flash'),
     request = require('request'),
     express = require('express'),
+    fs = require('fs'),
     app = express();
 
 /**
@@ -64,27 +65,27 @@ app.post('/setup/password', function (req, res) {
 
   set_system_password(req, password, confirmation, function (_was_set) {
 
-    if (_was_set && key.length > 0) {
+    if (!_was_set) {
+      return res.redirect('/setup');
+    }
 
-      add_openssh_public_key(req, key, function (_was_added) {
+    if (key.length <= 0) {
+      req.flash('success', 'Password successfully set');
+      return res.redirect('/setup');
+    }
 
-        if (_was_added) {
-          req.flash('key', null);
-          req.flash('success', 'Password and public key successfully set');
-	}
+    add_openssh_public_key(req, key, function (_was_added) {
 
-        return res.redirect('/setup');
-      });
-
-    } else {
-
-      if (_was_set) {
-        req.flash('success', 'Password successfully set');
+      if (_was_added) {
+        req.flash('key', null);
+        req.flash('success', 'Password and public key successfully set');
       }
 
       return res.redirect('/setup');
-    }
+    });
+
   });
+
 });
 
 /**
@@ -132,6 +133,36 @@ var add_openssh_public_key = function (_req, _key, _callback) {
   });
 
 };
+
+/**
+ */
+var store_system_password = function (_req, _password, _callback) {
+
+  var path = '/srv/storage/concierge/passwd/system';
+
+  fs.open(path, 'w', 0640, function (_err, _fd) {
+
+    if (_err) {
+      _req.flash('error', "Internal error: file open failed");
+      return _callback(false, _err);
+    }
+
+    var buffer = _password + '\n';
+    var len = buffer.length;
+
+    fs.write(_fd, buffer, 0, len, function (_err, _len, _buf) {
+
+      if (_err) {
+        _req.flash('error', "Internal error: file write failed");
+        return _callback(false, _err);
+      }
+
+      fs.fsync(_fd, function (_err) {
+        return _callback(true, _err);
+      });
+    });
+  });
+}
 
 /**
  */
@@ -184,8 +215,13 @@ var set_system_password = function (_req, _password, _confirmation, _callback) {
 	);
         return _callback(false, err);
       }
-        
-      return _callback(true);
+
+      /* Store password:
+          This is used by local services needing to connect to CouchDB. */
+
+      store_system_password(_req, _password, function (_was_written, _err) {
+        return _callback(_was_written, _err);
+      });
     });
   });
 };

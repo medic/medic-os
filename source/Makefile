@@ -1,58 +1,105 @@
 
+CPU ?= x86
 BITS ?= 32
 PARALLEL ?= 16
 
-ROOT := /srv/software/medic-core/v1.2.0/x86
-PATH := ${PATH}:${ROOT}/bin
+JAVA_VERSION := 1.7.9
+VM_TOOLS_VERSION := 9.2.2
+MEDIC_CORE_VERSION := 1.2.0
+
+VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${CPU}
+MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
+
+PKG_DIR := ../packages
+JAVA_PKG_ROOT := ${PKG_DIR}/java/software/java/v${JAVA_VERSION}/${CPU}
+VM_TOOLS_PKG_ROOT := ${PKG_DIR}/vm-tools/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
+MEDIC_CORE_PKG_ROOT := ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
+
+PATH := ${PATH}:${VM_TOOLS_ROOT}/bin
+PATH := ${PATH}:${MEDIC_CORE_ROOT}/bin
 
 MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
-all: build copy
+KERNEL_VERSION := 3.7.3
+KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/lib/modules/${KERNEL_VERSION}")
+
+
+all: build copy finalize
 
 
 build: build-all
 
-build-all: build-syslinux build-kernel build-busybox build-medic-core
+build-all: build-syslinux build-kernel install-kernel-modules build-vm-tools build-busybox build-medic-core
 
 
 copy: copy-all
 
-copy-all: copy-syslinux copy-kernel copy-busybox copy-medic-core
+copy-all: copy-syslinux copy-kernel copy-vm-tools copy-busybox copy-medic-core set-pax-flags
+
+
+finalize: finalize-all
+
+finalize-all: finalize-initrd
 
 
 clean: clean-all
 
-clean-all: clean-syslinux clean-kernel clean-busybox clean-medic-core
-	rm -f logs/timestamp
+clean-all: clean-syslinux clean-kernel clean-vm-tools clean-busybox clean-medic-core
+	rm -f logs/*
 
 
 pv: build-pv
 
 build-pv:
 	@(cd medic-core && echo && \
-		${QMAKE} ROOT='${ROOT}' START='pv' STOP='pv' \
+		${QMAKE} ROOT='${MEDIC_CORE_ROOT}' START='pv' STOP='pv' \
 			BITS='${BITS}' PARALLEL='${PARALLEL}')
 
 
-kernel: build-kernel copy-kernel
+kernel: build-kernel copy-kernel install-kernel-modules build-vm-tools
 
 clean-kernel:
 	(cd linux && ${MAKE} clean)
 
 build-kernel: build-pv
 	@(cd linux && \
-		cp ../../kernel/boot-logo/logo_medic_clut224.ppm \
+		cp ../../kernel/boot-logo/logo-medic.ppm \
 			./drivers/video/logo/logo_linux_clut224.ppm && \
-		cp ../../kernel/dot-config-3.6.11 .config) && \
+		cp "../../kernel/dot-config-${KERNEL_VERSION}-grsec" .config) && \
 		./scripts/logger linux \
 			'cd linux && ${PMAKE} bzImage && ${PMAKE} modules'
 
 copy-kernel:
-	@cp linux/arch/x86/boot/bzImage ../iso/boot/kernel && \
-	(cd linux && ${MAKE} modules_install \
+	@cp linux/arch/x86/boot/bzImage ../iso/boot/kernel
+
+install-kernel-modules:
+	@(cd linux && ${MAKE} modules_install \
 		INSTALL_MOD_PATH=../../initrd/ >/dev/null)
+
+
+vm-tools: build-vm-tools copy-vm-tools
+
+clean-vm-tools:
+	(cd vm-tools && ${MAKE} clean)
+
+build-vm-tools: install-kernel-modules
+	@(cd vm-tools && ${QMAKE} \
+		KERNEL_VERSION='${KERNEL_VERSION}' \
+		KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' \
+		ROOT='${VM_TOOLS_ROOT}' PARALLEL='${PARALLEL}' BITS='${BITS}') && \
+	depmod -a -b ../initrd '${KERNEL_VERSION}'
+
+copy-vm-tools:
+	@echo -n "Copying files for 'vm-tools'... "
+	@(cd vm-tools && \
+		./scripts/prepare-dist '${VM_TOOLS_ROOT}' \
+		mkdir -p ../../packages/vm-tools/software && \
+		rm -rf ../../packages/vm-tools/software/vm-tools && \
+		cp -R /srv/software/vm-tools \
+			../../packages/vm-tools/software/vm-tools)
+	@echo 'done.'
 
 
 medic-core: build-medic-core copy-medic-core
@@ -62,16 +109,28 @@ clean-medic-core:
 
 build-medic-core:
 	@(cd medic-core && \
-		${QMAKE} ROOT='${ROOT}' BITS='${BITS}' PARALLEL='${PARALLEL}')
+		${QMAKE} all gardenize ROOT='${MEDIC_CORE_ROOT}' \
+			BITS='${BITS}' PARALLEL='${PARALLEL}')
 
 copy-medic-core:
 	@echo -n "Copying files for 'medic-core'... "
-	@(cd medic-core && ./scripts/prepare-dist && \
+	@(cd medic-core && \
+		./scripts/prepare-dist '${MEDIC_CORE_ROOT}' && \
 		mkdir -p ../../packages/medic-core/software && \
 		rm -rf ../../packages/medic-core/software/medic-core && \
-		cp -R /srv/software/medic-core ../../packages/medic-core/software/medic-core)
+		cp -R /srv/software/medic-core \
+			../../packages/medic-core/software/medic-core)
 	@echo 'done.'
 
+set-pax-flags:
+	@echo -n "Setting executable flags... "
+	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
+		'${JAVA_PKG_ROOT}/bin/java' 2>/dev/null
+	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
+		'${MEDIC_CORE_PKG_ROOT}/bin/node' 2>/dev/null
+	@'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czrm \
+		'${MEDIC_CORE_PKG_ROOT}/bin/couchjs' 2>/dev/null
+	@echo 'done.'
 
 busybox: build-busybox copy-busybox
 
@@ -102,6 +161,11 @@ copy-syslinux:
 		cp core/isolinux.bin ../../iso/boot/isolinux/isolinux.bin)
 	@echo 'done.'
 
+
+finalize-initrd:
+	@for symlink in source build; do \
+		rm -f "../initrd/lib/modules/${KERNEL_VERSION}/$$symlink"; \
+	done
 
 stats: recalculate-stats
 

@@ -1,13 +1,16 @@
 #!/bin/bash
 
+self="`readlink -f "$0"`"
+source_base_dir="`dirname "$self"`/../"
+
+source "$source_base_dir/medic-core/scripts/include/logger" \
+    || fatal 'Unable to load logging library'
+
 fatal()
 {
   echo "$0: fatal: $*" >&2
   exit 1
 }
-
-source 'medic-core/scripts/include/logger' 2>/dev/null \
-    || fatal 'Unable to load logging library; retry from root directory'
 
 usage()
 {
@@ -37,7 +40,7 @@ main()
 
   check_args "$name" "$@" || usage
 
-  load_timestamp \
+  load_timestamp "$name" \
     || fatal 'Unable to load last timestamp; retry from root directory'
 
   (exec sh -c "$*") 2>&1 | logger "$name"

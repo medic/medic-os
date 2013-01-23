@@ -5,10 +5,11 @@ start()
   local self="`realpath "$0"`"
   local base="`dirname "$self"`"
 
-  local service='gammu'
-  local package='medic-core'
-  local logs_dir="/srv/storage/$package/$service/logs"
-  
+  source "$base/../env" &&
+  merge_environment /srv &&
+  \
+  local logs_dir="$PACKAGE_STORAGE/gammu/logs" &&
+  \
   exec "$base/../private/gammu-monitor" \
     >> "$logs_dir/gammu-monitor.log" 2>&1
 }

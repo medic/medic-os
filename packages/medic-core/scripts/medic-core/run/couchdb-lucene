@@ -6,18 +6,12 @@ start()
   local base="`dirname "$self"`"
 
   source "$base/../env" &&
-  merge_environment /srv/software &&
+  merge_environment /srv &&
   \
   exec nohup su -c "exec '$PACKAGE_ROOT/java/bin/run'" couchdb-lucene \
-    >> '/srv/storage/medic-core/couchdb-lucene/logs/startup.log' 2>&1
+    >> "$PACKAGE_STORAGE/couchdb-lucene/logs/startup.log" 2>&1
 }
 
-main()
-{
-  start
-  return "$?"
-}
-
-main
+start
 exit "$?"
 

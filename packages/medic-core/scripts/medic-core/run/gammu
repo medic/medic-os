@@ -5,12 +5,11 @@ start()
   local self="`realpath "$0"`"
   local base="`dirname "$self"`"
 
-  local logs_dir='/srv/storage/medic-core/gammu/logs'
-  local config_file='/srv/settings/medic-core/gammu/autodetect.conf'
-  local device="`"$base/../private/gammu-autodetect"`"
-
   source "$base/../env" &&
-  merge_environment /srv/software &&
+  merge_environment /srv &&
+  \
+  local logs_dir="$PACKAGE_STORAGE/gammu/logs" &&
+  local config_file="$PACKAGE_SETTINGS/gammu/autodetect.conf" &&
   \
   touch "$logs_dir/gammu-smsd.log" &&
   chown gammu:staff "$logs_dir/gammu-smsd.log" &&
@@ -19,12 +18,6 @@ start()
     >> "$logs_dir/gammu-smsd.log" 2>&1
 }
 
-main()
-{
-  start
-  return "$?"
-}
-
-main
+start
 exit "$?"
 

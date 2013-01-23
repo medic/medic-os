@@ -1,4 +1,18 @@
 #!/bin/sh
 
-(cd /srv/software/java && rm -f v1.7 && ln -sf v1.7.9 v1.7)
+install()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/env" &&
+  merge_environment /srv
+
+  (cd "$PACKAGE_ROOT/../../" &&
+    rm -f v1.7 && ln -sf v1.7.9 v1.7)
+}
+
+install "$@"
+exit "$?"
+
 

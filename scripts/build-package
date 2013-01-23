@@ -1,0 +1,93 @@
+#!/bin/sh
+
+
+create_package_digest()
+{
+  local staging_dir="$1"
+  local digest_type="$2"
+
+  local digest="`
+    "${digest_type}sum" "$staging_dir/package.tar.xz" 2>/dev/null
+  `"
+
+  if [ "$?" -ne 0 ]; then
+    return 1
+  fi
+
+  echo "$digest" | cut -f1 -d' ' 2>/dev/null \
+    > "$staging_dir/digest-$digest_type"
+
+  if [ "$?" -ne 0 ]; then
+    rm -f "$staging_dir/digest-$digest_type"
+    return 2
+  fi
+ 
+  return 0
+}
+
+main()
+{
+  local package="$1"
+  local version="$2"
+
+  local architecture='x86'
+  local staging_dir="staging/packages/$package"
+
+  if [ $# -gt 2 -o -z "$package" -o -z "version" ]; then
+    usage
+  fi
+
+  # Clear package staging directory
+  rm -rf "$staging_dir" && mkdir -p "$staging_dir" &&
+  \
+  # Copy package metadata template
+  cp -R "metadata/packages/$package" 'staging/packages' &&
+  \
+  # Gather and compress package contents
+  (cd "packages/$package" &&
+    tar -cf - * | xz -9ec > "../../$staging_dir/package.tar.xz") &&
+  \
+  # Store the package's base name as metadata
+  echo "$package" > "$staging_dir/name" &&
+  \
+  # Regenerate version information
+  echo "$version" > "$staging_dir/version" &&
+  \
+  # Regenerate cryptographic digests
+  for type in md5 sha1 sha256 sha512; do
+    create_package_digest "$staging_dir" "$type" \
+      || fatal "Couldn't create '$type' cryptographic digest for '$package'"
+  done &&
+  \
+  # Combine data and metadata to produce package
+  (cd "$staging_dir" &&
+    ar -rcs "../../../iso/packages/$package-v$version-$architecture.vpkg" *) &&
+
+  if [ "$?" -ne 0 ]; then
+    fatal "Package creation step for '$package' failed"
+  fi
+
+  return 0
+}
+
+warn()
+{
+  echo "Warning: $*" 2>&1
+}
+
+fatal()
+{
+  echo "Fatal: $*" 2>&1
+  exit 1
+}
+
+usage()
+{
+  echo "Usage: $1 package-name version-number"
+  exit 2
+}
+
+main "$@"
+exit "$?"
+
+

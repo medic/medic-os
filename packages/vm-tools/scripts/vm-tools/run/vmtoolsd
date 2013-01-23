@@ -1,0 +1,35 @@
+#!/bin/sh
+
+detect_vmware()
+{
+  # FIXME: Need to improve hypervisor detection method
+  dmesg | grep -i '^Hypervisor detected: VMware' &>/dev/null
+  return "$?"
+}
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  if ! detect_vmware; then
+    while true; do sleep 3600; done
+    return
+  fi
+
+  source "$base/../env" &&
+  merge_environment /srv &&
+  \
+  modprobe -a vmci vmblock vsock vmhgfs vmxnet &&
+  exec nohup vmtoolsd >> "$PACKAGE_STORAGE/logs/vmtoolsd.log" 2>&1
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+

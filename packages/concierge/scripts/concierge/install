@@ -1,2 +1,17 @@
 #!/bin/sh
 
+install()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/env" &&
+  merge_environment /srv
+
+  chown concierge:concierge-auth "$PACKAGE_STORAGE/passwd" &&
+  chmod 2710 "$PACKAGE_STORAGE/passwd"
+}
+
+install "$@"
+exit "$?"
+

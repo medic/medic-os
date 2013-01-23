@@ -1,0 +1,57 @@
+#/bin/sh
+
+busybox_manifest='/root/vm-toaster/busybox/manifest-1.20.2'
+
+main()
+{
+  echo "Checking filesystem:"
+
+  for path in bin/* sbin/* usr/bin/* usr/sbin/*; do
+    if [ -h "$path" ]; then
+      local file="`basename "$path"`"
+      local target="`readlink "$path"`"
+      local binary="`basename "$target"`"
+
+      if [ "$binary" = 'busybox' ]; then
+        echo -n "$path: "
+        if grep -F "$file" "$busybox_manifest" &>/dev/null; then
+          echo 'correct.'
+        else
+          echo 'not supported.'
+        fi
+      fi
+    fi
+  done
+  
+  echo "Checking busybox manifest:"
+  
+  while read binary; do
+
+    local found='0'
+    echo -n "$binary: "
+ 
+    for path in bin sbin usr/bin usr/sbin; do
+
+      if [ -h "$path/$binary" ]; then
+        local target="`readlink "$path/$binary"`"
+        
+        if [ "`basename "$target"`" = 'busybox' ]; then
+          found="$(($found + 1))"
+        fi
+      fi
+    done
+
+    if [ "$found" -le 0 ]; then
+      echo 'not yet linked.' 
+    elif [ "$found" -gt 1 ]; then
+      echo 'multiple links present.' 
+    else
+      echo 'correct.'
+    fi
+    
+  done < "$busybox_manifest"
+}
+
+cd initrd && main
+exit "$?"
+

@@ -1,0 +1,38 @@
+#!/bin/sh
+
+source '/boot/include/package'
+
+main()
+{
+  if [ $# -le 0 ]; then
+    usage
+  fi
+
+  for package in "$@"; do
+    package_update "$package" \
+      || fatal "Failed to update package '$package'"
+  done
+
+  return 0
+}
+
+warn()
+{
+  echo "Warning: $*" 2>&1
+}
+
+fatal()
+{
+  echo "Fatal: $*" 2>&1
+  exit 1
+}
+
+usage()
+{
+  echo "Usage: $0 <package.vpkg>..." >&2
+  exit 111
+}
+
+main "$@"
+exit "$?"
+

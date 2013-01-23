@@ -1,0 +1,11 @@
+
+prefix="$1"
+
+if ! [ -d "$prefix" ]; then
+  echo "Usage: $0 <prefix>" >&2
+  exit 111
+fi
+
+(cd "$prefix" &&
+  rm -rf etc include man share/man share/info share/glib-2.0)
+

@@ -1,0 +1,196 @@
+#!/bin/sh
+
+set -o pipefail
+
+package_extract_metadata()
+{
+  local path="$1"
+  local metadata_key="$2"
+
+  if ! [ -r "$path" ]; then
+    return 1
+  fi
+
+  ar -p "$path" "$metadata_key" 2>/dev/null
+  return "$?"
+}
+
+package_extract_name()
+{
+  local path="$1"
+
+  package_extract_metadata "$path" 'name'
+  return "$?"
+}
+
+package_extract_version()
+{
+  local path="$1"
+
+  package_extract_metadata "$path" 'version'
+  return "$?"
+}
+
+package_extract_digest()
+{
+  local path="$1"
+  local digest_type="$2"
+
+  if ! [ "$digest_type" ]; then
+    digest_type='sha512'
+  fi
+
+  package_extract_metadata "$path" "digest-$digest_type"
+  return "$?"
+}
+
+package_retrieve_installed_version()
+{
+  local package="$1"
+
+  cat "/srv/receipts/$package/version" 2>/dev/null
+  return "$?"
+}
+
+package_install()
+{
+  local path="$1"
+
+  if ! [ -r "$path" ]; then
+    return 1
+  fi
+
+  local package="`package_extract_name "$path"`" &&
+  local version="`package_extract_version "$path"`"
+
+  if [ "$?" -ne 0 ]; then
+    return 2
+  fi
+ 
+  mkdir -p "/srv/receipts/$package" &&
+    echo -n "$version" > "/srv/receipts/$package/version"
+
+  if [ "$?" -ne 0 ]; then
+    rm -f "/srv/receipts/$package/version"
+    return 3
+  fi
+
+  mkdir -p "/srv/receipts/$package" "/srv/scripts/$package" &&
+    (cd /srv && ar -p "$path" package.tar.xz | xz -dc \
+      | tar -xvf - > "/srv/receipts/$package/manifest") && sync
+
+  if [ "$?" -ne 0 ]; then
+    rm -f "/srv/receipts/$package"
+    return 4
+  fi
+
+  if [ -x "/srv/scripts/$package/install" ]; then
+
+    "/srv/scripts/$package/install" \
+      || warn "Installation script for package '$package' failed"
+
+    sync
+    
+    if [ "$?" -ne 0 ]; then
+      rm -rf "/srv/receipts/$package"
+      return 5
+    fi
+
+  fi
+
+  return 0
+}
+
+package_remove()
+{
+  local package="`basename "$1"`"
+
+  if [ -x "/srv/scripts/$package/remove" ]; then
+
+    supervisor_stop "$package"
+    
+    if [ "$?" -ne 0 ]; then
+      warn "Failed to stop services for package '$package'"
+      return 1
+    fi
+    
+    "/srv/scripts/$package/remove" \
+    
+    if [ "$?" -ne 0 ]; then
+      warn "Removal script for package '$package' failed"
+      return 2
+    fi
+
+    rm -rf "/srv/receipts/$package"
+  fi
+
+  sync
+
+  if [ "$?" -gt 0 ]; then
+    return 2
+  fi
+
+  return 0
+}
+
+package_update()
+{
+  local path="$1"
+  local force_reinstall="$2"
+
+  local package="`package_extract_name "$path"`" &&
+  local v_new="`package_extract_version "$path"`" &&
+  local v_prev="`package_retrieve_installed_version "$package"`"
+
+  if [ "$?" -ne 0 ]; then
+    return 1
+  fi
+
+  if ! [ "$v_new" -gt 0 ] &>/dev/null; then
+    return 2
+  fi
+
+  if [ "$v_prev" -gt 0 -a "$v_prev" -lt "$v_new" ] &>/dev/null; then
+    v_prev=''
+    package_remove "$package"
+  fi
+
+  if ! [ "$v_prev" -gt 0 ] &>/dev/null; then
+    force_reinstall='t'
+  fi
+
+  if [ "$force_reinstall" ]; then
+    package_install "$path" || return 3
+  fi
+
+  package_setup "$package"
+  return 0
+}
+
+package_merge_environment()
+{
+  local package="$1"
+
+  local env_file="/srv/scripts/$package/env"
+
+  if [ -f "$env_file" ]; then
+    source "$env_file"
+    merge_environment /srv &>/dev/null
+    unset merge_environment
+  fi
+}
+
+package_setup()
+{
+  local package="`basename "$1"`"
+
+  for script in /srv/scripts/$package/setup/*; do
+    if [ -x "$script" ]; then
+      "$script" \
+        || warn "Setup script '$script' for package '$package' failed"
+    fi
+  done
+
+  return 0
+}
+
