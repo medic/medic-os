@@ -1,15 +1,23 @@
 #!/bin/sh
 
 source '/boot/include/package'
+source '/boot/include/supervisor'
 
 main()
 {
+  local force_install=''
+
+  if [ "$1" = '-f' -o "$1" = '--force' ]; then
+    force_install='t'
+    shift 1
+  fi
+
   if [ $# -le 0 ]; then
     usage
   fi
 
   for package in "$@"; do
-    package_update "$package" \
+    package_update "$package" "$force_install" \
       || fatal "Failed to update package '$package'"
   done
 
@@ -29,7 +37,7 @@ fatal()
 
 usage()
 {
-  echo "Usage: $0 <package.vpkg>..." >&2
+  echo "Usage: $0 [-f|--force] <package.vpkg>..." >&2
   exit 111
 }
 

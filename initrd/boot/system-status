@@ -9,12 +9,12 @@ main()
   local numerator='0'
   local denominator='0'
 
-  trap 'true' INT
-
   set_echo 0
   set_cursor 0
   move_cursor 'y' -1
   set_console_blanking 0
+  
+  trap '' INT STOP HUP QUIT TERM
 
   local ip_address="`discover_ip_address`"
 
@@ -81,11 +81,11 @@ display_services()
     local running_services="`
       supervisor_list_running_services "$i" | wc -l
     `"
-    numerator="$(($numerator + $running_services))"
-    denominator="$(($denominator + $expected_services))"
+    numerator="$(($numerator + $running_services))" 2>/dev/null
+    denominator="$(($denominator + $expected_services))" 2>/dev/null
   done
     
-  delta="$(($denominator - $numerator))"
+  delta="$(($denominator - $numerator))" 2>/dev/null
 
   if [ "$denominator" -le 0 ]; then
     set_bold 1

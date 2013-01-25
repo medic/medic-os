@@ -94,17 +94,22 @@ display_centered()
 {
   local text="$1"
 
-  local columns="`stty -a |
-    sed -n '/columns / s/^.*\?columns \+\([0-9]\+\).*$/\1/p;'`"
+  local columns="`
+    stty -a |
+      sed -n '/columns / s/^.*\?columns \+\([0-9]\+\).*$/\1/p' 2>/dev/null
+  `"
 
-  local maximum="$(($columns - 2))"
+  local maximum="$(($columns - 2))" 2>/dev/null
 
   if [ "${#text}" -gt "$maximum" ]; then
-    text="`echo "$text" | sed "s/^ *\\(.\\{0,$maximum\\}\\).*$/\\1/g;"`"
+    text="`
+      echo "$text" |
+        sed "s/^ *\\(.\\{0,$maximum\\}\\).*$/\\1/g;" 2>/dev/null
+    `"
   fi
 
-  local length=$((${#text} / 2));
-  local indent=$((($columns / 2) - (${#text} / 2)));
+  local length=$((${#text} / 2)) 2>/dev/null
+  local indent=$((($columns / 2) - (${#text} / 2))) 2>/dev/null
 
   echo -ne '\r'
   clear_text 'x'

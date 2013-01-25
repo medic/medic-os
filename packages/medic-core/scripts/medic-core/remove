@@ -8,7 +8,8 @@ remove()
   source "$base/env" &&
   merge_environment /srv
 
-  rm -rf "$PACKAGE_ROOT"
+  rm -rf "$PACKAGE_SOFTWARE" "$PACKAGE_SCRIPTS" "$PACKAGE_SETTINGS" \
+    "$PACKAGE_STORAGE"/*/logs "$PACKAGE_STORAGE"/*/state
 }
 
 remove "$@"

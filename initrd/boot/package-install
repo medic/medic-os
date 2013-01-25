@@ -1,6 +1,7 @@
 #!/bin/sh
 
 source '/boot/include/package'
+source '/boot/include/supervisor'
 
 main()
 {
@@ -9,8 +10,16 @@ main()
   fi
 
   for path in "$@"; do
+
+    local package="`package_extract_name "$path"`" \
+      || fatal "Failed to determine name of package '$path'"
+
     package_install "$path" \
       || fatal "Failed to install package '$path'"
+
+    supervisor_start "$package" \
+      || fatal "Failed to start supervisor for package '$package'"
+
   done
 
   return 0
