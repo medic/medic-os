@@ -19,6 +19,7 @@ clean:
 
 distclean: clean
 	rm -rf initrd/lib/modules/*
+	rm -f iso/boot/kernel iso/boot/image.gz iso/packages/*
 	(cd source && ${MAKE} clean)
 
 clean-iso:

@@ -13,6 +13,7 @@ merge_environment()
   local java_root="$prefix/software/java/v$java_version/$cpu"
 
   export PACKAGE_ROOT="$root"
+  export PACKAGE_NAME="$name"
   export PACKAGE_SCRIPTS="$prefix/scripts/$name"
   export PACKAGE_STORAGE="$prefix/storage/$name"
   export PACKAGE_SOFTWARE="$prefix/software/$name"

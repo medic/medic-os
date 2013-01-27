@@ -10,18 +10,20 @@ main()
   if [ "$package" = '-h' -o "$package" = '--help' ]; then
     usage
   fi
-  
-  if [ -z "$package" ]; then
+
+  if [ -z "$package" -o "$package" = 'all' ]; then
     supervisor_list_all_packages
   else
+    if ! supervisor_package_exists "$package"; then
+      fatal "Package '$package' is not currently installed"
+    fi
     case "$attribute" in
       watched|expected|running|down)
         ;;
       '')
         attribute='all' ;;
       *)
-        warn "Service attribute '$attribute' does not exist"
-        usage
+        fatal "Service attribute '$attribute' does not exist"
     esac
    
     "supervisor_list_${attribute}_services" "$package"
@@ -47,7 +49,9 @@ fatal()
 
 usage()
 {
-  echo "Usage: $0 [package-name [watched|expected|running|down]]" >&2
+  echo "Usage: $0 <package-name | 'all'> " \
+    '[watched | expected | running | disabled | down]' >&2
+
   exit 111
 }
 

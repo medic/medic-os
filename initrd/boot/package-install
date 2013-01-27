@@ -17,6 +17,9 @@ main()
     package_install "$path" \
       || fatal "Failed to install package '$path'"
 
+    package_setup "$package" \
+      || fatal "Failed to run setup script for package '$path'"
+
     supervisor_start "$package" \
       || fatal "Failed to start supervisor for package '$package'"
 

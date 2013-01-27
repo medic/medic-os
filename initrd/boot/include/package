@@ -105,26 +105,27 @@ package_remove()
 {
   local package="`basename "$1"`"
 
-  if [ -x "/srv/scripts/$package/remove" ]; then
-
-    if ! supervisor_stop "$package"; then
-      warn "Failed to stop services for package '$package'"
-      return 1
-    fi
+  if ! supervisor_stop "$package"; then
+    warn "Failed to stop services for package '$package'"
+    return 1
+  fi
     
+  if [ -x "/srv/scripts/$package/remove" ]; then
     if ! "/srv/scripts/$package/remove"; then
       warn "Removal script for '$package' exited with non-zero status"
       return 2
     fi
+  fi
 
-    rm -rf "/srv/receipts/$package"
+  rm -rf "/srv/receipts/$package" \
+    "/srv/storage/system/supervisor/$package"
+
+  if [ "$?" -gt 0 ]; then
+    warn "Failed to remove installation records for package '$package'"
+    return 3
   fi
 
   sync
-
-  if [ "$?" -gt 0 ]; then
-    return 2
-  fi
 
   return 0
 }
@@ -132,7 +133,7 @@ package_remove()
 package_update()
 {
   local path="$1"
-  local force_reinstall="$2"
+  local force_install="$2"
 
   local package="`package_extract_name "$path"`" &&
   local v_new="`package_extract_version "$path"`" &&
@@ -148,25 +149,25 @@ package_update()
     return 2
   fi
 
-  if [ "$v_prev" -gt 0 ] 2>/dev/null; then
-    if [ "$v_prev" -gt "$v_new" -a -z "$force_reinstall" ] &>/dev/null; then
+  if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ] 2>/dev/null; then
 
-      warn "A newer version of '$package' is already installed"
-      warn "Use the force-reinstall option if you want to install it anyway"
-      return 3
+    warn "A newer version of '$package' is already installed"
+    warn "Use the force-install option if you want to install it anyway"
+    return 3
 
-    elif [ "$v_prev" -lt "$v_new" ]; then
+  elif [ "$v_prev" -a "$v_prev" -ne "$v_new"] 2>/dev/null; then
 
-      force_reinstall='t'
-
-      if ! package_remove "$package"; then
-        warn "Failed to completely remove package '$package'"
+    if ! package_remove "$package"; then
+      warn "Failed to completely remove package '$package'"
 	return 4
-      fi
     fi
   fi
 
-  if [ "$force_reinstall" ]; then
+  if [ -z "$v_prev" -o "$v_prev" -lt "$v_new" ] 2>/dev/null; then
+    force_install='t'
+  fi
+
+  if [ "$force_install" ]; then
     if ! package_install "$path"; then
       warn "Package '$package' encountered an error during installation"
       warn "Software installation from file '$file' was unsuccessful"
@@ -206,6 +207,24 @@ package_setup()
         || warn "Setup script '$script' for package '$package' failed"
     fi
   done
+
+  return 0
+}
+
+package_remove_empty_directories()
+{
+  local package="`basename "$1"`"
+  local software_dir="/srv/software/$package"
+
+  local file_count="`
+    find "$software_dir" -type f 2>/dev/null | wc -l
+  `"
+
+  [ "$?" -eq 0 ] || return 1
+    
+  if [ "$file_count" -eq 0 ]; then
+    rm -rf "$software_dir" || return 2
+  fi
 
   return 0
 }

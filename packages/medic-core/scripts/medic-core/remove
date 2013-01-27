@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source '/boot/include/package'
+
 remove()
 {
   local self="`realpath "$0"`"
@@ -8,8 +10,11 @@ remove()
   source "$base/env" &&
   merge_environment /srv
 
-  rm -rf "$PACKAGE_SOFTWARE" "$PACKAGE_SCRIPTS" "$PACKAGE_SETTINGS" \
+  rm -rf "$PACKAGE_ROOT" "$PACKAGE_SCRIPTS" \
     "$PACKAGE_STORAGE"/*/logs "$PACKAGE_STORAGE"/*/state
+
+  package_remove_empty_directories "$PACKAGE_NAME"
+  return "$?"
 }
 
 remove "$@"
