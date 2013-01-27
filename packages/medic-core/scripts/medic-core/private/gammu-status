@@ -18,13 +18,15 @@ detect()
 
   for device in $GAMMU_SMS_DEVICES; do
 
-    if [ "$device" = "$devices" ]; then
-      break
+    if ! [ -c "$device" ]; then
+      continue
     fi
+    
     if [ -z "$require_user" ]; then
       echo "$device"
       return 0
     fi
+    
     if [ "`stat -c '%U' "$device"`" = "$require_user" ]; then
       echo "$device"
       return 0

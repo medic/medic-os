@@ -19,8 +19,12 @@ detect()
   local logs_dir="$storage_dir/logs"
   local log="$logs_dir/autodetect.log"
 
-  for device_path in $GAMMU_DEVICES; do 
+  for device_path in $GAMMU_SMS_DEVICES; do 
 
+    if ! [ -c "$device_path" ]; then
+      continue
+    fi
+    
     local device_name="`basename "$device_path"`"
 
     # Probe for device:
@@ -45,6 +49,7 @@ detect()
         return 2
       fi
 
+      return 0
     fi
   done
 
