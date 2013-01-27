@@ -19,7 +19,6 @@ _supervisor_process()
 
   while true; do
 
-    rm -f "$pkg_supervise_dir/status/$package.pid" &&
     mkdir -p "$pkg_supervise_dir/status" "$pkg_supervise_dir/logs"
 
     # Is service down?
@@ -31,7 +30,7 @@ _supervisor_process()
       read < "$svc_down_fifo" &>/dev/null
       rm -f "$svc_down_fifo"
     fi
-    
+
     # Fork-and-exec:
     #  This attempts to start the supervised process.
         
@@ -40,11 +39,10 @@ _supervisor_process()
     local pid="$!"
     local pid_file="$pkg_supervise_dir/status/$service.pid"
     
-    echo "$pid" > "$pid_file" &&
-    wait "$pid" &&
-    rm -f "$pid_file"
-
+    echo "$pid" > "$pid_file" && wait "$pid"
     local status="$?"
+
+    rm -f "$pid_file"
     
     if [ "$status" -eq 0 ]; then
       echo "`date`: Service '$service' in package '$package'" \
@@ -60,6 +58,7 @@ _supervisor_process()
       fi
     fi
 
+    rm -f "$svc_status_fifo"
     echo "`date`: Restarting service '$service' in '$package'" >> "$log"
   done
 }
@@ -70,7 +69,7 @@ _supervisor_termination_trap()
   local service="$2"
 
   _supervisor_terminate_service "$package" "$service"
-  exit 111
+  exit "$?"
 }
 
 _supervisor_restart_trap()
@@ -104,24 +103,36 @@ _start_supervisor_process()
   local package="$1"
   local service="$2"
 
-  local ppid_dir="$supervise_dir/$package/status"
+  local pkg_supervise_dir="$supervise_dir/$package"
+  local ppid_dir="$pkg_supervise_dir/status"
   local ppid_file="$ppid_dir/$service.ppid"
 
-  supervisor_service_exists "$package" "$service" || return 1
+  mkdir -p "$ppid_dir" || return 1
 
-  if supervisor_is_service_watched "$package" "$service"; then
-    return 2
+  supervisor_service_exists "$package" "$service" || return 2
+  supervisor_is_service_watched "$package" "$service" && return 3
+
+  # Start supervisor:
+  #   This actually starts the supervisor process; it, in
+  #   turn, forks off the actual service to-be-watched.
+
+  (_supervisor_process "$package" "$service" &>/dev/null) &
+
+  # Write PPID file:
+  #   This file contains the PID of the supervisor process.
+
+  local ppid="$!"
+  echo "$ppid" > "$ppid_file"
+
+  if [ "$?" -ne 0 ]; then
+    warn "Failed to create PID file for '$package/$service'"
+    warn "Terminating supervisor process '$pid'"
+
+    kill -KILL "$ppid"
+    return 5
   fi
-    
-  trap '_terminate_supervisor_process "$package" "$service"' TERM
 
-  _supervisor_process "$package" "$service" &>/dev/null &
-
-  local pid="$!"
-  mkdir -p "$ppid_dir" &&
-  echo "$pid" > "$ppid_file"
-  
-  return "$?"
+  return 0
 }
 
 _terminate_supervisor_process()
@@ -144,9 +155,70 @@ _terminate_supervisor_process()
     return 3
   fi
 
+  # Status FIFO:
+  #   This is used to wait for service termination, as well as
+  #   to relay status messages during the termination process.
+
+  local svc_term_fifo="$pkg_status_dir/$service.term"
+
+  if ! mkfifo -m 0640 "$svc_term_fifo"; then
+    warn "Failed to create termination FIFO for '$package/$service'"
+    return 4
+  fi
+
   rm -f "$ppid_file" "$pkg_status_dir/$service.down" &&
   kill -TERM "$ppid" 2>/dev/null
+
+  if [ "$?" -ne 0 ]; then
+    return 5
+  fi
+
+  _wait_for_supervisor_exit "$package" "$service"
+  rm -f "$svc_term_fifo"
+
+  return "$?"
+}
+
+_wait_for_supervisor_exit()
+{
+  local package="$1"
+  local service="$2"
+
+  local exit_status=''
+  local pkg_status_dir="$supervise_dir/$package/status"
+  local svc_term_fifo="$pkg_status_dir/$service.term"
   
+  while [ -z "$exit_status" ] ; do
+    while read line; do
+    
+      # Did we read a number?
+      #   If so, this is the supervisor's exit status.
+
+      if [ "$line" -ge 0 ] 2>/dev/null; then
+        exit_status="$line"
+        break;
+      fi
+      
+      # Did we read something else?
+      #   If so, this is a status message; print it as a warning.
+
+      warn "$line"
+      
+    done < "$svc_term_fifo"
+  done
+
+  if [ "$exit_status" -ne 0 ]; then
+    warn "Service '$package/$service' exited with status '$exit_status'"
+  fi
+
+  return 0
+}
+
+_pid_has_active_process()
+{
+  local pid="`basename "$1"`"
+
+  test -d "/proc/$pid"
   return "$?"
 }
 
@@ -155,20 +227,40 @@ _pidfile_has_active_process()
   local pid_file="$1"
   
   if ! [ -f "$pid_file" ]; then
-    return 1
+    return 2
   fi
 
   local pid="`cat "$pid_file" 2>/dev/null`"
 
   if ! [ "$pid" ]; then
-    return 2
-  fi
-
-  if ! [ -d "/proc/$pid" ]; then
     return 3
   fi
 
-  return 0
+  _pid_has_active_process "$pid"
+  return "$?"
+}
+
+_termination_status_send()
+{
+  local package="$1"
+  local service="$2"
+  shift 2
+
+  local pkg_status_dir="$supervise_dir/$package/status"
+  local svc_term_fifo="$pkg_status_dir/$service.term"
+
+  for str in "$@"; do
+    if [ -p "$svc_term_fifo" ]; then
+      echo "$str" > "$svc_term_fifo"
+    else
+      if [ "$str" -ge 0 ] 2>/dev/null; then
+        str="Service exited with status '$str'"
+      fi
+      echo "'$package/$service': $str" >> "$log"
+    fi
+  done
+
+  return "$?"
 }
 
 _supervisor_terminate_service()
@@ -176,22 +268,71 @@ _supervisor_terminate_service()
   local package="$1"
   local service="$2"
 
+  local max_terminate_attempts='5'
+  local termination_wait_interval='2'
+  
   local pkg_status_dir="$supervise_dir/$package/status"
   local pid_file="$pkg_status_dir/$service.pid"
 
+  if ! [ -f "$pid_file" ]; then
+    return 0
+  fi
+
   local pid="`cat "$pid_file" 2>/dev/null`"
 
-  if [ "$pid" ]; then
-    rm -f "$pid_file" &&
-    kill -TERM "$pid" 2>/dev/null
+  if -z [ "$pid" ]; then
+
+    _termination_status_send "$package" "$service" \
+      "Process identifier is missing from '$pid_file'" \
+      'You may need to manually remove the file and retry'
+
+    _termination_status_send "$package" "$service" '255'
+    return 255
   fi
+
+  if ! rm -f "$pid_file"; then
+
+    _termination_status_send "$package" "$service" \
+      "Failed to remove file '$pid_file'" \
+      'Ensure you have write access to package status directories'
+
+    _termination_status_send "$package" "$service" '254'
+    return 254
+  fi
+
+  for i in `seq 1 "$max_terminate_attempts"`; do
+    kill -TERM "$pid" 2>/dev/null
+    if ! _pid_has_active_process "$pid"; then
+      break;
+    else
+      sleep "$termination_wait_interval"
+      _termination_status_send "$package" "$service" \
+        "Service '$package/$service' remains running; retrying"
+    fi
+  done
+
+  if _pid_has_active_process "$pid"; then
+    
+    _termination_status_send "$package" "$service" \
+      "Process in package '$package/$service' did not terminate" \
+      "Forcibly killing process with PID '$pid'..."
+
+    kill -KILL "$pid" 2>/dev/null
+    sleep "$termination_wait_interval"
+  fi
+
+  wait "$pid"
+  local exit_status="$?"
+
+  _termination_status_send "$package" "$service" "$exit_status"
+  return "$exit_status"
 }
 
 _supervisor_apply()
 {
   local operation="$1"
   local function="$2"
-  local package="`basename "$3"`"
+  local package="$3"
   shift 3
   
   local rv='0'
@@ -236,20 +377,27 @@ _supervisor_apply()
 
 supervisor_start()
 {
-  _supervisor_apply 'start' _start_supervisor_process "$@"
+  local package="`basename "$1"`"
+  shift 1
+
+  _supervisor_apply 'start' _start_supervisor_process "$package" "$@"
   return "$?"
 }
 
 supervisor_stop()
 {
-  _supervisor_apply 'stop' _terminate_supervisor_process "$@"
+  local package="`basename "$1"`"
+  shift 1
+
+  _supervisor_apply 'stop' _terminate_supervisor_process "$package" "$@"
   return "$?"
 }
 
 supervisor_reset()
 {
   if [ -d "$supervise_dir" ]; then
-    find "$supervise_dir" \( -type p -a -name '*.down' \) \
+    find "$supervise_dir" \
+	\( -type p -a \( -name '*.down' -o -name '*.term' \) \) \
 	-o -name '*.pid' -o -name '*.ppid' -exec rm -f {} \;
   fi
 
@@ -322,7 +470,8 @@ supervisor_service_down()
   local ppid="`cat "$pkg_supervise_dir/status/$service.ppid"`"
   local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
   
-  rm -f "$svc_down_fifo" && mkfifo -m 0600 "$svc_down_fifo" &&
+  rm -f "$svc_down_fifo" &&
+  mkfifo -m 0600 "$svc_down_fifo" &&
   kill -HUP "$ppid" 2>/dev/null
   
   if [ "$?" -ne 0 ]; then
@@ -535,7 +684,7 @@ supervisor_is_service_disabled()
   local package="`basename "$1"`"
   local service="`basename "$2"`"
   
-  [ -f "$supervise_dir/$package/status/$service.disabled" ]
+  test -f "$supervise_dir/$package/status/$service.disabled"
 }
 
 supervisor_is_service_watched()
@@ -561,7 +710,7 @@ supervisor_is_service_down()
   local package="`basename "$1"`"
   local service="`basename "$2"`"
 
-  [ -p "$supervise_dir/$package/status/$service.down" ]
+  test -p "$supervise_dir/$package/status/$service.down"
 }
 
 supervisor_is_service_expected()
