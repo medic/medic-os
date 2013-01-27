@@ -10,17 +10,24 @@ install()
   merge_environment /srv
 
   chown -R couchdb:staff \
-    "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb"
-
+    "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb" &&
+  \
   chown -R couchdb-lucene:staff \
-    "$PACKAGE_STORAGE/couchdb-lucene"
-
-  chown -R gammu:staff \
-    "$PACKAGE_STORAGE/gammu" "$PACKAGE_SETTINGS/gammu"
-
+    "$PACKAGE_STORAGE/couchdb-lucene" &&
+  \
+  chown -R gammu:gammu \
+    "$PACKAGE_STORAGE/gammu" "$PACKAGE_SETTINGS/gammu" &&
+  \
+  find "$PACKAGE_STORAGE/gammu" \
+    -type d -exec chmod 0750 {} \; &&
+  \
+  for binary in "$PACKAGE_ROOT/bin/gammu-smsd-inject"; do
+    chown gammu:gammu-inject "$binary" && chmod 4110 "$binary"
+  done &&
+  \
   persist_ssh_user_configuration_files \
-    tc "$PACKAGE_SETTINGS" authorized_keys
-
+    tc "$PACKAGE_SETTINGS" authorized_keys &&
+  \
   install_default_couchdb_databases \
     "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
 }
@@ -61,18 +68,15 @@ persist_ssh_user_configuration_files()
     local src_path="$ssh_dot_dir/authorized_keys"
     local target_path="$ssh_settings_dir/authorized_keys"
     
-    touch "$target_path" \
-      || return "$?"
+    touch "$target_path" || return 1
 
     if [ -f "$src_path" ]; then
-      cat "$src_path" >> "target_path" \
-        || return "$?"
+      cat "$src_path" >> "target_path" || return 2
     fi
 
     rm -f "$src_path" &&
     ln -sf "$target_path" "$src_path" &&
-    chown "$user.staff" "$target_path" \
-      || return "$?"
+    chown "$user.staff" "$target_path" || return 3
   done
 
   return 0

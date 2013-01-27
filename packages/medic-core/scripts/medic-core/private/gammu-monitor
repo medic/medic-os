@@ -31,7 +31,7 @@ monitor()
       rm -f "$settings_dir/detected"
       
       if [ "$last_device" ]; then
-        echo "`date`: Device '$last_device' was lost" >&2
+        warn "Device '$last_device' was lost"
       fi
       
       "$base/gammu-status" &>/dev/null
@@ -39,19 +39,20 @@ monitor()
       if [ "$?" -eq 0 ]; then
 
         touch "$settings_dir/detecting"
-        echo "`date`: Possible device(s) found, running autodetection" >&2
+        warn 'Possible device(s) found, running autodetection'
 
         device="`"$base/gammu-autodetect"`"
       
         if [ "$device" ]; then
-          echo "`date`: Auto-detection found device '$device'" >&2
+          warn "Auto-detection found device '$device'"
+          warn "Restarting '$package/$service' to add new device..."
 
           echo "$device" > "$settings_dir/detected" &&
 	  /boot/svc-restart "$package" "$service"
 
 	  if [ "$?" -ne 0 ]; then
             rm -f "$settings_dir/detected"
-            echo "`date`: Failed to restart '$package/$service'" >&2
+            warn "Failed to restart '$package/$service'"
 	  fi
         fi
 
@@ -65,6 +66,17 @@ monitor()
   done
   
   return 1
+}
+
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 1
 }
 
 main()

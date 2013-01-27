@@ -31,7 +31,7 @@ detect()
     #   Re-create configuration file, then attempt to identify device.
 
     rm -f "$settings_file" && mkdir -p "$logs_dir" &&
-    echo "`date`: Auto-detect running for '$device_path'" >> "$log" &&
+    warn "Auto-detect running for '$device_path'" &&
     \
     sed "s/ttyUSBX/$device_name/g;" < "$settings_file.template" \
       > "$settings_file" 2>/dev/null &&
@@ -45,7 +45,7 @@ detect()
 
       if [ "$?" -ne 0 ]; then
         warn "Failed to take ownership of '$device_path'"
-        warn "Skipping device and continuing with auto-detection"
+        warn "Skipping device; continuing auto-detection"
         return 2
       fi
 
@@ -54,6 +54,17 @@ detect()
   done
 
   return 1
+}
+
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 1
 }
 
 main()

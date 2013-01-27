@@ -101,12 +101,12 @@ apply_automatic_ip()
 
 warn()
 {
-  echo "Warning: $*" 2>&1
+  echo "Warning: $*" >&2
 }
 
 fatal()
 {
-  echo "Fatal: $*" 2>&1
+  echo "Fatal: $*" >&2
   exit 1
 }
 
