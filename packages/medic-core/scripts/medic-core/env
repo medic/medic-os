@@ -19,6 +19,8 @@ merge_environment()
   export PACKAGE_SOFTWARE="$prefix/software/$name"
   export PACKAGE_SETTINGS="$prefix/settings/$name"
 
+  export GAMMU_SMS_DEVICES='/dev/ttyUSB? /dev/ttyACM?'
+
   export PATH="$root/bin:$root/sbin:$PATH"
   export LD_LIBRARY_PATH="$root/lib:$LD_LIBRARY_PATH"
 

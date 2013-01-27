@@ -11,10 +11,18 @@ monitor()
   local package='medic-core'
   local service='gammu'
   
+  local last_device=''
   local settings_dir="/srv/storage/$package/$service/monitor"
+
+  # Clean up:
+  #  These files might be left-over from a previous boot.
+
+  rm -f "$settings_dir/detected" "$settings_dir/detecting" &&
   mkdir -p "$settings_dir"
 
-  local last_device=''
+  # Main loop:
+  #  Find the device that's currently in use. If it changes or
+  #  goes away entirely, log the event and probe for a new one.
  
   while true; do
     local device="`"$base/gammu-status" gammu`"
@@ -23,20 +31,20 @@ monitor()
       rm -f "$settings_dir/detected"
       
       if [ "$last_device" ]; then
-        echo "Device '$last_device' was lost at `date`" >&2
+        echo "`date`: Device '$last_device' was lost" >&2
       fi
       
       "$base/gammu-status" &>/dev/null
 
       if [ "$?" -eq 0 ]; then
         touch "$settings_dir/detecting"
-        echo "Possible device(s) found, running autodetection at `date`" >&2
+        echo "`date`: Possible device(s) found, running autodetection" >&2
 
         device="`"$base/gammu-autodetect"`"
       
         if [ "$device" ]; then
           echo "$device" > "$settings_dir/detected"
-          echo "Auto-detect found device '$device' at `date`" >&2
+          echo "`date`: Auto-detect found device '$device'" >&2
         fi
       fi
       
