@@ -18,24 +18,46 @@ detect()
   
   local logs_dir="$storage_dir/logs"
   local log="$logs_dir/autodetect.log"
-  
-  for i in `seq 0 9`; do
+ 
+  for n in `seq 0 9`; do
+    for type in USB ACM; do 
 
-    rm -f "$settings_file" && mkdir -p "$logs_dir" &&
-    echo "Auto-detect running for '/dev/ttyUSB$i' at `date`" >> "$log" &&
-    \
-    sed "s/ttyUSBX/ttyUSB$i/g;" < "$settings_file.template" \
-      > "$settings_file" 2>/dev/null &&
-    \
-    gammu -c "$settings_file" identify >> "$log" 2>&1
+      local device="tty$type$n"
+      local device_path="/dev/$device"
 
-    if [ "$?" -eq 0 ]; then
-      local device="/dev/ttyUSB$i"
-      chown "$user:$user" "$device"
-      echo "$device"
-      return 0
-    fi;
-   done
+      # Check for existence of device:
+      #   If the path is not a character-special device node, then
+      #   skip over it to keep from filling logs and taking CPU time.
+
+      if ! [ -c "$device_path" ]; then
+        continue
+      fi
+
+      # Probe for device:
+      #   Re-create configuration file, then attempt to identify device.
+
+      rm -f "$settings_file" && mkdir -p "$logs_dir" &&
+      echo "`date`: Auto-detect running for '$device_path'" >> "$log" &&
+      \
+      sed "s/ttyUSBX/$device/g;" < "$settings_file.template" \
+        > "$settings_file" 2>/dev/null &&
+      \
+      gammu -c "$settings_file" identify >> "$log" 2>&1
+
+      if [ "$?" -eq 0 ]; then
+
+	# Take ownership and return full device path
+        chown "$user:$user" "$device_path" && echo "$device_path"
+
+	if [ "$?" -ne 0 ]; then
+          warn "Failed to take ownership of '$device_path'"
+          warn "Skipping device and continuing with auto-detection"
+	  return 2
+	fi
+      fi
+
+     done
+  done
 
   return 1
 }
