@@ -58,12 +58,12 @@ detect()
 
 warn()
 {
-  echo "Warning: $*" >&2
+  echo "`date`: Warning: $*" >&2
 }
 
 fatal()
 {
-  echo "Fatal: $*" >&2
+  echo "`date`: Fatal: $*" >&2
   exit 1
 }
 

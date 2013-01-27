@@ -45,15 +45,15 @@ monitor()
       
         if [ "$device" ]; then
           warn "Auto-detection found device '$device'"
-          warn "Restarting '$package/$service' to add new device..."
+          warn "Reloading '$package/$service' to add new device(s)..."
 
           echo "$device" > "$settings_dir/detected" &&
-	  /boot/svc-restart "$package" "$service"
+          /boot/svc-reload "$package" "$service"
 
-	  if [ "$?" -ne 0 ]; then
+          if [ "$?" -ne 0 ]; then
             rm -f "$settings_dir/detected"
             warn "Failed to restart '$package/$service'"
-	  fi
+          fi
         fi
 
       fi
@@ -70,12 +70,12 @@ monitor()
 
 warn()
 {
-  echo "Warning: $*" >&2
+  echo "`date`: Warning: $*" >&2
 }
 
 fatal()
 {
-  echo "Fatal: $*" >&2
+  echo "`date`: Fatal: $*" >&2
   exit 1
 }
 

@@ -1,12 +1,5 @@
 #!/bin/sh
 
-prefix_logs()
-{
-  while read line; do
-    echo "`date`: $line"
-  done
-}
-
 start()
 {
   local self="`realpath "$0"`"
@@ -17,8 +10,8 @@ start()
   \
   local logs_dir="$PACKAGE_STORAGE/gammu/logs" &&
   \
-  exec "$base/../private/gammu-monitor" 2>&1 |
-    prefix_logs >> "$logs_dir/gammu-monitor.log"
+  exec "$base/../private/gammu-monitor" \
+    >> "$logs_dir/gammu-monitor.log" 2>&1
 }
 
 main()
