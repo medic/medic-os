@@ -18,7 +18,7 @@ main()
       fatal "Package '$package' is not currently installed"
     fi
     case "$attribute" in
-      watched|expected|running|down)
+      watched|expected|unexpected|enabled|disabled|running|restarting|down)
         ;;
       '')
         attribute='all' ;;
@@ -49,8 +49,11 @@ fatal()
 
 usage()
 {
-  echo "Usage: $0 <package-name | 'all'> " \
-    '[watched | expected | running | disabled | down]' >&2
+  echo -e "Usage:\n" \
+    "  $0 <package-name | 'all'> [ status-name ]\n"
+  echo
+  echo -e "Supported status names:\n" \
+    '  watched, (un)expected, [en|dis]abled, running, restarting, down' >&2
 
   exit 111
 }

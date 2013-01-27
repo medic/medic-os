@@ -11,6 +11,8 @@ _supervisor_process()
   local service="`basename "$2"`"
 
   local pkg_supervise_dir="$supervise_dir/$package"
+  local pkg_status_dir="$pkg_supervise_dir/status"
+
   local log="$pkg_supervise_dir/logs/$service.log"
 
   trap '_supervisor_resync_trap "$package" "$service"' HUP
@@ -19,12 +21,12 @@ _supervisor_process()
 
   while true; do
 
-    mkdir -p "$pkg_supervise_dir/status" "$pkg_supervise_dir/logs"
+    mkdir -p "$pkg_status_dir" "$pkg_supervise_dir/logs"
 
     # Is service down?
     #   If so, block on the FIFO; a write is our signal to resume.
     
-    local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
+    local svc_down_fifo="$pkg_status_dir/$service.down"
     
     if [ -p "$svc_down_fifo" ]; then
       read < "$svc_down_fifo" &>/dev/null
@@ -37,9 +39,13 @@ _supervisor_process()
     (exec "/srv/scripts/$package/run/$service" >> "$log" 2>&1) &
 
     local pid="$!"
-    local pid_file="$pkg_supervise_dir/status/$service.pid"
-    
-    echo "$pid" > "$pid_file" && wait "$pid"
+    local pid_file="$pkg_status_dir/$service.pid"
+    local restart_file="$pkg_status_dir/$service.restart"
+
+    echo "$pid" > "$pid_file" &&
+    rm -f "$restart_file" &&
+    wait "$pid"
+
     local status="$?"
 
     rm -f "$pid_file"
@@ -77,7 +83,10 @@ _supervisor_restart_trap()
   local package="$1"
   local service="$2"
 
-  is_restart_event='true'
+  local restart_file="$supervise_dir/$package/status/$service.restart"
+  touch "$restart_file"
+
+  is_restart_event='t'
   _supervisor_terminate_service "$package" "$service"
 }
 
@@ -135,51 +144,41 @@ _start_supervisor_process()
   return 0
 }
 
-_terminate_supervisor_process()
+_create_service_termination_fifo()
 {
   local package="$1"
   local service="$2"
-  
-  supervisor_service_exists "$package" "$service" || return 1
 
-  local pkg_status_dir="$supervise_dir/$package/status"
-  local ppid_file="$pkg_status_dir/$service.ppid"
-  
-  if ! supervisor_is_service_watched "$package" "$service"; then
-    return 2
-  fi
-  
-  local ppid="`cat "$ppid_file" 2>/dev/null`"
-
-  if ! [ "$ppid" ]; then
-    return 3
-  fi
-
-  # Status FIFO:
+  # Termination-status FIFO:
   #   This is used to wait for service termination, as well as
   #   to relay status messages during the termination process.
 
-  local svc_term_fifo="$pkg_status_dir/$service.term"
+  local svc_term_fifo="$supervise_dir/$package/status/$service.term"
 
   if ! mkfifo -m 0640 "$svc_term_fifo"; then
     warn "Failed to create termination FIFO for '$package/$service'"
-    return 4
+    return 1
   fi
 
-  rm -f "$ppid_file" "$pkg_status_dir/$service.down" &&
-  kill -TERM "$ppid" 2>/dev/null
-
-  if [ "$?" -ne 0 ]; then
-    return 5
-  fi
-
-  _wait_for_supervisor_exit "$package" "$service"
-  rm -f "$svc_term_fifo"
-
-  return "$?"
+  return 0
 }
 
-_wait_for_supervisor_exit()
+_delete_service_termination_fifo()
+{ 
+  local package="$1"
+  local service="$2"
+
+  local svc_term_fifo="$supervise_dir/$package/status/$service.term"
+
+  if ! rm -f "$svc_term_fifo"; then
+    warn "Failed to delete termination FIFO for '$package/$service'"
+    return 1
+  fi
+
+  return 0
+}
+
+_wait_for_service_termination()
 {
   local package="$1"
   local service="$2"
@@ -263,6 +262,46 @@ _termination_status_send()
   return "$?"
 }
 
+_terminate_supervisor_process()
+{
+  local package="$1"
+  local service="$2"
+  
+  supervisor_service_exists "$package" "$service" || return 1
+
+  local pkg_status_dir="$supervise_dir/$package/status"
+  local ppid_file="$pkg_status_dir/$service.ppid"
+  
+  if ! supervisor_is_service_watched "$package" "$service"; then
+    return 2
+  fi
+  
+  local ppid="`cat "$ppid_file" 2>/dev/null`"
+
+  if ! [ "$ppid" ]; then
+    return 3
+  fi
+
+  _create_service_termination_fifo "$package" "$service" \
+    || return 4
+
+  rm -f "$ppid_file" "$pkg_status_dir/$service.down" &&
+  kill -TERM "$ppid" 2>/dev/null
+
+  if [ "$?" -ne 0 ]; then
+    warn "Couldn't send signal to supervisor of '$package/$service'"
+    return 5
+  fi
+
+  _wait_for_service_termination "$package" "$service" \
+    || return 6
+
+  _delete_service_termination_fifo "$package" "$service" \
+    || return 7
+
+  return 0
+}
+
 _supervisor_terminate_service()
 {
   local package="$1"
@@ -333,6 +372,7 @@ _supervisor_apply()
   local operation="$1"
   local function="$2"
   local package="$3"
+
   shift 3
   
   local rv='0'
@@ -466,18 +506,23 @@ supervisor_service_down()
     return 3
   fi
 
+  _create_service_termination_fifo "$package" "$service" \
+    || return 4
+
   local pkg_supervise_dir="$supervise_dir/$package"
   local ppid="`cat "$pkg_supervise_dir/status/$service.ppid"`"
   local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
   
   rm -f "$svc_down_fifo" &&
   mkfifo -m 0600 "$svc_down_fifo" &&
-  kill -HUP "$ppid" 2>/dev/null
+  kill -HUP "$ppid" 2>/dev/null || return 5
   
-  if [ "$?" -ne 0 ]; then
-    return 4 # FIFO / signal failure
-  fi
-    
+  _wait_for_service_termination "$package" "$service" \
+    || return 6
+
+  _delete_service_termination_fifo "$package" "$service" \
+    || return 7
+
   return 0
 }
 
@@ -505,6 +550,8 @@ supervisor_service_up()
 
   # Write to the FIFO:
   #   This unblocks `_supervisor_process` and starts the service.
+  #   If, for some reason, the supervisor isn't listening at the
+  #   other end, we'll remain blocked until a supervisor shows up.
   
   local pkg_supervise_dir="$supervise_dir/$package"
   local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
@@ -540,14 +587,19 @@ supervisor_service_restart()
     return 5
   fi
 
+  _create_service_termination_fifo "$package" "$service" \
+    || return 6
+
   local pkg_supervise_dir="$supervise_dir/$package"
-  local ppid="`cat "$pkg_supervise_dir/status/$service.ppid"`"
+  local ppid="`cat "$pkg_supervise_dir/status/$service.ppid" 2>/dev/null`"
 
-  kill -USR1 "$ppid" 2>/dev/null
+  kill -USR1 "$ppid" 2>/dev/null || return 7
+  
+  _wait_for_service_termination "$package" "$service" \
+    || return 8
 
-  if [ "$?" -ne 0 ]; then
-    return 6 # Signal failure
-  fi
+  _delete_service_termination_fifo "$package" "$service" \
+    || return 9
 
   return 0
 }
@@ -567,12 +619,7 @@ supervisor_service_reload()
   local pkg_supervise_dir="$supervise_dir/$package"
   local pid="`cat "$pkg_supervise_dir/status/$service.pid"`"
 
-  kill -HUP "$pid" 2>/dev/null
-
-  if [ "$?" -ne 0 ]; then
-    return 3 # Signal failure
-  fi
-
+  kill -HUP "$pid" 2>/dev/null || return 3
   return 0
 }
 
@@ -616,29 +663,28 @@ supervisor_list_services_filtered()
   return 0
 }
 
-supervisor_list_expected_services()
+supervisor_list_restarting_services()
 {
   local package="`basename "$1"`"
 
   supervisor_list_services_filtered \
-    "$package" supervisor_is_service_expected
+    "$package" supervisor_is_service_restarting
 }
 
-supervisor_list_unexpected_services()
-{
-  local package="`basename "$1"`"
-
-  supervisor_list_services_filtered \
-    "$package" ! supervisor_is_service_expected
-}
-
-
-supervisor_list_down_services()
+supervisor_list_enabled_services()
 {
   local package="`basename "$1"`"
   
   supervisor_list_services_filtered \
-    "$package" supervisor_is_service_down
+    "$package" supervisor_is_service_enabled
+}
+
+supervisor_list_disabled_services()
+{
+  local package="`basename "$1"`"
+  
+  supervisor_list_services_filtered \
+    "$package" supervisor_is_service_disabled
 }
 
 supervisor_list_watched_services()
@@ -679,12 +725,50 @@ supervisor_list_running_services()
   return 0
 }
 
+supervisor_list_down_services()
+{
+  local package="`basename "$1"`"
+  
+  supervisor_list_services_filtered \
+    "$package" supervisor_is_service_down
+}
+
+supervisor_list_expected_services()
+{
+  local package="`basename "$1"`"
+
+  supervisor_list_services_filtered \
+    "$package" supervisor_is_service_expected
+}
+
+supervisor_list_unexpected_services()
+{
+  local package="`basename "$1"`"
+
+  supervisor_list_services_filtered \
+    "$package" supervisor_is_service_unexpected
+}
+
+supervisor_is_service_restarting()
+{
+  local package="`basename "$1"`"
+  local service="`basename "$2"`"
+  
+  test -f "$supervise_dir/$package/status/$service.restart"
+}
+
 supervisor_is_service_disabled()
 {
   local package="`basename "$1"`"
   local service="`basename "$2"`"
   
   test -f "$supervise_dir/$package/status/$service.disabled"
+}
+
+
+supervisor_is_service_enabled()
+{
+  test ! supervisor_is_service_disabled "$@"  
 }
 
 supervisor_is_service_watched()
@@ -718,8 +802,14 @@ supervisor_is_service_expected()
   supervisor_service_exists "$@" || return 1
   supervisor_is_service_down "$@" && return 2
   supervisor_is_service_disabled "$@" && return 3
+  supervisor_is_service_restarting "$@" && return 4
 
   return 0
+}
+
+supervisor_is_service_unexpected()
+{
+  test ! supervisor_is_service_expected "$@"
 }
 
 supervisor_package_exists()

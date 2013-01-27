@@ -17,7 +17,7 @@ detect()
   local settings_file="$settings_dir/autodetect.conf"
   
   local logs_dir="$storage_dir/logs"
-  local log="$logs_dir/autodetect.log"
+  local log="$logs_dir/gammu-autodetect.log"
 
   for device_path in $GAMMU_SMS_DEVICES; do 
 

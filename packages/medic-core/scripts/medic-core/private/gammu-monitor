@@ -37,15 +37,24 @@ monitor()
       "$base/gammu-status" &>/dev/null
 
       if [ "$?" -eq 0 ]; then
+
         touch "$settings_dir/detecting"
         echo "`date`: Possible device(s) found, running autodetection" >&2
 
         device="`"$base/gammu-autodetect"`"
       
         if [ "$device" ]; then
-          echo "$device" > "$settings_dir/detected"
-          echo "`date`: Auto-detect found device '$device'" >&2
+          echo "`date`: Auto-detection found device '$device'" >&2
+
+          echo "$device" > "$settings_dir/detected" &&
+	  /boot/svc-restart "$package" "$service"
+
+	  if [ "$?" -ne 0 ]; then
+            rm -f "$settings_dir/detected"
+            echo "`date`: Failed to restart '$package/$service'" >&2
+	  fi
         fi
+
       fi
       
       rm -f "$settings_dir/detecting"

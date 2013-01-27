@@ -13,7 +13,7 @@ show_package()
 show_services()
 {
   local package="`basename "$1"`"
-  local attributes='expected watched running down disabled'
+  local attributes='watched running restarting down disabled expected'
 
   local n="`supervisor_list_all_services "$package" | wc -l`"
   
@@ -34,10 +34,12 @@ show_services()
     	echo -n 'Disabled'
     elif supervisor_is_service_down "$package" "$service"; then
     	echo -n 'Stopped'
+    elif supervisor_is_service_restarting "$package" "$service"; then
+    	echo -n 'Restarting'
     elif ! supervisor_is_service_watched "$package" "$service"; then
-    	echo -n 'Supervisor Problem'
+    	echo -n 'Unsupervised'
     else
-    	echo -n 'Service Problem'
+    	echo -n 'Failure'
     fi
     
     echo -n ' (flags: '
