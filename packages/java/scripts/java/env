@@ -19,5 +19,7 @@ merge_environment()
 
   export PATH="$root/bin:$root/sbin:$PATH"
   export LD_LIBRARY_PATH="$root/lib:$LD_LIBRARY_PATH"
+
+  return 0
 }
 

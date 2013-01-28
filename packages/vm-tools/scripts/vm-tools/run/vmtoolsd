@@ -18,8 +18,8 @@ start()
   fi
 
   source "$base/../env" &&
-  merge_environment /srv &&
-  \
+  merge_environment /srv || return 255
+
   modprobe -a vmci vmblock vsock vmhgfs vmxnet &&
   exec nohup vmtoolsd >> "$PACKAGE_STORAGE/logs/vmtoolsd.log" 2>&1
 }

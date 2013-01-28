@@ -7,7 +7,7 @@ install()
   local base="`dirname "$self"`"
 
   source "$base/env" &&
-  merge_environment /srv
+  merge_environment /srv || return 255
 
   chown -R couchdb:staff \
     "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb" &&
@@ -30,6 +30,8 @@ install()
   \
   install_default_couchdb_databases \
     "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
+
+  return "$?"
 }
 
 

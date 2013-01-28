@@ -26,5 +26,7 @@ merge_environment()
 
   export JAVA_HOME="$java_root"
   export PATH="$java_root/bin:$java_root/java/bin:$PATH"
+
+  return 0
 }
 

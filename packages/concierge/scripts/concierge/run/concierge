@@ -7,10 +7,9 @@ start()
 
   source "$base/../../medic-core/env" &&
   merge_environment /srv &&
-  \
   source "$base/../env" &&
-  merge_environment /srv &&
-  \
+  merge_environment /srv || return 255
+
   exec nohup node "$PACKAGE_ROOT/server.js" \
     >> "$PACKAGE_STORAGE/logs/startup.log" 2>&1
 }

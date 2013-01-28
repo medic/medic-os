@@ -36,7 +36,8 @@ iso-image: initrd-image verify-packages
 initrd-image:
 	@echo -n 'Creating initrd image... '
 	@cd initrd && \
-		find * | cpio -o -H newc 2>/dev/null | xz -9ec \
+		find * | cpio -o -H newc 2>/dev/null \
+		  | sh ../source/linux/scripts/xz_wrap.sh \
 			> ../iso/boot/image.xz
 	@echo 'done.'
 
