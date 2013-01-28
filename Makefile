@@ -36,8 +36,8 @@ iso-image: initrd-image verify-packages
 initrd-image:
 	@echo -n 'Creating initrd image... '
 	@cd initrd && \
-		find * | cpio -o -H newc 2>/dev/null | gzip -c9 \
-			> ../iso/boot/image.gz
+		find * | cpio -o -H newc 2>/dev/null | xz -9ec \
+			> ../iso/boot/image.xz
 	@echo 'done.'
 
 strip-binaries:

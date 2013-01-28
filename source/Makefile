@@ -67,7 +67,7 @@ build-kernel: build-pv
 	@(cd linux && \
 		cp ../../kernel/boot-logo/logo-medic.ppm \
 			./drivers/video/logo/logo_linux_clut224.ppm && \
-		cp "../../kernel/dot-config-${KERNEL_VERSION}-grsec" .config) && \
+		cp -H "../../kernel/dot-config-${KERNEL_VERSION}" .config) && \
 		./scripts/logger linux \
 			'cd linux && ${PMAKE} bzImage && ${PMAKE} modules'
 
