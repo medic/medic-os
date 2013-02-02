@@ -160,7 +160,9 @@ main()
   fi
 
   display_centered 'Starting services...'
-  supervisor_reset
+
+  supervisor_reset \
+    || fatal "Failed to reset supervisor status information"
 
   for pkg in system-services vm-tools medic-core concierge gardener; do
     supervisor_start "$pkg" \

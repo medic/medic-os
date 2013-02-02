@@ -436,9 +436,14 @@ supervisor_stop()
 supervisor_reset()
 {
   if [ -d "$supervise_dir" ]; then
-    find "$supervise_dir" \
-	\( -type p -a \( -name '*.down' -o -name '*.term' \) \) \
-	-o -name '*.pid' -o -name '*.ppid' -exec rm -f {} \;
+    for p in '*.down' '*.term'; do
+      find "$supervise_dir" -type p -name "$p" -exec rm -f {} \; \
+        || return 1
+    done
+    for f in '*.pid' '*.ppid'; do
+      find "$supervise_dir" -type f -name "$f" -exec rm -f {} \; \
+        || return 2
+    done
   fi
 
   return 0
