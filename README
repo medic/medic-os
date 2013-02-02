@@ -4,5 +4,6 @@ release.
 
 Due to size restrictions, the source code for the Linux kernel, CouchDB,
 Node.js, OpenSSH, and their dependencies are not directly included in this
-repository. For a full source tree with pre-built binaries, please ask Dave.
+repository. For a full source tree with pre-built binaries, please ask Dave
+or join #medicmobile on Freenode (IRC).
 
