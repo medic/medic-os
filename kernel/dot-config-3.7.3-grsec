@@ -612,7 +612,8 @@ CONFIG_BQL=y
 # CONFIG_BT is not set
 # CONFIG_WIRELESS is not set
 # CONFIG_WIMAX is not set
-# CONFIG_RFKILL is not set
+CONFIG_RFKILL=m
+# CONFIG_RFKILL_INPUT is not set
 # CONFIG_NET_9P is not set
 # CONFIG_CAIF is not set
 
@@ -980,16 +981,34 @@ CONFIG_E1000=y
 # USB Network Adapters
 #
 # CONFIG_USB_KAWETH is not set
-# CONFIG_USB_PEGASUS is not set
-# CONFIG_USB_USBNET is not set
+CONFIG_USB_PEGASUS=m
+CONFIG_USB_USBNET=m
+# CONFIG_USB_NET_AX8817X is not set
+CONFIG_USB_NET_CDCETHER=m
+CONFIG_USB_NET_CDC_NCM=m
+# CONFIG_USB_NET_DM9601 is not set
+# CONFIG_USB_NET_SMSC75XX is not set
+# CONFIG_USB_NET_SMSC95XX is not set
+# CONFIG_USB_NET_GL620A is not set
+# CONFIG_USB_NET_NET1080 is not set
+# CONFIG_USB_NET_MCS7830 is not set
+# CONFIG_USB_NET_CDC_SUBSET is not set
+# CONFIG_USB_NET_ZAURUS is not set
+# CONFIG_USB_NET_CX82310_ETH is not set
+CONFIG_USB_NET_KALMIA=m
+CONFIG_USB_NET_QMI_WWAN=m
+CONFIG_USB_HSO=m
+# CONFIG_USB_NET_INT51X1 is not set
 # CONFIG_USB_IPHETH is not set
+CONFIG_USB_SIERRA_NET=m
+CONFIG_USB_VL600=m
 # CONFIG_WLAN is not set
 
 #
 # Enable WiMAX (Networking options) to see the WiMAX drivers
 #
 # CONFIG_WAN is not set
-CONFIG_VMXNET3=y
+CONFIG_VMXNET3=m
 # CONFIG_ISDN is not set
 
 #
