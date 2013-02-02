@@ -18,9 +18,10 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-size: 11pt;
+  font-size: 10pt;
   font-family: "Droid Sans";
 }
+
 body {
   background: url('../images/texture.png');
   background: image-set(
@@ -44,8 +45,9 @@ body {
   text-align: center;
   height: 10em;
 }
+
 .logo {
-  height: 11em;
+  height: 10em;
   width: 100%;
   opacity: 0.4;
   background: url('../images/medic-logo.svg');
@@ -67,6 +69,7 @@ body {
   overflow: hidden;
   border-radius: 2em;
 }
+
 .login-background {
   z-index: 10;
   border: solid 1px #000;
@@ -74,20 +77,24 @@ body {
   opacity: 0.2;
   box-shadow: 0.35em 0.35em 1em #000;
 }
+
 .login-top, .login-bottom {
   z-index: 100;
   width: 100%;
   left: 0;
 }
+
 .login-top {
   border-radius: 2em 2em 0 0;
   position: absolute;
   top: 0;
 }
+
 .login-bottom {
   border-radius: 0 0 2em 2em;
   position: absolute;
 }
+
 .login-status {
   position: absolute;
   top: 14em;
@@ -101,6 +108,7 @@ body {
   text-shadow: 0.15em 0.15em 0.1em #000;
 }
 
+
 input {
   padding: 0.5em;
   margin-top: 0.25em;
@@ -109,13 +117,16 @@ input {
   background-color: #fff;
 
 }
+
 input, .textarea-wrapper {
   box-shadow: 0 0 0.5em #555;
   opacity: 0.5;
 }
+
 input, textarea {
   outline: none;
 }
+
 .textarea-wrapper {
   border: solid 1px #111;
   border-radius: 1.5em;
@@ -127,9 +138,11 @@ input, textarea {
   right: 2.5em;
   bottom: 2em;
 }
+
 input.full {
   width: 100%;
 }
+
 textarea.full {
   margin: 0;
   padding: 0;
@@ -138,22 +151,27 @@ textarea.full {
   border: none;
   resize: none;
 }
+
 input:focus, .textarea-focus {
   box-shadow: 0 0 0.75em #d00;
   opacity: 0.95;
 }
 
+
 .indent {
   padding-left: 2.5em;
 }
+
 .rows {
   padding: 1.5em 0 1em 2em;
 }
+
 .row {
   margin: 0 3.5em 0 0.5em;
   padding: 0 0 0.5em 0;
   position: relative;
 }
+
 
 label {
   padding: 0.25em 2em 0 0.25em;
@@ -161,6 +179,7 @@ label {
   display: block;
   text-shadow: 0 0 0.5em #000;
 }
+
 .label-hint {
   position: absolute;
   right: 2.5em;
@@ -170,26 +189,31 @@ label {
   padding: 0.5em 1em 0 0;
 }
 
+
 .buttons {
   position: absolute;
   text-align: center;
   bottom: 2.5em;
   width: 100%;
 }
+
 .button, .circle {
   margin-left: auto;
   margin-right: auto;
 }
+
 .button {
   width: 5em;
   cursor: pointer;
   text-shadow: 0.15em 0.15em 0.2em #555;
 }
+
 .button .icon {
   color: #000;
   line-height: 1.25em;
   font-size: 2.5em;
 }
+
 .button .circle {
   width: 3em;
   height: 3em;
@@ -197,6 +221,7 @@ label {
   border-radius: 2em;
   border: solid 0.25em #000;
 }
+
 .button .label {
   color: #000;
   opacity: 0.5;
@@ -204,20 +229,29 @@ label {
   font-weight: bold;
   padding-top: 0.25em;
 }
+
 .hover .label {
   text-shadow: 0 0 0.5em #000;
 }
+
 .hover .icon, .hover .label {
   color: #fff;
 }
+
+
 .hover .circle {
   border-color: #fff;
   box-shadow: 0 0 1em #000;
 }
+
+
 .icon-lock-open:before {
   content: 'B';
 }
+
+
 .icon-lock-closed:before {
   content: 'A';
 }
+
 

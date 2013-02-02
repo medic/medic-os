@@ -6,8 +6,8 @@ start()
   local base="`dirname "$self"`"
 
   source "$base/../env" &&
-  merge_environment /srv &&
-  \
+  merge_environment /srv || return 255
+
   exec nohup su -c 'exec couchdb' couchdb \
     >> "$PACKAGE_STORAGE/couchdb/logs/startup.log" 2>&1
 }

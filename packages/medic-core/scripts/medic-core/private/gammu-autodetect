@@ -17,27 +17,54 @@ detect()
   local settings_file="$settings_dir/autodetect.conf"
   
   local logs_dir="$storage_dir/logs"
-  local log="$logs_dir/autodetect.log"
-  
-  for i in `seq 0 9`; do
+  local log="$logs_dir/gammu-autodetect.log"
+
+  for device_path in $GAMMU_SMS_DEVICES; do 
+
+    if ! [ -c "$device_path" ]; then
+      continue
+    fi
+    
+    local device_name="`basename "$device_path"`"
+
+    # Probe for device:
+    #   Re-create configuration file, then attempt to identify device.
 
     rm -f "$settings_file" && mkdir -p "$logs_dir" &&
-    echo "Auto-detect running for '/dev/ttyUSB$i' at `date`" >> "$log" &&
+    warn "Auto-detect running for '$device_path'" &&
     \
-    sed "s/ttyUSBX/ttyUSB$i/g;" < "$settings_file.template" \
+    sed "s/ttyUSBX/$device_name/g;" < "$settings_file.template" \
       > "$settings_file" 2>/dev/null &&
     \
     gammu -c "$settings_file" identify >> "$log" 2>&1
 
     if [ "$?" -eq 0 ]; then
-      local device="/dev/ttyUSB$i"
-      chown "$user:$user" "$device"
-      echo "$device"
+
+      # Take ownership and return full device path
+      chown "$user:$user" "$device_path" && echo "$device_path"
+
+      if [ "$?" -ne 0 ]; then
+        warn "Failed to take ownership of '$device_path'"
+        warn "Skipping device; continuing auto-detection"
+        return 2
+      fi
+
       return 0
-    fi;
-   done
+    fi
+  done
 
   return 1
+}
+
+warn()
+{
+  echo "`date`: Warning: $*" >&2
+}
+
+fatal()
+{
+  echo "`date`: Fatal: $*" >&2
+  exit 1
 }
 
 main()

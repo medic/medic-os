@@ -11,7 +11,7 @@ compile:
 copy:
 	@(cd source && ${QMAKE} copy)
 
-packages: medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg
+packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg
 
 clean:
 	rm -f output/image.iso
@@ -25,7 +25,7 @@ distclean: clean
 clean-iso:
 	rm -f iso/packages/*.vpkg iso/boot/image.gz iso/boot/kernel
 
-iso-image: initrd-image verify-packages strip-binaries
+iso-image: initrd-image verify-packages
 	@echo -n 'Creating ISO image... '
 	@cd iso && mkisofs -J -R -V 'Medic Mobile VM' \
 		-boot-load-size 4 -boot-info-table -o ../output/image.iso \
@@ -36,8 +36,9 @@ iso-image: initrd-image verify-packages strip-binaries
 initrd-image:
 	@echo -n 'Creating initrd image... '
 	@cd initrd && \
-		find * | cpio -o -H newc 2>/dev/null | gzip -c9 \
-			> ../iso/boot/image.gz
+		find * | cpio -o -H newc 2>/dev/null \
+		  | sh ../source/linux/scripts/xz_wrap.sh \
+			> ../iso/boot/image.xz
 	@echo 'done.'
 
 strip-binaries:

@@ -181,7 +181,7 @@ main()
 
 warn()
 {
-  echo -e "Warning triggered at `date`:\n  $*" >> "$log" 2>&1
+  echo -e "Warning triggered at `date`:\n  $*" >> "$log"
 }
 
 fatal()

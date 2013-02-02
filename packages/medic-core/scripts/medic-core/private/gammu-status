@@ -11,20 +11,27 @@ detect()
   source "$base/../env" &&
   merge_environment /srv
 
-  local devices='/dev/ttyUSB*'
+  # Search for the first suitable SMS device:
+  #   A "suitable device" means anything that's specified in the
+  #   `env` file's `GAMMU_SMS_DEVICES` variable. If `require_user`
+  #   is provided, then devices not owned by that user are ignored.
 
-  for device in $devices; do
-    if [ "$device" = "$devices" ]; then
-      break
+  for device in $GAMMU_SMS_DEVICES; do
+
+    if ! [ -c "$device" ]; then
+      continue
     fi
+    
     if [ -z "$require_user" ]; then
       echo "$device"
       return 0
     fi
+    
     if [ "`stat -c '%U' "$device"`" = "$require_user" ]; then
       echo "$device"
       return 0
     fi
+
   done
   
   return 1
