@@ -61,6 +61,10 @@ main()
   fi &&
   \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
+  build_autoconf 'popt' "$stdarg --enable-shared --disable-static" &&
+  \
+  build_make 'logrotate' 'all install' \
+    "PREFIX='$prefix' LFS='$CFLAGS' LDFLAGS='$LDFLAGS' BASEDIR=''" &&
   \
   builder_remove_static_libraries 'ncurses' 'ncurses_g' 'form' \
     'form_g' 'menu' 'menu_g' 'ncurses++' 'ncurses_g' 'panel' 'panel_g' &&
