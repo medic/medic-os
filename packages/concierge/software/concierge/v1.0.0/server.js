@@ -8,6 +8,8 @@ var child = require('child_process'),
     fs = require('fs'),
     app = express();
 
+var protocol = 'http://';
+var server = 'localhost:5984';
 var system_passwd_path = '/srv/storage/concierge/passwd/system';
 
 /**
@@ -65,25 +67,32 @@ app.post('/setup/password', function (req, res) {
     req.flash('key', key);
   }
 
-  set_password(req, password, confirmation, function (_err) {
-
+  set_password(req, password, confirmation, function (_err, _system_passwd) {
+  
     if (_err) {
       return res.redirect('/setup');
     }
 
-    if (key.length <= 0) {
-      req.flash('success', 'Password successfully set');
-      return res.redirect('/setup');
-    }
+    add_couchdb_defaults(req, _system_passwd, function (_err) {
 
-    add_openssh_public_key(req, key, function (_was_added) {
-
-      if (_was_added) {
-        req.flash('key', null);
-        req.flash('success', 'Password and public key successfully set');
+      if (_err) {
+        return res.redirect('/setup');
+      }
+      
+      if (key.length <= 0) {
+        req.flash('success', 'Password successfully set');
+        return res.redirect('/setup');
       }
 
-      return res.redirect('/setup');
+      add_openssh_public_key(req, key, function (_err) {
+
+        if (!_err) {
+          req.flash('key', null);
+          req.flash('success', 'Password and public key successfully set');
+        }
+        
+        return res.redirect('/setup');
+      });
     });
 
   });
@@ -203,7 +212,7 @@ var save_system_password = function (_req, _passwd, _callback) {
       }
 
       fs.fsync(_fd, function (_err) {
-          return _callback(_err);
+        return _callback(_err);
       });
     });
   });
@@ -218,7 +227,6 @@ var read_system_password = function (_callback) {
     fs.readFile(system_passwd_path, function (_err, _data) {
   
       if (_err) {
-        _req.flash('error', "Internal error: file read failed");
         return _callback(_err);
       }
     
@@ -264,14 +272,12 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
   /* Set CouchDB administrative password:
       This takes the database out of 'admin party' mode. */
 
-  var proto = 'http://';
-  var server = 'localhost:5984';
   var admins_uri = server + '/_config/admins'
 
   var put = {
     body: JSON.stringify(_passwd),
-    headers: { 'Content-type': 'application/json' },
-    uri: proto + admins_uri + '/admin'
+    uri: protocol + admins_uri + '/admin',
+    headers: { 'Content-type': 'application/json' }
   };
 
   /* Start talking to CouchDB:
@@ -279,27 +285,33 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
   async.waterfall([
 
-    /* Step 0: Read existing password, if any */
+    /* Step 0: Read system password, if it's already set */
     function (_cb) {
       read_system_password(function (_err, _system_passwd) {
         if (!_err) {
           put.auth = 'service:' + _system_passwd;
         }
-        return _cb();
+        /* Ignore errors: file might not exist */
+        return _cb(null, _system_passwd);
       });
     },
     
-    /* Step 1: Primary password change */
-    function (_cb) {
+    /* Step 1: Primary password change (i.e. admin) */
+    function (_system_passwd, _cb) {
       request.put(put, function (_err, _resp, _body) {
 	return check_response(
-	  _err, _resp, _req, 'Primary password change', _cb
+	  _err, _resp, _req, 'Primary password change', function(_e) {
+	    return _cb(_e, _system_passwd);
+	  }
 	);
       });
     },
 
-    /* Step 2: Secondary password generation */
-    function (_cb) {
+    /* Step 2: Secondary password generation, if necessary */
+    function (_system_passwd, _cb) {
+      if (_system_passwd) {
+        return _cb(null, _system_passwd);
+      }
       crypto.randomBytes(128, function (_err, _data) {
 	if (_err) {
 	  return _cb(_err);
@@ -311,9 +323,12 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     /* Step 3: Secondary password change */
     function (_system_passwd, _cb) {
 
-      put.auth = 'admin:' + _passwd;
-      put.uri = proto + admins_uri + '/service';
+      if (!_system_passwd) {
+        put.auth = 'admin:' + _passwd;
+      }
+        
       put.body = JSON.stringify(_system_passwd);
+      put.uri = protocol + admins_uri + '/service';
 
       request.put(put, function (_err, _resp, _body) {
 	return check_response(
@@ -324,19 +339,19 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
       });
     },
 
-    /* Step 4: Filesystem storage of secondary password */
+    /* Step 4: In-filesystem storage of secondary password */
     function (_system_passwd, _cb) {
 
       /* Store secondary administrative password in filesystem:
 	  This is used by local services needing to connect to CouchDB. */
 
       save_system_password(_req, _system_passwd, function (_err) {
-	return _cb(_err);
+	return _cb(_err, _system_passwd);
       });
     }
 
-  ], function (_err) {
-    return _callback(_err);
+  ], function (_err, _system_passwd) {
+    return _callback(_err, _system_passwd);
   });
 };      
 
@@ -369,9 +384,40 @@ var set_password = function (_req, _passwd, _confirm, _callback) {
       return _callback(_err);
     }
 
-    set_couchdb_passwd(_req, _passwd, _confirm, _callback);
+    set_couchdb_password(_req, _passwd, _confirm, _callback);
   });
 };
+
+/**
+ * add_couchdb_defaults:
+ */
+var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
+
+  var put = {
+    auth: 'service:' + _system_passwd,
+    headers: { 'Content-Type': 'application/json' }
+  };
+  
+  async.waterfall([
+
+    /* Step 1: Restrict CouchDB to valid users */
+    function (_cb) {
+      var config_uri = server + '/_config/couch_httpd_auth'
+
+      put.body = '"true"';
+      put.uri = protocol + config_uri + '/require_valid_user';
+
+      request.put(put, function (_err, _resp, _body) {
+	return check_response(
+	  _err, _resp, _req, 'Configuration change', _cb
+	);
+      });
+    }
+  ], 
+  function (_err) {
+    return _callback(_err);
+  });
+}
 
 /**
  * main:
