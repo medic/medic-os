@@ -1,0 +1,36 @@
+#!/bin/sh
+
+self="`readlink -f "$0"`"
+base_dir="`dirname "$self"`/../.."
+
+main()
+{
+  local command="$1"
+
+  if [ "$command" != 'force-erase' ]; then
+    echo
+    echo "WARNING: This script is designed for use within a virtual machine."
+    echo "WARNING: It will *irreversably erase* all data on '/dev/sdb1'."
+    echo "WARNING: It will also (temporarily) exhaust all free space on '/'."
+    echo
+    echo "If you really want to proceed, invoke this script as follows:"
+    echo "  $0 really-erase"
+    echo
+    exit 1
+  fi
+
+  logrotate -f /etc/logrotate.conf
+  rm -f /var/log/*.?*.gz
+
+  swapoff -a
+  (cd / && dd if=/dev/zero of=./zero bs=4096; rm -f ./zero)
+  #(cd /srv && dd if=/dev/zero of=./zero bs=4096; rm -f ./zero)
+  dd if=/dev/zero of=/dev/sdb1 bs=4096
+  mkswap /dev/sdb1
+
+  return 0
+}
+
+main "$@"
+exit "$?"
+
