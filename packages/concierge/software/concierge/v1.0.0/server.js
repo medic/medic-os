@@ -310,21 +310,23 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     /* Step 2: Secondary password generation, if necessary */
     function (_system_passwd, _cb) {
       if (_system_passwd) {
-        return _cb(null, _system_passwd);
+        return _cb(null, _system_passwd, false);
       }
       crypto.randomBytes(128, function (_err, _data) {
 	if (_err) {
 	  return _cb(_err);
 	}
-	return _cb(null, _data.toString('hex'));
+	return _cb(null, _data.toString('hex'), true);
       });
     },
 
     /* Step 3: Secondary password change */
-    function (_system_passwd, _cb) {
-
-      if (!_system_passwd) {
+    function (_system_passwd, _first_run, _cb) {
+    
+      if (_first_run) {
         put.auth = 'admin:' + _passwd;
+      } else {
+        put.auth = 'service:' + _system_passwd;
       }
         
       put.body = JSON.stringify(_system_passwd);
