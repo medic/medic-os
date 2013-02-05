@@ -3,10 +3,10 @@
 start()
 {
   local logs_dir='/srv/storage/system-services/logs'
-  local log_path="$logs_dir/system.log"
+  local log_path="$logs_dir/cron.log"
 
   mkdir -p "$logs_dir" &&
-  exec syslogd -n -O "$log_path" -b 4 >> "$log_path" 2>&1
+  exec crond -f -L "$log_path" >> "$log_path" 2>&1
 }
 
 main()

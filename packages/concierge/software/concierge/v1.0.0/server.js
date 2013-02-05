@@ -8,6 +8,7 @@ var child = require('child_process'),
     fs = require('fs'),
     app = express();
 
+var user = 'vm';
 var protocol = 'http://';
 var server = 'localhost:5984';
 var system_passwd_path = '/srv/storage/concierge/passwd/system';
@@ -167,7 +168,7 @@ var add_openssh_public_key = function (_req, _key, _callback) {
        This feature requires the `ssh-addkey` script and sudo privileges. */
 
   var passwd = child.spawn(
-    'sudo', [ '-u', 'tc', '/srv/scripts/concierge/private/ssh-addkey' ],
+    'sudo', [ '-u', user, '/srv/scripts/concierge/private/ssh-addkey' ],
       { stdio: 'pipe' }
   );
 
@@ -246,7 +247,7 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
       This can be used to log in via OpenSSH. */
 
   var passwd_process = child.spawn(
-    'sudo', [ 'passwd', 'tc' ], { stdio: 'pipe' }
+    'sudo', [ 'passwd', user ], { stdio: 'pipe' }
   );
 
   passwd_process.stdin.write(_passwd + '\n' + _confirm + '\n');
