@@ -22,6 +22,8 @@ clean_all()
       ( cd "$i" && make clean && make distclean )
     fi
   done
+
+  return 0
 }
 
 main()
