@@ -11,6 +11,7 @@ var child = require('child_process'),
 var user = 'vm';
 var protocol = 'http://';
 var server = 'localhost:5984';
+var private_path = '/srv/scripts/concierge/private';
 var system_passwd_path = '/srv/storage/concierge/passwd/system';
 
 /**
@@ -53,6 +54,17 @@ app.get('/setup', function (req, res) {
       success: req.flash('success')
     }
   });
+});
+
+
+/**
+ */
+app.post('/setup/finish', function (req, res) {
+
+  disable_concierge_service(function (_err) {
+    res.send(500);
+  });
+
 });
 
 
@@ -160,6 +172,35 @@ var check_response = function (_err, _resp, _req, _text, _cb) {
 
 
 /**
+ * disable_concierge_service:
+ */
+var disable_concierge_service = function (_req, _key, _callback) {
+
+  /* Terminate and disable the concierge process:
+       That's us, so take care to finish up before we spawn a subprocess. */
+
+  var passwd = child.spawn(
+    'sudo', [ '-u', user, private_path + '/disable-concierge' ],
+      { stdio: 'pipe' }
+  );
+
+  passwd.on('exit', function (_code, _signal) {
+
+    /* Error handling:
+        If we're successful, our process will exit on SIGTERM,
+        and this exit event will not be reached. If we do see a
+	subprocess exit, something went wrong (we're still alive). */
+
+    return request_error(
+      'Failed to shut down: internal error',
+        _req, _callback
+    );
+  });
+
+};
+
+
+/**
  * add_openssh_public_key:
  */
 var add_openssh_public_key = function (_req, _key, _callback) {
@@ -168,7 +209,7 @@ var add_openssh_public_key = function (_req, _key, _callback) {
        This feature requires the `ssh-addkey` script and sudo privileges. */
 
   var passwd = child.spawn(
-    'sudo', [ '-u', user, '/srv/scripts/concierge/private/ssh-addkey' ],
+    'sudo', [ '-u', user, private_path + '/ssh-addkey' ],
       { stdio: 'pipe' }
   );
 
