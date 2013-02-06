@@ -51,7 +51,7 @@ check_libraries()
 
   for library in "$@"; do
     local file="`
-      find "$pkg_base"/*/*/"lib/lib$library"*.so.* -prune 2>/dev/null \
+      find "$pkg_base"/*/*/"lib/lib$library"*.so -prune 2>/dev/null \
         | head -n1
     `"
     if ! [ -f "$file" ]; then
@@ -91,6 +91,8 @@ main()
   check_binaries 'vm-tools' 'bin' vmtoolsd \
     || fatal 'Failed to find a required binary in vm-tools/bin'
 
+  check_libraries  'vm-tools' dnet proc ffi \
+    || fatal 'Failed to find a required library in vm-tools'
   return 0
 }
 

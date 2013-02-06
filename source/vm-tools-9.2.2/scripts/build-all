@@ -37,6 +37,9 @@ main()
   \
   builder_remove_static_libraries 'z' &&
   \
+  build_make 'procps' 'all' 'SHARED=1' 't' &&
+  install_procps 'procps' "$prefix" &&
+  \
   build_autoconf 'libffi' "$stdarg" &&
   builder_remove_static_libraries 'ffi' &&
   \
@@ -48,9 +51,10 @@ main()
   \
   (disable_parallelism &&
    build_autoconf 'open-vm-tools' \
-    "$stdarg --with-kernel-release='$kernel_version' \
-     --with-linuxdir='$kernel_module_path' --without-x \
-     --without-gtk2 --without-pam --without-procps --without-icu") &&
+    "$stdarg --without-x \
+     --with-linuxdir='$kernel_module_path' \
+     --with-kernel-release='$kernel_version' \
+     --without-gtk2 --without-pam --without-icu") &&
   \
   builder_remove_static_libraries 'vmtools' 'hgfs' 'guestlib'
 
@@ -59,6 +63,17 @@ main()
   fi
 
   return 0
+}
+
+install_procps()
+{
+  local name="$1"
+  local prefix="$2"
+
+  mkdir -p "$prefix/lib" &&
+  cp "$name/proc/libproc-"*.so "$prefix/lib"
+
+  return "$?"
 }
 
 fatal()
