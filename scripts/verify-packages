@@ -77,7 +77,7 @@ main()
     menu history form panel ncurses exslt icudata xml2 exslt \
       || fatal 'Failed to find a required library in medic-core'
 
-  check_binaries 'medic-core' 'sbin' sshd paxctl \
+  check_binaries 'medic-core' 'sbin' sshd paxctl logrotate \
     || fatal 'Failed to find a required binary in medic-core/sbin'
 
   check_binaries 'medic-core' 'bin' \
