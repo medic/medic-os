@@ -3,7 +3,7 @@
 self="`readlink -f "$0"`"
 base_dir="`dirname "$self"`/../../medic-core"
 
-source "$base_dir/scripts/include/logger" 3>/dev/null &&
+source "$base_dir/scripts/include/logger" 2>/dev/null &&
 source "$base_dir/scripts/include/builder" 2>/dev/null \
     || fatal 'Unable to load a required library'
 
@@ -40,14 +40,17 @@ main()
   build_autoconf 'libffi' "$stdarg" &&
   builder_remove_static_libraries 'ffi' &&
   \
+  fix_libtool 'libdnet' &&
+  build_autoconf 'libdnet' \
+    "$stdarg --enable-shared --disable-static" &&
+  \
   build_autoconf 'glib' "$stdarg" &&
   \
   (disable_parallelism &&
    build_autoconf 'open-vm-tools' \
     "$stdarg --with-kernel-release='$kernel_version' \
-     --with-linuxdir='$kernel_module_path' \
-     --without-x --without-gtk2 --without-pam \
-     --without-procps --without-icu --without-dnet") &&
+     --with-linuxdir='$kernel_module_path' --without-x \
+     --without-gtk2 --without-pam --without-procps --without-icu") &&
   \
   builder_remove_static_libraries 'vmtools' 'hgfs' 'guestlib'
 

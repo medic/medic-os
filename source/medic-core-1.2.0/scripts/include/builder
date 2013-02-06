@@ -217,6 +217,19 @@ builder_clean_target()
       rm -rf megaco-* wx-* hipe-*) ) 2>&1 | logger "$name"
 }
 
+fix_libtool()
+{
+  for dir in "$@"; do
+    (cd "$dir" &&
+      libtoolize --automake --copy &&
+      aclocal -I config && autoheader &&
+      automake --add-missing --copy && autoconf) 2>/dev/null \
+	|| fatal "Unable to regenerate libtool files for '$dir'"
+  done
+
+  return 0
+}
+
 builder_initialize()
 {
   run_status_file="`tempfile`"
