@@ -1,5 +1,10 @@
 #!/bin/sh
 
+find_ntp_server()
+{
+  echo 'pool.ntp.org'
+}
+
 detect_vmware()
 {
   # FIXME: Need to improve hypervisor detection method
@@ -13,15 +18,17 @@ start()
   local base="`dirname "$self"`"
 
   if ! detect_vmware; then
-    while true; do sleep 3600; done
-    return
+    exec nohup ntpd -ndp "`find_ntp_server`" \
+      >> "$PACKAGE_STORAGE/logs/ntpd.log" 2>&1
   fi
 
   source "$base/../env" &&
   merge_environment /srv || return 255
 
   modprobe -a vmci vmblock vsock vmhgfs vmxnet &&
-  exec nohup vmtoolsd >> "$PACKAGE_STORAGE/logs/vmtoolsd.log" 2>&1
+  \
+  exec nohup vmtoolsd \
+    >> "$PACKAGE_STORAGE/logs/vmtoolsd.log" 2>&1
 }
 
 main()

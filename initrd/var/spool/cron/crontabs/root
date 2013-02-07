@@ -1,0 +1,16 @@
+
+# Run 'always' cron jobs every minute (use sparingly)
+* * * * * /boot/run-directories /etc/cron.always
+
+# Run hourly cron jobs at 30 minutes after the hour:
+30 * * * * /boot/run-directories /etc/cron.hourly
+
+# Run daily cron jobs at 12:30 every day:
+30 12 * * * /boot/run-directories /etc/cron.daily
+
+# Run weekly cron jobs at 13:00 on the first day of the week:
+30 13 * * 0 /boot/run-directories /etc/cron.weekly
+
+# Run monthly cron jobs at 13:30 on the first day of the month:
+30 13 1 * * /boot/run-directories /etc/cron.monthly
+
