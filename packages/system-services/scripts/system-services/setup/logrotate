@@ -1,0 +1,25 @@
+#!/bin/sh
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv || return 255
+
+  source "$base/../include/logrotate" && logrotate_install \
+    || return 1
+
+  return 0
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+
