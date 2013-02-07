@@ -61,7 +61,7 @@ app.get('/setup', function (req, res) {
  */
 app.post('/setup/finish', function (req, res) {
 
-  disable_concierge_service(function (_err) {
+  disable_concierge_service(req, function (_err) {
     res.send(500);
   });
 
@@ -174,23 +174,25 @@ var check_response = function (_err, _resp, _req, _text, _cb) {
 /**
  * disable_concierge_service:
  */
-var disable_concierge_service = function (_req, _key, _callback) {
+var disable_concierge_service = function (_req, _callback) {
 
   /* Terminate and disable the concierge process:
        That's us, so take care to finish up before we spawn a subprocess. */
 
-  var passwd = child.spawn(
-    'sudo', [ '-u', user, private_path + '/disable-concierge' ],
+  var disable = child.spawn(
+    'sudo', [ private_path + '/concierge-disable' ],
       { stdio: 'pipe' }
   );
+  
+  disable.stdin.end();
 
-  passwd.on('exit', function (_code, _signal) {
+  disable.on('exit', function (_code, _signal) {
 
     /* Error handling:
         If we're successful, our process will exit on SIGTERM,
         and this exit event will not be reached. If we do see a
 	subprocess exit, something went wrong (we're still alive). */
-
+	
     return request_error(
       'Failed to shut down: internal error',
         _req, _callback
@@ -208,15 +210,15 @@ var add_openssh_public_key = function (_req, _key, _callback) {
   /* Add data to OpenSSH's authorized_keys file:
        This feature requires the `ssh-addkey` script and sudo privileges. */
 
-  var passwd = child.spawn(
+  var addkey = child.spawn(
     'sudo', [ '-u', user, private_path + '/ssh-addkey' ],
       { stdio: 'pipe' }
   );
 
-  passwd.stdin.write(_key);
-  passwd.stdin.end();
+  addkey.stdin.write(_key);
+  addkey.stdin.end();
 
-  passwd.on('exit', function (_code, _signal) {
+  addkey.on('exit', function (_code, _signal) {
 
     if (_code != 0) {
       return request_error(
@@ -287,13 +289,13 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
   /* Set UNIX system password:
       This can be used to log in via OpenSSH. */
 
-  var passwd_process = child.spawn(
+  var passwd = child.spawn(
     'sudo', [ 'passwd', user ], { stdio: 'pipe' }
   );
 
-  passwd_process.stdin.write(_passwd + '\n' + _confirm + '\n');
+  passwd.stdin.write(_passwd + '\n' + _confirm + '\n');
    
-  passwd_process.on('exit', function (_code, _signal) {
+  passwd.on('exit', function (_code, _signal) {
 
     if (_code != 0) {
       return request_error(
