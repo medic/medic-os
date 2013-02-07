@@ -28,8 +28,8 @@ fi
    ln -sf ../../../../../settings/medic-core/openssh etc/ssh &&
  rm -rf etc/couchdb &&
    ln -sf ../../../../../settings/medic-core/couchdb etc/couchdb &&
- rm -rf var/log &&
-   ln -sf ../../../../../storage/medic-core/system/logs var/log &&
+ rm -rf var/log/couchdb &&
+   ln -sf ../../../../../../storage/medic-core/couchdb/logs var/log/couchdb &&
  rm -rf var/lib/couchdb &&
    ln -sf ../../../../../../storage/medic-core/couchdb/data var/lib/couchdb &&
  rm -rf var/run/couchdb &&

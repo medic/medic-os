@@ -8,12 +8,22 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  mkdir -p /etc/logrotate.d \
+  mkdir -p /etc/logrotate.d /etc/cron.daily \
     || return 1
 
   if ! [ -f /sbin/logrotate ]; then
     ln -sf "$PACKAGE_ROOT/sbin/logrotate" /sbin/logrotate \
       || return 2
+  fi
+
+  if ! [ -f /etc/logrotate.conf ]; then
+    ln -sf "$PACKAGE_SETTINGS/logrotate/logrotate.conf" /etc/logrotate.conf \
+      || return 3
+  fi
+
+  if ! [ -f /etc/cron.daily/logrotate ]; then
+    ln -sf "$PACKAGE_SCRIPTS/private/logrotate" /etc/cron.daily/logrotate \
+      || return 4
   fi
 
   return 0
