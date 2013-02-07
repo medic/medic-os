@@ -10,7 +10,7 @@ logrotate_install()
     || return 1
 
   if ! [ -f "$logrotate_dst_path" ]; then
-    cp "$logrotate_src_path" "$logrotate_dst_path" \
+    ln -sf "$logrotate_src_path" "$logrotate_dst_path" \
       || return 2
   fi
 
