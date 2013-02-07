@@ -356,11 +356,11 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
       if (_system_passwd) {
         return _cb(null, _system_passwd, false);
       }
-      crypto.randomBytes(128, function (_err, _data) {
+      crypto.randomBytes(256, function (_err, _data) {
 	if (_err) {
 	  return _cb(_err);
 	}
-	return _cb(null, _data.toString('hex'), true);
+	return _cb(null, _data.toString('base64'), true);
       });
     },
 
