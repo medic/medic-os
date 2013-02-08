@@ -17,13 +17,13 @@ start()
   local self="`realpath "$0"`"
   local base="`dirname "$self"`"
 
+  source "$base/../env" &&
+  merge_environment /srv || return 255
+
   if ! detect_vmware; then
     exec nohup ntpd -ndp "`find_ntp_server`" \
       >> "$PACKAGE_STORAGE/logs/ntpd.log" 2>&1
   fi
-
-  source "$base/../env" &&
-  merge_environment /srv || return 255
 
   modprobe -a vmci vmblock vsock vmhgfs vmxnet &&
   \

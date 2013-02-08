@@ -14,7 +14,7 @@ main()
     echo "WARNING: It will also (temporarily) exhaust all free space on '/'."
     echo
     echo "If you really want to proceed, invoke this script as follows:"
-    echo "  $0 really-erase"
+    echo "  $0 force-erase"
     echo
     exit 1
   fi
