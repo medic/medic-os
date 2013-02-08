@@ -14,13 +14,14 @@ PKG_DIR := ../packages
 JAVA_PKG_ROOT := ${PKG_DIR}/java/software/java/v${JAVA_VERSION}/${CPU}
 VM_TOOLS_PKG_ROOT := ${PKG_DIR}/vm-tools/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
 MEDIC_CORE_PKG_ROOT := ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
-
 PATH := ${PATH}:${VM_TOOLS_ROOT}/bin
 PATH := ${PATH}:${MEDIC_CORE_ROOT}/bin
 
 MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
+
+CFLAGS += -Os -fstack-protector-all
 
 KERNEL_VERSION := 3.7.5
 KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/lib/modules/${KERNEL_VERSION}")
@@ -31,7 +32,7 @@ all: build copy finalize
 
 build: build-all
 
-build-all: build-syslinux build-kernel install-kernel-modules build-vm-tools build-busybox build-medic-core
+build-all: build-dhcpcd build-syslinux build-kernel install-kernel-modules build-vm-tools build-busybox build-medic-core
 
 
 copy: copy-all
@@ -46,7 +47,7 @@ finalize-all: finalize-initrd
 
 clean: clean-all
 
-clean-all: clean-syslinux clean-kernel clean-vm-tools clean-busybox clean-medic-core
+clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-vm-tools clean-busybox clean-medic-core
 	rm -f logs/*
 
 
@@ -56,6 +57,21 @@ build-pv:
 	@(cd medic-core && echo && \
 		${QMAKE} ROOT='${MEDIC_CORE_ROOT}' START='pv' STOP='pv' \
 			BITS='${BITS}' PARALLEL='${PARALLEL}')
+
+
+dhcpcd: build-dhcpcd
+
+build-dhcpcd:
+	@./scripts/logger dhcpcd \
+		'cd dhcpcd && \
+		./configure --libexecdir=/lib/dhcpcd --with-hooks='' \
+			--dbdir=/run/dhcpcd --sysconfdir=/etc && \
+		${PMAKE} all CFLAGS="${CFLAGS}" && \
+		${PMAKE} _proginstall _scriptsinstall _confinstall \
+			DESTDIR=../../initrd'
+
+clean-dhcpcd:
+	@(cd dhcpcd && ${QMAKE} clean)
 
 
 kernel: build-kernel copy-kernel install-kernel-modules build-vm-tools
@@ -131,6 +147,7 @@ set-pax-flags:
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czrm \
 		'${MEDIC_CORE_PKG_ROOT}/lib/couchdb/bin/couchjs' 2>/dev/null && \
 	echo 'done.'
+
 
 busybox: build-busybox copy-busybox
 
