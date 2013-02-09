@@ -61,14 +61,17 @@ build-pv:
 
 dhcpcd: build-dhcpcd
 
-build-dhcpcd:
+build-dhcpcd: build-pv
 	@./scripts/logger dhcpcd \
 		'cd dhcpcd && \
-		./configure --libexecdir=/lib/dhcpcd --with-hooks='' \
+		./configure --libexecdir=/lib/dhcpcd \
 			--dbdir=/run/dhcpcd --sysconfdir=/etc && \
-		${PMAKE} all CFLAGS="${CFLAGS}" && \
-		${PMAKE} _proginstall _scriptsinstall _confinstall \
-			DESTDIR=../../initrd'
+		${MAKE} all CFLAGS="${CFLAGS}" && \
+		${MAKE} _proginstall _scriptsinstall _confinstall \
+			DESTDIR="../../initrd" && \
+		cd dhcpcd-hooks && \
+		${MAKE} install DESTDIR="../../../initrd" \
+			SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
 
 clean-dhcpcd:
 	@(cd dhcpcd && ${QMAKE} clean)
@@ -100,7 +103,7 @@ vm-tools: build-vm-tools copy-vm-tools
 clean-vm-tools:
 	(cd vm-tools && ${MAKE} clean)
 
-build-vm-tools: install-kernel-modules
+build-vm-tools: build-pv install-kernel-modules
 	@(cd vm-tools && ${QMAKE} \
 		KERNEL_VERSION='${KERNEL_VERSION}' \
 		KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' \
@@ -123,7 +126,7 @@ medic-core: build-medic-core copy-medic-core
 clean-medic-core:
 	rm -rf /srv/software/medic-core && (cd medic-core && ${MAKE} clean)
 
-build-medic-core:
+build-medic-core: build-pv
 	@(cd medic-core && \
 		${QMAKE} all gardenize ROOT='${MEDIC_CORE_ROOT}' \
 			BITS='${BITS}' PARALLEL='${PARALLEL}')
