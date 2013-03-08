@@ -130,7 +130,7 @@ build_npm_remote()
   local prefix="$2"
 
   builder_should_run "$name" || return 0
-  ("$prefix/bin/npm" install -g "$name") 2>&1 | logger "$name"
+  ("$prefix/bin/npm" install "$name" -g) 2>&1 | logger "$name"
   
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
