@@ -255,9 +255,8 @@ var save_system_password = function (_req, _passwd, _callback) {
     }
 
     var buffer = _passwd + '\n';
-    var len = buffer.length;
-
-    fs.write(_fd, buffer, 0, len, function (_err, _len, _buf) {
+    
+    fs.write(_fd, buffer, 0, 'utf-8', function (_err, _len, _buf) {
 
       if (_err) {
         _req.flash('error', "Internal error: file write failed");
@@ -265,6 +264,7 @@ var save_system_password = function (_req, _passwd, _callback) {
       }
 
       fs.fsync(_fd, function (_err) {
+
         return _callback(_err);
       });
     });
@@ -343,7 +343,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     
       read_system_password(function (_err, _system_passwd) {
         if (!_err) {
-          put.auth = 'service:' + _system_passwd;
+          put.auth = { user: 'service', pass: _system_passwd };
         }
         /* Ignore errors: file might not exist */
         return _cb(null, _system_passwd);
@@ -352,7 +352,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     
     /* Step 1: Primary password change (i.e. admin) */
     function (_system_passwd, _cb) {
-    
+
       request.put(put, function (_err, _resp, _body) {
         return check_response(
           _err, _resp, _req, 'Primary password change', function(_e) {
@@ -366,6 +366,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     function (_system_passwd, _cb) {
     
       if (_system_passwd) {
+
         return _cb(null, _system_passwd, false);
       }
       
@@ -373,6 +374,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
         if (_err) {
           return _cb(_err);
         }
+
         return _cb(null, _data.toString('base64'), true);
       });
     },
@@ -381,9 +383,9 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     function (_system_passwd, _first_run, _cb) {
     
       if (_first_run) {
-        put.auth = 'admin:' + _passwd;
+        put.auth = { user: 'admin', pass: _passwd };
       } else {
-        put.auth = 'service:' + _system_passwd;
+        put.auth = { user: 'service', pass: _system_passwd };
       }
       
       put.body = JSON.stringify(_system_passwd);
@@ -392,6 +394,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
       request.put(put, function (_err, _resp, _body) {
         return check_response(
           _err, _resp, _req, 'System account creation', function (_e) {
+
             return _cb(_e, _system_passwd, _first_run);
           }
         );
@@ -402,7 +405,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     function (_system_passwd, _first_run, _cb) {
     
       if (!_first_run) {
-              return _cb(null, _system_passwd);
+        return _cb(null, _system_passwd);
       }
       
       var doc = {
@@ -430,11 +433,13 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
           This is used by local services needing to connect to CouchDB. */
 
       save_system_password(_req, _system_passwd, function (_err) {
+
         return _cb(_err, _system_passwd);
       });
     }
 
   ], function (_err, _system_passwd) {
+
     return _callback(_err, _system_passwd);
   });
 };      
@@ -478,7 +483,7 @@ var set_password = function (_req, _passwd, _confirm, _callback) {
 var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
 
   var put = {
-    auth: 'service:' + _system_passwd,
+    auth: { user: 'service', pass: _system_passwd },
     headers: { 'Content-Type': 'application/json' }
   };
   

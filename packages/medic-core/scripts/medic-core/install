@@ -40,9 +40,9 @@ install_default_couchdb_databases()
   local package_root="$1"
   local storage_dir="$2"
 
-  for garden_db in dashboard.couch; do
-    local src="$package_root/share/couchdb/garden/$garden_db"
-    local dst="$storage_dir/couchdb/data/$garden_db"
+  for garden_db in dashboard; do
+    local src="$package_root/share/couchdb/garden/$garden_db.couch"
+    local dst="$storage_dir/couchdb/data/$garden_db.couch"
 
     if ! [ -f "$dst" ]; then
 	cp -a "$src" "$dst" && chown couchdb:couchdb "$dst" \

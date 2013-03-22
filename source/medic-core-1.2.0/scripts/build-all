@@ -42,6 +42,8 @@ main()
     "$stdarg --enable-static=no --enable-shared=yes" &&
   \
   if [ "$build_platform" = 'linux-elf' ]; then
+
+    build_autoconf 'strace' "$stdarg" &&
     build_autoconf 'usbutils' "$stdarg" &&
     \
     build_make 'usb-modeswitch' \
@@ -115,7 +117,8 @@ main()
   (simple_cflags && build_autoconf 'node' \
     "$stdarg --shared-zlib \
     --shared-zlib-includes='$prefix/include' \
-    --shared-zlib-libpath='$prefix/lib' --shared-openssl \
+    --shared-zlib-libpath='$prefix/lib' \
+    --shared-openssl \
     --shared-openssl-includes='$prefix/include' \
     --shared-openssl-libpath='$prefix/lib' --dest-cpu='$build_cpu'") &&
   \
@@ -134,8 +137,11 @@ main()
   (disable_parallelism && \
     builder_fix_erlang_dso_linkage "$bits") &&
   \
+  build_autoconf 'libffi' "$stdarg" && \
+  builder_remove_static_libraries 'ffi' &&
+  \
   build_autoconf 'gammu' \
-    "$stdarg --enable-shared --without-glib --without-gnapplet \
+    "$stdarg --enable-shared --without-gnapplet \
      --disable-backup --without-completion --enable-protection" &&
   \
   build_autoconf 'couchdb' \
@@ -147,7 +153,8 @@ main()
   build_make_install 'nodelint' "$prefix" &&
   \
   build_npm_remote 'kanso' "$prefix" &&
-  build_npm_remote 'fs-ext' "$prefix" &&
+  build_npm_remote 'node-gyp' "$prefix" &&
+  build_npm_local 'node-fs-ext' "$prefix" &&
   \
   build_ant 'ant' "$prefix" &&
   build_maven 'maven' "$prefix" &&

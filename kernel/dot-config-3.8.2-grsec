@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/i386 3.8.2 Kernel Configuration
+# Linux/i386 3.8.4 Kernel Configuration
 #
 # CONFIG_64BIT is not set
 CONFIG_X86_32=y
@@ -1974,6 +1974,7 @@ CONFIG_PAX_MEMORY_SANITIZE=y
 CONFIG_PAX_MEMORY_STACKLEAK=y
 # CONFIG_PAX_MEMORY_UDEREF is not set
 CONFIG_PAX_REFCOUNT=y
+# CONFIG_PAX_CONSTIFY_PLUGIN is not set
 CONFIG_PAX_USERCOPY=y
 # CONFIG_PAX_USERCOPY_DEBUG is not set
 CONFIG_PAX_SIZE_OVERFLOW=y

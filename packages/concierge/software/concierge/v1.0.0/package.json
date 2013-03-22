@@ -1,10 +1,9 @@
 {
-  "name": "vm-concierge",
+  "name": "concierge",
   "description": "Setup/configuration application for vm-toaster",
   "version": "0.0.2",
   "private": true,
   "dependencies": {
-    "fs": "0.x"
     "hbs": "1.x",
     "async": "0.x",
     "crypto": "0.x",

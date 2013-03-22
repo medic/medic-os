@@ -118,7 +118,7 @@ build_npm_local()
 
   builder_should_run "$name" || return 0
 
-  (cd "$name" &&
+  (cd "$name" && unset MAKE &&
     "$prefix/bin/npm" install -g) 2>&1 | logger "$name"
   
   builder_check_status "$name" "${PIPESTATUS[0]}"
