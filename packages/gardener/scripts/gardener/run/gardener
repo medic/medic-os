@@ -26,7 +26,8 @@ start()
   wait_for_passwd_file "$passwd_file" &&
   \
   local gardener="$PACKAGE_ROOT/node_modules/gardener/bin/gardener" &&
-  local gardener_args="watch 'http://service@localhost:5984' --stdinpass=true" &&
+  local gardener_watch="watch 'http://service@localhost:5984'" &&
+  local gardener_args="$gardener_watch --web=false --stdinpass=true" &&
   \
   exec nohup su -c "exec node '$gardener' $gardener_args" gardener \
     < "$passwd_file" >> "$PACKAGE_STORAGE/logs/startup.log" 2>&1

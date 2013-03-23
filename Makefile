@@ -2,6 +2,9 @@
 MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 
+CPU := x86
+MEDIC_CORE_VERSION := 1.2.1
+MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
 
 all: packages iso-image
 
@@ -48,7 +51,7 @@ strip-binaries:
 
 verify-packages:
 	@echo -n "Verifying package contents... "
-	@./scripts/verify-packages
+	@./scripts/verify-packages "${MEDIC_CORE_ROOT}"
 	@echo 'done.'
 
 concierge-pkg:

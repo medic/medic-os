@@ -5,7 +5,7 @@ PARALLEL ?= 16
 
 JAVA_VERSION := 1.7.9
 VM_TOOLS_VERSION := 9.2.2
-MEDIC_CORE_VERSION := 1.2.0
+MEDIC_CORE_VERSION := 1.2.1
 
 VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${CPU}
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
