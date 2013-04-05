@@ -293,23 +293,31 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
   /* Set UNIX system password:
       This can be used to log in via OpenSSH. */
 
-  var passwd = child.spawn(
-    'sudo', [ 'passwd', user ], { stdio: 'pipe' }
-  );
+  try {
+    var passwd = child.spawn(
+      'sudo', [ 'passwd', user ], { stdio: 'pipe' }
+    );
 
-  passwd.stdin.write(_passwd + '\n' + _confirm + '\n');
+    passwd.stdin.write(_passwd + '\n' + _confirm + '\n');
+    passwd.stdin.end();
    
-  passwd.on('exit', function (_code, _signal) {
+    passwd.on('exit', function (_code, _signal) {
 
-    if (_code != 0) {
-      return request_error(
-        'Password change failed: an internal error occurred',
-          _req, _callback
-      );
-    }
+      if (_code != 0) {
+        return request_error(
+          'Password change failed: password utility indicated a failure',
+            _req, _callback
+        );
+      }
 
-    return _callback();
-  });
+      return _callback();
+    });
+  } catch (e) {
+    return request_error(
+      "Password change failed: couldn't find/execute password utility",
+        _req, _callback
+    );
+  }
 };
 
 /**
