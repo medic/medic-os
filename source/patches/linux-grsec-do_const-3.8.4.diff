@@ -1,5 +1,5 @@
---- vm-toaster/source/linux/include/linux/net.h-prev	2013-03-21 00:43:03.228777626 -0700
-+++ vm-toaster/source/linux/include/linux/net.h	2013-03-21 00:43:14.965768432 -0700
+--- linux/include/linux/net.h-prev	2013-03-21 00:43:03.228777626 -0700
++++ linux/include/linux/net.h	2013-03-21 00:43:14.965768432 -0700
 @@ -183,7 +183,7 @@
  	int		(*create)(struct net *net, struct socket *sock,
  				  int protocol, int kern);

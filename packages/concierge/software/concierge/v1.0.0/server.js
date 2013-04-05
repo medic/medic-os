@@ -8,11 +8,13 @@ var child = require('child_process'),
     fs = require('fs'),
     app = express();
 
+
 var user = 'vm';
 var protocol = 'http://';
 var server = 'localhost:5984';
 var private_path = '/srv/scripts/concierge/private';
 var system_passwd_path = '/srv/storage/concierge/passwd/system';
+
 
 /**
  */
@@ -56,7 +58,6 @@ app.get('/setup', function (req, res) {
   });
 });
 
-
 /**
  */
 app.post('/setup/finish', function (req, res) {
@@ -66,7 +67,6 @@ app.post('/setup/finish', function (req, res) {
   });
 
 });
-
 
 /*
  */
@@ -147,7 +147,6 @@ var request_error = function (_message, _req, _callback) {
   );
 };
 
-
 /**
  * http_status_successful:
  */
@@ -155,7 +154,6 @@ var http_status_successful = function (_status) {
 
   return (_status >= 200 && _status < 300);
 };
-
 
 /**
  * check_response:
@@ -178,7 +176,6 @@ var check_response = function (_err, _resp, _req, _text, _cb) {
 
   return _cb();
 };
-
 
 /**
  * disable_concierge_service:
@@ -210,7 +207,6 @@ var disable_concierge_service = function (_req, _callback) {
 
 };
 
-
 /**
  * add_openssh_public_key:
  */
@@ -240,7 +236,6 @@ var add_openssh_public_key = function (_req, _key, _callback) {
   });
 
 };
-
 
 /**
  * save_system_password:

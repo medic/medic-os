@@ -5,7 +5,7 @@ PARALLEL ?= 16
 
 JAVA_VERSION := 1.7.9
 VM_TOOLS_VERSION := 9.2.2
-MEDIC_CORE_VERSION := 1.2.1
+MEDIC_CORE_VERSION := 1.2.2
 
 VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${CPU}
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
@@ -23,7 +23,7 @@ QMAKE := ${MAKE} --no-print-directory
 
 CFLAGS += -Os -fstack-protector-all
 
-KERNEL_VERSION := 3.8.4
+KERNEL_VERSION := 3.8.5
 KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/lib/modules/${KERNEL_VERSION}")
 
 
@@ -113,7 +113,7 @@ build-vm-tools: build-pv install-kernel-modules
 copy-vm-tools:
 	@echo -n "Copying files for 'vm-tools'... "
 	@(cd vm-tools && \
-		./scripts/prepare-dist '${VM_TOOLS_ROOT}' \
+		./scripts/prepare-dist '${VM_TOOLS_ROOT}' && \
 		mkdir -p ../../packages/vm-tools/software && \
 		rm -rf ../../packages/vm-tools/software/vm-tools && \
 		cp -R /srv/software/vm-tools \

@@ -3,7 +3,7 @@ MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 
 CPU := x86
-MEDIC_CORE_VERSION := 1.2.1
+MEDIC_CORE_VERSION := 1.2.2
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
 
 all: packages iso-image
@@ -66,7 +66,7 @@ java-pkg:
 
 medic-core-pkg:
 	@echo -n "Compressing package 'medic-core'... "
-	@scripts/build-package 'medic-core' 1200
+	@scripts/build-package 'medic-core' 1220
 	@echo 'done.'
 
 system-services-pkg:
@@ -76,7 +76,7 @@ system-services-pkg:
 
 vm-tools-pkg:
 	@echo -n "Compressing package 'vm-tools'... "
-	@scripts/build-package 'vm-tools' 9200
+	@scripts/build-package 'vm-tools' 9220
 	@echo 'done.'
 
 shrink-gardener:
