@@ -8,8 +8,10 @@ var child = require('child_process'),
     fs = require('fs'),
     app = express();
 
+var user = 'vm';
 var protocol = 'http://';
 var server = 'localhost:5984';
+var private_path = '/srv/scripts/concierge/private';
 var system_passwd_path = '/srv/storage/concierge/passwd/system';
 
 /**
@@ -54,6 +56,15 @@ app.get('/setup', function (req, res) {
   });
 });
 
+/**
+ */
+app.post('/setup/finish', function (req, res) {
+
+  disable_concierge_service(req, function (_err) {
+    res.send(500);
+  });
+
+});
 
 /*
  */
@@ -134,6 +145,13 @@ var request_error = function (_message, _req, _callback) {
   );
 };
 
+/**
+ * http_status_successful:
+ */
+var http_status_successful = function (_status) {
+
+  return (_status >= 200 && _status < 300);
+};
 
 /**
  * check_response:
@@ -147,7 +165,7 @@ var check_response = function (_err, _resp, _req, _text, _cb) {
     return _cb(_err);
   }
 
-  if (_resp.statusCode !== 200) {
+  if (!http_status_successful(_resp.statusCode)) {
     return request_error(
       _text + ' failed: ' + 'problem with database server',
         _req, _cb
@@ -157,6 +175,35 @@ var check_response = function (_err, _resp, _req, _text, _cb) {
   return _cb();
 };
 
+/**
+ * disable_concierge_service:
+ */
+var disable_concierge_service = function (_req, _callback) {
+
+  /* Terminate and disable the concierge process:
+       That's us, so take care to finish up before we spawn a subprocess. */
+
+  var disable = child.spawn(
+    'sudo', [ private_path + '/concierge-disable' ],
+      { stdio: 'pipe' }
+  );
+  
+  disable.stdin.end();
+
+  disable.on('exit', function (_code, _signal) {
+
+    /* Error handling:
+        If we're successful, our process will exit on SIGTERM,
+        and this exit event will not be reached. If we do see a
+        subprocess exit, something went wrong (we're still alive). */
+        
+    return request_error(
+      'Failed to shut down: internal error',
+        _req, _callback
+    );
+  });
+
+};
 
 /**
  * add_openssh_public_key:
@@ -166,15 +213,15 @@ var add_openssh_public_key = function (_req, _key, _callback) {
   /* Add data to OpenSSH's authorized_keys file:
        This feature requires the `ssh-addkey` script and sudo privileges. */
 
-  var passwd = child.spawn(
-    'sudo', [ '-u', 'tc', '/srv/scripts/concierge/private/ssh-addkey' ],
+  var addkey = child.spawn(
+    'sudo', [ '-u', user, private_path + '/ssh-addkey' ],
       { stdio: 'pipe' }
   );
 
-  passwd.stdin.write(_key);
-  passwd.stdin.end();
+  addkey.stdin.write(_key);
+  addkey.stdin.end();
 
-  passwd.on('exit', function (_code, _signal) {
+  addkey.on('exit', function (_code, _signal) {
 
     if (_code != 0) {
       return request_error(
@@ -187,7 +234,6 @@ var add_openssh_public_key = function (_req, _key, _callback) {
   });
 
 };
-
 
 /**
  * save_system_password:
@@ -202,10 +248,8 @@ var save_system_password = function (_req, _passwd, _callback) {
     }
 
     var buffer = _passwd + '\n';
-    var len = buffer.length;
-
-    fs.write(_fd, buffer, 0, len, function (_err, _len, _buf) {
-
+    
+    fs.write(_fd, buffer, 0, 'utf-8', function (_err, _len, _buf) {
       if (_err) {
         _req.flash('error', "Internal error: file write failed");
         return _callback(_err);
@@ -245,23 +289,31 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
   /* Set UNIX system password:
       This can be used to log in via OpenSSH. */
 
-  var passwd_process = child.spawn(
-    'sudo', [ 'passwd', 'tc' ], { stdio: 'pipe' }
-  );
+  try {
+    var passwd = child.spawn(
+      'sudo', [ 'passwd', user ], { stdio: 'pipe' }
+    );
 
-  passwd_process.stdin.write(_passwd + '\n' + _confirm + '\n');
+    passwd.stdin.write(_passwd + '\n' + _confirm + '\n');
+    passwd.stdin.end();
    
-  passwd_process.on('exit', function (_code, _signal) {
+    passwd.on('exit', function (_code, _signal) {
 
-    if (_code != 0) {
-      return request_error(
-        'Password change failed: an internal error occurred',
-          _req, _callback
-      );
-    }
+      if (_code != 0) {
+        return request_error(
+          'Password change failed: password utility indicated a failure',
+            _req, _callback
+        );
+      }
 
-    return _callback();
-  });
+      return _callback();
+    });
+  } catch (e) {
+    return request_error(
+      "Password change failed: couldn't find/execute password utility",
+        _req, _callback
+    );
+  }
 };
 
 /**
@@ -279,7 +331,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     uri: protocol + admins_uri + '/admin',
     headers: { 'Content-type': 'application/json' }
   };
-
+  
   /* Start talking to CouchDB:
       This process involves multiple requests; async used for clarity. */
 
@@ -287,9 +339,10 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
     /* Step 0: Read system password, if it's already set */
     function (_cb) {
+    
       read_system_password(function (_err, _system_passwd) {
         if (!_err) {
-          put.auth = 'service:' + _system_passwd;
+          put.auth = { user: 'service', pass: _system_passwd };
         }
         /* Ignore errors: file might not exist */
         return _cb(null, _system_passwd);
@@ -298,25 +351,30 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     
     /* Step 1: Primary password change (i.e. admin) */
     function (_system_passwd, _cb) {
+
       request.put(put, function (_err, _resp, _body) {
-	return check_response(
-	  _err, _resp, _req, 'Primary password change', function(_e) {
-	    return _cb(_e, _system_passwd);
-	  }
-	);
+        return check_response(
+          _err, _resp, _req, 'Primary password change', function(_e) {
+            return _cb(_e, _system_passwd);
+          }
+        );
       });
     },
 
     /* Step 2: Secondary password generation, if necessary */
     function (_system_passwd, _cb) {
+    
       if (_system_passwd) {
+
         return _cb(null, _system_passwd, false);
       }
-      crypto.randomBytes(128, function (_err, _data) {
-	if (_err) {
-	  return _cb(_err);
-	}
-	return _cb(null, _data.toString('hex'), true);
+      
+      crypto.randomBytes(256, function (_err, _data) {
+        if (_err) {
+          return _cb(_err);
+        }
+
+        return _cb(null, _data.toString('base64'), true);
       });
     },
 
@@ -324,31 +382,57 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     function (_system_passwd, _first_run, _cb) {
     
       if (_first_run) {
-        put.auth = 'admin:' + _passwd;
+        put.auth = { user: 'admin', pass: _passwd };
       } else {
-        put.auth = 'service:' + _system_passwd;
+        put.auth = { user: 'service', pass: _system_passwd };
       }
-        
+      
       put.body = JSON.stringify(_system_passwd);
       put.uri = protocol + admins_uri + '/service';
 
       request.put(put, function (_err, _resp, _body) {
-	return check_response(
-	  _err, _resp, _req, 'System account creation', function (_e) {
-	    return _cb(_e, _system_passwd);
-	  }
-	);
+        return check_response(
+          _err, _resp, _req, 'System account creation', function (_e) {
+
+            return _cb(_e, _system_passwd, _first_run);
+          }
+        );
       });
     },
 
-    /* Step 4: In-filesystem storage of secondary password */
+    /* Step 4: Create user document for `admin` */
+    function (_system_passwd, _first_run, _cb) {
+    
+      if (!_first_run) {
+        return _cb(null, _system_passwd);
+      }
+      
+      var doc = {
+        _id: 'org.couchdb.user:admin', roles: [],
+        type: 'user', name: 'admin', password: null
+      };
+      
+      put.body = JSON.stringify(doc);
+      put.uri = protocol + server + '/_users/' + doc._id,
+      
+      request.put(put, function (_err, _resp, _body) {
+        return check_response(
+          _err, _resp, _req, 'Administrative account creation',
+          function (_e) {
+            return _cb(_e, _system_passwd);
+          }
+        );
+      });
+    },
+    
+    /* Step 5: In-filesystem storage of secondary password */
     function (_system_passwd, _cb) {
 
       /* Store secondary administrative password in filesystem:
-	  This is used by local services needing to connect to CouchDB. */
+          This is used by local services needing to connect to CouchDB. */
 
       save_system_password(_req, _system_passwd, function (_err) {
-	return _cb(_err, _system_passwd);
+        return _cb(_err, _system_passwd);
       });
     }
 
@@ -396,7 +480,7 @@ var set_password = function (_req, _passwd, _confirm, _callback) {
 var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
 
   var put = {
-    auth: 'service:' + _system_passwd,
+    auth: { user: 'service', pass: _system_passwd },
     headers: { 'Content-Type': 'application/json' }
   };
   
@@ -410,9 +494,9 @@ var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
       put.uri = protocol + config_uri + '/require_valid_user';
 
       request.put(put, function (_err, _resp, _body) {
-	return check_response(
-	  _err, _resp, _req, 'Configuration change', _cb
-	);
+        return check_response(
+          _err, _resp, _req, 'Configuration change', _cb
+        );
       });
     }
   ], 

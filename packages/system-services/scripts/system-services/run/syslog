@@ -3,12 +3,10 @@
 start()
 {
   local logs_dir='/srv/storage/system-services/logs'
-  local syslog_file="$logs_dir/messages.log"
+  local log_path="$logs_dir/system.log"
 
   mkdir -p "$logs_dir" &&
-  \
-  exec syslogd -n -O "$syslog_file" -b 4 \
-    >> "$syslog_file" 2>&1
+  exec syslogd -n -O "$log_path" -b 4 >> "$log_path" 2>&1
 }
 
 main()

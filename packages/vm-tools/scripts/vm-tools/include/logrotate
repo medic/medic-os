@@ -1,0 +1,19 @@
+
+logrotate_install()
+{
+  local logrotate_dir='/etc/logrotate.d'
+  local logrotate_cfg="$PACKAGE_NAME.conf"
+  local logrotate_dst_path="$logrotate_dir/$logrotate_cfg"
+  local logrotate_src_path="$PACKAGE_SETTINGS/logrotate/$logrotate_cfg"
+
+  mkdir -p "$logrotate_dir" \
+    || return 1
+
+  if ! [ -f "$logrotate_dst_path" ]; then
+    ln -sf "$logrotate_src_path" "$logrotate_dst_path" \
+      || return 2
+  fi
+
+  return 0
+}
+

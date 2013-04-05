@@ -1,7 +1,6 @@
 #!/bin/sh
 
-user='tc'
-
+user='vm'
 prefix="/home/$user/.ssh"
 authorized_keys="$prefix/authorized_keys"
 

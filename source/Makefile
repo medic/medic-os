@@ -5,7 +5,7 @@ PARALLEL ?= 16
 
 JAVA_VERSION := 1.7.9
 VM_TOOLS_VERSION := 9.2.2
-MEDIC_CORE_VERSION := 1.2.0
+MEDIC_CORE_VERSION := 1.2.2
 
 VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${CPU}
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
@@ -14,7 +14,6 @@ PKG_DIR := ../packages
 JAVA_PKG_ROOT := ${PKG_DIR}/java/software/java/v${JAVA_VERSION}/${CPU}
 VM_TOOLS_PKG_ROOT := ${PKG_DIR}/vm-tools/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
 MEDIC_CORE_PKG_ROOT := ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
-
 PATH := ${PATH}:${VM_TOOLS_ROOT}/bin
 PATH := ${PATH}:${MEDIC_CORE_ROOT}/bin
 
@@ -22,7 +21,9 @@ MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
-KERNEL_VERSION := 3.7.5
+CFLAGS += -Os -fstack-protector-all
+
+KERNEL_VERSION := 3.8.5
 KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/lib/modules/${KERNEL_VERSION}")
 
 
@@ -31,7 +32,7 @@ all: build copy finalize
 
 build: build-all
 
-build-all: build-syslinux build-kernel install-kernel-modules build-vm-tools build-busybox build-medic-core
+build-all: build-dhcpcd build-syslinux build-kernel install-kernel-modules build-vm-tools build-busybox build-medic-core
 
 
 copy: copy-all
@@ -46,7 +47,7 @@ finalize-all: finalize-initrd
 
 clean: clean-all
 
-clean-all: clean-syslinux clean-kernel clean-vm-tools clean-busybox clean-medic-core
+clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-vm-tools clean-busybox clean-medic-core
 	rm -f logs/*
 
 
@@ -56,6 +57,24 @@ build-pv:
 	@(cd medic-core && echo && \
 		${QMAKE} ROOT='${MEDIC_CORE_ROOT}' START='pv' STOP='pv' \
 			BITS='${BITS}' PARALLEL='${PARALLEL}')
+
+
+dhcpcd: build-dhcpcd
+
+build-dhcpcd: build-pv
+	@./scripts/logger dhcpcd \
+		'cd dhcpcd && \
+		./configure --libexecdir=/lib/dhcpcd \
+			--dbdir=/run/dhcpcd --sysconfdir=/etc && \
+		${MAKE} all CFLAGS="${CFLAGS}" && \
+		${MAKE} _proginstall _scriptsinstall _confinstall \
+			DESTDIR="../../initrd" && \
+		cd dhcpcd-hooks && \
+		${MAKE} install DESTDIR="../../../initrd" \
+			SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
+
+clean-dhcpcd:
+	@(cd dhcpcd && ${QMAKE} clean)
 
 
 kernel: build-kernel copy-kernel install-kernel-modules build-vm-tools
@@ -84,7 +103,7 @@ vm-tools: build-vm-tools copy-vm-tools
 clean-vm-tools:
 	(cd vm-tools && ${MAKE} clean)
 
-build-vm-tools: install-kernel-modules
+build-vm-tools: build-pv install-kernel-modules
 	@(cd vm-tools && ${QMAKE} \
 		KERNEL_VERSION='${KERNEL_VERSION}' \
 		KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' \
@@ -94,7 +113,7 @@ build-vm-tools: install-kernel-modules
 copy-vm-tools:
 	@echo -n "Copying files for 'vm-tools'... "
 	@(cd vm-tools && \
-		./scripts/prepare-dist '${VM_TOOLS_ROOT}' \
+		./scripts/prepare-dist '${VM_TOOLS_ROOT}' && \
 		mkdir -p ../../packages/vm-tools/software && \
 		rm -rf ../../packages/vm-tools/software/vm-tools && \
 		cp -R /srv/software/vm-tools \
@@ -107,7 +126,7 @@ medic-core: build-medic-core copy-medic-core
 clean-medic-core:
 	rm -rf /srv/software/medic-core && (cd medic-core && ${MAKE} clean)
 
-build-medic-core:
+build-medic-core: build-pv
 	@(cd medic-core && \
 		${QMAKE} all gardenize ROOT='${MEDIC_CORE_ROOT}' \
 			BITS='${BITS}' PARALLEL='${PARALLEL}')
@@ -131,6 +150,7 @@ set-pax-flags:
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czrm \
 		'${MEDIC_CORE_PKG_ROOT}/lib/couchdb/bin/couchjs' 2>/dev/null && \
 	echo 'done.'
+
 
 busybox: build-busybox copy-busybox
 

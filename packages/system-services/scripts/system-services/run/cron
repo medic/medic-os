@@ -1,0 +1,20 @@
+#!/bin/sh
+
+start()
+{
+  local logs_dir='/srv/storage/system-services/logs'
+  local log_path="$logs_dir/cron.log"
+
+  mkdir -p "$logs_dir" &&
+  exec crond -f -L "$log_path" >> "$log_path" 2>&1
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+

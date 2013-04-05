@@ -9,7 +9,7 @@
   Device = /dev/ttyUSBX
   InboxPath = /srv/storage/medic-core/gammu/inbox/
   OutboxPath = /srv/storage/medic-core/gammu/outbox/
-  SentPath = /srv/storage/medic-core/gammu/sent/
-  ErrorsPath = /srv/storage/medic-core/gammu/errors/
+  SentSMSPath = /srv/storage/medic-core/gammu/sent/
+  ErrorSMSPath = /srv/storage/medic-core/gammu/errors/
   LogFile = /srv/storage/medic-core/gammu/logs/gammu-smsd.log
   

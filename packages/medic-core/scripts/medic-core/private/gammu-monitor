@@ -8,9 +8,10 @@ monitor()
   source "$base/../env" &&
   merge_environment /srv
 
+  local service=''
   local package='medic-core'
-  local service='gammu'
-  
+
+  local device=''
   local last_device=''
   local settings_dir="/srv/storage/$package/$service/monitor"
 
@@ -25,44 +26,78 @@ monitor()
   #  goes away entirely, log the event and probe for a new one.
  
   while true; do
-    local device="`"$base/gammu-status" gammu`"
-    
-    if [ -z "$device" ]; then
-      rm -f "$settings_dir/detected"
-      
-      if [ "$last_device" ]; then
-        warn "Device '$last_device' was lost"
+
+    if ! rm -f "$settings_dir/detecting"; then
+      warn "Failed to remove a file from '$settings_dir'"
+      continue
+    fi
+
+    sleep 1
+
+    last_device="$device"
+    device="`"$base/gammu-status" gammu`"
+
+    # Device already set up and owned by us?
+    #  If so, go back around and wait for it to disappear.
+
+    if [ "$device" ]; then
+      continue
+    fi
+
+    # No device?
+    #   If no device is present, we need to probe again.
+
+    if [ "$last_device" ]; then
+      warn "Device '$last_device' was lost"
+    fi
+
+    if ! rm -f "$settings_dir/detected"; then
+      warn "Failed to remove a file from '$settings_dir'"
+      continue
+    fi
+
+    # Quick search for an eligible device:
+    #   If one exists, go ahead with the expensive autodetection.
+
+    if "$base/gammu-status" &>/dev/null; then
+
+      warn 'Possible device(s) found, running autodetection'
+
+      if ! touch "$settings_dir/detecting"; then
+        warn "Failed to create a file in '$settings_dir'"
+        continue
       fi
-      
-      "$base/gammu-status" &>/dev/null
 
-      if [ "$?" -eq 0 ]; then
+      if device="`"$base/gammu-autodetect"`"; then
 
-        touch "$settings_dir/detecting"
-        warn 'Possible device(s) found, running autodetection'
+        warn "Auto-detection found device '$device'"
 
-        device="`"$base/gammu-autodetect"`"
-      
-        if [ "$device" ]; then
-          warn "Auto-detection found device '$device'"
-          warn "Reloading '$package/$service' to add new device(s)..."
+        # Tell others about the device:
+        #   Other programs can watch for this file if needed.
 
-          echo "$device" > "$settings_dir/detected" &&
-          /boot/svc-reload "$package" "$service"
+        if ! echo "$device" > "$settings_dir/detected"; then
+          warn "Failed to restart '$package/$service'"
+          continue
+        fi
 
-          if [ "$?" -ne 0 ]; then
-            rm -f "$settings_dir/detected"
-            warn "Failed to restart '$package/$service'"
-          fi
+        # Anything to restart?
+        #   If not, we're done; go back to sleep and poll for termination.
+
+        if [ -z "$package" -o -z "$service" ]; then
+          continue;
+        fi
+
+        warn "Restarting '$package/$service' to add new device(s)..."
+
+        if ! /boot/svc-reload "$package" "$service"; then
+          warn "Failed to restart '$package/$service'"
+          rm -f "$settings_dir/detected"
+          continue
         fi
 
       fi
-      
-      rm -f "$settings_dir/detecting"
-    fi
 
-    last_device="$device"    
-    sleep 1
+    fi
   done
   
   return 1

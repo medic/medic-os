@@ -9,6 +9,9 @@ install()
   source "$base/env" &&
   merge_environment /srv || return 255
 
+  (cd "$PACKAGE_ROOT/../../" &&
+    rm -f v1.2 && ln -sf v1.2.2 v1.2) &&
+  \
   chown -R couchdb:staff \
     "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb" &&
   \
@@ -26,7 +29,7 @@ install()
   done &&
   \
   persist_ssh_user_configuration_files \
-    tc "$PACKAGE_SETTINGS" authorized_keys &&
+    vm "$PACKAGE_SETTINGS" authorized_keys &&
   \
   install_default_couchdb_databases \
     "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
@@ -40,9 +43,9 @@ install_default_couchdb_databases()
   local package_root="$1"
   local storage_dir="$2"
 
-  for garden_db in dashboard.couch; do
-    local src="$package_root/share/couchdb/garden/$garden_db"
-    local dst="$storage_dir/couchdb/data/$garden_db"
+  for garden_db in dashboard; do
+    local src="$package_root/share/couchdb/garden/$garden_db.couch"
+    local dst="$storage_dir/couchdb/data/$garden_db.couch"
 
     if ! [ -f "$dst" ]; then
 	cp -a "$src" "$dst" && chown couchdb:couchdb "$dst" \
@@ -73,7 +76,7 @@ persist_ssh_user_configuration_files()
     touch "$target_path" || return 1
 
     if [ -f "$src_path" ]; then
-      cat "$src_path" >> "target_path" || return 2
+      cat "$src_path" >> "$target_path" || return 2
     fi
 
     rm -f "$src_path" &&
@@ -83,7 +86,6 @@ persist_ssh_user_configuration_files()
 
   return 0
 }
-
 
 install "$@"
 exit "$?"

@@ -3,9 +3,9 @@ lp:x:7:lp
 nogroup:x:65534:
 staff:x:50:
 concierge:x:100:concierge
-gammu-inject:x:101:tc,gammu
+gammu-inject:x:101:vm,gammu
 sshd:x:1000:
-tc:x:1001:
+vm:x:1001:
 couchdb:x:1002:
 couchdb-lucene:x:1003:
 gammu:x:1004:
