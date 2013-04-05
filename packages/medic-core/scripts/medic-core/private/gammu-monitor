@@ -8,7 +8,8 @@ monitor()
   source "$base/../env" &&
   merge_environment /srv
 
-  local service=''
+  local service='gammu'
+  local restart_service=''
   local package='medic-core'
 
   local device=''
@@ -83,14 +84,14 @@ monitor()
         # Anything to restart?
         #   If not, we're done; go back to sleep and poll for termination.
 
-        if [ -z "$package" -o -z "$service" ]; then
+        if [ -z "$package" -o -z "$restart_service" ]; then
           continue;
         fi
 
         warn "Restarting '$package/$service' to add new device(s)..."
 
-        if ! /boot/svc-reload "$package" "$service"; then
-          warn "Failed to restart '$package/$service'"
+        if ! /boot/svc-reload "$package" "$restart_service"; then
+          warn "Failed to restart '$package/$restart_service'"
           rm -f "$settings_dir/detected"
           continue
         fi
