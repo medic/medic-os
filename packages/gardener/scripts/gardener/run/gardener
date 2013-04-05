@@ -3,7 +3,7 @@
 wait_for_passwd_file()
 {
   local passwd_file="$1"
-  
+
   while ! [ -f "$passwd_file" ]; do
     sleep 5
   done
@@ -26,8 +26,7 @@ start()
   wait_for_passwd_file "$passwd_file" &&
   \
   local gardener="$PACKAGE_ROOT/node_modules/gardener/bin/gardener" &&
-  local gardener_watch="watch 'http://service@localhost:5984'" &&
-  local gardener_args="$gardener_watch --web=false --stdinpass=true" &&
+  local gardener_args="--stdinpass=true --dashboard=dashboard 'http://service@localhost:5984'" &&
   \
   exec nohup su -c "exec node '$gardener' $gardener_args" gardener \
     < "$passwd_file" >> "$PACKAGE_STORAGE/logs/startup.log" 2>&1
