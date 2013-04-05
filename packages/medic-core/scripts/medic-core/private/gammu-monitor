@@ -94,6 +94,7 @@ monitor()
           rm -f "$settings_dir/detected"
           continue
         fi
+
       fi
 
     fi

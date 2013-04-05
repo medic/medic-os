@@ -8,13 +8,11 @@ var child = require('child_process'),
     fs = require('fs'),
     app = express();
 
-
 var user = 'vm';
 var protocol = 'http://';
 var server = 'localhost:5984';
 var private_path = '/srv/scripts/concierge/private';
 var system_passwd_path = '/srv/storage/concierge/passwd/system';
-
 
 /**
  */
@@ -252,14 +250,12 @@ var save_system_password = function (_req, _passwd, _callback) {
     var buffer = _passwd + '\n';
     
     fs.write(_fd, buffer, 0, 'utf-8', function (_err, _len, _buf) {
-
       if (_err) {
         _req.flash('error', "Internal error: file write failed");
         return _callback(_err);
       }
 
       fs.fsync(_fd, function (_err) {
-
         return _callback(_err);
       });
     });
@@ -436,13 +432,11 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
           This is used by local services needing to connect to CouchDB. */
 
       save_system_password(_req, _system_passwd, function (_err) {
-
         return _cb(_err, _system_passwd);
       });
     }
 
   ], function (_err, _system_passwd) {
-
     return _callback(_err, _system_passwd);
   });
 };      
