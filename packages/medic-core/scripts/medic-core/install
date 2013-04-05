@@ -9,6 +9,9 @@ install()
   source "$base/env" &&
   merge_environment /srv || return 255
 
+  (cd "$PACKAGE_ROOT/../../" &&
+    rm -f v1.2 && ln -sf v1.2.2 v1.2) &&
+  \
   chown -R couchdb:staff \
     "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb" &&
   \
