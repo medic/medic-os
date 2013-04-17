@@ -141,7 +141,7 @@ main()
   build_autoconf 'couchdb' \
     "$stdarg --with-js-lib-name=mozjs185 \
       --with-erlang='$prefix/lib/erlang/usr/include' \
-      --with-js-include='$prefix/include' --with-js-lib='$prefix/lib'" &&
+      --with-js-include='$prefix/include/js' --with-js-lib='$prefix/lib'" &&
   \
   build_make_install 'nodeunit' "$prefix" &&
   build_make_install 'nodelint' "$prefix" &&
@@ -152,6 +152,7 @@ main()
   \
   build_npm_remote 'kanso' "$prefix" &&
   build_npm_local 'node-fs-ext' "$prefix" &&
+  build_npm_local 'node-gammu-json' "$prefix" &&
   \
   build_ant 'ant' "$prefix" &&
   build_maven 'maven' "$prefix" &&
