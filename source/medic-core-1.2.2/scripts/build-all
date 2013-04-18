@@ -35,6 +35,9 @@ main()
   \
   builder_remove_static_libraries 'z' &&
   \
+  build_bzip2 'bzip2' "$prefix" &&
+  builder_remove_static_libraries 'bz2' &&
+  \
   build_autoconf 'libusb' \
     "$stdarg --enable-static=no --enable-shared=yes" &&
   \
@@ -52,11 +55,11 @@ main()
     build_make 'usb-modeswitch-data' \
       'install' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\"" &&
     \
-    build_autoconf 'acl' \
-	"$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib' &&
-    \
     build_autoconf 'attr' \
       "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib' &&
+    \
+    build_autoconf 'acl' \
+	"$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib' &&
     \
     build_autoconf 'inotify-tools' \
       "$stdarg --enable-shared=yes --enable-static=no" &&

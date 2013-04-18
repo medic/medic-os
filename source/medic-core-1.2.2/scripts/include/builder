@@ -209,6 +209,19 @@ build_couchdb_lucene()
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
 
+build_bzip2()
+{
+  local name="$1"
+  local prefix="$2"
+
+  builder_should_run "$name" || return 0
+
+  (cd "$name" &&
+    make -f Makefile-libbz2_so &&
+    make install PREFIX="$prefix" &&
+    cp -P libbz2.so.* "$prefix/lib") | logger "$name"
+}
+
 builder_clean_target()
 {
   local name="$1"
