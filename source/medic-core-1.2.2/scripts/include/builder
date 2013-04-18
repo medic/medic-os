@@ -219,7 +219,7 @@ build_bzip2()
   (cd "$name" &&
     make -f Makefile-libbz2_so &&
     make install PREFIX="$prefix" &&
-    cp -P libbz2.so.* "$prefix/lib") | logger "$name"
+    cp -P libbz2.so.* "$prefix/lib") 2>&1 | logger "$name"
 }
 
 builder_clean_target()
