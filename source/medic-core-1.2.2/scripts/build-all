@@ -135,7 +135,7 @@ main()
   build_autoconf 'libffi' "$stdarg" && \
   builder_remove_static_libraries 'ffi' &&
   \
-  build_cmake 'gammu' \
+  build_cmake 'gammu' "$prefix" \
     "-DBUILD_SHARED_LIBS=ON -DWITH_Glib=OFF \
      -DINSTALL_GNAPPLET=OFF -DWITH_BACKUP=OFF \
      -DINSTALL_BASH_COMPLETION=OFF -DENABLE_PROTECTION=ON" &&

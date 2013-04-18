@@ -232,10 +232,10 @@ build_cmake()
   local cmake_args="$3"
 
   builder_should_run "$name" || return 0
-  cmake_args="$cmake_args -DCMAKE_INSTALL_PREFIX=\"$prefix\""
+  cmake_args="-DCMAKE_INSTALL_PREFIX="$prefix" $cmake_args"
 
-  (cd "$name" && mkdir build && cd build &&
-    cmake $cmake_args .. && make && make install) 2>&1 | logger "$name"
+  (cd "$name" && cmake $cmake_args &&
+    make && make install) 2>&1 | logger "$name"
 }
 
 builder_clean_target()
