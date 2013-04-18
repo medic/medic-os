@@ -216,10 +216,26 @@ build_bzip2()
 
   builder_should_run "$name" || return 0
 
-  (cd "$name" &&
-    make -f Makefile-libbz2_so &&
-    make install PREFIX="$prefix" &&
-    cp -P libbz2.so.* "$prefix/lib") 2>&1 | logger "$name"
+  ( (cd "$name" &&
+     make -f Makefile-libbz2_so &&
+     make install PREFIX="$prefix" &&
+     cp -P libbz2.so.* "$prefix/lib") &&
+    \
+    (cd "$prefix/lib" &&
+     ln -sf libbz2.so.1.0 libbz2.so.1) ) 2>&1 | logger "$name" 
+}
+
+build_cmake()
+{
+  local name="$1"
+  local prefix="$2"
+  local cmake_args="$3"
+
+  builder_should_run "$name" || return 0
+  cmake_args="$cmake_args -DCMAKE_INSTALL_PREFIX=\"$prefix\""
+
+  (cd "$name" && mkdir build && cd build &&
+    cmake $cmake_args .. && make && make install) 2>&1 | logger "$name"
 }
 
 builder_clean_target()
