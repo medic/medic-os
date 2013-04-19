@@ -25,11 +25,14 @@ start()
   local passwd_file="$PACKAGE_STORAGE/../concierge/passwd/system" &&
   wait_for_passwd_file "$passwd_file" &&
   \
+  local dir="$PACKAGE_STORAGE/data" &&
   local url="http://service@localhost:5984" &&
+  \
   local gardener="$PACKAGE_ROOT/node_modules/gardener/bin/gardener" &&
   local gardener_args="'$url' --stdinpass=true --dashboard=dashboard" &&
+  local gardener_cmd="'`which node`' '$gardener' $gardener_args" &&
   \
-  exec nohup su -c "exec node '$gardener' $gardener_args" gardener \
+  exec nohup su -c "cd '$dir' && exec $gardener_cmd" gardener \
     < "$passwd_file" >> "$PACKAGE_STORAGE/logs/startup.log" 2>&1
 }
 
