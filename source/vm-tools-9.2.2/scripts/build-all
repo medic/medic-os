@@ -21,7 +21,7 @@ main()
 
   check_args "$@" || usage
 
-  local cpu='Intel'
+  local cpu='intel'
   local uname="`uname -s`"
   local stdarg="--prefix=\"$prefix\""
 
