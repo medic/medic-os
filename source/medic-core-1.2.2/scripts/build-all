@@ -14,12 +14,16 @@ main()
   local pkg_start_version="$3"
   local pkg_stop="`echo "$4" | sed 's/\//-/g;'`"
   local pkg_stop_version="$5"
-  local bits="$6"
-  local parallel="$7"
+  local cpu="$6"
+  local bits="$7"
+  local parallel="$8"
 
   check_args "$@" || usage
 
-  local cpu='Intel'
+  if [ -z "$cpu" ]; then
+    cpu='intel'
+  fi
+
   local uname="`uname -s`"
   local stdarg="--prefix=\"$prefix\""
 
@@ -119,7 +123,8 @@ main()
     --shared-openssl-libpath='$prefix/lib' --dest-cpu='$build_cpu'") &&
   \
   (disable_parallelism &&
-    build_autoconf 'js' "$stdarg --host=\"$build_arch\"") &&
+    build_autoconf 'js' \
+      "$stdarg --host='$build_arch' --with-cpu-arch='$build_cpu'") &&
   \
   builder_move_libraries 'move-libraries' "$prefix" 'lib64' &&
   builder_remove_static_libraries 'js' &&

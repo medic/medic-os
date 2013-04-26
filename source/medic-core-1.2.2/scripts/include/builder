@@ -382,16 +382,23 @@ builder_setup_environment()
     export MAKE="$MAKE -j$parallel"
   fi
 
-  if [ "$uname" = 'Darwin' -a "$cpu" = 'Intel' -a "$bits" -eq 32 ]; then
+  if [ "$uname" = 'Darwin' -a "$cpu" = 'intel' -a "$bits" -eq 32 ]; then
     export LDFLAGS="-arch i386 -L$prefix/lib"
   else
     export LDFLAGS="-L$prefix/lib"
     #export LDFLAGS="$LDFLAGS -R$prefix/lib"
   fi
 
-  export CFLAGS_SIMPLE="-Os -m$bits -fstack-protector-all"
+  export CFLAGS_SIMPLE="-Os -fstack-protector-all"
   export CFLAGS_INCLUDE="-I$prefix/include -L$prefix/lib"
   #CFLAGS_INCLUDE="$CFLAGS_INCLUDE -R$prefix/lib"
+
+  if [ "$cpu" = 'intel' ]; then
+    export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -m$bits"
+  elif [ "$cpu" = 'arm' ]; then
+    local cflags_arch="-march=armv6 -mfpu=vfp -mfloat-abi=hard"
+    export CFLAGS_SIMPLE="$CFLAGS_SIMPLE $cflags_arch"
+  fi
 
   export CFLAGS="$CFLAGS_SIMPLE $CFLAGS_INCLUDE"
   export CXXFLAGS="$CFLAGS"
@@ -409,7 +416,7 @@ builder_detect_platform()
   fi
 
   # Detect architecture/platform
-  if [ "$cpu" = 'Intel' ]; then
+  if [ "$cpu" = 'intel' ]; then
     if [ "$uname" = 'Darwin' ]; then
         if [ "$bits" -eq 64 ]; then
           build_cpu='x64'
@@ -433,6 +440,10 @@ builder_detect_platform()
           build_arch="i586-linux-gnu"
         fi
     fi
+  elif [ "$cpu" = "arm" ]; then
+    build_cpu='arm'
+    build_platform="linux-armv4"
+    build_arch="arm-linux-gnueabihf"
   fi
 
   if [ -z "$build_cpu" -o -z "$build_arch" -o -z "$build_platform" ]; then
