@@ -20,12 +20,26 @@ main()
 
   check_args "$@" || usage
 
+  # Processor and system options:
+  #  These are used by `builder_setup_environment` to set
+  #  environment variables and compilation flags appropriately.
+
   if [ -z "$cpu" ]; then
     cpu='intel'
   fi
 
   local uname="`uname -s`"
   local stdarg="--prefix=\"$prefix\""
+
+  # Package-specific options:
+  #  These are used to vary configuration based upon
+  #  the architecture that we're currently compiling for.
+
+  local erlang_extra_options=""
+
+  if [ "$cpu" = 'intel' -a "$bits" ]; then
+    erlang_extra_options="--enable-m${bits}-build"
+  fi
 
   builder_initialize &&
   builder_setup_environment "$prefix" \
@@ -132,7 +146,7 @@ main()
   build_autoconf 'erlang' \
     "$stdarg $build_extra_options --enable-kernel-poll \
     --enable-dynamic-ssl-lib --enable-shared-zlib='$prefix' \
-    --with-ssl='$prefix' --enable-m${bits}-build" &&
+    --with-ssl='$prefix' $erlang_extra_options" &&
   \
   (disable_parallelism && \
     builder_fix_erlang_dso_linkage "$bits") &&

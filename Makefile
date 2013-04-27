@@ -2,9 +2,9 @@
 MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 
-CPU := x86
+ARCH := x86
 MEDIC_CORE_VERSION := 1.2.2
-MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
+MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${ARCH}
 
 all: packages iso-image
 
