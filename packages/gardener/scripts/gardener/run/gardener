@@ -27,7 +27,7 @@ start()
   \
   local url="http://service@localhost:5984" &&
   local gardener="$PACKAGE_ROOT/node_modules/gardener/bin/gardener" &&
-  local gardener_args="'$url' --stdinpass=true --dashboard=dashboard" &&
+  local gardener_args="'$url' --stdinpass=true --dashboard=dashboard --logdir=$PACKAGE_STORAGE/logs" &&
   \
   exec nohup su -c "exec node '$gardener' $gardener_args" gardener \
     < "$passwd_file" >> "$PACKAGE_STORAGE/logs/startup.log" 2>&1
