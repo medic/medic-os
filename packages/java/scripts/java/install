@@ -9,7 +9,7 @@ install()
   merge_environment /srv || return 255
 
   (cd "$PACKAGE_ROOT/../../" &&
-    rm -f v1.7 && ln -sf v1.7.9 v1.7)
+    rm -f v1.7 && ln -sf "v$PACKAGE_VERSION" v1.7)
 
   return "$?"
 }
