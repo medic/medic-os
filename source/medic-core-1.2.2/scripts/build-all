@@ -14,14 +14,32 @@ main()
   local pkg_start_version="$3"
   local pkg_stop="`echo "$4" | sed 's/\//-/g;'`"
   local pkg_stop_version="$5"
-  local bits="$6"
-  local parallel="$7"
+  local cpu="$6"
+  local bits="$7"
+  local parallel="$8"
 
   check_args "$@" || usage
 
-  local cpu='Intel'
+  # Processor and system options:
+  #  These are used by `builder_setup_environment` to set
+  #  environment variables and compilation flags appropriately.
+
+  if [ -z "$cpu" ]; then
+    cpu='intel'
+  fi
+
   local uname="`uname -s`"
   local stdarg="--prefix=\"$prefix\""
+
+  # Package-specific options:
+  #  These are used to vary configuration based upon
+  #  the architecture that we're currently compiling for.
+
+  local erlang_extra_options=""
+
+  if [ "$cpu" = 'intel' -a "$bits" ]; then
+    erlang_extra_options="--enable-m${bits}-build"
+  fi
 
   builder_initialize &&
   builder_setup_environment "$prefix" \
@@ -34,6 +52,9 @@ main()
       build_autoconf 'zlib' "--shared $stdarg") &&
   \
   builder_remove_static_libraries 'z' &&
+  \
+  build_bzip2 'bzip2' "$prefix" &&
+  builder_remove_static_libraries 'bz2' &&
   \
   build_autoconf 'libusb' \
     "$stdarg --enable-static=no --enable-shared=yes" &&
@@ -52,11 +73,11 @@ main()
     build_make 'usb-modeswitch-data' \
       'install' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\"" &&
     \
-    build_autoconf 'acl' \
-	"$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib' &&
-    \
     build_autoconf 'attr' \
       "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib' &&
+    \
+    build_autoconf 'acl' \
+	"$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib' &&
     \
     build_autoconf 'inotify-tools' \
       "$stdarg --enable-shared=yes --enable-static=no" &&
@@ -116,7 +137,8 @@ main()
     --shared-openssl-libpath='$prefix/lib' --dest-cpu='$build_cpu'") &&
   \
   (disable_parallelism &&
-    build_autoconf 'js' "$stdarg --host=\"$build_arch\"") &&
+    build_autoconf 'js' \
+      "$stdarg --host='$build_arch' --with-cpu-arch='$build_cpu'") &&
   \
   builder_move_libraries 'move-libraries' "$prefix" 'lib64' &&
   builder_remove_static_libraries 'js' &&
@@ -124,7 +146,7 @@ main()
   build_autoconf 'erlang' \
     "$stdarg $build_extra_options --enable-kernel-poll \
     --enable-dynamic-ssl-lib --enable-shared-zlib='$prefix' \
-    --with-ssl='$prefix' --enable-m${bits}-build" &&
+    --with-ssl='$prefix' $erlang_extra_options" &&
   \
   (disable_parallelism && \
     builder_fix_erlang_dso_linkage "$bits") &&
@@ -132,16 +154,17 @@ main()
   build_autoconf 'libffi' "$stdarg" && \
   builder_remove_static_libraries 'ffi' &&
   \
-  build_autoconf 'gammu' \
-    "$stdarg --enable-shared --without-gnapplet \
-     --disable-backup --without-completion --enable-protection" &&
+  build_cmake 'gammu' "$prefix" \
+    "-DBUILD_SHARED_LIBS=ON -DWITH_Glib=OFF \
+     -DINSTALL_GNAPPLET=OFF -DWITH_BACKUP=OFF \
+     -DINSTALL_BASH_COMPLETION=OFF -DENABLE_PROTECTION=ON" &&
   \
   build_make_install 'gammu-json' "$prefix" "PREFIX=\"$prefix\"" &&
   \
   build_autoconf 'couchdb' \
     "$stdarg --with-js-lib-name=mozjs185 \
       --with-erlang='$prefix/lib/erlang/usr/include' \
-      --with-js-include='$prefix/include' --with-js-lib='$prefix/lib'" &&
+      --with-js-include='$prefix/include/js' --with-js-lib='$prefix/lib'" &&
   \
   build_make_install 'nodeunit' "$prefix" &&
   build_make_install 'nodelint' "$prefix" &&
@@ -152,6 +175,7 @@ main()
   \
   build_npm_remote 'kanso' "$prefix" &&
   build_npm_local 'node-fs-ext' "$prefix" &&
+  build_npm_local 'node-gammu-json' "$prefix" &&
   \
   build_ant 'ant' "$prefix" &&
   build_maven 'maven' "$prefix" &&

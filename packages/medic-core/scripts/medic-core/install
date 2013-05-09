@@ -24,7 +24,10 @@ install()
   find "$PACKAGE_STORAGE/gammu" \
     -type d -exec chmod 0750 {} \; &&
   \
-  for binary in "$PACKAGE_ROOT/bin/gammu-smsd-inject"; do
+  for binary in \
+    "$PACKAGE_ROOT/bin/gammu-json" \
+    "$PACKAGE_ROOT/bin/gammu-smsd-inject"; do
+    \
     chown gammu:gammu-inject "$binary" && chmod 4110 "$binary"
   done &&
   \

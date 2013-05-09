@@ -1,19 +1,19 @@
 
-CPU ?= x86
 BITS ?= 32
+ARCH ?= x86
 PARALLEL ?= 16
 
 JAVA_VERSION := 1.7.9
 VM_TOOLS_VERSION := 9.2.2
 MEDIC_CORE_VERSION := 1.2.2
 
-VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${CPU}
-MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
+VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${ARCH}
+MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${ARCH}
 
 PKG_DIR := ../packages
-JAVA_PKG_ROOT := ${PKG_DIR}/java/software/java/v${JAVA_VERSION}/${CPU}
-VM_TOOLS_PKG_ROOT := ${PKG_DIR}/vm-tools/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
-MEDIC_CORE_PKG_ROOT := ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${CPU}
+JAVA_PKG_ROOT := ${PKG_DIR}/java/software/java/v${JAVA_VERSION}/${ARCH}
+VM_TOOLS_PKG_ROOT := ${PKG_DIR}/vm-tools/software/medic-core/v${MEDIC_CORE_VERSION}/${ARCH}
+MEDIC_CORE_PKG_ROOT := ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${ARCH}
 PATH := ${PATH}:${VM_TOOLS_ROOT}/bin
 PATH := ${PATH}:${MEDIC_CORE_ROOT}/bin
 
