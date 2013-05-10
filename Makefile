@@ -21,7 +21,7 @@ clean:
 	rm -rf staging/packages
 
 distclean: clean
-	rm -rf initrd/lib/modules/*
+	rm -rf "initrd/${ARCH}/lib/modules/"*
 	rm -f iso/boot/kernel iso/boot/image.gz iso/packages/*
 	(cd source && ${MAKE} clean)
 
@@ -38,10 +38,10 @@ iso-image: initrd-image verify-packages
 
 initrd-image:
 	@echo -n 'Creating initrd image... '
-	@cd initrd && \
+	@cd "initrd/${ARCH}" && \
 		find * | cpio -o -H newc 2>/dev/null \
-		  | sh ../source/linux/scripts/xz_wrap.sh \
-			> ../iso/boot/image.xz
+		  | sh ../../source/linux/scripts/xz_wrap.sh \
+			> ../../iso/boot/image.xz
 	@echo 'done.'
 
 strip-binaries:

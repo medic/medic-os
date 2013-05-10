@@ -6,7 +6,7 @@ merge_environment()
 
   local cpu='x86'
   local version='1.2.2'
-  local java_version='1.7.9'
+  local java_version='1.7.21'
 
   local prefix="$1"
   local root="$prefix/software/$name/v$version/$cpu"

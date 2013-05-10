@@ -8,7 +8,10 @@ install()
   source "$base/env" &&
   merge_environment /srv || return 255
 
-  chown gardener:gardener "$PACKAGE_STORAGE/data"
+  chown gardener:gardener "$PACKAGE_STORAGE/data" &&
+  chown root:gardener "$PACKAGE_STORAGE/logs" &&
+  chmod 0775 "$PACKAGE_STORAGE/logs"
+
   return "$?"
 }
 

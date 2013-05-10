@@ -3,7 +3,7 @@ BITS ?= 32
 ARCH ?= x86
 PARALLEL ?= 16
 
-JAVA_VERSION := 1.7.9
+JAVA_VERSION := 1.7.21
 VM_TOOLS_VERSION := 9.2.2
 MEDIC_CORE_VERSION := 1.2.2
 
@@ -24,7 +24,7 @@ QMAKE := ${MAKE} --no-print-directory
 CFLAGS += -Os -fstack-protector-all
 
 KERNEL_VERSION := 3.8.5
-KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/lib/modules/${KERNEL_VERSION}")
+KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/${ARCH}/lib/modules/${KERNEL_VERSION}")
 
 
 all: build copy finalize
@@ -68,9 +68,9 @@ build-dhcpcd: build-pv
 			--dbdir=/run/dhcpcd --sysconfdir=/etc && \
 		${MAKE} all CFLAGS="${CFLAGS}" && \
 		${MAKE} _proginstall _scriptsinstall _confinstall \
-			DESTDIR="../../initrd" && \
+			DESTDIR="../../initrd/${ARCH}" && \
 		cd dhcpcd-hooks && \
-		${MAKE} install DESTDIR="../../../initrd" \
+		${MAKE} install DESTDIR="../../../initrd/${ARCH}" \
 			SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
 
 clean-dhcpcd:
@@ -95,7 +95,7 @@ copy-kernel:
 
 install-kernel-modules:
 	@(cd linux && ${MAKE} modules_install \
-		INSTALL_MOD_PATH=../../initrd/ >/dev/null)
+		INSTALL_MOD_PATH="../../initrd/${ARCH}" >/dev/null)
 
 
 vm-tools: build-vm-tools copy-vm-tools
@@ -108,7 +108,7 @@ build-vm-tools: build-pv install-kernel-modules
 		KERNEL_VERSION='${KERNEL_VERSION}' \
 		KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' \
 		ROOT='${VM_TOOLS_ROOT}' PARALLEL='${PARALLEL}' BITS='${BITS}') && \
-	depmod -a -b ../initrd '${KERNEL_VERSION}'
+	depmod -a -b '../initrd/${ARCH}' '${KERNEL_VERSION}'
 
 copy-vm-tools:
 	@echo -n "Copying files for 'vm-tools'... "
@@ -143,6 +143,7 @@ copy-medic-core:
 
 set-pax-flags:
 	@echo -n "Setting executable flags... " && \
+	echo "${MEDIC_CORE_ROOT}" && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
 		'${JAVA_PKG_ROOT}/bin/java' 2>/dev/null && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
@@ -163,7 +164,7 @@ build-busybox: build-pv
 
 copy-busybox:
 	@echo -n "Copying files for 'busybox'... "
-	@(cd busybox && cp busybox ../../initrd/bin/busybox)
+	@(cd busybox && cp busybox ../../initrd/${ARCH}/bin/busybox)
 	@echo 'done.'
 
 
@@ -184,7 +185,7 @@ copy-syslinux:
 
 finalize-initrd:
 	@for symlink in source build; do \
-		rm -f "../initrd/lib/modules/${KERNEL_VERSION}/$$symlink"; \
+		rm -f "../initrd/${ARCH}/lib/modules/${KERNEL_VERSION}/$$symlink"; \
 	done
 
 stats: recalculate-stats
