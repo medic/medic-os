@@ -65,6 +65,49 @@ build_config()
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
 
+builder_normalize_architecture()
+{
+  local arch="$1"
+  local bits="$2"
+
+  if [ -z "$arch" ]; then
+    arch="`uname -m`"
+  fi
+
+  if [[ "$arch" = x86_64* ]]; then
+    arch='intel'
+  elif [[ "$arch" = x86* ]]; then
+    arch='intel'
+  elif [[ "$arch" = i?86 ]]; then
+    arch='intel'
+  elif [[ "$arch" = armv6* ]]; then
+    arch='armv6'
+  elif [ "$arch" = 'unknown' ]; then
+    arch='intel'
+  fi
+
+  echo "$arch"
+}
+
+builder_normalize_bits()
+{
+  local arch="$1"
+  local bits="$2"
+
+  if [[ "$arch" = x86_64* ]]; then
+    bits='64'
+  elif [[ "$arch" = x86* ]]; then
+    bits='32'
+  elif [[ "$arch" = i?86 ]]; then
+    bits='32'
+  elif [[ "$arch" = armv6* ]]; then
+    bits='32'
+  fi
+
+  echo "$bits"
+}
+
+
 builder_fix_erlang_dso_linkage()
 {
   local bits="$1"
@@ -352,7 +395,7 @@ builder_setup_environment()
   pkg_stop="$4"
   pkg_stop_version="$5"
   uname="$6"
-  cpu="$7"
+  arch="$7"
   bits="$8"
   parallel="$9"
 
@@ -382,7 +425,7 @@ builder_setup_environment()
     export MAKE="$MAKE -j$parallel"
   fi
 
-  if [ "$uname" = 'Darwin' -a "$cpu" = 'intel' -a "$bits" -eq 32 ]; then
+  if [ "$uname" = 'Darwin' -a "$arch" = 'intel' -a "$bits" -eq 32 ]; then
     export LDFLAGS="-arch i386 -L$prefix/lib"
   else
     export LDFLAGS="-L$prefix/lib"
@@ -393,9 +436,9 @@ builder_setup_environment()
   export CFLAGS_INCLUDE="-I$prefix/include -L$prefix/lib"
   #CFLAGS_INCLUDE="$CFLAGS_INCLUDE -R$prefix/lib"
 
-  if [ "$cpu" = 'intel' ]; then
+  if [ "$arch" = 'intel' ]; then
     export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -m$bits"
-  elif [ "$cpu" = 'arm' ]; then
+  elif [[ "$arch" = armv6* ]]; then
     local cflags_arch="-march=armv6 -mfpu=vfp -mfloat-abi=hard"
     export CFLAGS_SIMPLE="$CFLAGS_SIMPLE $cflags_arch"
   fi
@@ -416,7 +459,7 @@ builder_detect_platform()
   fi
 
   # Detect architecture/platform
-  if [ "$cpu" = 'intel' ]; then
+  if [ "$arch" = 'intel' ]; then
     if [ "$uname" = 'Darwin' ]; then
         if [ "$bits" -eq 64 ]; then
           build_cpu='x64'
@@ -440,7 +483,7 @@ builder_detect_platform()
           build_arch="i586-linux-gnu"
         fi
     fi
-  elif [ "$cpu" = "arm" ]; then
+  elif [[ "$arch" = armv6* ]]; then
     build_cpu='arm'
     build_platform="linux-armv4"
     build_arch="arm-linux-gnueabihf"

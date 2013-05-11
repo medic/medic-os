@@ -29,8 +29,12 @@ main()
 {
   local package="$1"
   local version="$2"
+  local architecture="$3"
 
-  local architecture='x86'
+  if [ -z "$architecture" ]; then
+    architecture='x86'
+  fi
+
   local staging_dir="staging/packages/$package"
 
   if [ $# -gt 2 -o -z "$package" -o -z "version" ]; then
