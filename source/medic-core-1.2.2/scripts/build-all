@@ -3,6 +3,12 @@
 self="`readlink -f "$0"`"
 base_dir="`dirname "$self"`/.."
 
+fatal()
+{
+  echo "Fatal error: $*" >&2
+  exit 111
+}
+
 source "$base_dir/scripts/include/logger" 2>/dev/null &&
 source "$base_dir/scripts/include/builder" 2>/dev/null \
     || fatal 'Unable to load a required library'
@@ -14,7 +20,7 @@ main()
   local pkg_start_version="$3"
   local pkg_stop="`echo "$4" | sed 's/\//-/g;'`"
   local pkg_stop_version="$5"
-  local cpu="$6"
+  local arch="$6"
   local bits="$7"
   local parallel="$8"
 
@@ -24,9 +30,8 @@ main()
   #  These are used by `builder_setup_environment` to set
   #  environment variables and compilation flags appropriately.
 
-  if [ -z "$cpu" ]; then
-    cpu='intel'
-  fi
+  bits="`builder_normalize_bits "$arch" "$bits"`"
+  arch="`builder_normalize_architecture "$arch" "$bits"`"
 
   local uname="`uname -s`"
   local stdarg="--prefix=\"$prefix\""
@@ -37,14 +42,14 @@ main()
 
   local erlang_extra_options=""
 
-  if [ "$cpu" = 'intel' -a "$bits" ]; then
+  if [ "$arch" = 'intel' -a "$bits" ]; then
     erlang_extra_options="--enable-m${bits}-build"
   fi
 
   builder_initialize &&
   builder_setup_environment "$prefix" \
     "$pkg_start" "$pkg_start_version" "$pkg_stop" \
-      "$pkg_stop_version" "$uname" "$cpu" "$bits" "$parallel" &&
+      "$pkg_stop_version" "$uname" "$arch" "$bits" "$parallel" &&
   \
   build_autoconf 'pv' "$stdarg" &&
   \

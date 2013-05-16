@@ -37,12 +37,13 @@ iso-image: initrd-image verify-packages
 	@echo 'done.'
 
 initrd-image:
-	@echo -n 'Creating initrd image... '
-	@cd "initrd/${ARCH}" && \
+	@echo -n 'Creating initrd image... ' &&
+	cp -a initrd/common/* "initrd/${ARCH}/" &&
+	cd "initrd/${ARCH}" && \
 		find * | cpio -o -H newc 2>/dev/null \
 		  | sh ../../source/linux/scripts/xz_wrap.sh \
-			> ../../iso/boot/image.xz
-	@echo 'done.'
+			> ../../iso/boot/image.xz &&
+	echo 'done.'
 
 strip-binaries:
 	@echo -n "Removing unnecessary symbols... "

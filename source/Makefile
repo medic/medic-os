@@ -163,9 +163,10 @@ build-busybox: build-pv
 	./scripts/logger busybox 'cd busybox && ${PMAKE}'
 
 copy-busybox:
-	@echo -n "Copying files for 'busybox'... "
-	@(cd busybox && cp busybox ../../initrd/${ARCH}/bin/busybox)
-	@echo 'done.'
+	@echo -n "Copying files for 'busybox'... " && \
+	mkdir -p "../initrd/${ARCH}/bin" && \
+	(cd busybox && cp busybox ../../initrd/${ARCH}/bin/busybox) && \
+	echo 'done.'
 
 
 syslinux: build-syslinux copy-syslinux
@@ -177,10 +178,10 @@ build-syslinux: build-pv
 	@./scripts/logger syslinux 'cd syslinux && ${PMAKE}'
 
 copy-syslinux:
-	@echo -n "Copying files for 'syslinux'... "
-	@(cd syslinux && \
-		cp core/isolinux.bin ../../iso/boot/isolinux/isolinux.bin)
-	@echo 'done.'
+	@echo -n "Copying files for 'syslinux'... " && \
+	(cd syslinux && \
+		cp core/isolinux.bin ../../iso/boot/isolinux/isolinux.bin) && \
+	echo 'done.'
 
 
 finalize-initrd:
