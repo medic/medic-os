@@ -36,6 +36,7 @@ main()
   fi
 
   local staging_dir="staging/packages/$package"
+  local package_name="$package-v$version-$architecture.vpkg"
 
   if [ $# -gt 2 -o -z "$package" -o -z "version" ]; then
     usage
@@ -65,7 +66,7 @@ main()
   \
   # Combine data and metadata to produce package
   (cd "$staging_dir" &&
-    ar -rcs "../../../iso/packages/$package-v$version-$architecture.vpkg" *) &&
+    ar -rcs "../../../images/$architecture/iso/packages/$package_name" *) &&
 
   if [ "$?" -ne 0 ]; then
     fatal "Package creation step for '$package' failed"

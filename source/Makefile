@@ -91,7 +91,7 @@ build-kernel: build-pv
 			'cd linux && ${PMAKE} bzImage && ${PMAKE} modules'
 
 copy-kernel:
-	@cp linux/arch/x86/boot/bzImage ../iso/boot/kernel
+	@cp linux/arch/x86/boot/bzImage ../images/x86/iso/boot/kernel
 
 install-kernel-modules:
 	@(cd linux && ${MAKE} modules_install \
@@ -180,7 +180,7 @@ build-syslinux: build-pv
 copy-syslinux:
 	@echo -n "Copying files for 'syslinux'... " && \
 	(cd syslinux && \
-		cp core/isolinux.bin ../../iso/boot/isolinux/isolinux.bin) && \
+		cp core/isolinux.bin ../../images/x86/iso/boot/isolinux/isolinux.bin) && \
 	echo 'done.'
 
 
