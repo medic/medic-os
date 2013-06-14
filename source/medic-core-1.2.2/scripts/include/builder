@@ -285,11 +285,21 @@ build_rebar()
 {
   local name="$1"
   local prefix="$2"
+  local command="$3"
+  local final_binary="$4"
 
   builder_should_run "$name" || return 0
 
-  (cd "$name" && ./bootstrap &&
-    mv rebar "$prefix/bin") 2>&1 | logger "$name"
+  if [ -z "$command" ]; then
+    command="make"
+  fi
+
+  if [ -z "$final_binary" ]; then
+    final_binary="$name"
+  fi
+
+  (cd "$name" && "$command" &&
+    mv "$final_binary" "$prefix/bin") 2>&1 | logger "$name"
 }
 
 builder_clean_target()

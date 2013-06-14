@@ -160,7 +160,8 @@ main()
   (disable_parallelism && \
     builder_fix_erlang_dso_linkage "$bits") &&
   \
-  build_rebar 'rebar' "$prefix" &&
+  build_rebar 'rebar' "$prefix" './bootstrap' &&
+  build_rebar 'erica' "$prefix" 'make' &&
   \
   build_autoconf 'libffi' "$stdarg" && \
   builder_remove_static_libraries 'ffi' &&
