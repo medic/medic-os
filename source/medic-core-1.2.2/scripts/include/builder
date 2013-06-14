@@ -281,6 +281,17 @@ build_cmake()
     make && make install) 2>&1 | logger "$name"
 }
 
+build_rebar()
+{
+  local name="$1"
+  local prefix="$2"
+
+  builder_should_run "$name" || return 0
+
+  (cd "$name" && ./bootstrap &&
+    mv rebar "$prefix/bin") 2>&1 | logger "$name"
+}
+
 builder_clean_target()
 {
   local name="$1"

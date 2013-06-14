@@ -143,7 +143,6 @@ copy-medic-core:
 
 set-pax-flags:
 	@echo -n "Setting executable flags... " && \
-	echo "${MEDIC_CORE_ROOT}" && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
 		'${JAVA_PKG_ROOT}/bin/java' 2>/dev/null && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
