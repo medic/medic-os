@@ -3,7 +3,7 @@ BITS ?= 32
 ARCH ?= x86
 PARALLEL ?= 16
 
-JAVA_VERSION := 1.7.21
+JAVA_VERSION := 1.7.25
 VM_TOOLS_VERSION := 9.2.2
 MEDIC_CORE_VERSION := 1.2.2
 
@@ -23,7 +23,7 @@ QMAKE := ${MAKE} --no-print-directory
 
 CFLAGS += -Os -fstack-protector-all
 
-KERNEL_VERSION := 3.8.5
+KERNEL_VERSION := 3.8.13
 KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/${ARCH}/lib/modules/${KERNEL_VERSION}")
 
 

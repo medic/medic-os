@@ -43,7 +43,7 @@ main()
   load_timestamp "$name" \
     || fatal 'Unable to load last timestamp; retry from root directory'
 
-  (exec sh -c "$*") 2>&1 | logger "$name"
+  (exec sh -c "$*" 2>&1) | logger "$name"
   return ${PIPESTATUS[0]}
 }
 

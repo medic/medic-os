@@ -11,6 +11,11 @@ simple_cflags()
   export CXXFLAGS="$CFLAGS_SIMPLE"
 }
 
+simple_ldflags()
+{
+  export LDFLAGS="$LDFLAGS_SIMPLE"
+}
+
 disable_library_path()
 {
   unset LD_LIBRARY_PATH
@@ -299,6 +304,7 @@ build_rebar()
   fi
 
   (cd "$name" && "$command" &&
+    chmod +x "$final_binary" &&
     mv "$final_binary" "$prefix/bin") 2>&1 | logger "$name"
 }
 
@@ -447,15 +453,12 @@ builder_setup_environment()
   fi
 
   if [ "$uname" = 'Darwin' -a "$arch" = 'intel' -a "$bits" -eq 32 ]; then
-    export LDFLAGS="-arch i386 -L$prefix/lib"
-  else
-    export LDFLAGS="-L$prefix/lib"
-    #export LDFLAGS="$LDFLAGS -R$prefix/lib"
+    export LDFLAGS_SIMPLE="-arch i386"
   fi
 
+  export LDFLAGS="$LDFLAGS_SIMPLE -L$prefix/lib"
   export CFLAGS_SIMPLE="-Os -fstack-protector-all"
   export CFLAGS_INCLUDE="-I$prefix/include -L$prefix/lib"
-  #CFLAGS_INCLUDE="$CFLAGS_INCLUDE -R$prefix/lib"
 
   if [ "$arch" = 'intel' ]; then
     export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -m$bits"

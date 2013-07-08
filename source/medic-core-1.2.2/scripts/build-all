@@ -118,8 +118,6 @@ main()
   \
   builder_remove_static_libraries 'crypto' 'ssl' &&
   \
-  build_autoconf 'rsync' "$stdarg" &&
-  \
   build_autoconf 'libidn' "$stdarg" &&
   builder_remove_static_libraries 'idn' &&
   \
@@ -133,17 +131,33 @@ main()
   builder_remove_static_libraries 'curl' &&
   build_autoconf 'icu' "$stdarg" &&
   \
+  build_autoconf 'pcre' \
+    "$stdarg --enable-utf \
+     --enable-jit --enable-shared --disable-static \
+     --enable-unicode-properties --enable-pcregrep-libbz2 \
+     --enable-pcregrep-libz --enable-pcretest-libreadline" &&
+  \
   build_autoconf 'git' \
-    "$stdarg --with-openssl='$prefix' \
-     --with-curl='$prefix' --with-zlib='$prefix' --without-iconv" &&
+    "$stdarg --with-openssl='$prefix' --with-curl='$prefix' \
+     --with-zlib='$prefix' --with-libpcre='$prefix' --without-iconv" &&
+  \
+  build_autoconf 'rsync' "$stdarg" &&
+
+  build_autoconf 'nginx' \
+    "$stdarg --sbin-path='$prefix/bin' \
+     --conf-path='$prefix/etc/nginx/nginx.conf' \
+     --pid-path='$prefix/var/run/nginx/nginx.pid' \
+     --error-log-path='$prefix/var/log/nginx/error.log' \
+     --lock-path='$prefix/var/run/nginx/nginx.lock'" \
+       "LINK='$CC $CFLAGS $LDFLAGS'" &&
   \
   (simple_cflags && build_autoconf 'node' \
     "$stdarg --shared-zlib \
-    --shared-zlib-includes='$prefix/include' \
-    --shared-zlib-libpath='$prefix/lib' \
-    --shared-openssl \
-    --shared-openssl-includes='$prefix/include' \
-    --shared-openssl-libpath='$prefix/lib' --dest-cpu='$build_cpu'") &&
+     --shared-zlib-includes='$prefix/include' \
+     --shared-zlib-libpath='$prefix/lib' \
+     --shared-openssl \
+     --shared-openssl-includes='$prefix/include' \
+     --shared-openssl-libpath='$prefix/lib' --dest-cpu='$build_cpu'") &&
   \
   (disable_parallelism &&
     build_autoconf 'js' \
