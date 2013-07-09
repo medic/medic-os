@@ -1,0 +1,140 @@
+/* Script for ld -Ur: link w/out relocation, do create constructors */
+OUTPUT_FORMAT("elf32-avr","elf32-avr","elf32-avr")
+OUTPUT_ARCH(avr:5)
+MEMORY
+{
+  text   (rx)   : ORIGIN = 0, LENGTH = 128K
+  data   (rw!x) : ORIGIN = 0x800060, LENGTH = 0xffa0
+  eeprom (rw!x) : ORIGIN = 0x810000, LENGTH = 64K
+}
+SECTIONS
+{
+  /* Read-only sections, merged into text segment: */
+  .hash        0 : { *(.hash)		}
+  .dynsym      0 : { *(.dynsym)		}
+  .dynstr      0 : { *(.dynstr)		}
+  .gnu.version 0 : { *(.gnu.version)	}
+  .gnu.version_d 0 : { *(.gnu.version_d)	}
+  .gnu.version_r 0 : { *(.gnu.version_r)	}
+  .rel.init    0 : { *(.rel.init)		}
+  .rela.init   0 : { *(.rela.init)	}
+  .rel.text    0 :
+    {
+      *(.rel.text)
+    }
+  .rela.text   0 :
+    {
+      *(.rela.text)
+    }
+  .rel.fini    0 : { *(.rel.fini)		}
+  .rela.fini   0 : { *(.rela.fini)	}
+  .rel.rodata  0 :
+    {
+      *(.rel.rodata)
+    }
+  .rela.rodata 0 :
+    {
+      *(.rela.rodata)
+    }
+  .rel.data    0 :
+    {
+      *(.rel.data)
+    }
+  .rela.data   0 :
+    {
+      *(.rela.data)
+    }
+  .rel.ctors   0 : { *(.rel.ctors)	}
+  .rela.ctors  0 : { *(.rela.ctors)	}
+  .rel.dtors   0 : { *(.rel.dtors)	}
+  .rela.dtors  0 : { *(.rela.dtors)	}
+  .rel.got     0 : { *(.rel.got)		}
+  .rela.got    0 : { *(.rela.got)		}
+  .rel.bss     0 : { *(.rel.bss)		}
+  .rela.bss    0 : { *(.rela.bss)		}
+  .rel.plt     0 : { *(.rel.plt)		}
+  .rela.plt    0 : { *(.rela.plt)		}
+  /* Internal text space or external memory */
+  .text :
+  {
+    *(.vectors)
+     __ctors_start = . ;
+     *(.ctors)
+     __ctors_end = . ;
+     __dtors_start = . ;
+     *(.dtors)
+     __dtors_end = . ;
+    *(.progmem.gcc*)
+    *(.progmem*)
+    *(.init0)  /* Start here after reset.  */
+    *(.init1)
+    *(.init2)  /* Clear __zero_reg__, set up stack pointer.  */
+    *(.init3)
+    *(.init4)  /* Initialize data and BSS.  */
+    *(.init5)
+    *(.init6)  /* C++ constructors.  */
+    *(.init7)
+    *(.init8)
+    *(.init9)  /* Call main().  */
+    *(.text)
+    *(.text.*)
+    *(.fini9)  /* _exit() starts here.  */
+    *(.fini8)
+    *(.fini7)
+    *(.fini6)  /* C++ destructors.  */
+    *(.fini5)
+    *(.fini4)
+    *(.fini3)
+    *(.fini2)
+    *(.fini1)
+    *(.fini0)  /* Infinite loop after program termination.  */
+  }
+  .data	0 :
+  {
+    *(.data)
+    *(.gnu.linkonce.d*)
+  }
+  .bss  :
+  {
+    *(.bss)
+    *(COMMON)
+  }
+  /* Global data not cleared after reset.  */
+  .noinit  :
+  {
+    *(.noinit*)
+  }
+  .eeprom 0:
+
+  {
+    *(.eeprom*)
+  }
+  /* Stabs debugging sections.  */
+  .stab 0 : { *(.stab) }
+  .stabstr 0 : { *(.stabstr) }
+  .stab.excl 0 : { *(.stab.excl) }
+  .stab.exclstr 0 : { *(.stab.exclstr) }
+  .stab.index 0 : { *(.stab.index) }
+  .stab.indexstr 0 : { *(.stab.indexstr) }
+  .comment 0 : { *(.comment) }
+  /* DWARF debug sections.
+     Symbols in the DWARF debugging sections are relative to the beginning
+     of the section so we begin them at 0.  */
+  /* DWARF 1 */
+  .debug          0 : { *(.debug) }
+  .line           0 : { *(.line) }
+  /* GNU DWARF 1 extensions */
+  .debug_srcinfo  0 : { *(.debug_srcinfo) }
+  .debug_sfnames  0 : { *(.debug_sfnames) }
+  /* DWARF 1.1 and DWARF 2 */
+  .debug_aranges  0 : { *(.debug_aranges) }
+  .debug_pubnames 0 : { *(.debug_pubnames) }
+  /* DWARF 2 */
+  .debug_info     0 : { *(.debug_info) *(.gnu.linkonce.wi.*) }
+  .debug_abbrev   0 : { *(.debug_abbrev) }
+  .debug_line     0 : { *(.debug_line) }
+  .debug_frame    0 : { *(.debug_frame) }
+  .debug_str      0 : { *(.debug_str) }
+  .debug_loc      0 : { *(.debug_loc) }
+  .debug_macinfo  0 : { *(.debug_macinfo) }
+}

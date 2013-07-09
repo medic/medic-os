@@ -1,0 +1,18 @@
+The turbo-devel package contains Turbo specific libraries, headers,
+developer documentation and examples.
+
+The package is always available at www.bladox.com.
+
+To develop Turbo specific packages it is necessary to have following
+packages installed:
+- GCC - standard gcc configured for AVR
+- binutils - modified binutils to support Turbo binary application format.
+
+Please see the doc/html/turbo-devel-manual/index.html for more information
+on how to install these packages.
+
+You may use the included examples freely without any limitations.
+
+In your project the only configuration to set is the TURBO_DIR variable
+pointing to the turbo-devel location. Either modify the Makefile or use 
+"export TURBO_DIR=where_is_turbo-devel_installed".

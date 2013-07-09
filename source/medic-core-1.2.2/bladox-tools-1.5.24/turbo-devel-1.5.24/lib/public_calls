@@ -1,0 +1,273 @@
+public_calls = 0x1db80;
+
+main = turbo_handler;
+
+not_implemented	= public_calls;
+__dbc 		= public_calls + 4;
+__dbsp 		= public_calls + 8;
+emalloc 	= public_calls + 12;
+efree 		= public_calls + 16;
+erb     	= public_calls + 20;
+ewb     	= public_calls + 24;
+mmalloc 	= public_calls + 28;
+malloc 		= public_calls + 28;
+mfree 		= public_calls + 32;
+free 		= public_calls + 32;
+get_inkey    	= public_calls + 36;
+stk_thread   	= public_calls + 40;
+display_icon 	= public_calls + 44;
+select_item  	= public_calls + 48;
+locale       	= public_calls + 52;
+insert_menu  	= public_calls + 56;
+retval  	= public_calls + 60;
+play_tone	= public_calls + 64;
+__dbch		= public_calls + 68;
+buf_A		= public_calls + 72;
+buf_B		= public_calls + 76;
+reg_app_data	= public_calls + 80;
+reg_sms_tag 	= public_calls + 84;
+locale_list  	= public_calls + 88;
+app_data      	= public_calls + 92;
+_s_stack      	= public_calls + 96;
+terminal_profile = public_calls + 100;
+inode      	= public_calls + 104;
+refresh_sms	= public_calls + 108;
+perror     	= public_calls + 112;
+version_turbo	= public_calls + 116;
+set_img    	= public_calls + 120;
+proc_8       	= public_calls + 124;
+memcpy		= public_calls + 128;
+set_proc_8  	= public_calls + 132;
+strlen		= public_calls + 136;
+set_up_event_list = public_calls + 140;
+__dbs           = public_calls + 144;
+set_up_menu     = public_calls + 148;
+rb 		= public_calls + 152;
+wb 		= public_calls + 156;
+str2msisdn 	= public_calls + 160;
+msisdn2str 	= public_calls + 164;
+msisdncmp 	= public_calls + 168;
+rw 		= public_calls + 172;
+ww 		= public_calls + 176;
+file_type    	= public_calls + 180;
+msisdncpy	= public_calls + 184;
+UNUSED_6	= public_calls + 188;
+UNUSED_7	= public_calls + 192;
+create_head_q	= public_calls + 196;
+create_head_a	= public_calls + 200;
+UNUSED_5	= public_calls + 204;
+skip_head	= public_calls + 208;
+cd		= public_calls + 212;
+cd_i		= public_calls + 216;
+create_dir	= public_calls + 220;
+create_file	= public_calls + 224;
+spider_back	= public_calls + 228;
+_db_stack	= public_calls + 232;
+delete_inode	= public_calls + 236;
+mc_detect	= public_calls + 240;
+display_text	= public_calls + 244;
+mc_append	= public_calls + 248;
+mc_clear		= public_calls + 252;
+mc_close		= public_calls + 256;
+mc_file_encrypt	= public_calls + 260;
+mc_open		= public_calls + 264;
+mc_read		= public_calls + 268;
+get_inode	= public_calls + 272;
+get_input	= public_calls + 276;
+get_len		= public_calls + 280;
+get_len_raw	= public_calls + 284;
+password	= public_calls + 288;
+pwd		= public_calls + 292;
+root		= public_calls + 296;
+spider		= public_calls + 300;
+spider_append_r	= public_calls + 304;
+spider_clear_r	= public_calls + 308;
+spider_init	= public_calls + 312;
+bzero		= public_calls + 316;
+yesno		= public_calls + 320;
+__dbih		= public_calls + 324;
+
+_db_malloc      = public_calls + 328;
+dcs_is_7b       = public_calls + 332;
+delete_files    = public_calls + 336;
+store_sms_2_sim = public_calls + 340;
+UNUSED_3             = public_calls + 344;
+UNUSED_4             = public_calls + 348;
+mc_file_decrypt    = public_calls + 352;
+get_adn         = public_calls + 356;
+get_bit         = public_calls + 360;
+mc_get_type         = public_calls + 364;
+get_tag         = public_calls + 368;
+__df_print       = public_calls + 372;
+mc_move            = public_calls + 376;
+reg_action      = public_calls + 380;
+set_bit         = public_calls + 384;
+set_inode       = public_calls + 388;
+spider_set_order = public_calls + 392;
+tpdu_seek       = public_calls + 396;
+create_head_msg = public_calls + 400;
+mc_rewrite      = public_calls + 404;
+display_text_raw = public_calls + 408;
+mc_find            = public_calls + 412;
+msisdn          = public_calls + 416;
+reg_file_type   = public_calls + 420;
+ino_parent       = public_calls + 424;
+send_sms        = public_calls + 428;
+mc_set_type         = public_calls + 432;
+adn_len         = public_calls + 436;
+fs_ino_block    = public_calls + 440;
+fs_ino_index    = public_calls + 444;
+fs_ino_p        = public_calls + 448;
+
+change_imsi     = public_calls + 452;
+reg_file        = public_calls + 456;
+sprintc         = public_calls + 460;
+sprintch        = public_calls + 464;
+sprints         = public_calls + 468;
+unreg_action    = public_calls + 472;
+unreg_file      = public_calls + 476;
+
+tsms_pid         = public_calls + 480;
+sprinti         = public_calls + 484;
+_db_imalloc     = public_calls + 488;
+ifree           = public_calls + 492;
+imalloc         = public_calls + 496;
+init_imalloc    = public_calls + 500;
+is_idle         = public_calls + 504;
+
+provide_imei    = public_calls + 508;
+provide_language = public_calls + 512;
+provide_local_info = public_calls + 516;
+provide_nmr     = public_calls + 520;
+provide_ta      = public_calls + 524;
+provide_date    = public_calls + 528;
+
+set_up_call     = public_calls + 532;
+
+refresh         = public_calls + 536;
+more_time       = public_calls + 540;
+display_more    = public_calls + 544;
+timer_start     = public_calls + 548;
+timer_stop      = public_calls + 552;
+timer_value     = public_calls + 556;
+
+wait_for_action = public_calls + 560;
+sim             = public_calls + 564;
+stk_cmd         = public_calls + 568;
+xrand           = public_calls + 572;
+select          = public_calls + 576;
+read_binary     = public_calls + 580;
+
+l_twofish_setup           = public_calls + 584;
+l_twofish_ecb_decrypt     = public_calls + 588;
+l_twofish_ecb_encrypt     = public_calls + 592;
+
+version_hwd 	= public_calls + 596;
+serial_number	= public_calls + 600;
+version_loader 	= public_calls + 604;
+
+prot_mem_delete 	= public_calls + 608;
+prot_mem_make_block	= public_calls + 612;
+prot_mem_read   	= public_calls + 616;
+prot_mem_encrypt	= public_calls + 620;
+prot_mem_decrypt	= public_calls + 624;
+
+
+launch_browser		= public_calls + 628;
+open_channel_raw	= public_calls + 632;
+close_channel		= public_calls + 636;
+get_channel_status	= public_calls + 640;
+send_data_raw		= public_calls + 644;
+receive_data_raw	= public_calls + 648;
+
+mc_blocks       	= public_calls + 652;
+mc_free         	= public_calls + 656;
+mc_get_label    	= public_calls + 660;
+mc_pages        	= public_calls + 664;
+mc_set_label    	= public_calls + 668;
+
+__edbc    		= public_calls + 672;
+__edbi    		= public_calls + 676;
+edbg    		= public_calls + 680;
+
+dcs_78    		= public_calls + 684;
+tsms_dcs  		= public_calls + 688;
+proc_16  		= public_calls + 692;
+dcs_7b_len  		= public_calls + 696;
+swap_nibble 		= public_calls + 700;
+twofish_cbc_encrypt 	= public_calls + 704;
+twofish_cbc_decrypt 	= public_calls + 708;
+_db_emalloc         	= public_calls + 712;
+
+UNUSED_0            	= public_calls + 716;
+UNUSED_1            	= public_calls + 720;
+
+memcmp             	= public_calls + 724;
+_init               	= public_calls + 728;
+adn_ready           	= public_calls + 732;
+sim_sst             	= public_calls + 736;
+sim_atr             	= public_calls + 740;
+
+twofish_setup           = public_calls + 744;
+twofish_ecb_decrypt     = public_calls + 748;
+twofish_ecb_encrypt     = public_calls + 752;
+poll_interval           = public_calls + 756;
+
+set_menu_alpha           = public_calls + 760;
+lookup_tsms_tag          = public_calls + 764;
+shmem_reg_key            = public_calls + 768;
+shmem_key                = public_calls + 772;
+
+delayUs                  = public_calls + 776;
+delayMs                  = public_calls + 780;
+
+sprintucs2_start         = public_calls + 784;
+sprintucs2_end           = public_calls + 788;
+
+bra_mac_reset           = public_calls + 792;
+bra_mac_get           	= public_calls + 796;
+bra_mac_set           	= public_calls + 800;
+bra_txrx        	= public_calls + 804;
+bra_seek_head         	= public_calls + 808;
+bra_make_head         	= public_calls + 812;
+bra_lqi               	= public_calls + 816;
+bra_set_freq           	= public_calls + 820;
+bra_set_802_15_4_channel      	= public_calls + 824;
+bra_set_tx_power       	= public_calls + 828;
+bra_freq       		= public_calls + 832;
+bra_tx_power       	= public_calls + 836;
+bra_cc2420_read       	= public_calls + 840;
+bra_cc2420_write       	= public_calls + 844;
+bra_tx_raw       	= public_calls + 848;
+bra_rx_raw       	= public_calls + 852;
+bra_radio_on       	= public_calls + 856;
+bra_radio_off       	= public_calls + 860;
+
+twin_sim            	= public_calls + 864;
+twin_on                 = public_calls + 868;
+twin_off                = public_calls + 872;
+twin_clk_on             = public_calls + 876;
+twin_clk_off            = public_calls + 880;
+twin_txrx               = public_calls + 884;
+twin_t1_apdu            = public_calls + 888;
+
+simx                    = public_calls + 892;
+btldr_conf              = public_calls + 896;
+btldr_atr               = public_calls + 900;
+//btldr_read_key          = public_calls + 904;
+//btldr_de                = public_calls + 908;
+btldr_e                 = public_calls + 912;
+btldr_d                 = public_calls + 916;
+
+reg_channel             = public_calls + 920;
+unreg_channel           = public_calls + 924;
+apdu_class              = public_calls + 928;
+app_name                = public_calls + 932;
+call_app                = public_calls + 936;
+
+simx_d                  = public_calls + 940;
+reg_aid                  = public_calls + 944;
+unreg_aid                  = public_calls + 948;
+
+progmem_write           = public_calls + 952;
+

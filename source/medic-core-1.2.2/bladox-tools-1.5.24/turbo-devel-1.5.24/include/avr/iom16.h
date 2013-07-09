@@ -1,0 +1,387 @@
+/* Copyright (c) 2004 Eric B. Weddington
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions are met:
+
+   * Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+
+   * Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in
+     the documentation and/or other materials provided with the
+     distribution.
+
+   * Neither the name of the copyright holders nor the names of
+     contributors may be used to endorse or promote products derived
+     from this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  POSSIBILITY OF SUCH DAMAGE. */
+
+/* $Id: iom16.h,v 1.7 2004/12/21 17:38:23 arcanum Exp $ */
+
+/* avr/iom16.h - definitions for ATmega16 */
+
+#ifndef _AVR_IOM16_H_
+#define _AVR_IOM16_H_ 1
+
+/* This file should only be included from <avr/io.h>, never directly. */
+
+#ifndef _AVR_IO_H_
+#  error "Include <avr/io.h> instead of this file."
+#endif
+
+#ifndef _AVR_IOXXX_H_
+#  define _AVR_IOXXX_H_ "iom16.h"
+#else
+#  error "Attempt to include more than one <avr/ioXXX.h> file."
+#endif 
+
+/* Registers and associated bit numbers */
+
+#define TWBR    _SFR_IO8(0x00)
+
+#define TWSR    _SFR_IO8(0x01)
+#define TWPS0   0
+#define TWPS1   1
+#define TWS3    3
+#define TWS4    4
+#define TWS5    5
+#define TWS6    6
+#define TWS7    7
+
+#define TWAR    _SFR_IO8(0x02)
+#define TWGCE   0
+#define TWA0    1
+#define TWA1    2
+#define TWA2    3
+#define TWA3    4
+#define TWA4    5
+#define TWA5    6
+#define TWA6    7
+
+#define TWDR    _SFR_IO8(0x03)
+
+/* Combine ADCL and ADCH */
+#define ADC     _SFR_IO16(0x04)
+
+#define ADCL    _SFR_IO8(0x04)
+#define ADCH    _SFR_IO8(0x05)
+
+#define ADCSRA  _SFR_IO8(0x06)
+#define ADPS0   0
+#define ADPS1   1
+#define ADPS2   2
+#define ADIE    3
+#define ADIF    4
+#define ADATE   5
+#define ADSC    6
+#define ADEN    7
+
+#define ADMUX   _SFR_IO8(0x07)
+#define MUX0    0
+#define MUX1    1
+#define MUX2    2
+#define MUX3    3
+#define MUX4    4
+#define ADLAR   5
+#define REFS0   6
+#define REFS1   7
+
+#define ACSR    _SFR_IO8(0x08)
+#define ACIS0   0
+#define ACIS1   1
+#define ACIC    2
+#define ACIE    3
+#define ACI     4
+#define ACO     5
+#define ACBG    6
+#define ACD     7
+
+#define UBRRL   _SFR_IO8(0x09)
+
+#define UCSRB   _SFR_IO8(0x0A)
+#define TXB8    0
+#define RXB8    1
+#define UCSZ2   2
+#define TXEN    3
+#define RXEN    4
+#define UDRIE   5
+#define TXCIE   6
+#define RXCIE   7
+
+#define UCSRA   _SFR_IO8(0x0B)
+#define MPCM    0
+#define U2X     1
+#define PE      2
+#define DOR     3
+#define FE      4
+#define UDRE    5
+#define TXC     6
+#define RXC     7
+
+#define UDR     _SFR_IO8(0x0C)
+
+#define SPCR    _SFR_IO8(0x0D)
+#define SPR0    0
+#define SPR1    1
+#define CPHA    2
+#define CPOL    3
+#define MSTR    4
+#define DORD    5
+#define SPE     6
+#define SPIE    7
+
+#define SPSR    _SFR_IO8(0x0E)
+#define SPI2X   0
+#define WCOL    6
+#define SPIF    7
+
+#define SPDR    _SFR_IO8(0x0F)
+
+/* The bit numbers for the Port A-D registers are defined in <avr/portpins.h> */
+#define PIND    _SFR_IO8(0x10)
+#define DDRD    _SFR_IO8(0x11)
+#define PORTD   _SFR_IO8(0x12)
+#define PINC    _SFR_IO8(0x13)
+#define DDRC    _SFR_IO8(0x14)
+#define PORTC   _SFR_IO8(0x15)
+#define PINB    _SFR_IO8(0x16)
+#define DDRB    _SFR_IO8(0x17)
+#define PORTB   _SFR_IO8(0x18)
+#define PINA    _SFR_IO8(0x19)
+#define DDRA    _SFR_IO8(0x1A)
+#define PORTA   _SFR_IO8(0x1B)
+
+/* EEPROM [0x1C..0X1F] The bit numbers are defined in <avr/io.h> */
+
+#define UCSRC   _SFR_IO8(0x20)
+#define UCPOL   0
+#define UCSZ0   1
+#define UCSZ1   2
+#define USBS    3
+#define UPM0    4
+#define UPM1    5
+#define UMSEL   6
+#define URSEL   7
+
+#define UBRRH   _SFR_IO8(0x20)
+#define URSEL   7
+
+#define WDTCR   _SFR_IO8(0x21)
+#define WDP0    0
+#define WDP1    1
+#define WDP2    2
+#define WDE     3
+#define WDTOE   4
+
+#define ASSR    _SFR_IO8(0x22)
+#define TCR2UB  0
+#define OCR2UB  1
+#define TCN2UB  2
+#define AS2     3
+
+#define OCR2    _SFR_IO8(0x23)
+
+#define TCNT2   _SFR_IO8(0x24)
+
+#define TCCR2   _SFR_IO8(0x25)
+#define CS20    0
+#define CS21    1
+#define CS22    2
+#define WGM21   3
+#define COM20   4
+#define COM21   5
+#define WGM20   6
+#define FOC2    7
+
+/* Combine ICR1L and ICR1H */
+#define ICR1    _SFR_IO16(0x26)
+
+#define ICR1L   _SFR_IO8(0x26)
+#define ICR1H   _SFR_IO8(0x27)
+
+/* Combine OCR1BL and OCR1BH */
+#define OCR1B   _SFR_IO16(0x28)
+
+#define OCR1BL  _SFR_IO8(0x28)
+#define OCR1BH  _SFR_IO8(0x29)
+
+/* Combine OCR1AL and OCR1AH */
+#define OCR1A   _SFR_IO16(0x2A)
+
+#define OCR1AL  _SFR_IO8(0x2A)
+#define OCR1AH  _SFR_IO8(0x2B)
+
+/* Combine TCNT1L and TCNT1H */
+#define TCNT1   _SFR_IO16(0x2C)
+
+#define TCNT1L  _SFR_IO8(0x2C)
+#define TCNT1H  _SFR_IO8(0x2D)
+
+#define TCCR1B  _SFR_IO8(0x2E)
+#define CS10    0
+#define CS11    1
+#define CS12    2
+#define WGM12   3
+#define WGM13   4
+#define ICES1   6
+#define ICNC1   7
+
+#define TCCR1A  _SFR_IO8(0x2F)
+#define WGM10   0
+#define WGM11   1
+#define FOC1B   2
+#define FOC1A   3
+#define COM1B0  4
+#define COM1B1  5
+#define COM1A0  6
+#define COM1A1  7
+
+#define SFIOR   _SFR_IO8(0x30)
+#define PSR10   0
+#define PSR2    1
+#define PUD     2
+#define ACME    3
+#define ADTS0   5
+#define ADTS1   6
+#define ADTS2   7
+
+#define OSCCAL  _SFR_IO8(0x31)
+
+#define OCDR    _SFR_IO8(0x31)
+
+#define TCNT0   _SFR_IO8(0x32)
+
+#define TCCR0   _SFR_IO8(0x33)
+#define CS00    0
+#define CS01    1
+#define CS02    2
+#define WGM01   3
+#define COM00   4
+#define COM01   5
+#define WGM00   6
+#define FOC0    7
+
+#define MCUCSR  _SFR_IO8(0x34)
+#define PORF    0
+#define EXTRF   1
+#define BORF    2
+#define WDRF    3
+#define JTRF    4
+#define ISC2    6
+#define JTD     7
+
+#define MCUCR   _SFR_IO8(0x35)
+#define ISC00   0
+#define ISC01   1
+#define ISC10   2
+#define ISC11   3
+#define SM0     4
+#define SM1     5
+#define SE      6
+#define SM2     7
+
+#define TWCR    _SFR_IO8(0x36)
+#define TWIE    0
+#define TWEN    2
+#define TWWC    3
+#define TWSTO   4
+#define TWSTA   5
+#define TWEA    6
+#define TWINT   7
+
+#define SPMCR   _SFR_IO8(0x37)
+#define SPMEN   0
+#define PGERS   1
+#define PGWRT   2
+#define BLBSET  3
+#define RWWSRE  4
+#define RWWSB   6
+#define SPMIE   7
+
+#define TIFR    _SFR_IO8(0x38)
+#define TOV0    0
+#define OCF0    1
+#define TOV1    2
+#define OCF1B   3
+#define OCF1A   4
+#define ICF1    5
+#define TOV2    6
+#define OCF2    7
+
+#define TIMSK   _SFR_IO8(0x39)
+#define TOIE0   0
+#define OCIE0   1
+#define TOIE1   2
+#define OCIE1B  3
+#define OCIE1A  4
+#define TICIE1  5
+#define TOIE2   6
+#define OCIE2   7
+
+#define GIFR    _SFR_IO8(0x3A)
+#define INTF2   5
+#define INTF0   6
+#define INTF1   7
+
+#define GICR    _SFR_IO8(0x3B)
+#define IVCE    0
+#define IVSEL   1
+#define INT2    5
+#define INT0    6
+#define INT1    7
+
+#define OCR0    _SFR_IO8(0x3C)
+
+/* SP [0x3D..0x3E] */
+/* SREG [0x3F] */
+
+
+/* Interrupt vectors */
+/* Vector 0 is the reset vector. */
+#define SIG_INTERRUPT0          _VECTOR(1)
+#define SIG_INTERRUPT1          _VECTOR(2)
+#define SIG_OUTPUT_COMPARE2     _VECTOR(3)
+#define SIG_OVERFLOW2           _VECTOR(4)
+#define SIG_INPUT_CAPTURE1      _VECTOR(5)
+#define SIG_OUTPUT_COMPARE1A    _VECTOR(6)
+#define SIG_OUTPUT_COMPARE1B    _VECTOR(7)
+#define SIG_OVERFLOW1           _VECTOR(8)
+#define SIG_OVERFLOW0           _VECTOR(9)
+#define SIG_SPI                 _VECTOR(10)
+#define SIG_USART_RECV          _VECTOR(11)
+#define SIG_UART_RECV           _VECTOR(11) /* For backwards compatibility */ 
+#define SIG_USART_DATA          _VECTOR(12)
+#define SIG_UART_DATA           _VECTOR(12) /* For backwards compatibility */ 
+#define SIG_USART_TRANS         _VECTOR(13)
+#define SIG_UART_TRANS          _VECTOR(13) /* For backwards compatibility */ 
+#define SIG_ADC                 _VECTOR(14)
+#define SIG_EEPROM_READY        _VECTOR(15)
+#define SIG_COMPARATOR          _VECTOR(16)
+#define SIG_2WIRE_SERIAL        _VECTOR(17)
+#define SIG_INTERRUPT2          _VECTOR(18)
+#define SIG_OUTPUT_COMPARE0     _VECTOR(19)
+#define SIG_SPM_READY           _VECTOR(20)
+
+#define _VECTORS_SIZE 84
+
+
+/* Constants */
+#define SPM_PAGESIZE    128
+#define RAMEND          0x45F
+#define XRAMEND         0x45F
+#define E2END           0x1FF
+#define FLASHEND        0x3FFF
+
+#endif /* _AVR_IOM16_H_ */
