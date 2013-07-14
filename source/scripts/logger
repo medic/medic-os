@@ -1,6 +1,6 @@
 #!/bin/bash
 
-self="`readlink -f "$0"`"
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 source_base_dir="`dirname "$self"`/../"
 
 source "$source_base_dir/medic-core/scripts/include/logger" \

@@ -1,5 +1,9 @@
 #!/bin/bash
 
+self="`readlink -f "$0"`"
+base_dir="`dirname "$self"`/.."
+
+
 check_args()
 {
   true
@@ -22,6 +26,6 @@ main()
   clean_all
 }
 
-main "$@"
+cd "$base_dir/source" && main "$@"
 exit $?
 

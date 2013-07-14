@@ -1,11 +1,13 @@
 
+unexport PLATFORM
+
 all:
-	@mkdir -p '$(ROOT)' && \
-	./scripts/build-all '$(ROOT)' '$(START)' '$(START_VERSION)' \
-		'$(STOP)' '$(STOP_VERSION)' '$(ARCH)' '$(BITS)' '$(PARALLEL)'
+	@mkdir -p '${ROOT}' && \
+	./scripts/build-all '${ROOT}' '${START}' '${START_VERSION}' \
+		'${STOP}' '${STOP_VERSION}' '${PLATFORM}' '${BITS}' '${PARALLEL}'
 
 gardenize:
-	@./scripts/gardenize-couchdb '$(ROOT)'
+	@./scripts/gardenize-couchdb '${ROOT}'
 
 clean-logs:
 	rm -f logs/*.log
@@ -17,8 +19,8 @@ clean: clean-logs
 stats: recalculate-stats
 
 recalculate-stats:
-	for file in logs/*"-$(TS).log"; do \
+	for file in logs/*"-${TS}.log"; do \
 		wc -l < "$$file" \
-			> "stats/`basename "$$file" .log | sed 's/-$(TS)//g;'`.count"; \
+			> "stats/`basename "$$file" .log | sed 's/-${TS}//g;'`.count"; \
 	done
 

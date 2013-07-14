@@ -1,0 +1,11 @@
+--- ant/build.xml~	2013-07-09 04:51:18.261999710 -0700
++++ ant/build.xml	2013-07-09 04:51:56.775000619 -0700
+@@ -873,7 +873,7 @@
+        ===================================================================
+   -->
+   <target name="dist-lite"
+-    depends="jars,test-jar"
++    depends="jars"
+     description="--> creates a minimum distribution to run Apache Ant">
+ 
+     <mkdir dir="${dist.dir}"/>

@@ -2,9 +2,9 @@
 MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 
-ARCH := x86
+PLATFORM := x86
 MEDIC_CORE_VERSION := 1.2.2
-MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${ARCH}
+MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
 all: packages build-x86-iso
 
@@ -23,7 +23,7 @@ clean:
 	rm -rf staging/packages
 
 distclean: clean
-	rm -rf "initrd/${ARCH}/lib/modules/"* && \
+	rm -rf "initrd/${PLATFORM}/lib/modules/"* && \
 	rm -f images/x86/iso/boot/kernel \
 	  images/x86/iso/boot/image.gz images/x86/iso/packages/* && \
 	(cd source && ${MAKE} clean)
@@ -43,10 +43,10 @@ build-x86-iso: build-x86-initrd verify-packages
 
 build-x86-initrd:
 	@echo -n 'Creating initrd image... ' && \
-	cp -a initrd/common/* "initrd/${ARCH}/" && \
-	cd "initrd/${ARCH}" && \
+	cp -a initrd/common/* "initrd/${PLATFORM}/" && \
+	cd "initrd/${PLATFORM}" && \
 		find * | cpio -o -H newc 2>/dev/null \
-		  | sh ../../source/linux/scripts/xz_wrap.sh \
+		  | sh ../../source/core/linux/scripts/xz_wrap.sh \
 			> ../../images/x86/iso/boot/image.xz && \
 	echo 'done.'
 

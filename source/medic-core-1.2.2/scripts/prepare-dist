@@ -8,9 +8,9 @@ if ! [ -d "$prefix" ]; then
 fi
 
 (cd "$prefix" &&
-  rm -rf lib/*.a lib/python?.? lib/erlang/usr lib/erlang/Install info \
-    include man java/manual share/man share/gtk-doc share/doc doc \
-    share/info share/emacs ssl etc/ssh_host* libexec/ssh-keysign)
+  rm -rf lib/*.a lib/python?.? lib/erlang/usr lib/erlang/Install \
+    info include man java/manual share/man share/gtk-doc share/doc doc \
+    logs html share/info share/emacs ssl etc/ssh_host* libexec/ssh-keysign)
 
 (cd "$prefix/lib/erlang/lib" && mkdir -p .save &&
   mv crypto-* compiler-* inets-* kernel-* os_mon-* public_key-* sasl-* \
@@ -40,7 +40,14 @@ fi
    ln -sf ../../../../../storage/medic-core/couchdb-lucene/indexes java/indexes)
 
 (cd "$prefix/bin" &&
+  rm -f gitk libusb.py jadmaker *-config &&
   for binary in git-receive-pack git-upload-archive; do
     rm -f "$binary" && ln -sf git "$binary";
+  done &&
+  for binary in git git-cvsserver git-shell git-upload-pack; do
+    rm -f "$binary" && ln -sf "../libexec/git-core/$binary" "$binary";
   done)
+
+(cd "$prefix/lib/node_modules" &&
+  rm -rf node-gyp)
 

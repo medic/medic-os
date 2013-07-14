@@ -1,5 +1,8 @@
 #!/bin/sh
 
+self="`readlink -f "$0"`"
+base_dir="`dirname "$self"`/.."
+
 main()
 {
   local prefix="$1"
@@ -30,6 +33,6 @@ main()
   return "$?"
 }
 
-main "$@"
+cd "$base_dir/source" && main "$@"
 exit "$?"
 

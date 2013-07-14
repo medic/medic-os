@@ -1,8 +1,11 @@
+
+unexport PLATFORM
+
 all:
-	@mkdir -p '$(ROOT)' && \
+	@mkdir -p '${ROOT}' && \
 	./scripts/build-all '${ROOT}' '${START}' '${START_VERSION}' \
-		'${STOP}' '${STOP_VERSION}' '${BITS}' '${PARALLEL}' \
-		'${KERNEL_VERSION}' '${KERNEL_MODULE_PATH}'
+		'${STOP}' '${STOP_VERSION}' '${PLATFORM}' '${BITS}' \
+		'${PARALLEL}' '${KERNEL_VERSION}' '${KERNEL_MODULE_PATH}'
 
 clean-logs:
 	rm -f logs/*.log

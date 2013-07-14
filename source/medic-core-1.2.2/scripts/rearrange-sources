@@ -1,0 +1,102 @@
+#!/bin/sh
+
+self="`readlink -f "$0" || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
+
+
+rename()
+{
+  find . -type d -exec chmod 755 {} \; &&
+    chown -R root:root . &&
+   \
+  for file in apache-*; do
+    mv "$file" "`echo "$file" | sed 's/^apache-//;'`";
+  done &&
+   \
+  for file in otp_src*; do
+    mv "$file" "erlang-`
+      echo "$file" | sed 's/^otp_src_//;' | tr '[A-Z]' '[a-z]'
+    `";
+  done &&
+   \
+  for file in xdelta3-*; do
+    mv "$file" "`echo "$file" | sed 's/^xdelta3-/xdelta-/;'`";
+  done &&
+  \
+  for pkg in rebar nodelint nodeunit gammu-json node-fs-ext garden_maker; do
+    mv "$pkg" "`echo "$pkg" | tr '_' '-'`-devel";
+  done &&
+  \
+  local version="`find_version icu4c*.tgz`" &&
+  mv icu "icu-`fix_version "$version"`" &&
+  \
+  local version="`find_version usbutils-*.tgz`" &&
+  mv usbutils "usbutils-`fix_version "$version"`" &&
+  \
+  local version="`find_version usb-modeswitch-*.*.*.tar.*`" &&
+  local source="`find * -prune -type d -name 'usb-modeswitch-data-*'`" &&
+  mv "$source" "usb-modeswitch-data-$version" &&
+  \
+  local version="`find_version node-v*.tar.*`" &&
+  local source="`find * -prune -type d -name 'node-v*'`" &&
+  mv "$source" "node-$version"
+}
+
+remove()
+{
+  rm -f *.downloaded *.finished &&
+  rm -f *.tar.bz2 *.tar.gz *.tar.xz *.tgz
+}
+
+symlink()
+{
+  find * -prune -type d | while read dir; do
+    ln -sf "$dir" "`echo "$dir" | sed 's/-[0-9\.a-z]\+$//;'`"
+  done &&
+  \
+  for dir in logs stats images; do
+    ln -sf "../$dir" "$dir";
+  done &&
+  \
+  local icu_target="`readlink icu`" && \
+  rm -f icu && ln -sf "$icu_target/source" icu &&
+  \
+  local js_target="`readlink js`" && \
+  rm -f js && ln -sf "$js_target/js/src" js
+}
+
+apply_patches()
+{
+  (cd ant && patch -s -p1 < ../../patches/ant-disable-junit.diff) &&
+  (cd erlang && patch -s -p1 < ../../patches/erlang-r15-pcre-fix.diff) &&
+  (cd maven && patch -s -p1 < ../../patches/maven-preserve-destination.diff) &&
+  (cd gammu && patch -s -p1 < ../../patches/gammu-disable-glib.diff) &&
+  (cd gammu && patch -s -p1 < ../../patches/gammu-fix-files-backend.diff) &&
+  (cd icu && patch -s -p2 < ../../../patches/icu-libicudata-linkage.diff) &&
+  (cd nodelint && patch -s -p1 < ../../patches/nodelint-install-script.diff)
+}
+
+find_version()
+{
+  echo "$@" | sed 's/^[A-Za-z0-9-]\+-v\?\([0-9\._]\+\).*$/\1/; s/\.$//;'
+}
+
+fix_version()
+{
+  echo "$@" | sed 's/^\([0-9]\)\([0-9]\)_\?\([0-9]\+\)/\1.\2.\3/;'
+}
+
+cd "$base_dir/incoming" &&
+\
+echo -n "Renaming directories... " >&2 &&
+  rename && echo 'done.' >&2 &&
+\
+echo -n "Removing compressed files... " >&2 &&
+  remove && echo 'done.' >&2 &&
+\
+echo -n "Creating symbolic links... " >&2 &&
+  symlink && echo 'done.' >&2 &&
+\
+echo -n "Applying patches... " >&2 &&
+  apply_patches && echo 'done.' >&2
+

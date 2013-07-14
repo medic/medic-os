@@ -70,42 +70,42 @@ build_config()
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
 
-builder_normalize_architecture()
+builder_normalize_platform()
 {
-  local arch="$1"
+  local platform="$1"
   local bits="$2"
 
-  if [ -z "$arch" ]; then
-    arch="`uname -m`"
+  if [ -z "$platform" ]; then
+    platform="`uname -m`"
   fi
 
-  if [[ "$arch" = x86_64* ]]; then
-    arch='intel'
-  elif [[ "$arch" = x86* ]]; then
-    arch='intel'
-  elif [[ "$arch" = i?86 ]]; then
-    arch='intel'
-  elif [[ "$arch" = armv6* ]]; then
-    arch='armv6'
-  elif [ "$arch" = 'unknown' ]; then
-    arch='intel'
+  if [[ "$platform" = x86_64* ]]; then
+    platform='intel'
+  elif [[ "$platform" = x86* ]]; then
+    platform='intel'
+  elif [[ "$platform" = i?86 ]]; then
+    platform='intel'
+  elif [[ "$platform" = armv6* ]]; then
+    platform='armv6'
+  elif [ "$platform" = 'unknown' ]; then
+    platform='intel'
   fi
 
-  echo "$arch"
+  echo "$platform"
 }
 
 builder_normalize_bits()
 {
-  local arch="$1"
+  local platform="$1"
   local bits="$2"
 
-  if [[ "$arch" = x86_64* ]]; then
+  if [[ "$platform" = x86_64* ]]; then
     bits='64'
-  elif [[ "$arch" = x86* ]]; then
+  elif [[ "$platform" = x86* ]]; then
     bits='32'
-  elif [[ "$arch" = i?86 ]]; then
+  elif [[ "$platform" = i?86 ]]; then
     bits='32'
-  elif [[ "$arch" = armv6* ]]; then
+  elif [[ "$platform" = armv6* ]]; then
     bits='32'
   fi
 
@@ -136,6 +136,25 @@ builder_remove_static_libraries()
     shift 1
     rm -f "$prefix/lib/lib$library_name.a"
   done
+}
+
+builder_install_file()
+{
+  local name="$1"
+  local source_path="$2"
+  local target_path="$3"
+  local target_directory="$target_path"
+
+  builder_should_run "$name" || return 0
+
+  if ! [ -d "$target_directory" ]; then
+    target_directory="`dirname "$target_directory"`"
+  fi
+
+  mkdir -p "$target_directory" &&
+  cp -a "$source_path" "$target_path"
+  
+  builder_check_status "$name" "$?"
 }
 
 build_make()
@@ -383,14 +402,33 @@ builder_should_run()
   local last_pkg="`cat "$last_pkg_file"`"
   local last_version="`cat "$last_version_file"`"
 
+  # Package may have multiple build steps:
+  #   If we've already seen the name of the package we're supposed
+  #   to stop on, continue executing steps until the name changes.
+
+  if [ "$run_status" -lt 0 ]; then
+    if [ "$pkg $version" != "$last_pkg $last_version" ]; then
+      run_status='1' # State: stopped
+      echo -n "$run_status" > "$run_status_file"
+    fi
+    return "$run_status"
+  fi
+
+  # Check for start, stop:
+  #   This lets you specify inclusive ranges of packages to build.
+
   if [ "$run_status" -eq 0 ]; then
     if [ "$pkg_stop" -a "$last_pkg $last_version" = "$pkg_stop $pkg_stop_version" ]; then
-      run_status='1'
+      if [ "$pkg $version" != "$last_pkg $last_version" ]; then
+        run_status='1' # State: stopped
+      else
+        run_status='-1' # State: stopping
+      fi
       echo -n "$run_status" > "$run_status_file"
     fi
   else
     if [ "$pkg_start" -a "$pkg $version" = "$pkg_start $pkg_start_version" ]; then
-      run_status='0'
+      run_status='0' # State: running
       echo -n "$run_status" > "$run_status_file"
     fi
   fi;
@@ -398,7 +436,8 @@ builder_should_run()
   echo -n "$pkg" > "$last_pkg_file"
   echo -n "$version" > "$last_version_file"
 
-  return "$run_status"
+  [ "$run_status" -le 0 ]
+  return "$?"
 }
 
 builder_move_libraries()
@@ -422,7 +461,7 @@ builder_setup_environment()
   pkg_stop="$4"
   pkg_stop_version="$5"
   uname="$6"
-  arch="$7"
+  platform="$7"
   bits="$8"
   parallel="$9"
 
@@ -436,6 +475,7 @@ builder_setup_environment()
 
   #export MAKE='gmake'
   #export GNUMAKE='gmake'
+
   export CC='gcc'
   export CXX='g++'
   export MAKE='make'
@@ -445,14 +485,14 @@ builder_setup_environment()
   export DYLD_LIBRARY_PATH="$prefix/lib:$DYLD_LIBRARY_PATH"
   export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
 
-  builder_detect_platform \
-    || fatal 'Unsupported platform or architecture; please edit Makefile'
+  builder_detect_system \
+    || fatal 'Unsupported system; please edit Makefile'
 
   if [ "$parallel" ]; then
     export MAKE="$MAKE -j$parallel"
   fi
 
-  if [ "$uname" = 'Darwin' -a "$arch" = 'intel' -a "$bits" -eq 32 ]; then
+  if [ "$uname" = 'Darwin' -a "$platform" = 'intel' -a "$bits" -eq 32 ]; then
     export LDFLAGS_SIMPLE="-arch i386"
   fi
 
@@ -460,9 +500,9 @@ builder_setup_environment()
   export CFLAGS_SIMPLE="-Os -fstack-protector-all"
   export CFLAGS_INCLUDE="-I$prefix/include -L$prefix/lib"
 
-  if [ "$arch" = 'intel' ]; then
+  if [ "$platform" = 'intel' ]; then
     export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -m$bits"
-  elif [[ "$arch" = armv6* ]]; then
+  elif [[ "$platform" = armv6* ]]; then
     local cflags_arch="-march=armv6 -mfpu=vfp -mfloat-abi=hard"
     export CFLAGS_SIMPLE="$CFLAGS_SIMPLE $cflags_arch"
   fi
@@ -471,7 +511,7 @@ builder_setup_environment()
   export CXXFLAGS="$CFLAGS"
 }
 
-builder_detect_platform()
+builder_detect_system()
 {
   # Detect machine word size
   if [ -z "$bits" ]; then
@@ -483,7 +523,7 @@ builder_detect_platform()
   fi
 
   # Detect architecture/platform
-  if [ "$arch" = 'intel' ]; then
+  if [ "$platform" = 'intel' ]; then
     if [ "$uname" = 'Darwin' ]; then
         if [ "$bits" -eq 64 ]; then
           build_cpu='x64'
