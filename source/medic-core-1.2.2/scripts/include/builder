@@ -547,7 +547,7 @@ builder_detect_system()
           build_arch="i586-linux-gnu"
         fi
     fi
-  elif [[ "$arch" = armv6* ]]; then
+  elif [[ "$platform" = armv6* ]]; then
     build_cpu='arm'
     build_platform="linux-armv4"
     build_arch="arm-linux-gnueabihf"
