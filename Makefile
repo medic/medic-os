@@ -65,9 +65,15 @@ concierge-pkg:
 	scripts/build-package 'concierge' 1000 && \
 	echo 'done.'
 
-java-pkg:
+java-pkg: copy-java-template
 	@echo -n "Compressing package 'java'... " && \
 	scripts/build-package 'java' 1790 && \
+	echo 'done.'
+
+copy-java-template:
+	@echo -n "Copying package template for 'java'... " && \
+	rm -rf packages/java/software && \
+	cp -a "templates/java/${PLATFORM}/software" packages/java/software && \
 	echo 'done.'
 
 medic-core-pkg:
