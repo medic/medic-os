@@ -30,8 +30,9 @@ rename()
   local version="`find_version icu4c*.tgz`" &&
   mv icu "icu-`fix_version "$version"`" &&
   \
-  local version="`find_version usbutils-*.tgz`" &&
-  mv usbutils "usbutils-`fix_version "$version"`" &&
+  local version="`find_version usbutils-*.tar.*`" &&
+  local source="`find * -prune -type d -name 'usbutils-*'`" &&
+  mv "$source" "usbutils-`fix_version "$version"`" &&
   \
   local version="`find_version usb-modeswitch-*.*.*.tar.*`" &&
   local source="`find * -prune -type d -name 'usb-modeswitch-data-*'`" &&

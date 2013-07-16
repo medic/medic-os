@@ -81,6 +81,8 @@ builder_normalize_platform()
 
   if [[ "$platform" = x86_64* ]]; then
     platform='intel'
+  elif [[ "$platform" = x64* ]]; then
+    platform='intel'
   elif [[ "$platform" = x86* ]]; then
     platform='intel'
   elif [[ "$platform" = i?86 ]]; then
@@ -100,6 +102,8 @@ builder_normalize_bits()
   local bits="$2"
 
   if [[ "$platform" = x86_64* ]]; then
+    bits='64'
+  elif [[ "$platform" = x64* ]]; then
     bits='64'
   elif [[ "$platform" = x86* ]]; then
     bits='32'
@@ -547,7 +551,7 @@ builder_detect_system()
           build_arch="i586-linux-gnu"
         fi
     fi
-  elif [[ "$arch" = armv6* ]]; then
+  elif [[ "$platform" = armv6* ]]; then
     build_cpu='arm'
     build_platform="linux-armv4"
     build_arch="arm-linux-gnueabihf"

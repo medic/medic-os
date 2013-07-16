@@ -6,9 +6,9 @@ PLATFORM := x86
 MEDIC_CORE_VERSION := 1.2.2
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
-all: packages build-x86-iso
+all: packages build-iso
 
-iso: build-x86-iso
+iso: build-iso
 
 compile:
 	@(cd source && ${QMAKE})
@@ -24,30 +24,30 @@ clean:
 
 distclean: clean
 	rm -rf "initrd/${PLATFORM}/lib/modules/"* && \
-	rm -f images/x86/iso/boot/kernel \
-	  images/x86/iso/boot/image.gz images/x86/iso/packages/* && \
+	rm -f images/${PLATFORM}/iso/boot/kernel \
+	  "images/${PLATFORM}/iso/boot/image.xz" "images/${PLATFORM}/iso/packages"/* && \
 	(cd source && ${MAKE} clean)
 
-clean-x86-iso:
-	rm -f images/x86/iso/packages/*.vpkg \
-	  images/x86/iso/boot/image.gz images/x86/iso/boot/kernel
+clean-iso:
+	rm -f "images/${PLATFORM}/iso/packages"/*.vpkg \
+	  "images/${PLATFORM}/iso/boot/image.gz" "images/${PLATFORM}/iso/boot/kernel"
 
-build-x86-iso: build-x86-initrd verify-packages
+build-iso: build-initrd verify-packages
 	@echo -n 'Creating ISO image... ' && \
-	cd images/x86/iso && mkisofs -J -R -V 'Medic Mobile VM' \
-		-o ../../../output/image-x86.iso \
+	cd "images/${PLATFORM}/iso" && mkisofs -J -R -V 'Medic Mobile VM' \
+		-o ../../../output/image-${PLATFORM}.iso \
 		-boot-load-size 4 -boot-info-table \
 		-no-emul-boot -b boot/isolinux/isolinux.bin \
 		-c boot/isolinux/boot.cat . &>/dev/null && \
 	echo 'done.'
 
-build-x86-initrd:
+build-initrd:
 	@echo -n 'Creating initrd image... ' && \
 	cp -a initrd/common/* "initrd/${PLATFORM}/" && \
 	cd "initrd/${PLATFORM}" && \
 		find * | cpio -o -H newc 2>/dev/null \
 		  | sh ../../source/core/linux/scripts/xz_wrap.sh \
-			> ../../images/x86/iso/boot/image.xz && \
+			> ../../images/${PLATFORM}/iso/boot/image.xz && \
 	echo 'done.'
 
 strip-binaries:

@@ -93,7 +93,10 @@ main()
   \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
   build_autoconf 'popt' "$stdarg --enable-shared --disable-static" &&
-  build_make_install 'bladox-tools' "$prefix" "PREFIX=\"$prefix\"" &&
+  \
+  if [ "$bits" -eq 32 ]; then
+    build_make_install 'bladox-tools' "$prefix" "PREFIX=\"$prefix\""
+  fi &&
   \
   (disable_parallelism && build_make 'logrotate' 'all install' \
     "PREFIX='$prefix' LFS='$CFLAGS' LDFLAGS='$LDFLAGS' BASEDIR=''") &&

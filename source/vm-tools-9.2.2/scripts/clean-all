@@ -7,7 +7,7 @@ check_args()
 
 fix_modules()
 {
-  find open-vm-tools/modules/linux \
+  find 'source/open-vm-tools/modules/linux' \
     -type f -a -name Makefile.kernel | while read path; do
   
     (cd "`dirname "$path"`" &&
@@ -17,7 +17,7 @@ fix_modules()
 
 clean_all()
 {
-  for i in *; do
+  for i in source/*; do
     if [ -h "$i" -a -f "$i/Makefile" ]; then
       ( cd "$i" && make clean && make distclean )
     fi

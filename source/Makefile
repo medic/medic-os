@@ -54,13 +54,12 @@ clean: clean-all
 clean-all: clean-core clean-vm-tools clean-medic-core
 
 
-core: build-core
+core: build-core copy-core
 
 build-core:
 	@(cd core && ${QMAKE} \
-		MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}' \
-		PLATFORM='${PLATFORM}' \
 		BITS='${BITS}' KERNEL_VERSION='${KERNEL_VERSION}' \
+		MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}' PLATFORM='${PLATFORM}' \
 		KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' PARALLEL='${PARALLEL}')
 
 clean-core:
@@ -113,7 +112,7 @@ copy-medic-core:
 	@echo 'done.'
 
 set-pax-flags:
-	@echo -n "Setting executable flags... " && \
+	echo -n "Setting executable flags... " && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
 		'${JAVA_PKG_ROOT}/bin/java' 2>/dev/null && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
