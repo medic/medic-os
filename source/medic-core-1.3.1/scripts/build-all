@@ -78,11 +78,11 @@ main()
     (disable_parallelism && build_make 'usb-modeswitch-data' \
      'install' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\"") &&
     \
-    build_autoconf 'attr' \
+    rm -f "$prefix/lib/libacl.*" && build_autoconf 'acl' \
       "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib' &&
     \
-    (disable_parallelism && build_autoconf 'acl' \
-      "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib') &&
+    rm -f "$prefix/lib/libattr.*" && build_autoconf 'attr' \
+      "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib' &&
     \
     build_autoconf 'inotify-tools' \
       "$stdarg --enable-shared=yes --enable-static=no" &&

@@ -5,7 +5,7 @@ PLATFORM ?= x86
 
 JAVA_VERSION := 1.7.25
 VM_TOOLS_VERSION := 9.2.2
-MEDIC_CORE_VERSION := 1.2.2
+MEDIC_CORE_VERSION := 1.3.1
 
 VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
@@ -111,8 +111,14 @@ copy-medic-core:
 			../../packages/medic-core/software/medic-core)
 	@echo 'done.'
 
-set-pax-flags:
-	echo -n "Setting executable flags... " && \
+copy-java-template:
+	@echo -n "Copying package template for 'java'... " && \
+	rm -rf ../packages/java/software && \
+	cp -a "../templates/java/${PLATFORM}/software" ../packages/java/software && \
+	echo 'done.'
+
+set-pax-flags: copy-java-template
+	@echo -n "Setting executable flags... " && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
 		'${JAVA_PKG_ROOT}/bin/java' 2>/dev/null && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \

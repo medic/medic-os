@@ -3,7 +3,7 @@ MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 
 PLATFORM := x86
-MEDIC_CORE_VERSION := 1.2.2
+MEDIC_CORE_VERSION := 1.3.1
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
 all: packages build-iso
@@ -62,33 +62,27 @@ verify-packages:
 
 concierge-pkg:
 	@echo -n "Compressing package 'concierge'... " && \
-	scripts/build-package 'concierge' 1000 && \
+	scripts/build-package 'concierge' 1000 '${PLATFORM}' && \
 	echo 'done.'
 
-java-pkg: copy-java-template
+java-pkg:
 	@echo -n "Compressing package 'java'... " && \
-	scripts/build-package 'java' 1790 && \
-	echo 'done.'
-
-copy-java-template:
-	@echo -n "Copying package template for 'java'... " && \
-	rm -rf packages/java/software && \
-	cp -a "templates/java/${PLATFORM}/software" packages/java/software && \
+	scripts/build-package 'java' 1725 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-pkg:
 	@echo -n "Compressing package 'medic-core'... " && \
-	scripts/build-package 'medic-core' 1220 && \
+	scripts/build-package 'medic-core' 1310 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
 	@echo -n "Compressing package 'system-services'... " && \
-	scripts/build-package 'system-services' 1000 && \
+	scripts/build-package 'system-services' 1000 '${PLATFORM}' && \
 	echo 'done.'
 
 vm-tools-pkg:
 	@echo -n "Compressing package 'vm-tools'... " && \
-	scripts/build-package 'vm-tools' 9220 && \
+	scripts/build-package 'vm-tools' 9220 '${PLATFORM}' && \
 	echo 'done.'
 
 shrink-gardener:

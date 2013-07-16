@@ -29,14 +29,14 @@ main()
 {
   local package="$1"
   local version="$2"
-  local architecture="$3"
+  local platform="$3"
 
-  if [ -z "$architecture" ]; then
-    architecture='x86'
+  if [ -z "$platform" ]; then
+    platform='x86'
   fi
 
   local staging_dir="staging/packages/$package"
-  local package_name="$package-v$version-$architecture.vpkg"
+  local package_name="$package-v$version-$platform.vpkg"
 
   if [ $# -gt 2 -o -z "$package" -o -z "version" ]; then
     usage

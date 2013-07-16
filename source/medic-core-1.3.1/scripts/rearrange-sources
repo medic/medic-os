@@ -23,7 +23,9 @@ rename()
     mv "$file" "`echo "$file" | sed 's/^xdelta3-/xdelta-/;'`";
   done &&
   \
-  for pkg in rebar nodelint nodeunit gammu-json node-fs-ext garden_maker; do
+  for pkg in rebar nodelint gammu-json \
+	  node-gammu-json node-fs-ext garden_maker; do
+    \
     mv "$pkg" "`echo "$pkg" | tr '_' '-'`-devel";
   done &&
   \
