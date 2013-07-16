@@ -20,7 +20,9 @@ packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-p
 
 clean:
 	rm -f output/* && \
-	rm -rf staging/packages
+	rm -rf staging/packages && \
+	rm -rf packages/vm-tools/software && \
+	rm -rf packages/medic-core/software
 
 distclean: clean
 	rm -rf "initrd/${PLATFORM}/lib/modules/"* && \
@@ -32,7 +34,7 @@ clean-iso:
 	rm -f "images/${PLATFORM}/iso/packages"/*.vpkg \
 	  "images/${PLATFORM}/iso/boot/image.gz" "images/${PLATFORM}/iso/boot/kernel"
 
-build-iso: build-initrd verify-packages
+build-iso:
 	@echo -n 'Creating ISO image... ' && \
 	cd "images/${PLATFORM}/iso" && mkisofs -J -R -V 'Medic Mobile VM' \
 		-o ../../../output/image-${PLATFORM}.iso \

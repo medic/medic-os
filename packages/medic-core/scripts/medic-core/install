@@ -10,7 +10,7 @@ install()
   merge_environment /srv || return 255
 
   (cd "$PACKAGE_ROOT/../../" &&
-    rm -f v1.2 && ln -sf v1.2.2 v1.2) &&
+    rm -f v1.3 && ln -sf v1.3.1 v1.3) &&
   \
   chown -R couchdb:staff \
     "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb" &&
