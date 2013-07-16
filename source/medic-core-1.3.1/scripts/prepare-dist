@@ -7,6 +7,11 @@ if ! [ -d "$prefix" ]; then
   exit 111
 fi
 
+if [ -d "$prefix/lib64" ]; then
+  mv "$prefix/lib64"/* "$prefix/lib" &&
+    rm -rf "$prefix/lib64" && ln -sf "$prefix/lib64" lib
+fi
+
 (cd "$prefix" &&
   rm -rf lib/*.a lib/python?.? lib/erlang/usr lib/erlang/Install \
     info include man java/manual share/man share/gtk-doc share/doc doc \
