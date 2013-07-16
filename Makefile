@@ -34,7 +34,7 @@ clean-iso:
 	rm -f "images/${PLATFORM}/iso/packages"/*.vpkg \
 	  "images/${PLATFORM}/iso/boot/image.gz" "images/${PLATFORM}/iso/boot/kernel"
 
-build-iso:
+build-iso: verify-packages build-initrd
 	@echo -n 'Creating ISO image... ' && \
 	cd "images/${PLATFORM}/iso" && mkisofs -J -R -V 'Medic Mobile VM' \
 		-o ../../../output/image-${PLATFORM}.iso \
