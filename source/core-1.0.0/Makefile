@@ -67,7 +67,7 @@ build-kernel: build-pv
 
 copy-kernel:
 	@cp linux/arch/x86/boot/bzImage \
-		"../../images/${PLATFORM}/iso/boot/kernel" &&
+		"../../images/${PLATFORM}/iso/boot/kernel" && \
 	strip linux/vmlinux && \
 	mkdir -p "../../images/${PLATFORM}/xen/boot" && \
 	gzip -c9 linux/vmlinux > "../../images/${PLATFORM}/xen/boot/kernel"

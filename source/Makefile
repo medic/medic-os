@@ -41,7 +41,7 @@ copy: copy-all
 copy-all: copy-core copy-medic-core copy-vm-tools set-pax-flags
 
 copy-core:
-	@(cd core && ${MAKE} copy)
+	@(cd core && ${MAKE} copy PLATFORM='${PLATFORM}')
 
 
 finalize: finalize-all
