@@ -67,14 +67,14 @@ build-kernel: build-pv
 
 copy-kernel:
 	@cp linux/arch/x86/boot/bzImage \
-		"../../images/${PLATFORM}/iso/boot/kernel" &&
+		"../../images/${PLATFORM}/iso/boot/kernel" && \
 	strip linux/vmlinux && \
 	mkdir -p "../../images/${PLATFORM}/xen/boot" && \
 	gzip -c9 linux/vmlinux > "../../images/${PLATFORM}/xen/boot/kernel"
 
 install-kernel-modules:
 	@(cd linux && ${MAKE} modules_install \
-		INSTALL_MOD_PATH="../../../initrd/${PLATFORM}" >/dev/null)
+		INSTALL_MOD_PATH="../../../initrd/${PLATFORM}" &>/dev/null)
 
 
 busybox: build-busybox copy-busybox
