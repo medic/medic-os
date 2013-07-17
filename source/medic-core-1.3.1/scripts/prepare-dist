@@ -8,8 +8,8 @@ if ! [ -d "$prefix" ]; then
 fi
 
 if [ -d "$prefix/lib64" ]; then
-  mv "$prefix/lib64"/* "$prefix/lib" &&
-    rm -rf "$prefix/lib64" && ln -sf "$prefix/lib64" lib
+  cp -a "$prefix/lib64"/* "$prefix/lib" &&
+    rm -rf "$prefix/lib64" && ln -sf lib "$prefix/lib64"
 fi
 
 (cd "$prefix" &&
@@ -45,7 +45,7 @@ fi
    ln -sf ../../../../../storage/medic-core/couchdb-lucene/indexes java/indexes)
 
 (cd "$prefix/bin" &&
-  rm -f gitk libusb.py jadmaker *-config &&
+  rm -f gitk libusb.py jadmaker *-config node-gyp &&
   for binary in git-receive-pack git-upload-archive; do
     rm -f "$binary" && ln -sf git "$binary";
   done &&
