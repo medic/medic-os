@@ -259,15 +259,6 @@ BEGIN { writeFlag=1 }
 } ' "$1"
 }
 
-getMajorVer() {
-awk '{printf "%d", $1}' /usr/share/doc/tc/release.txt 
-}
-
-getMirror() {
-read MIRROR < /opt/tcemirror
-MIRROR="${MIRROR%/}/$(getMajorVer).x/x86/tcz"
-}
-
 installed() {
   if [ -e /usr/local/tce.installed/${1%.*} ]; then 
     return 0

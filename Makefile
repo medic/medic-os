@@ -92,7 +92,7 @@ shrink-gardener:
 
 gardener-pkg: shrink-gardener
 	@echo -n "Compressing package 'gardener'... " && \
-	scripts/build-package 'gardener' 1010 && \
+	scripts/build-package 'gardener' 1003 '${PLATFORM}' && \
 	echo 'done.'
 
 convert-boot-logo:

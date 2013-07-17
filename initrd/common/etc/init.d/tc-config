@@ -10,7 +10,6 @@ TCEDIR="/tmp/tce"
 TCLOOP="/tmp/tcloop"
 TCEINSTALLED="/usr/local/tce.installed"
 INSTALLED=""
-VERSION="$(cat /usr/share/doc/tc/release.txt)"
 
 ### END functions
 

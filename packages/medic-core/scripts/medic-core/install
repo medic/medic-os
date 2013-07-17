@@ -9,8 +9,14 @@ install()
   source "$base/env" &&
   merge_environment /srv || return 255
 
+	local platform="`cat /etc/platform`"
+
+  (cd "$PACKAGE_ROOT/../" &&
+    rm -f default && ln -sf "$platform" default) &&
+  \
   (cd "$PACKAGE_ROOT/../../" &&
-    rm -f v1.3 && ln -sf v1.3.1 v1.3) &&
+    rm -f v1.3 && ln -sf v1.3.1 v1.3 &&
+		rm -f current && ln -sf v1.3.1 current) &&
   \
   chown -R couchdb:staff \
     "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb" &&
