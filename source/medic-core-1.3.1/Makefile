@@ -3,6 +3,11 @@ unexport PLATFORM
 
 all:
 	@mkdir -p '${ROOT}' && \
+	for file in templates/common/* templates/'${PLATFORM}'/*; do \
+		if [ -e "$$file" ]; then \
+			cp -a "$$file" '${ROOT}'; \
+		fi; \
+	done && \
 	./scripts/build-all '${ROOT}' '${START}' '${START_VERSION}' \
 		'${STOP}' '${STOP_VERSION}' '${PLATFORM}' '${BITS}' '${PARALLEL}'
 
