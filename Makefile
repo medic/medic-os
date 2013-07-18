@@ -50,6 +50,9 @@ build-initrd:
 		find * | cpio -o -H newc 2>/dev/null \
 		  | sh ../../source/core/linux/scripts/xz_wrap.sh \
 			> ../../images/${PLATFORM}/iso/boot/image.xz && \
+	if [ -d xen ]; then \
+		cp -a iso/boot/image.xz xen/boot/image.xz; \
+	fi && \
 	echo 'done.'
 
 strip-binaries:

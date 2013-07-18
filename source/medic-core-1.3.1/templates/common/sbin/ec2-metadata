@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 #########################################################################
 #This software code is made available "AS IS" without warranties of any #
@@ -11,7 +11,7 @@
 #affiliates.                                                            #
 #########################################################################
 
-function print_help()
+print_help()
 {
 echo "ec2-metadata v0.1.1
 Use to retrieve EC2 instance metadata from within a running EC2 instance. 
@@ -46,7 +46,7 @@ Options:
 }
 
 #check some basic configurations before running the code
-function chk_config()
+chk_config()
 {
 	#check if run inside an ec2-instance
 	x=$(curl -s http://169.254.169.254/)
@@ -57,7 +57,7 @@ function chk_config()
 }
 
 #print standard metric
-function print_normal_metric() {
+print_normal_metric() {
 	metric_path=$2
 	echo -n $1": "
 	RESPONSE=$(curl -fs http://169.254.169.254/latest/${metric_path}/)
@@ -69,7 +69,7 @@ function print_normal_metric() {
 }
 
 #print block-device-mapping
-function print_block-device-mapping()
+print_block_device_mapping()
 {
 echo 'block-device-mapping: '
 x=$(curl -fs http://169.254.169.254/latest/meta-data/block-device-mapping/)
@@ -83,7 +83,7 @@ fi
 }
 
 #print public-keys
-function print_public-keys()
+print_public_keys()
 {
 	echo 'public-keys: '
 	x=$(curl -fs http://169.254.169.254/latest/meta-data/public-keys/)
@@ -104,13 +104,13 @@ function print_public-keys()
 }
 
 
-function print_all()
+print_all()
 {
 	print_normal_metric ami-id meta-data/ami-id
 	print_normal_metric ami-launch-index meta-data/ami-launch-index
 	print_normal_metric ami-manifest-path meta-data/ami-manifest-path
 	print_normal_metric ancestor-ami-ids meta-data/ancestor-ami-ids
-	print_block-device-mapping
+	print_block_device_mapping
 	print_normal_metric instance-id meta-data/instance-id
 	print_normal_metric instance-type meta-data/instance-type
 	print_normal_metric local-hostname meta-data/local-hostname
@@ -120,7 +120,7 @@ function print_all()
 	print_normal_metric product-codes meta-data/product-codes
 	print_normal_metric public-hostname meta-data/public-hostname
 	print_normal_metric public-ipv4 meta-data/public-ipv4
-	print_public-keys
+	print_public_keys
 	print_normal_metric ramdisk-id /meta-data/ramdisk-id
 	print_normal_metric reservation-id /meta-data/reservation-id
 	print_normal_metric security-groups meta-data/security-groups
@@ -146,7 +146,7 @@ while [ "$1" != "" ]; do
 																 ;;
 	-n | --ancestor-ami-ids )      print_normal_metric ancestor-ami-ids meta-data/ancestor-ami-ids
 																 ;;
-	-b | --block-device-mapping )  print_block-device-mapping
+	-b | --block-device-mapping )  print_block_device_mapping
 																 ;;
 	-i | --instance-id )           print_normal_metric instance-id meta-data/instance-id
 																 ;;
@@ -166,7 +166,7 @@ while [ "$1" != "" ]; do
 																 ;;
 	-v | --public-ipv4 )           print_normal_metric public-ipv4 meta-data/public-ipv4
 																 ;;
-	-u | --public-keys )           print_public-keys
+	-u | --public-keys )           print_public_keys
 																 ;;
 	-r | --ramdisk-id )            print_normal_metric ramdisk-id /meta-data/ramdisk-id
 																 ;;
