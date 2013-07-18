@@ -6,9 +6,11 @@ PLATFORM := x86
 MEDIC_CORE_VERSION := 1.3.1
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
-all: packages build-iso
+all: packages build-iso build-xen-image
 
 iso: build-iso
+
+xen: build-xen-image
 
 compile:
 	@(cd source && ${QMAKE})
@@ -26,7 +28,7 @@ clean:
 
 distclean: clean
 	rm -rf "initrd/${PLATFORM}/lib/modules/"* && \
-	rm -f images/${PLATFORM}/iso/boot/kernel \
+	rm -f "images/${PLATFORM}/iso/boot/kernel" \
 	  "images/${PLATFORM}/iso/boot/image.xz" "images/${PLATFORM}/iso/packages"/* && \
 	(cd source && ${MAKE} clean)
 
@@ -37,22 +39,33 @@ clean-iso:
 build-iso: verify-packages build-initrd
 	@echo -n 'Creating ISO image... ' && \
 	cd "images/${PLATFORM}/iso" && mkisofs -J -R -V 'Medic Mobile VM' \
-		-o ../../../output/image-${PLATFORM}.iso \
+		-o "../../../output/image-${PLATFORM}.iso" \
 		-boot-load-size 4 -boot-info-table \
 		-no-emul-boot -b boot/isolinux/isolinux.bin \
 		-c boot/isolinux/boot.cat . &>/dev/null && \
 	echo 'done.'
 
+build-xen-image:
+	@echo -n 'Creating Xen image... ' && \
+	loop_path="staging/loopback/" && \
+	image_path="output/image-${PLATFORM}-xen.img" && \
+	dd if=/dev/zero of="$$image_path" \
+		bs=1048576 seek=1023 count=1 &>/dev/null && \
+	mkfs.ext4 -F "$$image_path" &>/dev/null && \
+	mount -o loop "$$image_path" "$$loop_path" && \
+	cp -a "images/${PLATFORM}/xen"/* "$$loop_path" && \
+	sync && umount "$$loop_path" && sync && \
+	echo 'done.'
+
 build-initrd:
 	@echo -n 'Creating initrd image... ' && \
 	cp -a initrd/common/* "initrd/${PLATFORM}/" && \
-	cd "initrd/${PLATFORM}" && \
+	(cd "initrd/${PLATFORM}" && \
 		find * | cpio -o -H newc 2>/dev/null \
 		  | sh ../../source/core/linux/scripts/xz_wrap.sh \
-			> ../../images/${PLATFORM}/iso/boot/image.xz && \
-	if [ -d xen ]; then \
-		cp -a iso/boot/image.xz xen/boot/image.xz; \
-	fi && \
+			> "../../images/${PLATFORM}/iso/boot/image.xz") && \
+	(cd "images/${PLATFORM}" && \
+		[ -d xen ] && cp -a "iso/boot/image.xz" "xen/boot/") && \
 	echo 'done.'
 
 strip-binaries:
@@ -67,27 +80,27 @@ verify-packages:
 
 concierge-pkg:
 	@echo -n "Compressing package 'concierge'... " && \
-	scripts/build-package 'concierge' 1000 '${PLATFORM}' && \
+	scripts/build-package 'concierge' 1000 "${PLATFORM}" && \
 	echo 'done.'
 
 java-pkg:
 	@echo -n "Compressing package 'java'... " && \
-	scripts/build-package 'java' 1725 '${PLATFORM}' && \
+	scripts/build-package 'java' 1725 "${PLATFORM}" && \
 	echo 'done.'
 
 medic-core-pkg:
 	@echo -n "Compressing package 'medic-core'... " && \
-	scripts/build-package 'medic-core' 1310 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 1310 "${PLATFORM}" && \
 	echo 'done.'
 
 system-services-pkg:
 	@echo -n "Compressing package 'system-services'... " && \
-	scripts/build-package 'system-services' 1000 '${PLATFORM}' && \
+	scripts/build-package 'system-services' 1000 "${PLATFORM}" && \
 	echo 'done.'
 
 vm-tools-pkg:
 	@echo -n "Compressing package 'vm-tools'... " && \
-	scripts/build-package 'vm-tools' 9220 '${PLATFORM}' && \
+	scripts/build-package 'vm-tools' 9220 "${PLATFORM}" && \
 	echo 'done.'
 
 shrink-gardener:
@@ -95,7 +108,7 @@ shrink-gardener:
 
 gardener-pkg: shrink-gardener
 	@echo -n "Compressing package 'gardener'... " && \
-	scripts/build-package 'gardener' 1003 '${PLATFORM}' && \
+	scripts/build-package 'gardener' 1003 "${PLATFORM}" && \
 	echo 'done.'
 
 convert-boot-logo:
