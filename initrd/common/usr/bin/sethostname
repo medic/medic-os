@@ -1,16 +1,16 @@
 #!/bin/sh
 # Set hostname
-# Originally a function contributed by henk.1955 
-# Now callable via /opt/bootsync.sh when no boot host= is specified.
-. /etc/init.d/tc-functions
-HOSTNAME="$(getbootparam host 2>/dev/null)"
-[ -n "$HOSTNAME" ] || HOSTNAME="$1"
-[ -n "$HOSTNAME" ] || HOSTNAME="tinycouch"
+
+HOSTNAME="$1"
+[ "$HOSTNAME" ] || HOSTNAME='toaster'
+
 rm -f /etc/hostname
-echo $HOSTNAME >/etc/hostname
+echo "$HOSTNAME" >/etc/hostname
 hostname -F /etc/hostname
 rm -f /etc/hosts
+
 cat >/etc/hosts <<EOT
+
 127.0.0.1 $HOSTNAME localhost
 
 # The following lines are desirable for IPv6 capable hosts

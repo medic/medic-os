@@ -54,10 +54,10 @@ main()
 
   display_centered 'Starting up...'
 
-  echo "Storage initialization started at `date`" >> "$log" 2>&1
+  log "Storage initialization started at `date`"
 
   mount_source_image "$source_device" \
-    || fatal 'Failed to mount the ISO image; possible problem with VM CD-ROM'
+    || fatal 'Failed to mount the ISO image; possible problem with media'
 
   # Look for existing storage:
   #   Use the first valid virtual disk that we find, provided
@@ -67,7 +67,7 @@ main()
 
   for device in `echo -n "$scan_devices"`; do
     local v="`find_storage "$device"`"
-    
+
     if [ "$?" -eq 0 -a "$v" -le "$version" ] &>/dev/null; then
       found_version="$v"
       found_device="$device"
@@ -86,7 +86,7 @@ main()
   if [ -z "$found_version" ]; then
     for device in `echo -n "$scan_devices"`; do
       if is_storage_valid "$device" && is_storage_empty "$device"; then
-      
+
         initialize_storage "$device" "$swap_size" "$version" \
           >> "$log" 2>&1
 
@@ -119,18 +119,18 @@ main()
   #   Update each package necessary for proper startup; the `package_update`
   #   function will avoid overwriting existing binaries if it's able to.
 
-  echo "Software update started at `date`" >> "$log" 2>&1
+  log "Software update started at `date`"
 
   local total_packages='0'
   local finished_packages='0'
 
-  for package_path in /mnt/image/packages/*.vpkg; do
+  for package_path in /mnt/startup/packages/*.vpkg; do
     total_packages="$(($total_packages + 1))"
   done
 
-  for package_path in /mnt/image/packages/*.vpkg; do
+  for package_path in /mnt/startup/packages/*.vpkg; do
     package_update "$package_path" "$is_newly_initialized" \
-      || fatal 'Failed to extract required software from ISO image'
+      || fatal 'Failed to extract required software from disk/image'
 
     finished_packages="$(($finished_packages + 1))"
     local percent_packages="$((100 * $finished_packages / $total_packages))"
@@ -138,7 +138,7 @@ main()
     display_centered "Setting up software ($percent_packages% complete)..."
   done
 
-  echo "Software update finished at `date`" >> "$log" 2>&1
+  log "Software update finished at `date`"
   display_centered 'Checking authentication database...'
 
   persist_authentication_database >> "$log" 2>&1 \
@@ -172,7 +172,7 @@ main()
   display_centered 'Releasing startup disk...'
 
   unmount_source_image "$source_device" \
-    || fatal 'Failed to unmount ISO image; possible problem with VM CD-ROM'
+    || fatal 'Failed to unmount ISO image; possible problem with media'
 
   display_centered 'Synchronizing disks...'
   synchronize_disks
@@ -183,21 +183,22 @@ main()
 
 warn()
 {
-  echo -e "Warning triggered at `date`:\n  $*" >> "$log"
+  log "Warning triggered at `date`:\n  $*"
 }
 
 fatal()
 {
   clear
-  echo -ne '\n\n'
-  echo 'An unrecoverable error has occurred.' >&2
-  echo 'The virtual machine cannot start properly at this time.' >&2
-  echo "Details: $*." >&2
-  echo >&2
-  echo 'Please contact technical support and provide this error message.' >&2
-  echo
 
-  echo -e "Fatal error at `date`:\n  $*" >> "$log" 2>&1
+  print '\n'
+  print 'An unrecoverable error has occurred.'
+  print 'The virtual machine cannot start properly at this time.'
+  print "Details: $*."
+  print
+  print 'Please contact technical support and provide this error message.'
+  print
+
+  log "Fatal error at `date`:\n  $*"
 
   sleep 15
   read line
@@ -205,7 +206,7 @@ fatal()
   set_echo 1
   set_cursor 1
 
-  echo 'Attempting to start recovery console...'
+  print 'Attempting to start recovery console...'
   exec /sbin/getty -nl /bin/sh 38400 tty1
 }
 

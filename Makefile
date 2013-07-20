@@ -47,13 +47,20 @@ build-iso: verify-packages build-initrd
 
 build-xen-image:
 	@echo -n 'Creating Xen image... ' && \
-	loop_path="staging/loopback/" && \
-	image_path="output/image-${PLATFORM}-xen.img" && \
+	\
+	loop_path="staging/loopback" && \
+	image_path="output/image-${PLATFORM}-xen" && \
+	\
 	dd if=/dev/zero of="$$image_path" \
 		bs=1048576 seek=1023 count=1 &>/dev/null && \
 	mkfs.ext4 -F "$$image_path" &>/dev/null && \
 	mount -o loop "$$image_path" "$$loop_path" && \
+	\
 	cp -a "images/${PLATFORM}/xen"/* "$$loop_path" && \
+	mkdir -p "$$loop_path/mnt/image/packages" && \
+	cp -a "images/${PLATFORM}/iso/packages"/* \
+		"$$loop_path/mnt/image/packages" && \
+	\
 	sync && umount "$$loop_path" && sync && \
 	echo 'done.'
 

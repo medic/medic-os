@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -o pipefail
+hypervisor_type="`cat /sys/hypervisor/type 2>/dev/null`"
 
 set_echo()
 {
@@ -93,6 +94,11 @@ clear_text()
 display_centered()
 {
   local text="$1"
+
+  if [ "$hypervisor_type" = 'xen' ]; then
+    echo -e "$text" > /dev/hvc0
+    return 0
+  fi
 
   local columns="`
     stty -a |

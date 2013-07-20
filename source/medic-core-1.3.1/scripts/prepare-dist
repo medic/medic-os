@@ -7,6 +7,10 @@ if ! [ -d "$prefix" ]; then
   exit 111
 fi
 
+if [ -L "$prefix/lib64" ]; then
+  rm -f "$prefix/lib64"
+fi
+
 if [ -d "$prefix/lib64" ]; then
   cp -a "$prefix/lib64"/* "$prefix/lib" &&
     rm -rf "$prefix/lib64" && ln -sf lib "$prefix/lib64"
