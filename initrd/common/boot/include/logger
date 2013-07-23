@@ -1,7 +1,6 @@
 #!/bin/sh
 
 log='/var/log/startup.log'
-hypervisor_type="`cat /sys/hypervisor/type 2>/dev/null`"
 
 log()
 {
@@ -10,7 +9,7 @@ log()
 
 print()
 {
-  if [ "$hypervisor_type" = 'xen' ]; then
+  if [ "`hypervisor_type`" = 'xen' ]; then
     echo -e "$*" &>/dev/hvc0
   else
     echo -e "$*" >&2

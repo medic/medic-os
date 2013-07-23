@@ -16,6 +16,7 @@ modprobe loop 2>/dev/null
 /sbin/ldconfig 2>/dev/null
 /etc/init.d/rc.dhcpcd &
 
+chown -R vm:root /home/vm
 /usr/bin/sethostname toaster
 sysctl -w kernel.grsecurity.grsec_lock=1 &>/dev/null
 

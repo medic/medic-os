@@ -5,8 +5,8 @@ source '/boot/include/cursor'
 source '/boot/include/startup'
 source '/boot/include/package'
 source '/boot/include/supervisor'
+source '/boot/include/hypervisor'
 
-hypervisor_type="`cat /sys/hypervisor/type 2>/dev/null`"
 
 wait_for_ip_address()
 {
@@ -49,7 +49,7 @@ main()
   local found_device=''
   local found_version=''
 
-	if [ "$hypervisor_type" = 'xen' ]; then
+	if [ "`hypervisor_type`" = 'xen' ]; then
     source_device='/dev/xvda1'
 	fi
 

@@ -1,7 +1,6 @@
 #!/bin/sh
 
 set -o pipefail
-hypervisor_type="`cat /sys/hypervisor/type 2>/dev/null`"
 
 is_storage_valid()
 {

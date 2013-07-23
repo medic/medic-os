@@ -3,6 +3,8 @@
 source '/boot/include/cursor'
 source '/boot/include/startup'
 source '/boot/include/supervisor'
+source '/boot/include/hypervisor'
+
 
 main()
 {
@@ -15,9 +17,7 @@ main()
   set_console_blanking 0
   
   trap '' INT STOP HUP QUIT
-
   local ip_address="`discover_ip_address`"
-  local hypervisor_type="`cat /sys/hypervisor/type 2>/dev/null`"
 
   while true; do
   
@@ -31,8 +31,9 @@ main()
       set_bold 0
     fi
 
-    if [ "$hypervisor_type" = 'xen' ]; then
+    if is_hypervisor; then
       display_centered "System booted successfully."
+      display_centered "Hypervisor present; suppressing status display."
       while true; do sleep 3600; done
     fi
 

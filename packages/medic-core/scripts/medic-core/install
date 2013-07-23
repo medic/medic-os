@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 install()
 {
   local self="`realpath "$0"`"
@@ -46,7 +45,6 @@ install()
   return "$?"
 }
 
-
 install_default_couchdb_databases()
 {
   local package_root="$1"
@@ -64,7 +62,6 @@ install_default_couchdb_databases()
 
   return 0
 }
-
 
 persist_ssh_user_configuration_files()
 {

@@ -1,6 +1,7 @@
 #!/bin/sh
 
 source '/boot/include/supervisor'
+source '/boot/include/hypervisor'
 
 disable()
 {
