@@ -17,7 +17,7 @@ is_storage_empty()
   
   local rv="`dd if="$device" bs=4096 count=16 2>/dev/null \
     | hexdump -v | head -n4096 | grep -v '^[0-9a-f]\+ [ 0]\+$'`"
-    
+
   [ -z "$rv" ]
   return "$?"
 }
@@ -86,10 +86,6 @@ mount_source_image()
 {
   local device="$1"
 
-  if [ "$hypervisor_type" = 'xen' ]; then
-    return 0
-  fi
-
   unmount_source_image  
   mkdir -p /mnt/startup && mount "$device" /mnt/startup
   
@@ -98,10 +94,6 @@ mount_source_image()
 
 unmount_source_image()
 {
-  if [ "$hypervisor_type" = 'xen' ]; then
-    return 0
-  fi
-
   umount -f /mnt/startup 2>/dev/null
   return "$?"
 }

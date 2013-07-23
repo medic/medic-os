@@ -27,7 +27,7 @@ start()
 
   modprobe -a vmci vmblock vsock vmhgfs vmxnet &&
   \
-  exec nohup vmtoolsd \
+  exec vmtoolsd \
     >> "$PACKAGE_STORAGE/logs/vmtoolsd.log" 2>&1
 }
 

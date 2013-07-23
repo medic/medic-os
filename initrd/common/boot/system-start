@@ -6,6 +6,7 @@ source '/boot/include/startup'
 source '/boot/include/package'
 source '/boot/include/supervisor'
 
+hypervisor_type="`cat /sys/hypervisor/type 2>/dev/null`"
 
 wait_for_ip_address()
 {
@@ -42,10 +43,15 @@ main()
   local scan_devices='
     /dev/hda /dev/sda /dev/hdb /dev/sdb
       /dev/hdc /dev/sdc /dev/hdd /dev/sdd
+      /dev/xvdb /dev/xvdc /dev/xvdd /dev/xvde
   '
 
   local found_device=''
   local found_version=''
+
+	if [ "$hypervisor_type" = 'xen' ]; then
+    source_device='/dev/xvda1'
+	fi
 
   set_echo 0
   set_bold 1
@@ -85,7 +91,7 @@ main()
 
   if [ -z "$found_version" ]; then
     for device in `echo -n "$scan_devices"`; do
-      if is_storage_valid "$device" && is_storage_empty "$device"; then
+      if is_storage_valid "$device"; then
 
         initialize_storage "$device" "$swap_size" "$version" \
           >> "$log" 2>&1
@@ -183,7 +189,7 @@ main()
 
 warn()
 {
-  log "Warning triggered at `date`:\n  $*"
+  print "Warning triggered at `date`:\n  $*"
 }
 
 fatal()

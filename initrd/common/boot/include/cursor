@@ -7,6 +7,10 @@ set_echo()
 {
   local direction="$1"
 
+  if [ "$hypervisor_type" = 'xen' ]; then
+    return 0
+  fi
+
   if [ "$direction" -eq 0 ]; then
     stty -echo 2>/dev/null
   else
@@ -18,12 +22,20 @@ set_console_blanking()
 {
   local minutes="$1"
 
+  if [ "$hypervisor_type" = 'xen' ]; then
+    return 0
+  fi
+
   echo -ne "\033[9;$minutes]\033[14;$minutes]" > /dev/console
 }
 
 set_cursor()
 {
   local direction="$1"
+
+  if [ "$hypervisor_type" = 'xen' ]; then
+    return 0
+  fi
 
   if [ "$direction" -eq 0 ]; then
     echo -ne '\033[?25l'
@@ -35,7 +47,11 @@ set_cursor()
 set_bold()
 {
   local state="$1"
-  
+
+  if [ "$hypervisor_type" = 'xen' ]; then
+    return 0
+  fi
+
   if [ "$state" -eq 0 ]; then
     echo -ne '\033[0m'
   else
@@ -45,11 +61,19 @@ set_bold()
 
 save_cursor_position()
 {
+  if [ "$hypervisor_type" = 'xen' ]; then
+    return 0
+  fi
+
   echo -ne '\033[s'
 }
 
 restore_cursor_position()
 {
+  if [ "$hypervisor_type" = 'xen' ]; then
+    return 0
+  fi
+
   echo -ne '\033[u'
 }
 
@@ -57,6 +81,10 @@ move_cursor()
 {
   local axis="$1"
   local count="$2"
+
+  if [ "$hypervisor_type" = 'xen' ]; then
+    return 0
+  fi
 
   if [ "$axis" = 'y' ]; then
     if [ "$count" -lt 0 ]; then
@@ -77,6 +105,10 @@ clear_text()
 {
   local axis="$1"
   local is_backward="$2"
+
+  if [ "$hypervisor_type" = 'xen' ]; then
+    return 0
+  fi
 
   if [ "$axis" = 'y' ]; then
     axis='J'
@@ -135,6 +167,10 @@ display_activity_indicator()
 {
   local final_activity_frame="$1"
   shift 1
+
+  if [ "$hypervisor_type" = 'xen' ]; then
+    return 0
+  fi
 
   if [ "$activity_frame" -le 1 ]; then
     activity_direction='1'

@@ -5,6 +5,24 @@ set -o pipefail
 is_restart_event=''
 supervise_dir="/srv/storage/system/supervisor"
 
+_safe_waitpid()
+{
+  local pid="$1"
+
+  EINTR=0
+  wait "$pid"
+  
+  local status="$?"
+  
+  while [ "$EINTR" -gt 0 ]; do
+    EINTR=0
+    wait "$pid"
+    status="$?"
+  done
+  
+  return "$status"
+} 
+
 _supervisor_process()
 {
   local package="`basename "$1"`"
@@ -15,9 +33,12 @@ _supervisor_process()
 
   local log="$pkg_supervise_dir/logs/$service.log"
 
-  trap '_supervisor_resync_trap "$package" "$service"' HUP
-  trap '_supervisor_restart_trap "$package" "$service"' USR1
-  trap '_supervisor_termination_trap "$package" "$service"' TERM
+  trap 'EINTR=1; _supervisor_resync_trap "$package" "$service"' HUP
+  trap 'EINTR=1; _supervisor_restart_trap "$package" "$service"' USR1
+  trap 'EINTR=1; _supervisor_termination_trap "$package" "$service"' TERM
+
+  echo "`date`: Starting _supervisor_process for '$package/$service'" \
+    >> "$log"
 
   while true; do
 
@@ -35,27 +56,34 @@ _supervisor_process()
 
     # Fork-and-exec:
     #  This attempts to start the supervised process.
-        
-    (exec "/srv/scripts/$package/run/$service" >> "$log" 2>&1) &
+
+    echo "`date`: Starting run script for '$package/$service'" >> "$log"
+    ( exec "/srv/scripts/$package/run/$service" >> "$log" 2>&1 ) &
 
     local pid="$!"
     local pid_file="$pkg_status_dir/$service.pid"
     local restart_file="$pkg_status_dir/$service.restart"
 
-    echo "$pid" > "$pid_file" &&
-    rm -f "$restart_file" &&
-    wait "$pid"
+    echo "`date`: Started '$package/$service'; pid is '$pid'" >> "$log"
 
+    echo "$pid" > "$pid_file" \
+      || echo "`date`: Failed to create '$pid_file'" >> "$log"
+
+    rm -f "$restart_file" \
+      || echo "`date`: Failed to remove '$restart_file'" >> "$log"
+
+    _safe_waitpid "$pid"
     local status="$?"
 
-    rm -f "$pid_file"
+    rm -f "$pid_file" \
+      || echo "`date`: Failed to remove '$pid_file'" >> "$log"
     
     if [ "$status" -eq 0 ]; then
-      echo "`date`: Service '$service' in package '$package'" \
-        "exited normally (pid was '$pid')" >> "$log"
+      echo "`date`: Service '$package/$service' (pid '$pid') "
+        "exited with normal status" >> "$log"
     else
-      echo "`date`: Service '$service' in package '$package'" \
-        "exited with non-zero status $status (pid was '$pid')" >> "$log"
+      echo "`date`: Service '$package/$service' (pid '$pid') " \
+        "exited with non-zero status '$status'" >> "$log"
 
       if [ "$is_restart_event" ]; then
         is_restart_event=''
@@ -65,7 +93,7 @@ _supervisor_process()
     fi
 
     rm -f "$svc_status_fifo"
-    echo "`date`: Restarting service '$service' in '$package'" >> "$log"
+    echo "`date`: Restarting service '$package/$service'" >> "$log"
   done
 }
 
@@ -98,10 +126,15 @@ _supervisor_resync_trap()
   local pkg_supervise_dir="$supervise_dir/$package"
   local svc_down_fifo="$pkg_supervise_dir/status/$service.down"
 
+  echo "`date`: Resync signal received for '$package/$service'" >> "$log"
+
   if supervisor_is_service_running "$package" "$service"; then
+
     if [ -p "$svc_down_fifo" ]; then
+      echo "`date`: Resync is terminating '$package/$service'" >> "$log"
       _supervisor_terminate_service "$package" "$service"
     fi
+
   fi
   
   return 0
@@ -125,7 +158,7 @@ _start_supervisor_process()
   #   This actually starts the supervisor process; it, in
   #   turn, forks off the actual service to-be-watched.
 
-  (_supervisor_process "$package" "$service" &>/dev/null) &
+  ( _supervisor_process "$package" "$service" &>/dev/null ) &
 
   # Write PPID file:
   #   This file contains the PID of the supervisor process.
@@ -186,7 +219,7 @@ _wait_for_service_termination()
   local exit_status=''
   local pkg_status_dir="$supervise_dir/$package/status"
   local svc_term_fifo="$pkg_status_dir/$service.term"
-  
+
   while [ -z "$exit_status" ] ; do
     while read line; do
     
@@ -722,7 +755,7 @@ supervisor_list_running_services()
     service="`basename "$service" .pid`"
     if [ "$service" != '*' ]; then
       if supervisor_is_service_running "$package" "$service"; then
-      	echo "$service"
+        echo "$service"
       fi
     fi
   done

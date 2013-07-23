@@ -29,16 +29,19 @@ clean:
 distclean: clean
 	rm -rf "initrd/${PLATFORM}/lib/modules/"* && \
 	rm -f "images/${PLATFORM}/iso/boot/kernel" \
-	  "images/${PLATFORM}/iso/boot/image.xz" "images/${PLATFORM}/iso/packages"/* && \
+	  "images/${PLATFORM}/iso/boot/image.xz" \
+		"images/${PLATFORM}/iso/packages"/* && \
 	(cd source && ${MAKE} clean)
 
 clean-iso:
 	rm -f "images/${PLATFORM}/iso/packages"/*.vpkg \
-	  "images/${PLATFORM}/iso/boot/image.gz" "images/${PLATFORM}/iso/boot/kernel"
+		"images/${PLATFORM}/iso/boot/image.gz" \
+			"images/${PLATFORM}/iso/boot/kernel"
 
 build-iso: verify-packages build-initrd
 	@echo -n 'Creating ISO image... ' && \
-	cd "images/${PLATFORM}/iso" && mkisofs -J -R -V 'Medic Mobile VM' \
+	cd "images/${PLATFORM}/iso" && mkisofs -J -R \
+		-V 'Medic Mobile VM' \
 		-o "../../../output/image-${PLATFORM}.iso" \
 		-boot-load-size 4 -boot-info-table \
 		-no-emul-boot -b boot/isolinux/isolinux.bin \
@@ -53,13 +56,14 @@ build-xen-image:
 	\
 	dd if=/dev/zero of="$$image_path" \
 		bs=1048576 seek=1023 count=1 &>/dev/null && \
+	\
 	mkfs.ext4 -F "$$image_path" &>/dev/null && \
 	mount -o loop "$$image_path" "$$loop_path" && \
 	\
 	cp -a "images/${PLATFORM}/xen"/* "$$loop_path" && \
-	mkdir -p "$$loop_path/mnt/image/packages" && \
+	mkdir -p "$$loop_path/packages" && \
 	cp -a "images/${PLATFORM}/iso/packages"/* \
-		"$$loop_path/mnt/image/packages" && \
+		"$$loop_path/packages" && \
 	\
 	sync && umount "$$loop_path" && sync && \
 	echo 'done.'
