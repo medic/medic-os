@@ -68,27 +68,34 @@ build-xen-image:
 	echo 'done.'
 
 build-ami-image:
-	@ec2_arch='i386' && \
+	@echo -n 'Building AMI instance-store image... ' && \
+	source "config/aws/settings" && \
 	if [ '${PLATFORM}' = 'x64' ]; then \
-	  ec2_arch='x86_64'; \
+		ec2_arch='x86_64'; \
+	else \
+		ec2_arch='i386'; \
 	fi && \
 	rm -rf "output/image-${PLATFORM}-ami" && \
 	mkdir -p "output/image-${PLATFORM}-ami" && \
-	source "config/aws/settings" && \
 	ln -f "output/image-${PLATFORM}-xen" "output/image" && \
 	ec2-bundle-image -c "$$EC2_CERT" -k "$$EC2_PRIVATE_KEY" \
 		-u "$$AWS_ID" -d "output/image-${PLATFORM}-ami" \
-		-i "output/image" -r "$$ec2_arch" &>/dev/null; \
-	rm -f "output/image"
+		-i "output/image" -r "$$ec2_arch" &>/dev/null || exit 1; \
+	rm -f "output/image"; \
+	echo 'done.'
 
 compress-xen-image:
 	@gzip -q9 "output/image-${PLATFORM}-xen"
 
 upload-ami-image: build-ami-image
+	@echo -n 'Uploading AMI instance-store image... ' && \
 	source "config/aws/settings" && \
-	ec2-upload-bundle -a "$$AWS_ACCESS_KEY" \
+	ec2-upload-bundle \
+		-a "$$AWS_ACCESS_KEY" \
 		-s "$$AWS_SECRET_KEY" -b "$$S3_BUCKET" \
-			-m "output/image-${PLATFORM}-ami/image.manifest.xml"
+		-m "output/image-${PLATFORM}-ami/image.manifest.xml" \
+			&>/dev/null || exit 1; \
+	echo 'done.'
 
 build-initrd:
 	@echo -n 'Creating initrd image... ' && \
