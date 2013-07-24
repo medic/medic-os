@@ -5,6 +5,6 @@ hiddenmenu
 
 title Medic Mobile Virtual Appliance
 root (hd0)
-kernel /boot/kernel root=/dev/xvda1 console=hvc0 init=/bin/test
+kernel /boot/kernel console=hvc0
 initrd /boot/image.xz
 

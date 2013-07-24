@@ -6,7 +6,7 @@ PLATFORM := x86
 MEDIC_CORE_VERSION := 1.3.1
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
-all: packages build-iso build-xen-image
+all: packages build-iso build-xen-image build-ami-image compress-xen-image
 
 iso: build-iso
 
@@ -21,7 +21,7 @@ copy:
 packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg
 
 clean:
-	rm -f output/* && \
+	rm -rf output/* && \
 	rm -rf staging/packages && \
 	rm -rf packages/vm-tools/software && \
 	rm -rf packages/medic-core/software
@@ -35,8 +35,7 @@ distclean: clean
 
 clean-iso:
 	rm -f "images/${PLATFORM}/iso/packages"/*.vpkg \
-		"images/${PLATFORM}/iso/boot/image.gz" \
-			"images/${PLATFORM}/iso/boot/kernel"
+		"images/${PLATFORM}/iso/boot/image.gz" \ "images/${PLATFORM}/iso/boot/kernel"
 
 build-iso: verify-packages build-initrd
 	@echo -n 'Creating ISO image... ' && \
@@ -67,6 +66,29 @@ build-xen-image:
 	\
 	sync && umount "$$loop_path" && sync && \
 	echo 'done.'
+
+build-ami-image:
+	@ec2_arch='i386' && \
+	if [ '${PLATFORM}' = 'x64' ]; then \
+	  ec2_arch='x86_64'; \
+	fi && \
+	rm -rf "output/image-${PLATFORM}-ami" && \
+	mkdir -p "output/image-${PLATFORM}-ami" && \
+	source "config/aws/settings" && \
+	ln -f "output/image-${PLATFORM}-xen" "output/image" && \
+	ec2-bundle-image -c "$$EC2_CERT" -k "$$EC2_PRIVATE_KEY" \
+		-u "$$AWS_ID" -d "output/image-${PLATFORM}-ami" \
+		-i "output/image" -r "$$ec2_arch" &>/dev/null; \
+	rm -f "output/image"
+
+compress-xen-image:
+	@gzip -q9 "output/image-${PLATFORM}-xen"
+
+upload-ami-image: build-ami-image
+	source "config/aws/settings" && \
+	ec2-upload-bundle -a "$$AWS_ACCESS_KEY" \
+		-s "$$AWS_SECRET_KEY" -b "$$S3_BUCKET" \
+			-m "output/image-${PLATFORM}-ami/image.manifest.xml"
 
 build-initrd:
 	@echo -n 'Creating initrd image... ' && \
