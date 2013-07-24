@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source '/boot/include/hypervisor'
+
 install()
 {
   local self="`realpath "$0"`"
@@ -8,14 +10,14 @@ install()
   source "$base/env" &&
   merge_environment /srv || return 255
 
-	local platform="`cat /etc/platform`"
+  local platform="`cat /etc/platform`"
 
   (cd "$PACKAGE_ROOT/../" &&
     rm -f default && ln -sf "$platform" default) &&
   \
   (cd "$PACKAGE_ROOT/../../" &&
     rm -f v1.3 && ln -sf v1.3.1 v1.3 &&
-		rm -f current && ln -sf v1.3.1 current) &&
+    rm -f current && ln -sf v1.3.1 current) &&
   \
   chown -R couchdb:staff \
     "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb" &&
@@ -39,6 +41,8 @@ install()
   persist_ssh_user_configuration_files \
     vm "$PACKAGE_SETTINGS" authorized_keys &&
   \
+  install_default_ssh_keys vm && \
+  \
   install_default_couchdb_databases \
     "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
 
@@ -55,8 +59,8 @@ install_default_couchdb_databases()
     local dst="$storage_dir/couchdb/data/$garden_db.couch"
 
     if ! [ -f "$dst" ]; then
-	cp -a "$src" "$dst" && chown couchdb:couchdb "$dst" \
-	  || return "$?"
+  cp -a "$src" "$dst" && chown couchdb:couchdb "$dst" \
+    || return "$?"
     fi
   done
 
@@ -89,6 +93,20 @@ persist_ssh_user_configuration_files()
     ln -sf "$target_path" "$src_path" &&
     chown "$user.staff" "$target_path" || return 3
   done
+
+  return 0
+}
+
+install_default_ssh_keys()
+{
+  local user="$1"
+
+  if [ "`hypervisor_type`" != 'xen' ]; then
+    return 0
+  fi
+
+  (ec2-metadata -u \
+    | grep '^\(ssh\|ecdsa\)-' >> ~vm/.ssh/authorized_keys) &>/dev/null
 
   return 0
 }

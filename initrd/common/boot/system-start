@@ -49,9 +49,9 @@ main()
   local found_device=''
   local found_version=''
 
-	if [ "`hypervisor_type`" = 'xen' ]; then
+  if [ "`hypervisor_type`" = 'xen' ]; then
     source_device='/dev/xvda1'
-	fi
+  fi
 
   set_echo 0
   set_bold 1
@@ -106,6 +106,24 @@ main()
       fi
     done
   fi
+  # Network connection:
+  #   Get an IP address via DHCP, and ensure we have network
+  #   connectivity before continuing on with installation or updates.
+
+  local ip_address=''
+  display_centered 'Setting up network connection...'
+
+  ip_address="`wait_for_ip_address`"
+
+  if [ $? -ne 0 ]; then
+    display_centered 'Checking for alternate network configuration...' &&
+    attempt_manual_network_configuration &&
+    ip_address="`wait_for_ip_address`"
+
+    if [ $? -ne 0 ]; then
+      fatal 'Failed to obtain an IP address for this virtual machine'
+    fi
+  fi
 
   # Disk found?
   #   If so, check its version and update its software if necessary.
@@ -119,12 +137,11 @@ main()
       || fatal 'Failed to update base system; please contact support.'
   fi
 
-  display_centered 'Setting up software...'
-  
   # Update packages:
   #   Update each package necessary for proper startup; the `package_update`
   #   function will avoid overwriting existing binaries if it's able to.
 
+  display_centered 'Setting up software...'
   log "Software update started at `date`"
 
   local total_packages='0'
@@ -149,21 +166,6 @@ main()
 
   persist_authentication_database >> "$log" 2>&1 \
     || fatal 'Failed to initialize authentication database'
-
-  local ip_address=''
-  display_centered 'Setting up network connection...'
-
-  ip_address="`wait_for_ip_address`"
-
-  if [ $? -ne 0 ]; then
-    display_centered 'Checking for alternate network configuration...' &&
-    attempt_manual_network_configuration &&
-    ip_address="`wait_for_ip_address`"
-
-    if [ $? -ne 0 ]; then
-      fatal 'Failed to obtain an IP address for this virtual machine'
-    fi
-  fi
 
   display_centered 'Starting services...'
 
