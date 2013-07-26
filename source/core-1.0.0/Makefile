@@ -2,8 +2,7 @@
 MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
-
-KERNEL_CONFIG := ../../../kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}-grsec
+KERNEL_CONFIG := ../../../kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}
 
 
 all: build
@@ -27,7 +26,7 @@ clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-busybox
 pv: build-pv
 
 build-pv:
-	@(cd ../medic-core && echo && \
+	@(cd ../medic-core && \
 		${QMAKE} ROOT='${MEDIC_CORE_ROOT}' \
 			START='pv' STOP='pv' \
 			PLATFORM='${PLATFORM}' \
@@ -59,21 +58,23 @@ clean-kernel:
 
 build-kernel: build-pv
 	@(cd linux && \
-		cp ../../../kernel/boot-logo/logo-medic.ppm \
+		cp ../../../kernel/common/boot-logo/logo-medic.ppm \
 			./drivers/video/logo/logo_linux_clut224.ppm && \
-		cp -H "${KERNEL_CONFIG}" .config) && \
+		cp -H "${KERNEL_CONFIG}${KERNEL_EXTRA}" .config) && \
 		./scripts/logger linux \
 			'cd linux && ${PMAKE} bzImage && ${PMAKE} modules'
 
 copy-kernel:
 	@cp linux/arch/x86/boot/bzImage \
 		"../../images/${PLATFORM}/iso/boot/kernel" && \
-	strip linux/vmlinux && \
+	strip -o linux/vmlinux-stripped linux/vmlinux && \
 	mkdir -p "../../images/${PLATFORM}/xen/boot" && \
-	gzip -c9 linux/vmlinux > "../../images/${PLATFORM}/xen/boot/kernel"
+	gzip -c9 linux/vmlinux-stripped \
+		> "../../images/${PLATFORM}/xen/boot/kernel"
 
 install-kernel-modules:
-	@(cd linux && ${MAKE} modules_install \
+	@rm -rf "../../initrd/${PLATFORM}/lib/modules"/* && \
+	(cd linux && ${MAKE} modules_install \
 		INSTALL_MOD_PATH="../../../initrd/${PLATFORM}" &>/dev/null)
 
 
