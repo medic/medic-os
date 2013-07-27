@@ -65,6 +65,22 @@ build-core:
 clean-core:
 	(cd core && ${MAKE} clean)
 
+rebuild-kernel:
+	@(cd core && \
+	  ${QMAKE} clean-kernel &>/dev/null && \
+	  ${QMAKE} kernel \
+		PLATFORM='${PLATFORM}' \
+		MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}' \
+		KERNEL_VERSION='${KERNEL_VERSION}' KERNEL_EXTRA='${KERNEL_EXTRA}' \
+		KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' PARALLEL='${PARALLEL}')
+
+rebuild-vm-tools-modules:
+	@echo -n "Rebuilding 'open-vm-tools' kernel modules... " && \
+	(cd vm-tools/source/open-vm-tools/modules && \
+		${QMAKE} clean &>/dev/null && \
+		${QMAKE} all install &>/dev/null) || exit "$$?"; \
+	depmod -a -b '../initrd/${PLATFORM}' '${KERNEL_VERSION}' && \
+	echo 'done.'
 
 vm-tools: build-vm-tools copy-vm-tools
 

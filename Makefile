@@ -6,7 +6,7 @@ PLATFORM := x86
 MEDIC_CORE_VERSION := 1.3.1
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
-all: packages build-iso build-xen-image build-ami-image compress-xen-image
+all: packages build-iso build-xen-image build-ami-image compress-xen-image build-x86-image-nopae
 
 iso: build-iso
 
@@ -35,13 +35,14 @@ distclean: clean
 
 clean-iso:
 	rm -f "images/${PLATFORM}/iso/packages"/*.vpkg \
-		"images/${PLATFORM}/iso/boot/image.gz" \ "images/${PLATFORM}/iso/boot/kernel"
+		"images/${PLATFORM}/iso/boot/image.gz" \
+		"images/${PLATFORM}/iso/boot/kernel"
 
 build-iso: verify-packages build-initrd
 	@echo -n 'Creating ISO image... ' && \
 	cd "images/${PLATFORM}/iso" && mkisofs -J -R \
 		-V 'Medic Mobile VM' \
-		-o "../../../output/image-${PLATFORM}.iso" \
+		-o "../../../output/image-${PLATFORM}${ISO_EXTRA}.iso" \
 		-boot-load-size 4 -boot-info-table \
 		-no-emul-boot -b boot/isolinux/isolinux.bin \
 		-c boot/isolinux/boot.cat . &>/dev/null && \
@@ -80,7 +81,7 @@ build-ami-image:
 	ln -f "output/image-${PLATFORM}-xen" "output/image" && \
 	ec2-bundle-image -c "$$EC2_CERT" -k "$$EC2_PRIVATE_KEY" \
 		-u "$$AWS_ID" -d "output/image-${PLATFORM}-ami" \
-		-i "output/image" -r "$$ec2_arch" &>/dev/null || exit 1; \
+		-i "output/image" -r "$$ec2_arch" &>/dev/null || exit "$$?"; \
 	rm -f "output/image"; \
 	echo 'done.'
 
@@ -94,7 +95,7 @@ upload-ami-image: build-ami-image
 		-a "$$AWS_ACCESS_KEY" \
 		-s "$$AWS_SECRET_KEY" -b "$$S3_BUCKET" \
 		-m "output/image-${PLATFORM}-ami/image.manifest.xml" \
-			&>/dev/null || exit 1; \
+			|| exit "$$?"; \
 	echo 'done.'
 
 build-initrd:
@@ -107,6 +108,16 @@ build-initrd:
 	(cd "images/${PLATFORM}" && \
 		[ -d xen ] && cp -a "iso/boot/image.xz" "xen/boot/") && \
 	echo 'done.'
+
+build-x86-image-nopae:
+	@if [ "${PLATFORM}" = 'x86' ]; then \
+		echo 'Building x86 image with PAE disabled...' && \
+		(cd source && \
+		  ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
+		  ${QMAKE} rebuild-vm-tools-modules) && \
+		\
+		${QMAKE} build-iso ISO_EXTRA='-nopae'; \
+	fi
 
 strip-binaries:
 	@echo -n "Removing unnecessary symbols... " && \
@@ -153,7 +164,8 @@ gardener-pkg: shrink-gardener
 
 convert-boot-logo:
 	for file in logo-medic logo-medic-gray; do \
-		pngtopnm "kernel/boot-logo/$$file.png" | ppmquant 224 2>/dev/null \
-			| pnmtoplainpnm > "kernel/boot-logo/$$file.ppm"; \
+		pngtopnm "kernel/common/boot-logo/$$file.png" \
+		  | ppmquant 224 2>/dev/null | pnmtoplainpnm \
+		    > "kernel/common/boot-logo/$$file.ppm"; \
 	done
 
