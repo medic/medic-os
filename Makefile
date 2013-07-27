@@ -169,3 +169,8 @@ convert-boot-logo:
 		    > "kernel/common/boot-logo/$$file.ppm"; \
 	done
 
+download:
+	@(cd source/medic-core && \
+	  ./scripts/retrieve-sources && \
+	  ./scripts/rearrange-sources && mv incoming/* source)
+
