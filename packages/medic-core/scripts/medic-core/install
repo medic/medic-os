@@ -19,6 +19,9 @@ install()
     rm -f v1.3 && ln -sf v1.3.1 v1.3 &&
     rm -f current && ln -sf v1.3.1 current) &&
   \
+  (cd "$PACKAGE_STORAGE/nginx/state" && \
+    ln -sf ../logs logs) &&
+  \
   chown -R couchdb:staff \
     "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb" &&
   \
@@ -54,8 +57,8 @@ install_default_couchdb_databases()
     local dst="$storage_dir/couchdb/data/$garden_db.couch"
 
     if ! [ -f "$dst" ]; then
-  cp -a "$src" "$dst" && chown couchdb:couchdb "$dst" \
-    || return "$?"
+      cp -a "$src" "$dst" && chown couchdb:couchdb "$dst" \
+        || return "$?"
     fi
   done
 
