@@ -86,7 +86,7 @@ build-ami-image:
 	echo 'done.'
 
 compress-xen-image:
-	@gzip -q9 "output/image-${PLATFORM}-xen"
+	@gzip -qf9 "output/image-${PLATFORM}-xen"
 
 upload: upload-ami-image
 
