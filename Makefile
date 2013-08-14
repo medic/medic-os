@@ -88,6 +88,8 @@ build-ami-image:
 compress-xen-image:
 	@gzip -q9 "output/image-${PLATFORM}-xen"
 
+upload: upload-ami-image
+
 upload-ami-image: build-ami-image
 	@echo -n 'Uploading AMI instance-store image... ' && \
 	source "config/aws/settings" && \

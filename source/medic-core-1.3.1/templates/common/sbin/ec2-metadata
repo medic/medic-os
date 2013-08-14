@@ -71,15 +71,15 @@ print_normal_metric() {
 #print block-device-mapping
 print_block_device_mapping()
 {
-echo 'block-device-mapping: '
-x=$(curl -fs http://169.254.169.254/latest/meta-data/block-device-mapping/)
-if [ $? -eq 0 ]; then
-	for i in $x; do
-		echo -e '\t' $i: $(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/$i)
-	done
-else
-	echo not available
-fi
+	echo 'block-device-mapping: '
+	x=$(curl -fs http://169.254.169.254/latest/meta-data/block-device-mapping/)
+	if [ $? -eq 0 ]; then
+		echo "$x" | while read i; do
+			echo -e '\t' $i: $(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/$i)
+		done
+	else
+		echo not available
+	fi
 }
 
 #print public-keys
@@ -88,7 +88,7 @@ print_public_keys()
 	echo 'public-keys: '
 	x=$(curl -fs http://169.254.169.254/latest/meta-data/public-keys/)
 	if [ $? -eq 0 ]; then
-		for i in $x; do
+		echo "$x" | while read i; do
 			index=$(echo $i|cut -d = -f 1)
 			keyname=$(echo $i|cut -d = -f 2)
 			echo keyname:$keyname
