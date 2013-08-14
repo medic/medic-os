@@ -155,6 +155,7 @@ main()
 
   build_autoconf 'nginx' \
     "$stdarg --sbin-path='$prefix/bin' \
+     --with-http_ssl_module --with-http_spdy_module \
      --conf-path='$prefix/etc/nginx/nginx.conf' \
      --pid-path='$prefix/var/run/nginx/nginx.pid' \
      --error-log-path='$prefix/var/log/nginx/error.log' \
