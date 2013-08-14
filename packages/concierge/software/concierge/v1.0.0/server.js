@@ -58,7 +58,7 @@ app.get('/setup', function (req, res) {
 
 /**
  */
-app.post('/setup/finish', function (req, res) {
+app.get('/setup/finish', function (req, res) {
 
   disable_concierge_service(req, function (_err) {
     res.send(500);
