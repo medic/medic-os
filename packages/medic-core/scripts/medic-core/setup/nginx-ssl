@@ -1,5 +1,5 @@
 #!/bin/sh
-set -x
+
 create_self_signed_ssl_certificate()
 {
   local path="$1"
