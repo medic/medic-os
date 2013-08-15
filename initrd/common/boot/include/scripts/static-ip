@@ -1,6 +1,7 @@
 #!/bin/sh
 
 source '/boot/include/logger'
+source '/boot/include/utility'
 
 stop_dhcp_server()
 {
@@ -25,7 +26,7 @@ apply_static_ip_address()
   # Set up network interface
   if [ "$ip" -a "$netmask" ]; then
   
-    echo "Stopping DHCP server for '$interface'" >> "$log"
+    log "Stopping DHCP server for '$interface'"
     stop_dhcp_server "$interface" >> "$log" 2>&1
 
     # Bring network interface down:
@@ -33,15 +34,15 @@ apply_static_ip_address()
     #   If an error occurs, we ignore it and continue trying to bring
     #   the interface up.
     
-    echo "Resetting network interface '$interface'" >> "$log"
+    log "Resetting network interface '$interface'"
     ifconfig "$interface" down >> "$log" 2>&1
     
     local extra_args=''
-    echo "Setting IP for '$interface' to '$ip'" >> "$log"
+    log "Setting IP for '$interface' to '$ip'"
     
     if [ "$broadcast" ]; then
       extra="broadcast '$broadcast'"
-      echo "Broadcast address on '$interface' is '$broadcast'" >> "$log"
+      log "Broadcast address on '$interface' is '$broadcast'"
     fi
     
     ifconfig "$interface" "$ip" \
@@ -55,7 +56,7 @@ apply_static_ip_address()
   # Set default route
   if [ "$gateway" ]; then
   
-    echo "Setting system-wide default route to '$gateway'" >> "$log"
+    log "Setting system-wide default route to '$gateway'"
     route add default gw "$gateway" >> "$log" 2>&1
     
     if [ "$?" -ne 0 ]; then
@@ -66,7 +67,7 @@ apply_static_ip_address()
   # Add default domain suffix to resolv.conf
   if [ "$domain" ]; then
   
-    echo "Adding search domain '$domain' to resolv.conf" >> "$log"
+    log "Adding search domain '$domain' to resolv.conf"
     echo "search $domain" > /etc/resolv.conf 2>>"$log"
     
     if [ "$?" -ne 0 ]; then
@@ -77,14 +78,14 @@ apply_static_ip_address()
   # Add DNS server(s) to resolv.conf
   if [ "$dns" ]; then
   
-    echo "Deleting any existing resolv.conf" >> "$log"
+    log "Deleting existing resolv.conf"
     rm -f /etc/resolv.conf >> "$log" 2>&1
 
-    echo "Adding new DNS servers to resolv.conf" >> "$log"
+    log "Adding new DNS servers to resolv.conf"
     
     for server in $dns; do
     
-      echo "Adding DNS server '$server' to resolv.conf" >> "$log"
+      log "Adding DNS server '$server' to resolv.conf"
       echo "nameserver $server" >> /etc/resolv.conf 2>>"$log"
       
       if [ "$?" -ne 0 ]; then
@@ -93,7 +94,7 @@ apply_static_ip_address()
     done
   fi
 
-  echo "Setup of interface '$interface' successful" >> "$log"
+  log "Setup of interface '$interface' successful"
   return 0 
 }
 
@@ -116,17 +117,6 @@ main()
   esac
 
   return "$?"
-}
-
-warn()
-{
-  echo "Warning: $*" 2>&1
-}
-
-fatal()
-{
-  echo "Fatal: $*" 2>&1
-  exit 1
 }
 
 usage()

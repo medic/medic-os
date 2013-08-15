@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source '/boot/include/utility'
+
 main()
 {
   if [ "$#" -le 0 ]; then
@@ -22,17 +24,6 @@ main()
   done
 
   return "$?"
-}
-
-warn()
-{
-  echo "Warning: $*" >&2
-}
-
-fatal()
-{
-  echo "Fatal: $*" >&2
-  exit 1
 }
 
 usage()

@@ -1,5 +1,6 @@
 #!/bin/sh
 
+source '/boot/include/utility'
 source '/boot/include/supervisor'
 source '/boot/include/hypervisor'
 
@@ -34,17 +35,6 @@ main()
   fi
     
   return 0
-}
-
-warn()
-{
-  echo "Warning: $*" >&2
-}
-
-fatal()
-{
-  echo "Fatal: $*" >&2
-  exit 1
 }
 
 usage()

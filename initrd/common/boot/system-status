@@ -1,6 +1,7 @@
 #!/bin/sh
 
 source '/boot/include/cursor'
+source '/boot/include/utility'
 source '/boot/include/startup'
 source '/boot/include/supervisor'
 source '/boot/include/hypervisor'
@@ -116,19 +117,6 @@ display_services()
   echo && display_centered "If this message persists, please contact support."
 
   return 1
-}
-
-warn()
-{
-  echo "Warning: $*" >&2
-}
-
-fatal()
-{
-  echo "Fatal: $*" >&2
-
-  sleep 10
-  exit 1
 }
 
 main

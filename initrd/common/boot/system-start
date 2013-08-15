@@ -2,11 +2,11 @@
 
 source '/boot/include/logger'
 source '/boot/include/cursor'
+source '/boot/include/utility'
 source '/boot/include/startup'
 source '/boot/include/package'
 source '/boot/include/supervisor'
 source '/boot/include/hypervisor'
-
 
 wait_for_ip_address()
 {
@@ -32,7 +32,6 @@ wait_for_ip_address()
   echo "$ip_address"
   return 0
 }
-
 
 main()
 {
@@ -191,7 +190,7 @@ main()
 
 warn()
 {
-  print "Warning triggered at `date`:\n  $*"
+  log "Warning: $*\n"
 }
 
 fatal()
