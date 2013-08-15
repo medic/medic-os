@@ -1,0 +1,62 @@
+#!/bin/sh
+set -x
+create_self_signed_ssl_certificate()
+{
+  local path="$1"
+  local country="$2"
+  local state="$3"
+  local locality="$4"
+  local organization="$5"
+  local department="$6"
+  local common_name="$7"
+  local email="$8"
+
+  if [ -f "$path.key" -a -f "$path.crt" ]; then
+    return 0
+  fi
+
+  # Make sure we have enough entropy:
+  #   Feeding data from the pseudo-random device back in to
+  #   the truly-random device isn't really ideal, but it ensures
+  #   that we don't hang forever waiting for more randomness to
+  #   be collected. We should eventually use a better method here.
+
+  local directory="`dirname "$path"`" &&
+  dd if=/dev/urandom of=/dev/random count=80 2>/dev/null &&
+  \
+  mkdir -p "$directory" &&
+  chown root:nobody "$directory" && chmod 600 "$directory" &&
+  \
+  for i in "$country" "$state" "$locality" \
+    "$organization" "$department" "$common_name" "$email"; do
+    echo "$i"
+  done | openssl req -x509 -nodes -newkey rsa:4096 \
+    -keyout "$path.key" -out "$path.crt" -days 3650 2>/dev/null
+}
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv || return 255
+
+  create_self_signed_ssl_certificate \
+    "$PACKAGE_SETTINGS/nginx/private/default" \
+    'US' 'Oregon' 'Portland' 'Medic Mobile' \
+    'Department of Information Security' \
+    '*.medicmobile.org' 'security@medicmobile.org'
+
+  return "$?"
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+
