@@ -19,7 +19,7 @@ fi
 (cd "$prefix" &&
   rm -rf lib/*.a lib/python?.? lib/erlang/usr lib/erlang/Install \
     info include man java/manual share/man share/gtk-doc share/doc doc \
-    logs html share/info share/emacs ssl etc/ssh_host* libexec/ssh-keysign)
+    logs html share/info share/emacs etc/ssh_host* libexec/ssh-keysign)
 
 (cd "$prefix/lib/erlang/lib" && mkdir -p .save &&
   mv crypto-* compiler-* inets-* kernel-* os_mon-* public_key-* sasl-* \

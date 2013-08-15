@@ -113,8 +113,8 @@ main()
   build_autoconf 'diffutils' "$stdarg" &&
   build_autoconf 'patch' "$stdarg" &&
   \
-  (disable_parallelism && \
-    build_config 'openssl' "shared no-asm zlib-dynamic $stdarg") &&
+  (disable_parallelism && build_config 'openssl' \
+      "shared no-asm zlib-dynamic --openssldir='$prefix/etc/ssl' $stdarg") &&
   \
   build_autoconf 'openssh' \
     "$stdarg --sysconfdir=\"$prefix/etc/ssh\" \

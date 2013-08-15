@@ -30,7 +30,7 @@ create_self_signed_ssl_certificate()
   for i in "$country" "$state" "$locality" \
     "$organization" "$department" "$common_name" "$email"; do
     echo "$i"
-  done | openssl req -x509 -nodes -newkey rsa:4096 \
+  done | "$PACKAGE_ROOT/bin/openssl" req -x509 -nodes -newkey rsa:4096 \
     -keyout "$path.key" -out "$path.crt" -days 3650 2>/dev/null
 }
 
