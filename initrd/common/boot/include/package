@@ -98,6 +98,9 @@ package_install()
       rm -rf "/srv/receipts/$package"
       return 5
     fi
+  else
+    log "Skipping installation script for package '$package'"
+    log "File '/srv/scripts/$package/install' is not executable"
   fi
 
   log "Successfully installed package '$package'"
@@ -173,7 +176,7 @@ package_update()
 
     if ! package_remove "$package"; then
       warn "Failed to completely remove package '$package'"
-	return 4
+      return 4
     fi
   fi
 
