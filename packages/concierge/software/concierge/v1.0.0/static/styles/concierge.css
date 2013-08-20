@@ -18,7 +18,7 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-size: 10pt;
+  font-size: 9.5pt;
   font-family: "Droid Sans";
 }
 
@@ -43,26 +43,26 @@ body {
   width: 100%;
   padding-top: 2%;
   text-align: center;
-  height: 10em;
+  height: 9em;
 }
 
 .logo {
-  height: 10em;
+  height: 9em;
   width: 100%;
   opacity: 0.4;
   background: url('../images/medic-logo.svg');
   background-repeat: no-repeat;
   background-position: center;
-  background-size: auto 11em;
+  background-size: auto 9em;
 }
 
 .login input, .login textarea {
-  font-size: 1.15em;
+  font-size: 1.05em;
 }
 .login, .login-background {
   width: 70%;
-  bottom: 10em;
-  top: 16em;
+  bottom: 9em;
+  top: 15em;
   left: 15%;
   min-height: 20em;
   position: absolute;
@@ -97,7 +97,7 @@ body {
 
 .login-status {
   position: absolute;
-  top: 14em;
+  top: 12.5em;
   width: 70%;
   padding-left: 15%;
   text-align: center;
@@ -177,6 +177,7 @@ label {
   padding: 0.25em 2em 0 0.25em;
   color: #fff;
   display: block;
+  font-size: 0.95em;
   text-shadow: 0 0 0.5em #000;
 }
 
@@ -189,12 +190,12 @@ label {
   padding: 0.5em 1em 0 0;
 }
 
-
 .buttons {
   position: absolute;
   text-align: center;
   bottom: 2.5em;
-  width: 100%;
+  width: 30%;
+  left: 50%;
 }
 
 .button, .circle {
@@ -204,7 +205,10 @@ label {
 
 .button {
   width: 5em;
+  left: -5em;
+  float: left;
   cursor: pointer;
+  position: relative;
   text-shadow: 0.15em 0.15em 0.2em #555;
 }
 
@@ -254,4 +258,8 @@ label {
   content: 'A';
 }
 
+.icon-check:before {
+  content: 'C';
+  font-size: 0.85em;
+}
 

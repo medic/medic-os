@@ -75,6 +75,8 @@ package_install()
     return 3
   fi
 
+  log "Extracting files for package '$package'"
+
   mkdir -p "/srv/receipts/$package" "/srv/scripts/$package" &&
     (cd /srv && ar -p "$path" package.tar.xz | xz -dc \
       | tar -xvf - > "/srv/receipts/$package/manifest") && sync
@@ -87,6 +89,8 @@ package_install()
 
   if [ -x "/srv/scripts/$package/install" ]; then
 
+    log "Running installation script for package '$package'"
+
     "/srv/scripts/$package/install" \
       || warn "Installation script for package '$package' failed"
 
@@ -94,9 +98,10 @@ package_install()
       rm -rf "/srv/receipts/$package"
       return 5
     fi
-
-    sync
   fi
+
+  log "Successfully installed package '$package'"
+  sync
 
   return 0
 }
@@ -105,11 +110,15 @@ package_remove()
 {
   local package="`basename "$1"`"
 
+  log "Stopping services for package '$package'"
+
   if ! supervisor_stop "$package"; then
     warn "Failed to stop services for package '$package'"
     return 1
   fi
     
+  log "Removing package '$package'"
+
   if [ -x "/srv/scripts/$package/remove" ]; then
     if ! "/srv/scripts/$package/remove"; then
       warn "Removal script for '$package' exited with non-zero status"
@@ -125,6 +134,7 @@ package_remove()
     return 3
   fi
 
+  log "Successfully removed package '$package'"
   sync
 
   return 0
@@ -138,6 +148,8 @@ package_update()
   local package="`package_extract_name "$path"`" &&
   local v_new="`package_extract_version "$path"`" &&
   local v_prev="`package_retrieve_installed_version "$package"`"
+
+  log "Examining package '$package'"
 
   if [ "$?" -ne 0 ]; then
     warn "Failed to read metadata from package file '$file'"
@@ -157,6 +169,8 @@ package_update()
 
   elif [ "$v_prev" -a "$v_prev" -ne "$v_new"] 2>/dev/null; then
 
+    log "Removing package '$package'"
+
     if ! package_remove "$package"; then
       warn "Failed to completely remove package '$package'"
 	return 4
@@ -165,6 +179,7 @@ package_update()
 
   if [ -z "$v_prev" -o "$v_prev" -lt "$v_new" ] 2>/dev/null; then
     force_install='t'
+    log "Update required for package '$package'"
   fi
 
   if [ "$force_install" ]; then
@@ -175,12 +190,15 @@ package_update()
     fi
   fi
 
+  log "Running setup tasks for package '$package'"
+
   if ! package_setup "$package"; then
     warn "Setup script in package '$package' exited with non-zero status"
     warn "Your installation of '$package' may be incomplete"
     return 6
   fi
 
+  log "Finished examining package '$package'"
   return 0
 }
 
@@ -203,6 +221,9 @@ package_setup()
 
   for script in /srv/scripts/$package/setup/*; do
     if [ -x "$script" ]; then
+
+      log "Running setup task '$package/`basename "$script"`"
+
       "$script" \
         || warn "Setup script '$script' for package '$package' failed"
     fi

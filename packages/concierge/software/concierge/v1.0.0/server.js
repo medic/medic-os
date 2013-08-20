@@ -41,18 +41,23 @@ app.get('/', function (req, res) {
  */
 app.get('/setup', function (req, res) {
 
-  res.render('setup/index.hbs', {
-    title: (
-      'Set Administrative Password: ' +
-      'Medic Mobile Virtual Server Configuration'
-    ),
-    data: {
-      key: req.flash('key')
-    },
-    messages: {
-      error: req.flash('error'),
-      success: req.flash('success')
-    }
+  read_system_password(function (_err, _system_passwd) {
+    res.render('setup/index.hbs', {
+      title: (
+        'Set Administrative Password: ' +
+        'Medic Mobile Virtual Server Configuration'
+      ),
+      data: {
+        key: req.flash('key')
+      },
+      messages: {
+        error: req.flash('error'),
+        success: req.flash('success')
+      },
+      options: {
+        lock: !_err
+      }
+    });
   });
 });
 
