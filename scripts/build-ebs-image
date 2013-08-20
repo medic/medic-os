@@ -1,0 +1,110 @@
+#!/bin/sh
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 111
+}
+
+usage()
+{
+  echo "Usage: $0 loopback_image description device"
+  exit 1
+}
+
+wait_for_device()
+{
+  local device="$1"
+
+  for i in `seq 1 10`; do
+    if [ -b "$device" ]; then
+      return 0
+    fi
+    sleep 5
+  done
+
+  return 1
+}
+
+wait_for_volume_availability()
+{
+  local volume_id="$1"
+
+  sleep 15
+}
+
+wait_for_snapshot_availability()
+{
+  local snapshot_id="$1"
+
+  sleep 15
+}
+
+main()
+{
+  local image="$1"
+  local description="$2"
+  local device="$3"
+
+  if ! [ -f "$image" ]; then
+    usage
+  fi
+
+  if [ -z "$description" ]; then
+    usage
+  fi
+
+  if [ -z "$device" ]; then
+    usage
+  fi
+
+  local volume_id="`
+    ec2-create-volume -s1 \
+      -z "$EC2_AVAILABILITY_ZONE" --region "$EC2_REGION" | cut -f2
+  `" || fatal 'Failed to create volume'
+
+  wait_for_volume_availability "$volume_id"
+
+  ec2-attach-volume "$volume_id" -i "`
+    ec2-metadata -i | cut -d: -f2 | sed 's/^ *//'
+  `" -d "$device" &>/dev/null || fatal 'Failed to attach volume'
+
+  echo "$volume_id" >&2
+
+  wait_for_device "$device" \
+    || fatal 'Volume did not attach during timeout period'
+
+  mkfs.ext4 "$device" &>/dev/null \
+    || fatal "Failure while formatting device '$device'"
+
+  mkdir -p /mnt/startup && mount "$device" /mnt/startup \
+    || fatal "Failure while mounting device '$device'"
+
+  mkdir -p /mnt/loopback && mount -o loop "$image" /mnt/loopback \
+    || fatal "Failure while mounting loopback image '$image'"
+
+  cp -a /mnt/loopback/* /mnt/startup/ \
+    || fatal 'Failure while copying files'
+
+  sync && umount /mnt/loopback && umount /mnt/startup \
+    || fatal 'Failure while unmounting volumes'
+
+  sync && ec2-detach-volume --region "$EC2_REGION" "$volume_id" &>/dev/null \
+    || fatal 'Failure while detaching volume'
+
+  local snapshot_id="`
+    ec2-create-snapshot "$volume_id" \
+      --region "$EC2_REGION" -d "$description" | cut -f2 \
+  `" || fatal "Failure while creating snapshot for volume '$volume_id'"
+
+  wait_for_snapshot_availability "$snapshot_id"
+
+  ec2-delete-volume "$volume_id" &>/dev/null \
+    || fatal "Failure while deleting volume '$volume_id'"
+
+  echo "$snapshot_id"
+}
+
+main "$@"
+exit "$?"
+
