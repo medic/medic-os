@@ -2,8 +2,9 @@
 MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
-KERNEL_CONFIG := ../../../kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}
 
+PLATFORM ?= x86
+KERNEL_CONFIG := ../../../kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}
 
 all: build
 

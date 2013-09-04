@@ -1,8 +1,8 @@
 
 MAKE ?= make
+PLATFORM ?= x86
 QMAKE := ${MAKE} --no-print-directory
 
-PLATFORM := x86
 MEDIC_CORE_VERSION := 1.3.1
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
