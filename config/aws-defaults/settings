@@ -1,0 +1,15 @@
+
+export S3_BUCKET='s3-bucket'
+export EC2_HOME=~/ec2-api-tools
+
+export EC2_REGION='us-west-2'
+export EC2_AVAILABILITY_ZONE='us-west-2a'
+export EC2_URL='https://us-west-2.ec2.amazonaws.com'
+
+export EC2_CERT=~/vm-toaster/config/aws/id-x509.crt
+export EC2_PRIVATE_KEY=~/vm-toaster/config/aws/id-x509.key
+
+export AWS_ID='000000000000'
+export AWS_ACCESS_KEY='XXXXXXXXXXXXXXXXXXXX'
+export AWS_SECRET_KEY='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+
