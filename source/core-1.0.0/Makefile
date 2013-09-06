@@ -4,7 +4,7 @@ PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
 PLATFORM ?= x86
-KERNEL_CONFIG := ../../../kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}
+KERNEL_CONFIG := ../../../../kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}
 
 all: build
 
@@ -38,35 +38,35 @@ dhcpcd: build-dhcpcd
 
 build-dhcpcd: build-pv
 	@./scripts/logger dhcpcd \
-		'cd dhcpcd && \
+		'cd source/dhcpcd && \
 		./configure --libexecdir=/lib/dhcpcd \
 			--dbdir=/run/dhcpcd --sysconfdir=/etc && \
 		${MAKE} all CFLAGS="${CFLAGS}" && \
 		${MAKE} _proginstall _scriptsinstall _confinstall \
-			DESTDIR="../../../initrd/${PLATFORM}" && \
+			DESTDIR="../../../../initrd/${PLATFORM}" && \
 		cd dhcpcd-hooks && \
-		${MAKE} install DESTDIR="../../../../initrd/${PLATFORM}" \
+		${MAKE} install DESTDIR="../../../../../initrd/${PLATFORM}" \
 			SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
 
 clean-dhcpcd:
-	@(cd dhcpcd && ${QMAKE} clean)
+	@(cd source/dhcpcd && ${QMAKE} clean)
 
 
 kernel: build-kernel copy-kernel install-kernel-modules
 
 clean-kernel:
-	(cd linux && ${MAKE} clean)
+	(cd source/linux && ${MAKE} clean)
 
 build-kernel: build-pv
-	@(cd linux && \
-		cp ../../../kernel/common/boot-logo/logo-medic.ppm \
+	@(cd source/linux && \
+		cp ../../../../kernel/common/boot-logo/logo-medic.ppm \
 			./drivers/video/logo/logo_linux_clut224.ppm && \
 		cp -H "${KERNEL_CONFIG}${KERNEL_EXTRA}" .config) && \
 		./scripts/logger linux \
-			'cd linux && ${PMAKE} bzImage && ${PMAKE} modules'
+			'cd source/linux && ${PMAKE} bzImage && ${PMAKE} modules'
 
 copy-kernel:
-	@cp linux/arch/x86/boot/bzImage \
+	@cp source/linux/arch/x86/boot/bzImage \
 		"../../images/${PLATFORM}/iso/boot/kernel" && \
 	strip -o linux/vmlinux-stripped linux/vmlinux && \
 	mkdir -p "../../images/${PLATFORM}/xen/boot" && \
@@ -75,39 +75,39 @@ copy-kernel:
 
 install-kernel-modules:
 	@rm -rf "../../initrd/${PLATFORM}/lib/modules"/* && \
-	(cd linux && ${MAKE} modules_install \
-		INSTALL_MOD_PATH="../../../initrd/${PLATFORM}" &>/dev/null)
+	(cd source/linux && ${MAKE} modules_install \
+		INSTALL_MOD_PATH="../../../../initrd/${PLATFORM}" &>/dev/null)
 
 
 busybox: build-busybox copy-busybox
 
 clean-busybox:
-	(cd busybox && ${MAKE} clean)
+	(cd source/busybox && ${MAKE} clean)
 
 build-busybox: build-pv
-	@(cd busybox && cp ../../../busybox/dot-config-1.20.2 .config) && \
-	./scripts/logger busybox 'cd busybox && ${PMAKE}'
+	@(cd source/busybox && cp ../../../../busybox/dot-config-1.21.1 .config) && \
+	./scripts/logger busybox 'cd source/busybox && ${PMAKE}'
 
 copy-busybox:
 	@echo -n "Copying files for 'busybox'... " && \
 	mkdir -p "../../initrd/${PLATFORM}/bin" && \
-	(cd busybox && cp busybox \
-		../../../initrd/${PLATFORM}/bin/busybox) && \
+	(cd source/busybox && cp busybox \
+		../../../../initrd/${PLATFORM}/bin/busybox) && \
 	echo 'done.'
 
 
 syslinux: build-syslinux copy-syslinux
 
 clean-syslinux:
-	(cd syslinux && ${MAKE} clean)
+	(cd source/syslinux && ${MAKE} clean; true)
 
 build-syslinux: build-pv
-	@./scripts/logger syslinux 'cd syslinux && ${PMAKE} MAKEFLAGS='
+	@./scripts/logger syslinux 'cd source/syslinux && ${PMAKE} bios MAKEFLAGS='
 
 copy-syslinux:
 	@echo -n "Copying files for 'syslinux'... " && \
-	(cd syslinux && \
-		cp core/isolinux.bin ../../../images/x86/iso/boot/isolinux/isolinux.bin) && \
+	(cd source/syslinux && \
+		cp core/isolinux.bin ../../../../images/x86/iso/boot/isolinux/isolinux.bin) && \
 	echo 'done.'
 
 

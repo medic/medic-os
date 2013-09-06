@@ -1,0 +1,13 @@
+Only in busybox-1.21.1~/modutils: .depmod.c.swp
+diff -ur busybox-1.21.1~/modutils/depmod.c busybox-1.21.1/modutils/depmod.c
+--- busybox-1.21.1~/modutils/depmod.c	2013-05-11 16:30:43.000000000 -0700
++++ busybox-1.21.1/modutils/depmod.c	2013-09-05 20:23:22.324631002 -0700
+@@ -215,7 +215,7 @@
+ 			parse_module(*argv, /*sb (unused):*/ NULL, &modules, 0);
+ 		} while (*++argv);
+ 	} else {
+-		recursive_action(".", ACTION_RECURSE,
++		recursive_action(".", ACTION_RECURSE | ACTION_FOLLOWLINKS,
+ 				parse_module, NULL, &modules, 0);
+ 	}
+ 

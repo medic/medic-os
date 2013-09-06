@@ -172,7 +172,15 @@ convert-boot-logo:
 	done
 
 download:
-	@(cd source/medic-core && \
-	  ./scripts/retrieve-sources && \
-	  ./scripts/rearrange-sources && mv incoming/* source)
+	@./scripts/retrieve-sources core source/core/incoming && \
+	  (cd source/core && ./scripts/rearrange-sources) && \
+	./scripts/retrieve-sources medic-core source/medic-core/incoming && \
+	  (cd source/medic-core && ./scripts/rearrange-sources) && \
+	./scripts/retrieve-sources vm-tools source/vm-tools/incoming && \
+	  (cd source/vm-tools && ./scripts/rearrange-sources)
+
+move-downloaded:
+	@(cd source/core && mv incoming/* source) && \
+	(cd source/vm-tools && mv incoming/* source) && \
+	(cd source/medic-core && mv incoming/* source)
 
