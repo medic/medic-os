@@ -68,9 +68,9 @@ build-kernel: build-pv
 copy-kernel:
 	@cp source/linux/arch/x86/boot/bzImage \
 		"../../images/${PLATFORM}/iso/boot/kernel" && \
-	strip -o linux/vmlinux-stripped linux/vmlinux && \
+	strip -o source/linux/vmlinux-stripped source/linux/vmlinux && \
 	mkdir -p "../../images/${PLATFORM}/xen/boot" && \
-	gzip -c9 linux/vmlinux-stripped \
+	gzip -c9 source/linux/vmlinux-stripped \
 		> "../../images/${PLATFORM}/xen/boot/kernel"
 
 install-kernel-modules:
@@ -106,8 +106,8 @@ build-syslinux: build-pv
 
 copy-syslinux:
 	@echo -n "Copying files for 'syslinux'... " && \
-	(cd source/syslinux && \
-		cp core/isolinux.bin ../../../../images/x86/iso/boot/isolinux/isolinux.bin) && \
+	(cd source/syslinux && cp bios/core/isolinux.bin \
+	  ../../../../images/x86/iso/boot/isolinux/isolinux.bin) && \
 	echo 'done.'
 
 

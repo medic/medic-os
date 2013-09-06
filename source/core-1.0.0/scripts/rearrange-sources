@@ -16,6 +16,7 @@ apply_patches()
   (cd linux && patch -s -p1 < ../../patches/grsecurity-2.9.1-linux-3.8.13.diff) &&
   (cd linux && patch -s -p1 < ../../patches/linux-export-final_putname-3.7.5.diff) &&
   (cd linux && patch -s -p1 < ../../patches/linux-grsec-do_const-3.8.4.diff) &&
+  (cd linux && patch -s -p1 < ../../patches/linux-grsec-localversion-3.8.13.diff) &&
 	(cd busybox && patch -s -p1 < ../../patches/busybox-1.21.1-depmod.diff)
 }
 

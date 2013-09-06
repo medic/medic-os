@@ -10,7 +10,9 @@ rename()
   find . -type d -exec chmod 755 {} \; &&
     chown -R root:root . &&
   \
-  ln -s ../../medic-core/source/pv pv &&
+	for pkg in pv zlib; do
+    ln -s "../../medic-core/source/$pkg" "$pkg"
+	done &&
   \
   local version="`find_version open-vm-tools-*.tar.*`" &&
   local source="`find * -prune -type d -name 'open-vm-tools-*'`" &&

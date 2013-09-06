@@ -492,6 +492,11 @@ builder_setup_environment()
   builder_detect_system \
     || fatal 'Unsupported system; please edit Makefile'
 
+	if [ "$bits" -eq 64 ]; then
+	  (cd "$prefix" && rm -rf lib64 && mkdir -p lib && ln -s lib lib64) \
+	    || fatal 'Failed to create symbolic link for 64-bit libraries'
+	fi
+
   if [ "$parallel" ]; then
     export MAKE="$MAKE -j$parallel"
   fi
