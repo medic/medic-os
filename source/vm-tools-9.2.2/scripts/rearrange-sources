@@ -9,7 +9,9 @@ rename()
 {
   find . -type d -exec chmod 755 {} \; &&
     chown -R root:root . &&
-	\
+  \
+  ln -s ../../medic-core/source/pv pv &&
+  \
   local version="`find_version open-vm-tools-*.tar.*`" &&
   local source="`find * -prune -type d -name 'open-vm-tools-*'`" &&
   mv "$source" "open-vm-tools-$version"
