@@ -1,0 +1,116 @@
+#!/bin/sh
+
+self="`readlink -f "$0" || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
+
+trim()
+{
+  local str="$1"
+  echo "$str" | sed 's/^ \+//; s/^ \+//;'
+}
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 111
+}
+
+indent()
+{
+  while read line; do echo "  $line"; done
+}
+
+extract()
+{
+  for archive in "$@"; do
+
+    local type="`echo "$archive" | sed 's/.*\.//'`"
+
+    case "$type" in
+      bz2)
+        tar xjf "$archive" ;;
+      *gz)
+        tar xzf "$archive" ;;
+      xz)
+        tar xJf "$archive" ;;
+      *)
+        ;;
+    esac
+
+  done
+}
+
+main()
+{
+  local manifest_name="$1"
+	local target_directory="$2"
+
+	if [ $# -lt 2 -o -z "$manifest_name" ]; then
+    echo "Usage: $0 manifest_name target_directory" >&2
+		exit 111
+  fi
+
+	cd "$target_directory" \
+    || fatal "Unable to change to target directory '$target_directory'"
+
+  while read line; do
+
+    local name="`echo "$line" | cut -d, -f1`"
+    name="`basename "$name"`"
+
+    local url="`echo "$line" | cut -d, -f2`"
+    url="`trim "$url"`"
+
+    if [ -f "$name.downloaded" ]; then
+      echo "Skipping already-downloaded package '$name'" >&2
+      continue
+    fi
+
+    echo "Downloading source code for package '$name'... " >&2
+
+    if [[ "$url" = *.git ]]; then
+
+      git clone "$url" 2>&1 | indent
+
+      [ "${PIPESTATUS[0]}" -eq 0 ] \
+        || fatal "Error occurred while cloning repository '$name'"
+
+      echo -n 'git' > "$name.finished"
+
+    elif [[ "$url" = "npm "* ]]; then
+
+      sh -c "$url" 2>&1 | indent
+
+      [ "${PIPESTATUS[0]}" -eq 0 ] \
+        || fatal "Error occurred while retrieving module '$name'"
+
+      echo -n 'npm' > "$name.finished"
+
+    else
+
+      curl -L -O -# "`trim "$url"`" \
+        || fatal "Error occurred while downloading '$name'"
+
+			# Workaround for curl bug:
+			#   The final frame of the progress bar is emitted on a new
+			#   line when an FTP IRL is used; just erase it and continue.
+
+			if [ "`echo "$url" | cut -d: -f1`" = 'ftp' ]; then
+        echo -ne "\033[1K\r"
+			fi
+
+      (extract "`basename "$url"`" && echo -n 'curl' > "$name.finished") &
+
+    fi
+
+    touch "$name.downloaded"
+
+  done < "../../manifests/$manifest_name"
+
+  echo -n 'Waiting for decompression processes to complete... '
+  wait
+  echo 'done.'
+}
+
+main "$@"
+
