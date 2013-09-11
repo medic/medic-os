@@ -1,6 +1,5 @@
-# ~/.ashrc: Executed by SHells.
+# ~/.ashrc: Executed by Shells.
 #
-. /etc/init.d/tc-functions
 
 # Alias definitions.
 #

@@ -8,6 +8,10 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
+	# Update password in couchdb-lucene.ini
+	"$base/../setup/couchdb-lucene" &&
+	\
+	# Start couchdb-lucene
   exec su -c "exec '$PACKAGE_ROOT/java/bin/run'" couchdb-lucene \
     >> "$PACKAGE_STORAGE/couchdb-lucene/logs/startup.log" 2>&1
 }

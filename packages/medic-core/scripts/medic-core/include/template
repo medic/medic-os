@@ -1,0 +1,26 @@
+#!/bin/sh
+
+template()
+{
+  local src_path="$1"
+  local dst_path="$2"
+  shift 2
+
+  [ -f "$src_path" ] || return 11
+	[ $(($# % 2)) -eq 0 ] || return 111
+
+  local command=''
+
+  while [ "$#" -gt 0 ]; do
+
+    local name="$1"
+    local value="$2"
+
+    command="${command}s/{{$name}}/$value/g;"
+    shift 2
+  done
+
+  sed "$command" < "$src_path" > "$dst_path"
+  return 0
+}
+

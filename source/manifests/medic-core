@@ -21,7 +21,7 @@ libidn, http://ftp.gnu.org/gnu/libidn/libidn-1.27.tar.gz
 libusb, http://iweb.dl.sourceforge.net/project/libusb/libusb-1.0/libusb-1.0.9/libusb-1.0.9.tar.bz2
 libusb-compat, http://iweb.dl.sourceforge.net/project/libusb/libusb-compat-0.1/libusb-compat-0.1.5/libusb-compat-0.1.5.tar.bz2
 logrotate, https://fedorahosted.org/releases/l/o/logrotate/logrotate-3.8.5.tar.gz
-lrzip, http://ck.kolivas.org/apps/lrzip/lrzip-0.614.tar.bz2
+lrzip, http://ck.kolivas.org/apps/lrzip/lrzip-0.615.tar.bz2
 lzma, http://tukaani.org/lzma/lzma-4.32.7.tar.xz
 lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
 maven, http://mirrors.ibiblio.org/apache/maven/maven-3/3.0.5/source/apache-maven-3.0.5-src.tar.gz

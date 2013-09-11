@@ -15,17 +15,11 @@ create_self_signed_ssl_certificate()
     return 0
   fi
 
-  # Make sure we have enough entropy:
-  #   Feeding data from the pseudo-random device back in to
-  #   the truly-random device isn't really ideal, but it ensures
-  #   that we don't hang forever waiting for more randomness to
-  #   be collected. We should eventually use a better method here.
-
   local directory="`dirname "$path"`" &&
-  dd if=/dev/urandom of=/dev/random count=80 2>/dev/null &&
-  \
-  mkdir -p "$directory" &&
-  chown root:nobody "$directory" && chmod 600 "$directory" &&
+	\
+	mkdir -p "$directory" &&
+	chmod 600 "$directory" &&
+  chown root:nobody "$directory" &&
   \
   for i in "$country" "$state" "$locality" \
     "$organization" "$department" "$common_name" "$email"; do

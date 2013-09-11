@@ -105,7 +105,7 @@ build-initrd:
 	cp -a initrd/common/* "initrd/${PLATFORM}/" && \
 	(cd "initrd/${PLATFORM}" && \
 		find * | cpio -o -H newc 2>/dev/null \
-		  | sh ../../source/core/linux/scripts/xz_wrap.sh \
+		  | sh ../../source/core/source/linux/scripts/xz_wrap.sh \
 			> "../../images/${PLATFORM}/iso/boot/image.xz") && \
 	(cd "images/${PLATFORM}" && \
 		[ -d xen ] && cp -a "iso/boot/image.xz" "xen/boot/") && \
@@ -153,7 +153,7 @@ system-services-pkg:
 
 vm-tools-pkg:
 	@echo -n "Compressing package 'vm-tools'... " && \
-	scripts/build-package 'vm-tools' 9220 "${PLATFORM}" && \
+	scripts/build-package 'vm-tools' 9230 "${PLATFORM}" && \
 	echo 'done.'
 
 shrink-gardener:
@@ -172,15 +172,27 @@ convert-boot-logo:
 	done
 
 download:
-	@./scripts/retrieve-sources core source/core/incoming && \
+	@rm -f status/download.finished && \
+	./scripts/retrieve-sources core source/core/incoming && \
 	  (cd source/core && ./scripts/rearrange-sources) && \
 	./scripts/retrieve-sources medic-core source/medic-core/incoming && \
 	  (cd source/medic-core && ./scripts/rearrange-sources) && \
 	./scripts/retrieve-sources vm-tools source/vm-tools/incoming && \
-	  (cd source/vm-tools && ./scripts/rearrange-sources)
+	  (cd source/vm-tools && ./scripts/rearrange-sources) && \
+	touch status/download.finished
 
 move-downloaded:
-	@(cd source/core && mv incoming/* source) && \
+	@rm -f status/move.finished && \
+	(cd source/core && mv incoming/* source) && \
 	(cd source/vm-tools && mv incoming/* source) && \
-	(cd source/medic-core && mv incoming/* source)
+	(cd source/medic-core && mv incoming/* source) && \
+	touch status/move.finished
+
+delete-downloaded:
+	@rm -f status/* && \
+	for type in incoming source; do \
+	  for pkg in core vm-tools medic-core; do \
+	    (cd source && rm -rf "$$pkg/$$type"/*); \
+		done; \
+	done
 

@@ -28,13 +28,13 @@ export PATH LD_LIBRARY_PATH PS1 G_FILENAME_ENCODING ignoreeof
 umask 022
 
 if [ -f /etc/sysconfig/language ]; then
-. /etc/sysconfig/language
-export LANG LC_ALL
+  . /etc/sysconfig/language
+  export LANG LC_ALL
 fi
 
 if [ -f /etc/sysconfig/timezone ]; then
-. /etc/sysconfig/timezone
-export TZ
+  . /etc/sysconfig/timezone
+  export TZ
 fi
 
 for i in /etc/profile.d/*.sh ; do

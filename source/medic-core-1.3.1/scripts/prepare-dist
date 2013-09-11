@@ -47,6 +47,8 @@ fi
    ln -sf ../../../../../../storage/medic-core/couchdb/state var/run/couchdb &&
  rm -rf java/logs &&
    ln -sf ../../../../../storage/medic-core/couchdb-lucene/logs java/logs &&
+ rm -rf java/conf &&
+   ln -sf ../../../../../settings/medic-core/couchdb-lucene java/conf &&
  rm -rf java/indexes &&
    ln -sf ../../../../../storage/medic-core/couchdb-lucene/indexes java/indexes)
 

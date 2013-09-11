@@ -8,23 +8,27 @@ source "$base_dir/../medic-core/scripts/include/rearrange"
 rename()
 {
   find . -type d -exec chmod 755 {} \; &&
-    chown -R root:root .
+    chown -R root:root . &&
+  \
+	for pkg in pv zlib; do
+    ln -s "../../medic-core/source/$pkg" "$pkg"
+	done &&
+  \
+  local version="`find_version open-vm-tools-*.tar.*`" &&
+  local source="`find * -prune -type d -name 'open-vm-tools-*'`" &&
+  mv "$source" "open-vm-tools-$version"
 }
 
 apply_patches()
 {
-  (cd linux && patch -s -p1 < ../../patches/grsecurity-2.9.1-linux-3.8.13.diff) &&
-  (cd linux && patch -s -p1 < ../../patches/linux-export-final_putname-3.7.5.diff) &&
-  (cd linux && patch -s -p1 < ../../patches/linux-grsec-do_const-3.8.4.diff) &&
-  (cd linux && patch -s -p1 < ../../patches/linux-grsec-localversion-3.8.13.diff) &&
-	(cd busybox && patch -s -p1 < ../../patches/busybox-1.21.1-depmod.diff)
+  (cd procps && patch -s -p1 < ../../patches/procps-3.2.8-makefile-include.diff)
 }
 
-finished_path="$base_dir/../../status/core.finished"
+finished_path="$base_dir/../../status/vm-tools.finished"
 
 if [ -f "$finished_path" ]; then
-  echo "Tree already rearranged for collection 'core'; skipping" >&2
-	exit 0
+	echo "Tree already rearranged for collection 'vm-tools'; skipping" >&2
+  exit 0
 fi
 
 cd "$base_dir/incoming" &&

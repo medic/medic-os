@@ -89,17 +89,23 @@ fix_version()
   echo "$@" | sed 's/^\([0-9]\)\([0-9]\)_\?\([0-9]\+\)/\1.\2.\3/;'
 }
 
+finished_path="$base_dir/../../status/medic-core.finished"
+
+if [ -f "$finished_path" ]; then
+  echo "Tree already rearranged for collection 'medic-core'; skipping" >&2
+	exit 0
+fi
+
 cd "$base_dir/incoming" &&
 \
 echo -n "Renaming directories... " >&2 &&
   rename && echo 'done.' >&2 &&
-\
 echo -n "Removing compressed files... " >&2 &&
   remove && echo 'done.' >&2 &&
-\
 echo -n "Creating symbolic links... " >&2 &&
   symlink && echo 'done.' >&2 &&
-\
 echo -n "Applying patches... " >&2 &&
-  apply_patches && echo 'done.' >&2
+  apply_patches && echo 'done.' >&2 &&
+\
+touch "$finished_path"
 
