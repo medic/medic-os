@@ -49,13 +49,17 @@ build-dhcpcd: build-pv
 			SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
 
 clean-dhcpcd:
-	@(cd source/dhcpcd && ${QMAKE} clean)
+	@if [ -f source/dhcpcd ]; then \
+		(cd source/dhcpcd && ${QMAKE} clean); \
+	fi
 
 
 kernel: build-kernel copy-kernel install-kernel-modules
 
 clean-kernel:
-	(cd source/linux && ${MAKE} clean)
+	if [ -f source/linux ]; then \
+		(cd source/linux && ${MAKE} clean); \
+	fi
 
 build-kernel: build-pv
 	@(cd source/linux && \
@@ -82,7 +86,9 @@ install-kernel-modules:
 busybox: build-busybox copy-busybox
 
 clean-busybox:
-	(cd source/busybox && ${MAKE} clean)
+	@if [ -f source/busybox ]; then \
+		(cd source/busybox && ${MAKE} clean); \
+	fi
 
 build-busybox: build-pv
 	@(cd source/busybox && cp ../../../../busybox/dot-config-1.21.1 .config) && \
@@ -99,7 +105,9 @@ copy-busybox:
 syslinux: build-syslinux copy-syslinux
 
 clean-syslinux:
-	(cd source/syslinux && ${MAKE} clean; true)
+	@if [ -f source/syslinux ]; then \
+	  (cd source/syslinux && ${MAKE} clean); \
+	fi
 
 build-syslinux: build-pv
 	@./scripts/logger syslinux 'cd source/syslinux && ${PMAKE} bios MAKEFLAGS='

@@ -7,7 +7,11 @@ check_args()
 
 fix_modules()
 {
-  find 'source/open-vm-tools/modules/linux' \
+  if ! [ -d source/open-vm-tools/modules/linux ]; then
+    return 0
+	fi
+
+  find source/open-vm-tools/modules/linux \
     -type f -a -name Makefile.kernel | while read path; do
   
     (cd "`dirname "$path"`" &&

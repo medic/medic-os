@@ -106,7 +106,7 @@ main()
       [ "${PIPESTATUS[0]}" -eq 0 ] \
         || fatal "Error occurred while cloning repository '$name'"
 
-      echo -n 'git' > "$name.retrieved"
+      echo -n 'git' > "$name.finished"
 
     elif [[ "$url" = "npm "* ]]; then
 
@@ -115,7 +115,7 @@ main()
       [ "${PIPESTATUS[0]}" -eq 0 ] \
         || fatal "Error occurred while retrieving module '$name'"
 
-      echo -n 'npm' > "$name.retrieved"
+      echo -n 'npm' > "$name.finished"
 
     else
 

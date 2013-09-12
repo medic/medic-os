@@ -24,7 +24,7 @@ rename()
   done &&
   \
   for pkg in rebar nodelint gammu-json \
-	  node-gammu-json node-fs-ext garden_maker; do
+    node-gammu-json node-fs-ext garden_maker; do
     \
     mv "$pkg" "`echo "$pkg" | tr '_' '-'`-devel";
   done &&
@@ -75,8 +75,14 @@ apply_patches()
   (cd maven && patch -s -p1 < ../../patches/maven-preserve-destination.diff) &&
   (cd gammu && patch -s -p1 < ../../patches/gammu-disable-glib.diff) &&
   (cd gammu && patch -s -p1 < ../../patches/gammu-fix-files-backend.diff) &&
+  (cd garden-maker && patch -s -p1 < ../../patches/garden-maker-medic.diff) &&
   (cd icu && patch -s -p2 < ../../../patches/icu-libicudata-linkage.diff) &&
   (cd nodelint && patch -s -p1 < ../../patches/nodelint-install-script.diff)
+}
+
+update_garden_maker()
+{
+  (cd garden-maker && ./update.sh)
 }
 
 find_version()
@@ -93,7 +99,7 @@ finished_path="$base_dir/../../status/medic-core.finished"
 
 if [ -f "$finished_path" ]; then
   echo "Tree already rearranged for collection 'medic-core'; skipping" >&2
-	exit 0
+  exit 0
 fi
 
 cd "$base_dir/incoming" &&
@@ -106,6 +112,8 @@ echo -n "Creating symbolic links... " >&2 &&
   symlink && echo 'done.' >&2 &&
 echo -n "Applying patches... " >&2 &&
   apply_patches && echo 'done.' >&2 &&
+echo -n "Updating garden-maker: " >&2 &&
+  update_garden_maker &&
 \
 touch "$finished_path"
 
