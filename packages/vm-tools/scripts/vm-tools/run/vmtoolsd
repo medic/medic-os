@@ -25,7 +25,7 @@ start()
       >> "$PACKAGE_STORAGE/logs/ntpd.log" 2>&1
   fi
 
-  modprobe -a vmci vmblock vsock vmhgfs vmxnet &&
+  modprobe -a vmci vsock vmxnet vmhgfs &&
   \
   exec vmtoolsd \
     >> "$PACKAGE_STORAGE/logs/vmtoolsd.log" 2>&1

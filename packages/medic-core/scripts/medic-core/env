@@ -26,6 +26,7 @@ merge_environment()
   export PATH="$java_root/bin:$java_root/java/bin:$PATH"
 
   export GAMMU_SMS_DEVICES='/dev/ttyUSB? /dev/ttyACM? /dev/ttyHS?'
+  export CONCIERGE_PASSWD_PATH="$PACKAGE_STORAGE/../concierge/passwd"
 
   return 0
 }

@@ -1,0 +1,24 @@
+diff -urN open-vm-tools-9.2.3~/configure open-vm-tools-9.2.3/configure
+--- open-vm-tools-9.2.3~/configure	2013-04-17 15:15:27.000000000 -0700
++++ open-vm-tools-9.2.3/configure	2013-09-11 16:43:00.403725852 -0700
+@@ -22515,7 +22515,7 @@
+    # See if we need vmci and vsock modules. Starting with 3.9 they made
+    # their way into mainline kernel.
+    if test "$osVersion" -lt 309000; then
+-      MODULES="$MODULES vmci vsock"
++      MODULES="vmci vsock $MODULES"
+    fi
+    if test "$osVersion" -lt 300000; then
+       MODULES="$MODULES vmblock vmsync"
+diff -urN open-vm-tools-9.2.3~/configure.ac open-vm-tools-9.2.3/configure.ac
+--- open-vm-tools-9.2.3~/configure.ac	2013-09-11 16:42:24.623725853 -0700
++++ open-vm-tools-9.2.3/configure.ac	2013-09-11 16:43:15.371725852 -0700
+@@ -951,7 +951,7 @@
+    # See if we need vmci and vsock modules. Starting with 3.9 they made
+    # their way into mainline kernel.
+    if test "$osVersion" -lt 309000; then
+-      MODULES="$MODULES vmci vsock"
++      MODULES="vmci vsock $MODULES"
+    fi
+    if test "$osVersion" -lt 300000; then
+       MODULES="$MODULES vmblock vmsync"

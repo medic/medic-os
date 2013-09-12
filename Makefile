@@ -182,11 +182,12 @@ download:
 	touch status/download.finished
 
 move-downloaded:
-	@rm -f status/move.finished && \
-	(cd source/core && mv incoming/* source) && \
-	(cd source/vm-tools && mv incoming/* source) && \
-	(cd source/medic-core && mv incoming/* source) && \
-	touch status/move.finished
+	@if ! [ -f status/move.finished ]; then \
+	  (cd source/core && mv incoming/* source) && \
+	  (cd source/vm-tools && mv incoming/* source) && \
+	  (cd source/medic-core && mv incoming/* source) && \
+	  touch status/move.finished; \
+  fi
 
 delete-downloaded:
 	@rm -f status/* && \
