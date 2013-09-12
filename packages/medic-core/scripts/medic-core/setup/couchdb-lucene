@@ -10,7 +10,7 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-	local password="`cat "$CONCIERGE_PASSWD_PATH/system"` 2>/dev/null" \
+	local password="`cat "$CONCIERGE_PASSWD_PATH/system" 2>/dev/null`" \
     || return 0
 
   template "$PACKAGE_STORAGE/couchdb-lucene/templates/couchdb-lucene.ini" \
