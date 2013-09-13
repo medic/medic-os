@@ -18,6 +18,7 @@ inotify-tools, http://github.com/downloads/rvoicilas/inotify-tools/inotify-tools
 js, http://ftp.mozilla.org/pub/mozilla.org/js/js185-1.0.0.tar.gz
 libffi, http://mirrors.kernel.org/sources.redhat.com/libffi/libffi-3.0.13.tar.gz
 libidn, http://ftp.gnu.org/gnu/libidn/libidn-1.27.tar.gz
+libpcap, http://www.tcpdump.org/release/libpcap-1.4.0.tar.gz
 libusb, http://iweb.dl.sourceforge.net/project/libusb/libusb-1.0/libusb-1.0.9/libusb-1.0.9.tar.bz2
 libusb-compat, http://iweb.dl.sourceforge.net/project/libusb/libusb-compat-0.1/libusb-compat-0.1.5/libusb-compat-0.1.5.tar.bz2
 logrotate, https://fedorahosted.org/releases/l/o/logrotate/logrotate-3.8.5.tar.gz
@@ -42,6 +43,7 @@ readline, http://ftp.gnu.org/gnu/readline/readline-6.2.tar.gz
 rebar, https://github.com/basho/rebar.git
 rsync, http://rsync.samba.org/ftp/rsync/rsync-3.0.9.tar.gz
 strace, http://superb-dca2.dl.sourceforge.net/project/strace/strace/4.8/strace-4.8.tar.xz
+tcpdump, http://www.tcpdump.org/release/tcpdump-4.4.0.tar.gz
 usb-modeswitch, http://www.draisberghof.de/usb_modeswitch/usb-modeswitch-1.2.6.tar.bz2
 usb-modeswitch-data, http://www.draisberghof.de/usb_modeswitch/usb-modeswitch-data-20130610.tar.bz2
 usbutils, https://www.kernel.org/pub/linux/utils/usb/usbutils/usbutils-007.tar.xz

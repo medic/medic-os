@@ -51,7 +51,7 @@ finalize-all: finalize-initrd
 
 clean: clean-all
 
-clean-all: clean-core clean-vm-tools clean-medic-core
+clean-all: clean-core clean-vm-tools clean-medic-core clean-java
 
 
 core: build-core copy-core
@@ -127,11 +127,13 @@ copy-medic-core:
 			../../packages/medic-core/software/medic-core)
 	@echo 'done.'
 
-copy-java-template:
+copy-java-template: clean-java
 	@echo -n "Copying package template for 'java'... " && \
-	rm -rf ../packages/java/software && \
 	cp -a "../templates/java/${PLATFORM}/software" ../packages/java/software && \
 	echo 'done.'
+
+clean-java:
+	rm -rf ../packages/java/software
 
 set-pax-flags: copy-java-template
 	@echo -n "Setting executable flags... " && \

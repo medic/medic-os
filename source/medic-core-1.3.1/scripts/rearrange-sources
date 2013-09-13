@@ -112,7 +112,7 @@ echo -n "Creating symbolic links... " >&2 &&
   symlink && echo 'done.' >&2 &&
 echo -n "Applying patches... " >&2 &&
   apply_patches && echo 'done.' >&2 &&
-echo -n "Updating garden-maker: " >&2 &&
+echo "Updating garden-maker:" >&2 &&
   update_garden_maker &&
 \
 touch "$finished_path"

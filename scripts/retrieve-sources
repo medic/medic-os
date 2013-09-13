@@ -78,7 +78,6 @@ main()
 
 	local n='0'
 
-	echo >&2
 	echo "Retrieving $lines packages from collection '$manifest_name':" >&2
 
   while read line; do

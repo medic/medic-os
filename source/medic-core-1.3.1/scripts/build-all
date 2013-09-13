@@ -91,6 +91,9 @@ main()
 
   fi &&
   \
+  build_autoconf 'libpcap' "$stdarg" &&
+  build_autoconf 'tcpdump' "$stdarg --disable-smb" &&
+  \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
   build_autoconf 'popt' "$stdarg --enable-shared --disable-static" &&
   \
