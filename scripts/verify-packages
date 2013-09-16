@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
@@ -59,7 +59,7 @@ check_libraries()
     local file="`
       find "$pkg_base"/*/*/lib/lib* -prune \
         -name "lib$library*.so" -o -name "lib$library*.so.*" \
-	  2>/dev/null | head -n1
+    2>/dev/null | head -n1
     `"
     if ! [ -f "$file" ]; then
       warn "Unable to find library '$library' in package '$package'"

@@ -373,13 +373,14 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
         return _cb(null, _system_passwd, false);
       }
-      
+
+      /* Generate random 2048-bit password */
       crypto.randomBytes(256, function (_err, _data) {
         if (_err) {
           return _cb(_err);
         }
 
-        return _cb(null, _data.toString('base64'), true);
+        return _cb(null, _data.toString('hex'), true);
       });
     },
 

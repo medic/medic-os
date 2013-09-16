@@ -61,6 +61,8 @@ fi
     rm -f "$binary" && ln -sf "../libexec/git-core/$binary" "$binary";
   done)
 
+(cd "$prefix/sbin" && rm -f tcpdump.*)
+
 (cd "$prefix/lib/node_modules" &&
   rm -rf node-gyp)
 

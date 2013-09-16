@@ -70,14 +70,22 @@ symlink()
 
 apply_patches()
 {
-  (cd ant && patch -s -p1 < ../../patches/ant-disable-junit.diff) &&
-  (cd erlang && patch -s -p1 < ../../patches/erlang-r15-pcre-fix.diff) &&
-  (cd maven && patch -s -p1 < ../../patches/maven-preserve-destination.diff) &&
-  (cd gammu && patch -s -p1 < ../../patches/gammu-disable-glib.diff) &&
-  (cd gammu && patch -s -p1 < ../../patches/gammu-fix-files-backend.diff) &&
-  (cd garden-maker && patch -s -p1 < ../../patches/garden-maker-medic.diff) &&
-  (cd icu && patch -s -p2 < ../../../patches/icu-libicudata-linkage.diff) &&
-  (cd nodelint && patch -s -p1 < ../../patches/nodelint-install-script.diff)
+  (cd ant && patch -s -p1 \
+    < ../../patches/ant-disable-junit.diff) &&
+  (cd erlang && patch -s -p1 \
+    < ../../patches/erlang-r15-pcre-fix.diff) &&
+  (cd maven && patch -s -p1 \
+    < ../../patches/maven-preserve-destination.diff) &&
+  (cd gammu && patch -s -p1 \
+    < ../../patches/gammu-disable-glib.diff) &&
+  (cd gammu && patch -s -p1 \
+    < ../../patches/gammu-fix-files-backend.diff) &&
+  (cd garden-maker && \
+    patch -s -p1 < ../../patches/garden-maker-medic.diff) &&
+  (cd icu && patch -s -p2 \
+    < ../../../patches/icu-libicudata-linkage.diff) &&
+  (cd nodelint && patch -s -p1 \
+    < ../../patches/nodelint-install-script.diff)
 }
 
 update_garden_maker()

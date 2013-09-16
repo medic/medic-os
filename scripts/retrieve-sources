@@ -46,9 +46,9 @@ extract_if_necessary()
   local name="$2"
   local origin="$3"
 
-	if ! [ -f "$name.finished" ]; then
-	  (extract "`basename "$url"`" && echo -n "$origin" > "$name.finished") &
-	fi
+  if ! [ -f "$name.finished" ]; then
+    (extract "`basename "$url"`" && echo -n "$origin" > "$name.finished") &
+  fi
 
   return 0
 }
@@ -56,33 +56,33 @@ extract_if_necessary()
 main()
 {
   local manifest_name="$1"
-	local target_directory="$2"
+  local target_directory="$2"
 
-	if [ $# -lt 2 -o -z "$manifest_name" ]; then
+  if [ $# -lt 2 -o -z "$manifest_name" ]; then
     echo "Usage: $0 manifest_name target_directory" >&2
-		return 111
+    return 111
   fi
 
-	cd "$target_directory" \
+  cd "$target_directory" \
     || fatal "Unable to change to target directory '$target_directory'"
 
-	local manifest_path="../../manifests/$manifest_name"
+  local manifest_path="../../manifests/$manifest_name"
 
-	local lines="`wc -l "$manifest_path" | cut -d' ' -f1`" \
+  local lines="`wc -l "$manifest_path" | cut -d' ' -f1`" \
     || fatal "Unable to read manifest file 'manifests/$manifest_name'"
 
-	if [ -f "$base_dir/status/$manifest_name.retrieved" ]; then
+  if [ -f "$base_dir/status/$manifest_name.retrieved" ]; then
     echo "Collection '$manifest_name' is already downloaded; skipping" >&2
-		return 0
-	fi
+    return 0
+  fi
 
-	local n='0'
+  local n='0'
 
-	echo "Retrieving $lines packages from collection '$manifest_name':" >&2
+  echo "Retrieving $lines packages from collection '$manifest_name':" >&2
 
   while read line; do
 
-		local n="$[$n + 1]"
+    local n="$[$n + 1]"
 
     local name="`echo "$line" | cut -d, -f1`"
     name="`basename "$name"`"
@@ -92,11 +92,11 @@ main()
 
     if [ -f "$name.downloaded" ]; then
       echo "[$n/$lines] Skipping already-downloaded package '$name'" >&2
-			extract_if_necessary "$url" "$name" 'curl'
+      extract_if_necessary "$url" "$name" 'curl'
       continue
     fi
 
-		echo "[$n/$lines] Downloading source code for package '$name'... " >&2
+    echo "[$n/$lines] Downloading source code for package '$name'... " >&2
 
     if [[ "$url" = *.git ]]; then
 
@@ -121,15 +121,15 @@ main()
       curl -L -O -# "`trim "$url"`" \
         || fatal "Error occurred while downloading '$name'"
 
-			# Workaround for curl bug:
-			#   The final frame of the progress bar is emitted on a new
-			#   line when an FTP IRL is used; just erase it and continue.
+      # Workaround for curl bug:
+      #   The final frame of the progress bar is emitted on a new
+      #   line when an FTP IRL is used; just erase it and continue.
 
-			if [ "`echo "$url" | cut -d: -f1`" = 'ftp' ]; then
+      if [ "`echo "$url" | cut -d: -f1`" = 'ftp' ]; then
         echo -ne "\033[1K\r"
-			fi
+      fi
 
-			extract_if_necessary "$url" "$name" 'curl'
+      extract_if_necessary "$url" "$name" 'curl'
     fi
 
     touch "$name.downloaded"
@@ -138,8 +138,8 @@ main()
 
   echo -n 'Waiting for decompression processes to complete... ' >&2
   wait
-	
-	touch "$base_dir/status/$manifest_name.retrieved"
+  
+  touch "$base_dir/status/$manifest_name.retrieved"
   echo 'done.' >&2
 }
 

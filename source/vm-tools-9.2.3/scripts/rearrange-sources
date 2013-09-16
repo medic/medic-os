@@ -10,9 +10,9 @@ rename()
   find . -type d -exec chmod 755 {} \; &&
     chown -R root:root . &&
   \
-	for pkg in pv zlib; do
+  for pkg in pv zlib; do
     ln -s "../../medic-core/source/$pkg" "$pkg"
-	done &&
+  done &&
   \
   local version="`find_version open-vm-tools-*.tar.*`" &&
   local source="`find * -prune -type d -name 'open-vm-tools-*'`" &&
@@ -21,13 +21,16 @@ rename()
 
 apply_patches()
 {
-  (cd procps && patch -s -p1 < ../../patches/procps-3.2.8-makefile-include.diff)
+  (cd procps && patch -s -p1 \
+    < ../../patches/procps-3.2.8-makefile-include.diff) &&
+  (cd open-vm-tools && patch -s -p1 \
+    < ../../patches/open-vm-tools-9.2.3-module-build-order.diff)
 }
 
 finished_path="$base_dir/../../status/vm-tools.finished"
 
 if [ -f "$finished_path" ]; then
-	echo "Tree already rearranged for collection 'vm-tools'; skipping" >&2
+  echo "Tree already rearranged for collection 'vm-tools'; skipping" >&2
   exit 0
 fi
 
