@@ -15,6 +15,11 @@ fatal()
   exit 111
 }
 
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
 indent()
 {
   while read line; do echo "  $line"; done
@@ -37,7 +42,14 @@ extract()
         ;;
     esac
 
+    if [ "$?" -ne 0 ]; then
+      warn "Failed to extracting source code from '$archive'"
+      return "$?"
+    fi
+
   done
+
+  return 0
 }
 
 extract_if_necessary()
@@ -138,7 +150,7 @@ main()
 
   echo -n 'Waiting for decompression processes to complete... ' >&2
   wait
-  
+
   touch "$base_dir/status/$manifest_name.retrieved"
   echo 'done.' >&2
 }

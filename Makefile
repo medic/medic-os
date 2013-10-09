@@ -33,11 +33,6 @@ distclean: clean
 		"images/${PLATFORM}/iso/packages"/* && \
 	(cd source && ${MAKE} clean)
 
-clean-iso:
-	rm -f "images/${PLATFORM}/iso/packages"/*.vpkg \
-		"images/${PLATFORM}/iso/boot/image.gz" \
-		"images/${PLATFORM}/iso/boot/kernel"
-
 build-iso: verify-packages build-initrd
 	@echo -n 'Creating ISO image... ' && \
 	cd "images/${PLATFORM}/iso" && mkisofs -J -R \

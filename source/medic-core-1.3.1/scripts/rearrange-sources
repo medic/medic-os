@@ -90,7 +90,13 @@ apply_patches()
 
 update_garden_maker()
 {
-  (cd garden-maker && ./update.sh)
+  for i in `seq 1 5`; do
+    (cd garden-maker && ./update.sh) && return 0
+    echo 'Failure while updating garden-maker; retrying...' >&2
+  done
+
+  echo 'Too many failures while updating garden-maker; aborting' >&2
+  return "$?"
 }
 
 find_version()
