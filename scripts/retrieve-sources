@@ -130,7 +130,7 @@ main()
 
     else
 
-      curl -L -O -# "`trim "$url"`" \
+      curl -f -L -O -# "`trim "$url"`" \
         || fatal "Error occurred while downloading '$name'"
 
       # Workaround for curl bug:

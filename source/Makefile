@@ -110,7 +110,7 @@ copy-vm-tools:
 medic-core: build-medic-core copy-medic-core
 
 clean-medic-core:
-	rm -rf /srv/software/medic-core && (cd medic-core && ${MAKE} clean)
+	@rm -rf /srv/software/medic-core && (cd medic-core && ${MAKE} clean)
 
 build-medic-core:
 	@(cd medic-core && ${QMAKE} all gardenize \
@@ -133,7 +133,7 @@ copy-java-template: clean-java
 	echo 'done.'
 
 clean-java:
-	rm -rf ../packages/java/software
+	@rm -rf ../packages/java/software
 
 set-pax-flags: copy-java-template
 	@echo -n "Setting executable flags... " && \

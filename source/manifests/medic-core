@@ -3,7 +3,7 @@ attr, http://download.savannah.gnu.org/releases/attr/attr-2.4.47.src.tar.gz
 ant, http://archive.apache.org/dist/ant/source/apache-ant-1.9.1-src.tar.gz
 bladox-tools, https://scri.pt/get/source/bladox-tools-1.5.24.tar.xz
 bzip2, http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
-couchdb, http://mirrors.ibiblio.org/apache/couchdb/source/1.3.1/apache-couchdb-1.3.1.tar.gz
+couchdb, http://mirrors.ibiblio.org/apache/couchdb/source/1.4.0/apache-couchdb-1.4.0.tar.gz
 couchdb-lucene, https://scri.pt/get/source/couchdb-lucene-0.8.0.tar.gz
 curl, http://curl.haxx.se/download/curl-7.31.0.tar.bz2
 diffutils, http://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz

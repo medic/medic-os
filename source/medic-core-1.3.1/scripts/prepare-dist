@@ -22,8 +22,9 @@ fi
     logs html share/info share/emacs etc/ssh_host* libexec/ssh-keysign)
 
 (cd "$prefix/lib/erlang/lib" && mkdir -p .save &&
-  mv crypto-* compiler-* inets-* kernel-* os_mon-* public_key-* sasl-* \
-    ssl-* stdlib-* tools-* .save && rm -rf * && mv .save/* . && rmdir .save)
+  mv asn1-* crypto-* compiler-* inets-* kernel-* \
+    os_mon-* public_key-* sasl-* ssl-* stdlib-* tools-* .save &&
+      rm -rf * && mv .save/* . && rmdir .save)
 
 (cd "$prefix/java/lib" && 
   rm -f vorbis-java-*.jar poi-*.jar xmlbeans-*.jar dom4j-*.jar \
