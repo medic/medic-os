@@ -212,10 +212,15 @@ main()
     build_npm_remote 'node-gyp' "$prefix"
   fi &&
   \
+  build_npm_remote 'async' "$prefix" &&
+  build_npm_remote 'express' "$prefix" &&
   build_npm_remote 'kanso' "$prefix" &&
+  build_npm_remote 'lazy' "$prefix" &&
+  build_npm_remote 'request' "$prefix" &&
+  \
+  build_npm_local 'kujua-transport' "$prefix" &&
   build_npm_local 'node-fs-ext' "$prefix" &&
   build_npm_local 'node-gammu-json' "$prefix" &&
-  build_npm_local 'kujua-transport' "$prefix" &&
   \
   build_ant 'ant' "$prefix" &&
   build_maven 'maven' "$prefix" &&

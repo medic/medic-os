@@ -1,0 +1,19 @@
+#!/bin/sh
+
+install()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/env" &&
+  merge_environment /srv || return 255
+
+  chown root:gammu "$PACKAGE_STORAGE/logs" &&
+  chmod 0775 "$PACKAGE_STORAGE/logs"
+
+  return "$?"
+}
+
+install "$@"
+exit "$?"
+

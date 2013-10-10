@@ -25,16 +25,10 @@ start()
   local passwd_file="$PACKAGE_STORAGE/../concierge/passwd/system" &&
   wait_for_passwd_file "$passwd_file" &&
   \
-  local data="$PACKAGE_STORAGE/data" &&
   local logs="$PACKAGE_STORAGE/logs" &&
-  local url="http://service@localhost:5984" &&
+  local kujua_transport_cmd="node '$PACKAGE_ROOT/kujua-transport.js'" &&
   \
-  local gardener="$PACKAGE_ROOT/bin/gardener" &&
-  local gardener_opts='--stdinpass=true --dashboard=dashboard' &&
-  local gardener_args="'$url' $gardener_opts --logdir='$logs'" &&
-  local gardener_cmd="'`which node`' '$gardener' $gardener_args" &&
-  \
-  exec nohup su -c "cd '$data' && exec $gardener_cmd" gardener \
+  exec nohup su -c "exec $kujua_transport_cmd service -" gammu \
     < "$passwd_file" >> "$logs/startup.log" 2>&1
 }
 

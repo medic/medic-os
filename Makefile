@@ -3,7 +3,7 @@ MAKE ?= make
 PLATFORM ?= x86
 QMAKE := ${MAKE} --no-print-directory
 
-MEDIC_CORE_VERSION := 1.3.1
+MEDIC_CORE_VERSION := 1.4.0
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
 all: packages build-iso build-xen-image build-ami-image compress-xen-image build-x86-image-nopae
@@ -157,6 +157,11 @@ shrink-gardener:
 gardener-pkg: shrink-gardener
 	@echo -n "Compressing package 'gardener'... " && \
 	scripts/build-package 'gardener' 1003 "${PLATFORM}" && \
+	echo 'done.'
+
+kujua-transport-pkg:
+	@echo -n "Compressing package 'kujua-transport'... " && \
+	scripts/build-package 'kujua-transport' 1000 "${PLATFORM}" && \
 	echo 'done.'
 
 convert-boot-logo:
