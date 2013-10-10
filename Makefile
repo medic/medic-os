@@ -18,7 +18,7 @@ compile:
 copy:
 	@(cd source && ${QMAKE} copy)
 
-packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg
+packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg kujua-transport-pkg
 
 clean:
 	rm -rf output/* && \

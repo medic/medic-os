@@ -219,6 +219,7 @@ main()
   build_npm_remote 'kanso' "$prefix" &&
   build_npm_remote 'lazy' "$prefix" &&
   build_npm_remote 'request' "$prefix" &&
+  build_npm_remote 'hbs' "$prefix" &&
   \
   build_npm_local 'kujua-transport' "$prefix" &&
   build_npm_local 'node-fs-ext' "$prefix" &&
