@@ -114,8 +114,10 @@ build-syslinux: build-pv
 
 copy-syslinux:
 	@echo -n "Copying files for 'syslinux'... " && \
-	(cd source/syslinux && cp bios/core/isolinux.bin \
-	  ../../../../images/x86/iso/boot/isolinux/isolinux.bin) && \
+	(cd source/syslinux &&
+	  cp bios/core/isolinux.bin \
+            bios/com32/elflink/ldlinux/ldlinux.c32 \
+	      "../../../../images/${PLATFORM}/iso/boot/isolinux/") && \
 	echo 'done.'
 
 
