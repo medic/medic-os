@@ -171,9 +171,11 @@ main()
   supervisor_reset \
     || fatal "Failed to reset supervisor status information"
 
-  for pkg in system-services vm-tools medic-core concierge gardener; do
-    supervisor_start "$pkg" \
-      || fatal "Failed to start required network service '$pkg'"
+  for dir in /srv/scripts/*; do
+    if [ -f "$dir/start" ]; then
+      supervisor_start "`basename "$dir"`" \
+        || fatal "Failed to start required network service '$pkg'"
+    fi
   done
 
   display_centered 'Releasing startup disk...'
