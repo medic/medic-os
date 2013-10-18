@@ -85,7 +85,9 @@ apply_patches()
   (cd icu && patch -s -p2 \
     < ../../../patches/icu-libicudata-linkage.diff) &&
   (cd nodelint && patch -s -p1 \
-    < ../../patches/nodelint-install-script.diff)
+    < ../../patches/nodelint-install-script.diff) &&
+  (cd inotify-tools && patch -s -p1 \
+    < ../../patches/inotify-tools-include.diff)
 }
 
 update_garden_maker()
