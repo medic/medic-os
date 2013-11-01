@@ -87,7 +87,9 @@ apply_patches()
   (cd nodelint && patch -s -p1 \
     < ../../patches/nodelint-install-script.diff) &&
   (cd inotify-tools && patch -s -p1 \
-    < ../../patches/inotify-tools-include.diff)
+    < ../../patches/inotify-tools-include.diff) &&
+  (cd couchdb && patch -s -p1 \
+    < ../../patches/couchdb-fix-user-properties.diff)
 }
 
 update_garden_maker()
