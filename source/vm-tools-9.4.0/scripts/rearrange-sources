@@ -26,7 +26,9 @@ apply_patches()
   (cd open-vm-tools && patch -s -p1 \
     < ../../patches/open-vm-tools-9.2.2-configure-cflags.diff) &&
   (cd open-vm-tools && patch -s -p1 \
-    < ../../patches/open-vm-tools-9.4.0-linux-3.10.diff)
+    < ../../patches/open-vm-tools-9.4.0-linux-3.10.diff) &&
+  (cd open-vm-tools && patch -s -p1 \
+    < ../../patches/open-vm-tools-9.4.0-depmod-base-path.diff)
 }
 
 finished_path="$base_dir/../../status/vm-tools.finished"
