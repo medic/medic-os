@@ -21,7 +21,7 @@ copy-all: copy-syslinux copy-kernel copy-busybox
 clean: clean-all
 
 clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-busybox
-	rm -f logs/*
+	rm -f logs/*/*
 
 
 pv: build-pv
@@ -37,7 +37,7 @@ build-pv:
 dhcpcd: build-dhcpcd
 
 build-dhcpcd: build-pv
-	@./scripts/logger dhcpcd \
+	@./scripts/logger 'dhcpcd' '${PLATFORM}' \
 		'cd source/dhcpcd && \
 		./configure --libexecdir=/lib/dhcpcd \
 			--dbdir=/run/dhcpcd --sysconfdir=/etc && \
@@ -66,7 +66,7 @@ build-kernel: build-pv
 		cp ../../../../kernel/common/boot-logo/logo-medic.ppm \
 			./drivers/video/logo/logo_linux_clut224.ppm && \
 		cp -H "${KERNEL_CONFIG}${KERNEL_EXTRA}" .config) && \
-		./scripts/logger linux \
+		./scripts/logger 'linux' '${PLATFORM}' \
 			'cd source/linux && ${PMAKE} bzImage && ${PMAKE} modules'
 
 copy-kernel:
@@ -92,7 +92,8 @@ clean-busybox:
 
 build-busybox: build-pv
 	@(cd source/busybox && cp ../../../../busybox/dot-config-1.21.1 .config) && \
-	./scripts/logger busybox 'cd source/busybox && ${PMAKE}'
+	./scripts/logger 'busybox' '${PLATFORM}' \
+		'cd source/busybox && ${PMAKE}'
 
 copy-busybox:
 	@echo -n "Copying files for 'busybox'... " && \
@@ -110,22 +111,25 @@ clean-syslinux:
 	fi
 
 build-syslinux: build-pv
-	@./scripts/logger syslinux 'cd source/syslinux && ${PMAKE} bios MAKEFLAGS='
+	@./scripts/logger 'syslinux' '${PLATFORM}' \
+		'cd source/syslinux && ${PMAKE} bios MAKEFLAGS='
 
 copy-syslinux:
 	@echo -n "Copying files for 'syslinux'... " && \
 	(cd source/syslinux && \
 	  cp bios/core/isolinux.bin \
-            bios/com32/elflink/ldlinux/ldlinux.c32 \
-	      "../../../../images/${PLATFORM}/iso/boot/isolinux/") && \
+			bios/com32/elflink/ldlinux/ldlinux.c32 \
+		  "../../../../images/${PLATFORM}/iso/boot/isolinux/") && \
 	echo 'done.'
 
 
 stats: recalculate-stats
 
 recalculate-stats:
-	for file in logs/*"-$(TS).log"; do \
-		wc -l < "$$file" \
-			> "stats/`basename "$$file" .log | sed 's/-$(TS)//g;'`.count"; \
+	for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
+		stats_file="stats/${PLATFORM}/` \
+			basename "$$file" .log | sed 's/-${TS}//g;' \
+		`.count" && \
+		wc -l < "$$file" > "$$stats_file"; \
 	done
 

@@ -3,19 +3,22 @@
 load_timestamp()
 {
   local path="$1"
-  local directory="`dirname "$path"`"
+  local platform="$2"
+
+  local timestamp_dir="`dirname "$path"`"
+  local timestamp_path="$timestamp_dir/logs/$platform/timestamp"
 
   if [ "$timestamp" ]; then
     return 0
   fi
 
-  if [ -f "$directory/logs/timestamp" ]; then
-    timestamp="`cat "$directory/logs/timestamp" 2>/dev/null`"
+  if [ -f "$timestamp_path" ]; then
+    timestamp="`cat "$timestamp_path" 2>/dev/null`"
   fi
 
   if [ -z "$timestamp" ]; then
     timestamp="`date +%Y%m%d-%H%M%S`"
-    echo -n "$timestamp" > "$directory/logs/timestamp"
+    echo -n "$timestamp" > "$timestamp_path"
   fi
 
   if [ -z "$timestamp" ]; then
@@ -28,13 +31,17 @@ load_timestamp()
 logger()
 {
   local name="$1"
+  local platform="$2"
+
   local path="`readlink -f "$1"`"
   local directory="`dirname "$name"`" # Defaults to '.'
 
   local line=0
   local lines_denominator=''
   local safe_name="`echo "$name" | sed 's/\//-/g;' 2>/dev/null`"
-  local expected_lines="`cat "$directory/stats/$safe_name.count" 2>/dev/null`"
+
+  local stats_path="$directory/stats/$platform/$safe_name.count"
+  local expected_lines="`cat "$stats_path" 2>/dev/null`"
 
   if [ -z "$expected_lines" ]; then
     expected_lines=0
@@ -42,6 +49,10 @@ logger()
     lines_denominator=" of $expected_lines"
   fi
 
+  local output_dir="$directory/logs/$platform"
+  local output_path="$output_dir/$safe_name-$timestamp.log"
+
+  mkdir -p "$output_dir"
   pv -h &>/dev/null
 
   if [ $? -eq 0 ]; then
@@ -50,10 +61,10 @@ logger()
       if [ "$line" -le "$expected_lines" ]; then
         echo "$x"
       else
-        echo "$x" >> "$directory/logs/$safe_name-$timestamp.log"
+        echo "$x" >> "$output_path"
       fi
     done | pv -petl -i 0.5 -N "$safe_name" -s "$expected_lines" \
-      > "$directory/logs/$safe_name-$timestamp.log"
+      > "$output_path"
 
     local date="at `date +'%I:%M:%S%P'`"
     printf "\033[1A\r\033[K\r%9s: %s %s\n" \
@@ -61,7 +72,7 @@ logger()
   else
     while read i; do
       line=$[$line + 1]
-      echo "$i" >> "$directory/logs/$safe_name-$timestamp.log"
+      echo "$i" >> "$output_path"
       printf '\r%9s: %s; %s' "$name" \
         'Estimate not yet available' \
         "$line$lines_denominator lines processed... " >&2
