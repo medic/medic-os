@@ -1,4 +1,4 @@
-linux, https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.8.13.tar.xz
+linux, https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.10.17.tar.xz
 busybox, http://www.busybox.net/downloads/busybox-1.21.1.tar.bz2
 dhcpcd, http://roy.marples.name/downloads/dhcpcd/dhcpcd-6.0.5.tar.bz2
 syslinux, https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.01.tar.xz

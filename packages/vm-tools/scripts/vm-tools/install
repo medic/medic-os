@@ -14,8 +14,8 @@ install()
     rm -f default && ln -sf "$platform" default) &&
   \
   (cd "$PACKAGE_ROOT/../../" &&
-    rm -f v9.2 && ln -sf v9.2.3 v9.2 &&
-    rm -f current && ln -sf v9.2.3 current)
+    rm -f v9.4 && ln -sf v9.4.0 v9.4 &&
+    rm -f current && ln -sf v9.4.0 current)
 
   return "$?"
 }

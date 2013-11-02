@@ -4,7 +4,7 @@ merge_environment()
 {
   local name='vm-tools'
 
-  local version='9.2.3'
+  local version='9.4.0'
   local platform="`cat /etc/platform`"
 
   local prefix="$1"

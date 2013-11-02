@@ -4,7 +4,7 @@ PARALLEL ?= 16
 PLATFORM ?= x86
 
 JAVA_VERSION := 1.7.25
-VM_TOOLS_VERSION := 9.2.3
+VM_TOOLS_VERSION := 9.4.0
 MEDIC_CORE_VERSION := 1.4.0
 
 VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
@@ -24,7 +24,7 @@ QMAKE := ${MAKE} --no-print-directory
 
 CFLAGS += -Os -fstack-protector-all
 
-KERNEL_VERSION := 3.8.13
+KERNEL_VERSION := 3.10.17
 KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}")
 
 
