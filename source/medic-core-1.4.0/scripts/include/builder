@@ -2,7 +2,7 @@
 
 log()
 {
-  logger "$1" "$platform"
+  logger "$1" "$original_platform"
 }
 
 disable_parallelism()

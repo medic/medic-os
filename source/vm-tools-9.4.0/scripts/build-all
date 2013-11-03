@@ -29,6 +29,7 @@ main()
   #  These are used by `builder_setup_environment` to set
   #  environment variables and compilation flags appropriately.
 
+  original_platform="$platform"
   bits="`builder_platform_to_bits "$platform" "$bits"`"
   architecture="`builder_platform_to_architecture "$platform" "$bits"`"
 
