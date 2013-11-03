@@ -1,5 +1,5 @@
 
-unexport PLATFORM
+PLATFORM ?= x86
 
 all:
 	@mkdir -p '${ROOT}' && \
