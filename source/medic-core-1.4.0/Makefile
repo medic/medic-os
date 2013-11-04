@@ -15,7 +15,7 @@ gardenize:
 	@./scripts/gardenize-couchdb '${ROOT}'
 
 clean-logs:
-	rm -f logs/*.log
+	rm -f logs/*/*.log
 
 clean: clean-logs
 	./scripts/clean-all; \

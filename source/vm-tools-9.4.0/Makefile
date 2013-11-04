@@ -8,7 +8,7 @@ all:
 		'${PARALLEL}' '${KERNEL_VERSION}' '${KERNEL_MODULE_PATH}'
 
 clean-logs:
-	rm -f logs/*.log
+	rm -f logs/*/*.log
 
 clean: clean-logs
 	./scripts/clean-all
