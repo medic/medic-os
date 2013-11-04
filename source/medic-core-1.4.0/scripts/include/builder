@@ -484,13 +484,12 @@ builder_setup_environment()
     echo -n 0 > "$run_status_file"
   fi
 
-  #export MAKE='gmake'
-  #export GNUMAKE='gmake'
+  unset PLATFORM
 
   export CC='gcc'
   export CXX='g++'
-  export MAKE='make'
-  export GNUMAKE='make'
+  export MAKE='gmake'
+  export GNUMAKE='gmake'
   export PATH="$prefix/bin:$PATH"
   export LD_LIBRARY_PATH="$prefix/lib:$LD_LIBRARY_PATH"
   export DYLD_LIBRARY_PATH="$prefix/lib:$DYLD_LIBRARY_PATH"
