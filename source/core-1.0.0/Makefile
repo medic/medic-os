@@ -57,8 +57,8 @@ clean-dhcpcd:
 kernel: build-kernel copy-kernel install-kernel-modules
 
 clean-kernel:
-	if [ -f source/linux ]; then \
-		(cd source/linux && ${MAKE} clean); \
+	@if [ -f source/linux ]; then \
+		(cd source/linux && ${QMAKE} mrproper); \
 	fi
 
 build-kernel: build-pv
@@ -67,7 +67,8 @@ build-kernel: build-pv
 			./drivers/video/logo/logo_linux_clut224.ppm && \
 		cp -H "${KERNEL_CONFIG}${KERNEL_EXTRA}" .config) && \
 		./scripts/logger 'linux' '${PLATFORM}' \
-			'cd source/linux && ${PMAKE} bzImage && ${PMAKE} modules'
+			'unset MAKEFLAGS && cd source/linux && \
+			   ${PMAKE} bzImage && ${PMAKE} modules'
 
 copy-kernel:
 	@cp source/linux/arch/x86/boot/bzImage \

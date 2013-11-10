@@ -374,9 +374,9 @@ fix_libtool()
 
 builder_initialize()
 {
-  run_status_file="`tempfile`"
-  last_pkg_file="`tempfile`"
-  last_version_file="`tempfile`"
+  last_pkg_file="`mktemp`"
+  run_status_file="`mktemp`"
+  last_version_file="`mktemp`"
 
   trap builder_cleanup EXIT
 }
