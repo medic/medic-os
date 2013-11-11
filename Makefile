@@ -24,7 +24,8 @@ clean:
 	rm -rf output/* && \
 	rm -rf staging/packages && \
 	rm -rf packages/vm-tools/software && \
-	rm -rf packages/medic-core/software
+	rm -rf packages/medic-core/software && \
+	rm -rf "images/${PLATFORM}/iso/packages"/*
 
 distclean: clean
 	rm -rf "initrd/${PLATFORM}/lib/modules/"* && \
