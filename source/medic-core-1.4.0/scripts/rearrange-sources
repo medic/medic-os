@@ -89,7 +89,9 @@ apply_patches()
   (cd inotify-tools && patch -s -p1 \
     < ../../patches/inotify-tools-include.diff) &&
   (cd couchdb && patch -s -p1 \
-    < ../../patches/couchdb-fix-user-properties.diff)
+    < ../../patches/couchdb-fix-user-properties.diff) &&
+  (cd js && patch -s -p1 \
+    < ../../../../patches/js-fix-makefile-loop.diff)
 }
 
 update_garden_maker()
