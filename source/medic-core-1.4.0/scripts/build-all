@@ -68,8 +68,21 @@ main()
   build_autoconf 'libusb-compat' \
     "$stdarg --enable-static=no --enable-shared=yes" &&
   \
+  build_autoconf 'libpcap' "$stdarg" &&
+  build_autoconf 'tcpdump' "$stdarg --disable-smb" &&
+  \
+  build_autoconf 'ncurses' "$stdarg --with-shared" &&
+  build_autoconf 'popt' "$stdarg --enable-shared --disable-static" &&
+  \
   if [ "$build_platform" = 'linux-elf' ]; then
 
+    build_make_install 'libutempter' "$prefix" \
+      "DESTDIR=\"$prefix\" libdir=/lib \
+        libexecdir=/lib includedir=/include mandir=/man" &&
+    \
+    builder_remove_static_libraries 'utempter' &&
+    \
+    build_autoconf 'screen' "$stdarg" &&
     build_autoconf 'strace' "$stdarg" &&
     build_autoconf 'usbutils' "$stdarg" &&
     \
@@ -93,12 +106,6 @@ main()
     build_make_install 'paxctl' "$prefix" "DESTDIR=\"$prefix\""
 
   fi &&
-  \
-  build_autoconf 'libpcap' "$stdarg" &&
-  build_autoconf 'tcpdump' "$stdarg --disable-smb" &&
-  \
-  build_autoconf 'ncurses' "$stdarg --with-shared" &&
-  build_autoconf 'popt' "$stdarg --enable-shared --disable-static" &&
   \
   if [ "$bits" -eq 32 ]; then
     build_make_install 'bladox-tools' "$prefix" "PREFIX=\"$prefix\""

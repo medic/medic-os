@@ -22,6 +22,7 @@ libidn, http://ftp.gnu.org/gnu/libidn/libidn-1.27.tar.gz
 libpcap, http://www.tcpdump.org/release/libpcap-1.4.0.tar.gz
 libusb, http://iweb.dl.sourceforge.net/project/libusb/libusb-1.0/libusb-1.0.9/libusb-1.0.9.tar.bz2
 libusb-compat, http://iweb.dl.sourceforge.net/project/libusb/libusb-compat-0.1/libusb-compat-0.1.5/libusb-compat-0.1.5.tar.bz2
+libutempter, http://ftp.altlinux.org/pub/people/ldv/utempter/libutempter-1.1.6.tar.bz2
 logrotate, https://fedorahosted.org/releases/l/o/logrotate/logrotate-3.8.5.tar.gz
 lrzip, http://ck.kolivas.org/apps/lrzip/lrzip-0.615.tar.bz2
 lzma, http://tukaani.org/lzma/lzma-4.32.7.tar.xz
@@ -43,6 +44,7 @@ pv, http://www.ivarch.com/programs/sources/pv-1.4.6.tar.bz2
 readline, http://ftp.gnu.org/gnu/readline/readline-6.2.tar.gz
 rebar, https://github.com/basho/rebar.git
 rsync, http://rsync.samba.org/ftp/rsync/src/rsync-3.0.9.tar.gz
+screen, http://ftp.gnu.org/gnu/screen/screen-4.0.3.tar.gz
 strace, http://superb-dca2.dl.sourceforge.net/project/strace/strace/4.8/strace-4.8.tar.xz
 tcpdump, http://www.tcpdump.org/release/tcpdump-4.4.0.tar.gz
 usb-modeswitch, http://www.draisberghof.de/usb_modeswitch/usb-modeswitch-1.2.6.tar.bz2

@@ -77,7 +77,7 @@ build-ami-image:
 	ln -f "output/image-${PLATFORM}-xen" "output/image" && \
 	ec2-bundle-image -c "$$EC2_CERT" -k "$$EC2_PRIVATE_KEY" \
 		-u "$$AWS_ID" -d "output/image-${PLATFORM}-ami" \
-		-i "output/image" -r "$$ec2_arch" &>/dev/null || exit "$$?"; \
+		-i "output/image" -r "$$ec2_arch" || exit "$$?"; \
 	rm -f "output/image"; \
 	echo 'done.'
 
