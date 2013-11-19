@@ -1,6 +1,6 @@
-diff -urN garden-maker-devel~/update.sh garden-maker-devel/update.sh
---- garden-maker-devel~/update.sh	2013-09-11 23:34:27.065725853 -0700
-+++ garden-maker-devel/update.sh	2013-09-11 23:54:26.494725177 -0700
+diff -ur garden_maker/update.sh garden_maker/update.sh
+--- garden_maker/update.sh	2013-11-18 19:07:25.627436693 -0800
++++ garden_maker/update.sh	2013-11-18 19:07:48.105431936 -0800
 @@ -1,4 +1,10 @@
 -#!/bin/bash
 +#!/bin/sh
@@ -10,7 +10,7 @@ diff -urN garden-maker-devel~/update.sh garden-maker-devel/update.sh
 +  -# -o assets/dashboard.couch &&
 +\
 +echo "Downloading Futon assets for CouchDB:" >&2 &&
-+curl https://github.com/garden20/garden-futon/archive/master.zip \
++curl https://codeload.github.com/garden20/garden-futon/zip/master \
 +  -# -o assets/futon.zip
  
 -curl   http://reupholster.iriscouch.com/dashboard/_design/dashboard/static/dashboard.couch -o assets/dashboard.couch
