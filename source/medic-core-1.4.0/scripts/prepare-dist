@@ -1,5 +1,5 @@
 #!/bin/sh
-exit 0;
+
 prefix="$1"
 
 if ! [ -d "$prefix" ]; then
