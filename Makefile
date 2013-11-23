@@ -167,9 +167,9 @@ kujua-transport-pkg:
 
 convert-boot-logo:
 	for file in logo-medic logo-medic-gray; do \
-		pngtopnm "kernel/common/boot-logo/$$file.png" \
+		pngtopnm "config/kernel/common/boot-logo/$$file.png" \
 		  | ppmquant 224 2>/dev/null | pnmtoplainpnm \
-		    > "kernel/common/boot-logo/$$file.ppm"; \
+		    > "config/kernel/common/boot-logo/$$file.ppm"; \
 	done
 
 download:
