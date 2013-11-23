@@ -4,7 +4,7 @@ PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
 PLATFORM ?= x86
-KERNEL_CONFIG := ../../../../kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}
+KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}
 
 all: build
 
@@ -63,7 +63,7 @@ clean-kernel:
 
 build-kernel: build-pv
 	@(cd source/linux && \
-		cp ../../../../kernel/common/boot-logo/logo-medic.ppm \
+		cp ../../../../config/kernel/common/boot-logo/logo-medic.ppm \
 			./drivers/video/logo/logo_linux_clut224.ppm && \
 		cp -H "${KERNEL_CONFIG}${KERNEL_EXTRA}" .config) && \
 		./scripts/logger 'linux' '${PLATFORM}' \

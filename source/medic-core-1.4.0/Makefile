@@ -1,4 +1,5 @@
 
+BITS ?= 32
 PLATFORM ?= x86
 
 all:
