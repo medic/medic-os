@@ -90,6 +90,8 @@ apply_patches()
     < ../../patches/inotify-tools-include.diff) &&
   (cd couchdb && patch -s -p1 \
     < ../../patches/couchdb-fix-user-properties.diff) &&
+  (cd libutempter && patch -s -p1 \
+    < ../../patches/libutempter-fix-makefile-links.diff) &&
   (cd js && patch -s -p1 \
     < ../../../../patches/js-fix-makefile-loop.diff)
 }
