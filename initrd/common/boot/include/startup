@@ -68,7 +68,7 @@ initialize_storage()
     "\\nt\\n82\\nn\\np\\n2\\n\\n\\np\\nw" \
       | fdisk "$device" &&
   \
-  sleep 2 &&
+  sync && sleep 2 && sync &&
   mkswap "${device}1" && swapon -p16 "${device}1" &&
   mkfs.ext4 "${device}2" && mkdir -p /srv && mount "${device}2" /srv &&
   \

@@ -64,6 +64,25 @@ main()
   mount_source_image "$source_device" \
     || fatal 'Failed to mount the ISO image; possible problem with media'
 
+  # Network connection:
+  #   Get an IP address via DHCP, and ensure we have network
+  #   connectivity before continuing on with installation or updates.
+
+  local ip_address=''
+  display_centered 'Setting up network connection...'
+
+  ip_address="`wait_for_ip_address`"
+
+  if [ $? -ne 0 ]; then
+    display_centered 'Checking for alternate network configuration...' &&
+    attempt_manual_network_configuration &&
+    ip_address="`wait_for_ip_address`"
+
+    if [ $? -ne 0 ]; then
+      fatal 'Failed to obtain an IP address for this virtual machine'
+    fi
+  fi
+
   # Look for existing storage:
   #   Use the first valid virtual disk that we find, provided
   #   it wasn't initialized by a future version of this script.
@@ -104,24 +123,6 @@ main()
 
       fi
     done
-  fi
-  # Network connection:
-  #   Get an IP address via DHCP, and ensure we have network
-  #   connectivity before continuing on with installation or updates.
-
-  local ip_address=''
-  display_centered 'Setting up network connection...'
-
-  ip_address="`wait_for_ip_address`"
-
-  if [ $? -ne 0 ]; then
-    display_centered 'Checking for alternate network configuration...' &&
-    attempt_manual_network_configuration &&
-    ip_address="`wait_for_ip_address`"
-
-    if [ $? -ne 0 ]; then
-      fatal 'Failed to obtain an IP address for this virtual machine'
-    fi
   fi
 
   # Disk found?

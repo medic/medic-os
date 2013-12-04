@@ -32,7 +32,7 @@ start()
 
       find "$source" -mindepth 0 -maxdepth 1 \
         \! \( -name '.' -o -name '..' \) \
-	  -exec cp -a \{\} "$destination" || return 2
+          -exec cp -a \{\} "$destination" \; || return 2
     fi
 
     # Create symbolic link:
