@@ -86,7 +86,7 @@ main()
     || fatal 'Failed to find pax header in java binaries'
 
   check_libraries 'medic-core' \
-    z curl acl attr idn usb ssl crypto lzmadec \
+    z curl acl attr idn usb ssl crypto \
     lzo2 menu history form panel ncurses icudata \
       || fatal 'Failed to find a required library in medic-core'
 
@@ -94,9 +94,9 @@ main()
     || fatal 'Failed to find a required binary in medic-core/sbin'
 
   check_binaries 'medic-core' 'bin' \
-    node couchdb erl gammu curl ssh rsync lrzip lzma xdelta3 \
-    diff patch getfacl getfattr openssl kanso npm nodelint \
-      || fatal 'Failed to find a required binary in medic-core/bin'
+    node couchdb erl gammu curl ssh rsync lrzip lzma \
+      xdelta3 diff patch getfacl getfattr openssl kanso npm nodelint \
+	    || fatal 'Failed to find a required binary in medic-core/bin'
 
   check_binaries 'java' 'bin' java \
     || fatal 'Failed to find a required binary in java/bin'
