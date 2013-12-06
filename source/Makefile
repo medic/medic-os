@@ -129,6 +129,7 @@ copy-medic-core:
 
 copy-java-template: clean-java
 	@echo -n "Copying package template for 'java'... " && \
+	rm -rf ../packages/java/software/* && \
 	cp -a "../templates/java/${PLATFORM}/software" ../packages/java/software && \
 	echo 'done.'
 
