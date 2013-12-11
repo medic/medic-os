@@ -30,14 +30,14 @@ wait_for_volume_availability()
 {
   local volume_id="$1"
 
-  sleep 15
+  sleep 20
 }
 
 wait_for_snapshot_availability()
 {
   local snapshot_id="$1"
 
-  sleep 15
+  sleep 20
 }
 
 main()
@@ -67,29 +67,31 @@ main()
 
   ec2-attach-volume "$volume_id" -i "`
     ec2-metadata -i | cut -d: -f2 | sed 's/^ *//'
-  `" -d "$device" &>/dev/null || fatal 'Failed to attach volume'
+  `" -d "$device" &>/dev/null || fatal 'Failed to attach temporary volume'
 
-  echo "$volume_id" >&2
+  echo "Volume identifier: $volume_id" >&2
 
   wait_for_device "$device" \
     || fatal 'Volume did not attach during timeout period'
 
-  mkfs.ext4 "$device" &>/dev/null \
+  sudo mkfs.ext4 "$device" &>/dev/null \
     || fatal "Failure while formatting device '$device'"
 
-  mkdir -p /mnt/startup && mount "$device" /mnt/startup \
+  sudo mkdir -p /mnt/startup &&
+  sudo mount "$device" /mnt/startup \
     || fatal "Failure while mounting device '$device'"
 
-  mkdir -p /mnt/loopback && mount -o loop "$image" /mnt/loopback \
+  sudo mkdir -p /mnt/loopback &&
+  sudo mount -o loop "$image" /mnt/loopback \
     || fatal "Failure while mounting loopback image '$image'"
 
-  cp -a /mnt/loopback/* /mnt/startup/ \
+  sudo cp -a /mnt/loopback/* /mnt/startup/ \
     || fatal 'Failure while copying files'
 
-  sync && umount /mnt/loopback && umount /mnt/startup \
+  sudo umount /mnt/loopback /mnt/startup && sudo sync \
     || fatal 'Failure while unmounting volumes'
 
-  sync && ec2-detach-volume --region "$EC2_REGION" "$volume_id" &>/dev/null \
+  ec2-detach-volume --region "$EC2_REGION" "$volume_id" &>/dev/null \
     || fatal 'Failure while detaching volume'
 
   local snapshot_id="`
@@ -99,10 +101,13 @@ main()
 
   wait_for_snapshot_availability "$snapshot_id"
 
+  echo -n "Deleting temporary volume '$volume_id'... " >&2
+
   ec2-delete-volume "$volume_id" &>/dev/null \
     || fatal "Failure while deleting volume '$volume_id'"
 
-  echo "$snapshot_id"
+  echo 'done.' >&2
+  echo "Snapshot identifier: $snapshot_id"
 }
 
 main "$@"
