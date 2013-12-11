@@ -2,9 +2,8 @@
 
 install()
 {
-  yum remove ntp &&
-  \
-  yum install \
+  yum "$@" remove ntp &&
+  yum "$@" install \
     kernel-headers kernel-devel gcc47-c++ gcc47-plugin-devel \
     autoconf automake bison flex nasm ruby patch git ntpdate \
     ncurses-devel libuuid-devel tcl libtool gettext-devel \
@@ -12,4 +11,5 @@ install()
 }
 
 install "$@"
+exit "$?"
 
