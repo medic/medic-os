@@ -114,16 +114,18 @@ main() {
            curl -O# '$mmva_url_base/mmva-core-src-current.tar.xz' &&
            echo 'Downloading MMVA JDK/JRE module:' >&2 &&
            curl -O# '$mmva_url_base/mmva-java-$platform-current.tar.xz' &&
-           echo -n 'Extracting MMVA images... ' >&2 &&
+           echo -n 'Extracting MMVA core image... ' >&2 &&
            sudo tar xJf mmva-core-src-current.tar.xz &&
+           echo 'done.' >&2 &&
+           echo -n 'Extracting MMVA JDK/JRE module... ' >&2 &&
            sudo tar xJf 'mmva-java-$platform-current.tar.xz' &&
            echo 'done.' >&2 && cd mmva-src &&
-           ln -nsf '$platform' java-current/selected &&
+           sudo ln -nsf '$platform' java-current/selected &&
            echo -n 'Installing build-time dependencies... ' >&2 &&
            sudo ./vm-toaster/config/redhat/scripts/yum-install -q -y &&
            echo 'done.' >&2 &&
            echo -n 'Applying latest MMVA updates... ' >&2 &&
-           (cd vm-toaster && git remote set-url origin \
+           (cd vm-toaster && sudo git remote set-url origin \
              https://github.com/browndav/vm-toaster && sudo git pull -q) &&
            echo 'done.' >&2 &&
            echo 'Building MMVA:' >&2 &&
