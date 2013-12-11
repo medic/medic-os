@@ -74,22 +74,24 @@ main()
   wait_for_device "$device" \
     || fatal 'Volume did not attach during timeout period'
 
-  mkfs.ext4 "$device" &>/dev/null \
+  sudo mkfs.ext4 "$device" &>/dev/null \
     || fatal "Failure while formatting device '$device'"
 
-  mkdir -p /mnt/startup && mount "$device" /mnt/startup \
+  sudo mkdir -p /mnt/startup &&
+  sudo mount "$device" /mnt/startup \
     || fatal "Failure while mounting device '$device'"
 
-  mkdir -p /mnt/loopback && mount -o loop "$image" /mnt/loopback \
+  sudo mkdir -p /mnt/loopback &&
+  sudo mount -o loop "$image" /mnt/loopback \
     || fatal "Failure while mounting loopback image '$image'"
 
-  cp -a /mnt/loopback/* /mnt/startup/ \
+  sudo cp -a /mnt/loopback/* /mnt/startup/ \
     || fatal 'Failure while copying files'
 
-  sync && umount /mnt/loopback && umount /mnt/startup \
+  sudo umount /mnt/loopback /mnt/startup && sudo sync \
     || fatal 'Failure while unmounting volumes'
 
-  sync && ec2-detach-volume --region "$EC2_REGION" "$volume_id" &>/dev/null \
+  ec2-detach-volume --region "$EC2_REGION" "$volume_id" &>/dev/null \
     || fatal 'Failure while detaching volume'
 
   local snapshot_id="`
