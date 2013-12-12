@@ -109,7 +109,7 @@ main() {
            echo "$settings" > ~/settings && source ~/settings &&
            echo 'done.' >&2 &&
            echo -n 'Updating system packages... ' >&2 &&
-           sudo yum -q -y update &&
+           sudo yum -q -y update &>/dev/null &&
            echo 'done.' >&2 &&
            echo 'Downloading MMVA core:' >&2 &&
            curl -O# '$mmva_url_base/mmva-core-src-current.tar.xz' &&
