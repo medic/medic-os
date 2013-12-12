@@ -131,11 +131,12 @@ main() {
              https://github.com/browndav/vm-toaster && sudo git pull -q) &&
            echo 'done.' >&2 &&
            echo 'Starting MMVA build process.' >&2 &&
-           source .profile && sudo make all PLATFORM='$platform' &&
+           source .profile &&
+           sudo JAVA_HOME="\$JAVA_HOME" \
+             make all PLATFORM='$platform' &&
            echo 'done.' >&2 &&
            echo -n 'Building elastic block store images... ' >&2 &&
-           export PATH='~/mmva-src/ec2-api-tools/bin:\$PATH' &&
-           vm-toaster/scripts/build-ebs-image \
+           ./vm-toaster/scripts/build-ebs-image \
              'output/image-$platform-xen' \
              'MMVA $platform - `date +%Y%m%d`' /dev/sdb &&
            echo 'done.' >&2"
