@@ -135,7 +135,7 @@ main() {
            echo 'done.' >&2 &&
            echo -n 'Building elastic block store images... ' >&2 &&
            export PATH='~/mmva-src/ec2-api-tools/bin:\$PATH' &&
-           sudo vm-toaster/scripts/build-ebs-image \
+           vm-toaster/scripts/build-ebs-image \
              'output/image-$platform-xen' \
              'MMVA $platform - `date +%Y%m%d`' /dev/sdb &&
            echo 'done.' >&2"
