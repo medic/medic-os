@@ -130,8 +130,8 @@ main() {
            (cd vm-toaster && sudo git remote set-url origin \
              https://github.com/browndav/vm-toaster && sudo git pull -q) &&
            echo 'done.' >&2 &&
-           echo 'Building MMVA:' >&2 &&
-           sudo make all PLATFORM='$platform' &&
+           echo 'Starting MMVA build process.' >&2 &&
+           source .profile && sudo make all PLATFORM='$platform' &&
            echo 'done.' >&2 &&
            echo -n 'Building elastic block store images... ' >&2 &&
            export PATH='~/mmva-src/ec2-api-tools/bin:\$PATH' &&
