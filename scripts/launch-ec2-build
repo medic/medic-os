@@ -16,6 +16,7 @@ main() {
   local security_group='basic'
   local time_zone='America/Los_Angeles'
   local ssh_key_name="Nightly Build Key"
+  local default_availability_zone='us-west-2a'
   local mmva_url_base='https://scri.pt/get/mmva'
 
   if [ -z "$platform" ]; then
@@ -34,7 +35,7 @@ main() {
   esac
 
   if [ -z "$EC2_AVAILABILITY_ZONE" ]; then
-    EC2_AVAILABILITY_ZONE='us-west-2a'
+    EC2_AVAILABILITY_ZONE="$default_availability_zone"
   fi
 
   if [ "$time_zone" ]; then
@@ -47,7 +48,7 @@ main() {
 
     settings="`cat "$settings"`"
   fi
-  
+
   local n='15'
   local tab="`printf '\t'`"
 
@@ -105,14 +106,17 @@ main() {
         "echo 'done.' >&2 &&
            echo 'Connection established successfully.' >&2 &&
            echo -n 'Setting up environment... ' >&2 &&
+           \
            export TZ='$time_zone' &&
            mkdir -p mmva-src/vm-toaster/config/aws-current &&
            echo "$settings" > mmva-src/vm-toaster/config/aws-current/settings &&
            source mmva-src/vm-toaster/config/aws-current/settings &&
            echo 'done.' >&2 &&
+           \
            echo -n 'Updating system packages... ' >&2 &&
            sudo yum -q -y update &>/dev/null &&
            echo 'done.' >&2 &&
+           \
            echo 'Downloading MMVA core:' >&2 &&
            curl -O# '$mmva_url_base/mmva-core-src-current.tar.xz' &&
            echo 'Downloading MMVA JDK/JRE module:' >&2 &&
@@ -120,23 +124,28 @@ main() {
            echo -n 'Extracting MMVA core image... ' >&2 &&
            sudo tar xJf mmva-core-src-current.tar.xz &&
            echo 'done.' >&2 &&
+           \
            echo -n 'Extracting MMVA JDK/JRE module... ' >&2 &&
            sudo tar xJf 'mmva-java-$platform-current.tar.xz' &&
            echo 'done.' >&2 && cd mmva-src &&
            sudo ln -nsf '$platform' java-current/selected &&
+           \
            echo -n 'Installing build-time dependencies... ' >&2 &&
            sudo ./vm-toaster/config/redhat/scripts/yum-install \
              -q -y &>/dev/null &&
            echo 'done.' >&2 &&
+           \
            echo -n 'Applying latest MMVA updates... ' >&2 &&
            (cd vm-toaster && sudo git remote set-url origin \
              https://github.com/browndav/vm-toaster && sudo git pull -q) &&
            echo 'done.' >&2 &&
+           \
            echo 'Starting MMVA build process.' >&2 &&
            source .profile &&
            sudo JAVA_HOME="\$JAVA_HOME" \
              make all PLATFORM='$platform' &&
-           echo 'done.' >&2 &&
+           echo 'MMVA build complete.' >&2 &&
+           \
            echo -n 'Building elastic block store images... ' >&2 &&
            ./vm-toaster/scripts/build-ebs-image \
              'output/image-$platform-xen' \

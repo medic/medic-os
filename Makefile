@@ -6,7 +6,7 @@ QMAKE := ${MAKE} --no-print-directory
 MEDIC_CORE_VERSION := 1.4.0
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
-all: packages build-iso build-xen-image build-ami-image compress-xen-image build-x86-image-nopae
+all: packages build-iso build-xen-image compress-xen-image build-x86-image-nopae
 
 iso: build-iso
 
@@ -55,9 +55,9 @@ build-xen-image:
 	\
 	mkfs.ext4 -F "$$image_path" &>/dev/null && \
 	mount -o loop "$$image_path" "$$loop_path" && \
-	\
 	cp -a "images/${PLATFORM}/xen"/* "$$loop_path" && \
 	mkdir -p "$$loop_path/packages" && \
+	\
 	cp -a "images/${PLATFORM}/iso/packages"/* \
 		"$$loop_path/packages" && \
 	\
@@ -66,18 +66,25 @@ build-xen-image:
 
 build-ami-image:
 	@echo -n 'Building AMI instance-store image... ' && \
+	\
 	source "config/aws/settings" && \
-	if [ '${PLATFORM}' = 'x64' ]; then \
-		ec2_arch='x86_64'; \
-	else \
-		ec2_arch='i386'; \
-	fi && \
+	export PATH="$$EC2_HOME/bin:$$PATH" && \
+	\
+	case '${PLATFORM}' in \
+	  x64) architecture='x86_64';; \
+	  x86) architecture='i386';; \
+	  *) echo 'Fatal: Unsupported platform' >&2; exit 1 ;; \
+	esac && \
+	\
 	rm -rf "output/image-${PLATFORM}-ami" && \
 	mkdir -p "output/image-${PLATFORM}-ami" && \
 	ln -f "output/image-${PLATFORM}-xen" "output/image" && \
-	ec2-bundle-image -c "$$EC2_CERT" -k "$$EC2_PRIVATE_KEY" \
+	\
+	ec2-bundle-image \
+		-c "$$EC2_CERTIFICATE" -k "$$EC2_PRIVATE_KEY" \
 		-u "$$AWS_ID" -d "output/image-${PLATFORM}-ami" \
-		-i "output/image" -r "$$ec2_arch" >/dev/null || exit "$$?"; \
+		-i "output/image" -r "$$architecture" >/dev/null || exit "$$?"; \
+	\
 	rm -f "output/image"; \
 	echo 'done.'
 
@@ -89,7 +96,10 @@ upload: upload-ami-image
 
 upload-ami-image: build-ami-image
 	@echo -n 'Uploading AMI instance-store image... ' && \
+	\
 	source "config/aws/settings" && \
+	export PATH="$$EC2_HOME/bin:$$PATH" && \
+	\
 	ec2-upload-bundle \
 		-a "$$AWS_ACCESS_KEY" \
 		-s "$$AWS_SECRET_KEY" -b "$$S3_BUCKET" \
@@ -170,7 +180,7 @@ convert-boot-logo:
 	for file in logo-medic logo-medic-gray; do \
 		pngtopnm "config/kernel/common/boot-logo/$$file.png" \
 		  | ppmquant 224 2>/dev/null | pnmtoplainpnm \
-		    > "config/kernel/common/boot-logo/$$file.ppm"; \
+			> "config/kernel/common/boot-logo/$$file.ppm"; \
 	done
 
 download:
@@ -195,7 +205,7 @@ delete-downloaded:
 	@rm -f status/* && \
 	for type in incoming source; do \
 	  for pkg in core vm-tools medic-core; do \
-	    (cd source && rm -rf "$$pkg/$$type"/*); \
+		(cd source && rm -rf "$$pkg/$$type"/*); \
 		done; \
 	done
 

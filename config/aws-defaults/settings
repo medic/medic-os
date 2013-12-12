@@ -6,7 +6,7 @@ export EC2_REGION='us-west-2'
 export EC2_AVAILABILITY_ZONE='us-west-2a'
 export EC2_URL='https://us-west-2.ec2.amazonaws.com'
 
-export EC2_CERT=~/mmva-src/vm-toaster/config/aws/id-x509.crt
+export EC2_CERTIFICATE=~/mmva-src/vm-toaster/config/aws/id-x509.crt
 export EC2_PRIVATE_KEY=~/mmva-src/vm-toaster/config/aws/id-x509.key
 
 export AWS_ID='000000000000'
