@@ -123,7 +123,8 @@ main() {
            echo 'done.' >&2 && cd mmva-src &&
            sudo ln -nsf '$platform' java-current/selected &&
            echo -n 'Installing build-time dependencies... ' >&2 &&
-           sudo ./vm-toaster/config/redhat/scripts/yum-install -q -y &&
+           sudo ./vm-toaster/config/redhat/scripts/yum-install \
+             -q -y &>/dev/null &&
            echo 'done.' >&2 &&
            echo -n 'Applying latest MMVA updates... ' >&2 &&
            (cd vm-toaster && sudo git remote set-url origin \
