@@ -20,6 +20,27 @@ warn()
   echo "Warning: $*" >&2
 }
 
+finish_curl_progress()
+{
+  if [ "$QUIET" ]; then
+    return 0
+  fi
+
+  # Workaround for curl bug:
+  #   The final frame of the progress bar is emitted on a new
+  #   line when an FTP URL is used; just erase it and continue.
+
+  if [ "`echo "$url" | cut -d: -f1`" = 'ftp' ]; then
+    echo -ne "\033[1K\r"
+  fi
+
+  echo -ne '\033[1A' &&
+  for i in `seq 1 72`; do echo -n '#'; done &&
+  echo ' 100.0%'
+
+  return "$?"
+}
+
 indent()
 {
   while read line; do echo "  $line"; done
@@ -133,14 +154,7 @@ main()
       curl -f -L -O -# "`trim "$url"`" \
         || fatal "Error occurred while downloading '$name'"
 
-      # Workaround for curl bug:
-      #   The final frame of the progress bar is emitted on a new
-      #   line when an FTP IRL is used; just erase it and continue.
-
-      if [ "`echo "$url" | cut -d: -f1`" = 'ftp' ]; then
-        echo -ne "\033[1K\r"
-      fi
-
+      finish_curl_progress &&
       extract_if_necessary "$url" "$name" 'curl'
     fi
 
