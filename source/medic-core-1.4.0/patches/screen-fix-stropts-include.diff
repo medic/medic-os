@@ -1,0 +1,60 @@
+diff -ur screen-4.0.3~/process.c screen-4.0.3/process.c
+--- screen-4.0.3~/process.c	2003-09-18 12:53:54.000000000 +0000
++++ screen-4.0.3/process.c	2013-12-12 05:09:02.492027300 +0000
+@@ -37,7 +37,7 @@
+ #include "config.h"
+ 
+ /* for solaris 2.1, Unixware (SVR4.2) and possibly others: */
+-#ifdef SVR4
++#if defined(SVR4) && defined(_XOPEN_STREAMS)
+ # include <sys/stropts.h>
+ #endif
+ 
+diff -ur screen-4.0.3~/pty.c screen-4.0.3/pty.c
+--- screen-4.0.3~/pty.c	2003-09-08 14:26:18.000000000 +0000
++++ screen-4.0.3/pty.c	2013-12-12 05:09:36.228029587 +0000
+@@ -34,7 +34,7 @@
+ #endif
+ 
+ /* for solaris 2.1, Unixware (SVR4.2) and possibly others */
+-#ifdef HAVE_SVR4_PTYS
++#if defined(SVR4) && defined(_XOPEN_STREAMS)
+ # include <sys/stropts.h>
+ #endif
+ 
+diff -ur screen-4.0.3~/screen.c screen-4.0.3/screen.c
+--- screen-4.0.3~/screen.c	2003-09-08 14:26:41.000000000 +0000
++++ screen-4.0.3/screen.c	2013-12-12 05:09:56.924029260 +0000
+@@ -50,7 +50,7 @@
+ 
+ #include "config.h"
+ 
+-#ifdef SVR4
++#if defined(SVR4) && defined(_XOPEN_STREAMS)
+ # include <sys/stropts.h>
+ #endif
+ 
+diff -ur screen-4.0.3~/tty.c.dist screen-4.0.3/tty.c.dist
+--- screen-4.0.3~/tty.c.dist	2006-10-23 13:04:42.000000000 +0000
++++ screen-4.0.3/tty.c.dist	2013-12-12 05:10:21.124028404 +0000
+@@ -50,7 +50,7 @@
+ #endif
+ 
+ #include "config.h"
+-#ifdef SVR4
++#if defined(SVR4) && defined(_XOPEN_STREAMS)
+ #include <sys/stropts.h>	/* for I_POP */
+ #endif
+ 
+diff -ur screen-4.0.3~/tty.sh screen-4.0.3/tty.sh
+--- screen-4.0.3~/tty.sh	2003-09-08 14:24:25.000000000 +0000
++++ screen-4.0.3/tty.sh	2013-12-12 05:10:54.272029243 +0000
+@@ -76,7 +76,7 @@
+ #endif
+ 
+ #include "config.h"
+-#ifdef SVR4
++#if defined(SVR4) && defined(_XOPEN_STREAMS)
+ #include <sys/stropts.h>	/* for I_POP */
+ #endif
+ 

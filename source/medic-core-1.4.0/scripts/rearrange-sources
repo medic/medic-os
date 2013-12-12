@@ -80,8 +80,8 @@ apply_patches()
     < ../../patches/gammu-disable-glib.diff) &&
   (cd gammu && patch -s -p1 \
     < ../../patches/gammu-fix-files-backend.diff) &&
-  (cd garden-maker && \
-    patch -s -p1 < ../../patches/garden-maker-medic.diff) &&
+  (cd garden-maker && patch -s -p1 \
+    < ../../patches/garden-maker-medic.diff) &&
   (cd icu && patch -s -p2 \
     < ../../../patches/icu-libicudata-linkage.diff) &&
   (cd nodelint && patch -s -p1 \
@@ -92,6 +92,8 @@ apply_patches()
     < ../../patches/couchdb-fix-user-properties.diff) &&
   (cd libutempter && patch -s -p1 \
     < ../../patches/libutempter-fix-makefile-links.diff) &&
+  (cd screen && patch -s -p1 \
+    < ../../patches/screen-fix-stropts-include.diff) &&
   (cd js && patch -s -p1 \
     < ../../../../patches/js-fix-makefile-loop.diff)
 }
