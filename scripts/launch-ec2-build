@@ -105,10 +105,11 @@ main() {
         "echo 'done.' >&2 &&
            echo 'Connection established successfully.' >&2 &&
            echo -n 'Setting up environment... ' >&2 &&
+           export TZ='$time_zone' &&
            echo "$settings" > ~/settings && source ~/settings &&
            echo 'done.' >&2 &&
            echo -n 'Updating system packages... ' >&2 &&
-           export TZ='$time_zone' &&
+           sudo yum -q -y update &&
            echo 'done.' >&2 &&
            echo 'Downloading MMVA core:' >&2 &&
            curl -O# '$mmva_url_base/mmva-core-src-current.tar.xz' &&
