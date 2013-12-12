@@ -106,7 +106,9 @@ main() {
            echo 'Connection established successfully.' >&2 &&
            echo -n 'Setting up environment... ' >&2 &&
            export TZ='$time_zone' &&
-           echo "$settings" > ~/settings && source ~/settings &&
+           mkdir -p mmva-src/vm-toaster/config/aws-current &&
+           echo "$settings" > mmva-src/vm-toaster/config/aws-current/settings &&
+           source mmva-src/vm-toaster/config/aws-current/settings &&
            echo 'done.' >&2 &&
            echo -n 'Updating system packages... ' >&2 &&
            sudo yum -q -y update &>/dev/null &&
