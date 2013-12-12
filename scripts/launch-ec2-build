@@ -92,7 +92,7 @@ main() {
   fi
 
   echo "done." >&2
-  echo "Instance address: $external_fqdn"
+  echo "Instance name: $external_fqdn"
   echo -n 'Waiting for instance to start... ' >&2
 
   n='30'
