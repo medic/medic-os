@@ -151,7 +151,7 @@ main() {
              '$platform' 'output/image-$platform-xen' \
              'MMVA $platform - `date +%Y%m%d`' /dev/sdb \
            \
-           echo 'EBS images built successfully.' >&2 &&
+           echo 'EBS images built successfully.' >&2"
 
     if [ "$?" -ne 255 ]; then
       echo 'failed.' >&2
