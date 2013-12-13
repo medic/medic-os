@@ -148,7 +148,7 @@ main() {
            \
            echo -n 'Building elastic block store images... ' >&2 &&
            ./vm-toaster/scripts/build-ebs-image \
-             'output/image-$platform-xen' \
+             '$platform' 'output/image-$platform-xen' \
              'MMVA $platform - `date +%Y%m%d`' /dev/sdb &&
            echo 'done.' >&2"
 
