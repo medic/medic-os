@@ -84,6 +84,9 @@ main()
 
   wait_for_volume_availability "$volume_id"
 
+  ec2-create-tags "$volume_id" --tag "Name=MMVA $platform" &>/dev/null \
+    || fatal "Failure while setting tags on volume'$volume_id'"
+
   ec2-attach-volume "$volume_id" -i "`
     ec2-metadata -i | cut -d: -f2 | sed 's/^ *//'
   `" -d "$device" &>/dev/null || fatal 'Failed to attach temporary volume'
@@ -123,7 +126,10 @@ main()
   `" || fatal "Failure while creating snapshot for volume '$volume_id'"
 
   wait_for_snapshot_availability "$snapshot_id"
-  
+
+  ec2-create-tags "$snapshot_id" --tag "Name=MMVA $platform" &>/dev/null \
+    || fatal "Failure while setting tags on snapshot '$snapshot_id'"
+
   echo 'done.' >&2
   echo "Snapshot identifier: $snapshot_id"
 
@@ -138,12 +144,12 @@ main()
   echo 'done.' >&2
   echo "AMI identifier: $ami_id"
 
-  ec2-create-tags "$ami_id" --tag "Name=MMVA $platform" \
+  ec2-create-tags "$ami_id" --tag "Name=MMVA $platform" &>/dev/null \
     || fatal "Failure while setting tags on AMI '$ami_id'"
 
   echo -n "Deleting temporary volume '$volume_id'... " >&2
 
-  ec2-delete-volume "$volume_id" &>/dev/null \
+  ec2-delete-volume "$volume_id" \
     || fatal "Failure while deleting volume '$volume_id'"
 
   echo 'done.' >&2

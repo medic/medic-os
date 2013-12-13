@@ -140,17 +140,18 @@ main() {
              https://github.com/browndav/vm-toaster && sudo git pull -q) &&
            echo 'done.' >&2 &&
            \
-           echo 'Starting MMVA build process.' >&2 &&
+           echo 'Starting MMVA build process:' >&2 &&
            source .profile &&
            sudo JAVA_HOME="\$JAVA_HOME" \
              make all PLATFORM='$platform' &&
            echo 'MMVA build complete.' >&2 &&
            \
-           echo -n 'Building elastic block store images... ' >&2 &&
+           echo -n 'Building EBS images:' >&2 &&
            ./vm-toaster/scripts/build-ebs-image \
              '$platform' 'output/image-$platform-xen' \
-             'MMVA $platform - `date +%Y%m%d`' /dev/sdb &&
-           echo 'done.' >&2"
+             'MMVA $platform - `date +%Y%m%d`' /dev/sdb \
+           \
+           echo 'EBS images built successfully.' >&2 &&
 
     if [ "$?" -ne 255 ]; then
       echo 'failed.' >&2
