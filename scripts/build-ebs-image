@@ -77,6 +77,8 @@ main()
     fatal "A not-yet-existing block-special device must be specified"
   fi
 
+  local name="MMVA $platform - `date +%Y%m%d`"
+
   local volume_id="`
     ec2-create-volume -s1 \
       -z "$EC2_AVAILABILITY_ZONE" --region "$EC2_REGION" | cut -f2
@@ -84,7 +86,7 @@ main()
 
   wait_for_volume_availability "$volume_id"
 
-  ec2-create-tags "$volume_id" --tag "Name=MMVA $platform" &>/dev/null \
+  ec2-create-tags "$volume_id" --tag "Name=$name" &>/dev/null \
     || fatal "Failure while setting tags on volume'$volume_id'"
 
   ec2-attach-volume "$volume_id" -i "`
@@ -127,7 +129,7 @@ main()
 
   wait_for_snapshot_availability "$snapshot_id"
 
-  ec2-create-tags "$snapshot_id" --tag "Name=MMVA $platform" &>/dev/null \
+  ec2-create-tags "$snapshot_id" --tag "Name=$name" &>/dev/null \
     || fatal "Failure while setting tags on snapshot '$snapshot_id'"
 
   echo 'done.' >&2
@@ -144,7 +146,7 @@ main()
   echo 'done.' >&2
   echo "AMI identifier: $ami_id"
 
-  ec2-create-tags "$ami_id" --tag "Name=MMVA $platform" &>/dev/null \
+  ec2-create-tags "$ami_id" --tag "Name=$name" &>/dev/null \
     || fatal "Failure while setting tags on AMI '$ami_id'"
 
   echo -n "Deleting temporary volume '$volume_id'... " >&2
