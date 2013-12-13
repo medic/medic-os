@@ -84,8 +84,8 @@ main()
       -z "$EC2_AVAILABILITY_ZONE" --region "$EC2_REGION" | cut -f2
   `" || fatal 'Failed to create volume'
 
-  wait_for_volume_availability "$volume_id"
-
+  wait_for_volume_availability "$volume_id" &&
+  \
   ec2-create-tags "$volume_id" --tag "Name=$name" &>/dev/null \
     || fatal "Failure while setting tags on volume'$volume_id'"
 
@@ -127,8 +127,8 @@ main()
       --region "$EC2_REGION" -d "$description" | cut -f2 \
   `" || fatal "Failure while creating snapshot for volume '$volume_id'"
 
-  wait_for_snapshot_availability "$snapshot_id"
-
+  wait_for_snapshot_availability "$snapshot_id" &&
+  \
   ec2-create-tags "$snapshot_id" --tag "Name=$name" &>/dev/null \
     || fatal "Failure while setting tags on snapshot '$snapshot_id'"
 
@@ -151,6 +151,8 @@ main()
 
   echo -n "Deleting temporary volume '$volume_id'... " >&2
 
+  wait_for_volume_availability "$volume_id" &&
+  \
   ec2-delete-volume "$volume_id" \
     || fatal "Failure while deleting volume '$volume_id'"
 
