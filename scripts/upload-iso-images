@@ -1,0 +1,38 @@
+#!/bin/sh
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 111
+}
+
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
+usage()
+{
+  echo "Usage: $0 method user host target options"
+  exit 1
+}
+
+main()
+{
+  local method="$1"
+  local user="$2"
+  local host="$3"
+  local target="$4"
+  local options="$5"
+
+  if [ "$1" = '-h' -o "$1" = '--help' ]; then
+    usage
+  fi
+
+  echo 'upload_iso_images:' "$@" >&2
+  return 0
+}
+
+main "$@"
+exit "$?"
+

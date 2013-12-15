@@ -1,0 +1,59 @@
+#!/bin/sh
+
+ts="`date +%Y%m%d`"
+base_directory="$1"
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 255
+}
+
+main()
+{
+  if [ "$base_directory" ]; then
+    cd "$base_directory" \
+      || fatal "Failed to change directory to '$base_directory'"
+  fi
+
+  # Primary source tree
+  (cd mmva-src && make delete) &&
+  echo -n "Building core MMVA archive... " >&2 &&
+  \
+  tar -cf - mmva-src \
+    --exclude 'mmva-src/java' \
+    --exclude 'mmva-src/java-current' \
+    --exclude 'mmva-src/vm-toaster/templates/java' \
+    --exclude 'mmva-src/vm-toaster/config/aws-current' \
+      | xz -9ec > "mmva-core-src-$ts.tar.xz"
+
+  if [ "$?" -ne 0 ]; then
+    echo 'failed.' >&2
+    fatal 'Failed to build core MMVA archive'
+  fi
+  
+  echo 'done.' >&2
+
+  # Platform-specific Java binaries
+  for platform in armv6 x86 x64; do
+    (cd mmva-src &&
+      make clean delete PLATFORM="$platform") &&
+    \
+    echo -n "Building JDK/JRE archive for '$platform'... " >&2 &&
+    tar -cf - "mmva-src/java" "mmva-src/java-current/$platform" \
+      "mmva-src/vm-toaster/templates/java/$platform" \
+        | xz -9ec > "mmva-java-$platform-$ts.tar.xz"
+
+    if [ "$?" -ne 0 ]; then
+      echo 'failed.' >&2
+      fatal "Failed to build JDK/JRE archive for $platform"
+    fi
+
+    echo 'done.' >&2
+  done
+
+}
+
+main "$@"
+exit "$?"
+

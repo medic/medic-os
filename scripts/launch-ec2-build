@@ -12,7 +12,6 @@ main() {
   local platform="$2"
   local instance_type="$3"
 
-  local ami='';
   local security_group='basic'
   local time_zone='America/Los_Angeles'
   local ssh_key_name="Nightly Build Key"
@@ -27,6 +26,9 @@ main() {
     instance_type='m1.small'
   fi
 
+  local ami='';
+  local ssh_private_key='';
+
   case "$platform" in
     x64)
       ami='ami-be1c848e' ;;
@@ -34,19 +36,25 @@ main() {
       ami='ami-4c1c847c' ;;
   esac
 
-  if [ -z "$EC2_AVAILABILITY_ZONE" ]; then
-    EC2_AVAILABILITY_ZONE="$default_availability_zone"
-  fi
-
   if [ "$time_zone" ]; then
     export TZ="$time_zone"
   fi
 
   if [ "$settings" ]; then
     source "$settings" \
-      || fatal "Couldn't read settings data from '$settings'"
+      || fatal "Couldn't load settings data from '$settings'"
 
-    settings="`cat "$settings"`"
+    settings="`cat "$settings"`" \
+      || fatal "Couldn't read settings data from '$settings'"
+  fi
+
+  if [ "$SSH_PRIVATE_KEY" ]; then
+    ssh_private_key="`cat "$SSH_PRIVATE_KEY"`" \
+      || fatal "Couldn't read private key from '$SSH_PRIVATE_KEY'"
+  fi
+
+  if [ -z "$EC2_AVAILABILITY_ZONE" ]; then
+    EC2_AVAILABILITY_ZONE="$default_availability_zone"
   fi
 
   local n='15'
@@ -97,6 +105,7 @@ main() {
   echo -n 'Waiting for instance to start... ' >&2
 
   n='30'
+  local rv='0'
 
   while [ "$n" -gt 0 ]; do
     sleep 5 && n=$[n - 1]
@@ -110,6 +119,7 @@ main() {
            export TZ='$time_zone' &&
            mkdir -p mmva-src/vm-toaster/config/aws-current &&
            echo "$settings" > mmva-src/vm-toaster/config/aws-current/settings &&
+           echo "$ssh_private_key" >> ~/.ssh/authorized_keys &&
            source mmva-src/vm-toaster/config/aws-current/settings &&
            echo 'done.' >&2 &&
            \
@@ -151,16 +161,28 @@ main() {
              '$platform' 'output/image-$platform-xen' \
              'MMVA $platform - `date +%Y%m%d`' /dev/sdb \
            \
-           echo 'EBS images built successfully.' >&2"
+           echo 'EBS images built successfully.' >&2 &&
+           echo 'Uploading ISO images:' >&2 &&
+           ./vm-toaster/scripts/upload-iso-images \
+             "$UPLOAD_METHOD" "$UPLOAD_USER" \
+               "$UPLOAD_HOST" "$UPLOAD_TARGET" "$UPLOAD_OPTIONS" && \
+           echo 'ISO images uploaded successfully.'"
 
-    if [ "$?" -ne 255 ]; then
+    rv="$?"
+
+    if [ "$rv" -ne 0 -a "$rv" -ne 255 ]; then
       echo 'failed.' >&2
       fatal 'Remote build process failed'
     fi
   done
 
-  fatal 'Failed to connect to instance; timeout exceeded'
+  if [ "$rv" -eq 255 ]; then
+    fatal 'Failed to connect to instance; timeout exceeded'
+  fi
+
+  return 0
 }
 
 main "$@"
+exit "$?"
 

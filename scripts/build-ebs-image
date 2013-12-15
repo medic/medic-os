@@ -6,6 +6,11 @@ fatal()
   exit 111
 }
 
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
 usage()
 {
   echo "Usage: $0 platform loopback_image description device"
@@ -154,7 +159,7 @@ main()
   wait_for_volume_availability "$volume_id" &&
   \
   ec2-delete-volume "$volume_id" \
-    || fatal "Failure while deleting volume '$volume_id'"
+    || warn "Failure while deleting volume '$volume_id'"
 
   echo 'done.' >&2
 }
