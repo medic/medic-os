@@ -102,78 +102,82 @@ main() {
 
   echo "done." >&2
   echo "Instance name: $external_fqdn"
-  echo -n 'Waiting for instance to start... ' >&2
 
-  n='30'
+  n='15'
   local rv='0'
   local ssh_host="ec2-user@$external_fqdn"
   local ssh_command='ssh -q -o StrictHostKeyChecking=no -o RequestTTY=yes'
 
   while [ "$n" -gt 0 ]; do
+
     sleep 5 && n=$[n - 1]
+    echo -n 'Waiting for instance to start... ' >&2
 
     $ssh_command  "$ssh_host" \
       'mkdir -p mmva-src/vm-toaster/config/aws-current .ssh' &&
+    \
+    echo 'done.' >&2 &&
+    echo 'Connecting to instance... ' >&2 &&
     \
     echo "$settings" | $ssh_command  "$ssh_host" \
       'cat > mmva-src/vm-toaster/config/aws-current/settings' && \
     \
     echo "$ssh_private_key" | $ssh_command  "$ssh_host" \
-      'cat >> .ssh/authorized_keys' && \
+      'cat >> .ssh/id_rsa' && \
     \
     $ssh_command  "$ssh_host" \
-        "echo 'done.' >&2 &&
-           echo 'Connection established successfully.' >&2 &&
-           echo -n 'Setting up environment... ' >&2 &&
-           \
-           export TZ='$time_zone' &&
-           source mmva-src/vm-toaster/config/aws-current/settings &&
-           echo 'done.' >&2 &&
-           \
-           echo -n 'Updating system packages... ' >&2 &&
-           sudo yum -q -y update &>/dev/null &&
-           echo 'done.' >&2 &&
-           \
-           echo 'Downloading MMVA core:' >&2 &&
-           curl -O# '$mmva_url_base/mmva-core-src-current.tar.xz' &&
-           echo 'Downloading MMVA JDK/JRE module:' >&2 &&
-           curl -O# '$mmva_url_base/mmva-java-$platform-current.tar.xz' &&
-           echo -n 'Extracting MMVA core image... ' >&2 &&
-           sudo tar xJf mmva-core-src-current.tar.xz &&
-           echo 'done.' >&2 &&
-           \
-           echo -n 'Extracting MMVA JDK/JRE module... ' >&2 &&
-           sudo tar xJf 'mmva-java-$platform-current.tar.xz' &&
-           echo 'done.' >&2 && cd mmva-src &&
-           sudo ln -nsf '$platform' java-current/selected &&
-           \
-           echo -n 'Installing build-time dependencies... ' >&2 &&
-           sudo ./vm-toaster/config/redhat/scripts/yum-install \
-             -q -y &>/dev/null &&
-           echo 'done.' >&2 &&
-           \
-           echo -n 'Applying latest MMVA updates... ' >&2 &&
-           (cd vm-toaster && sudo git remote set-url origin \
-             https://github.com/browndav/vm-toaster && sudo git pull -q) &&
-           echo 'done.' >&2 &&
-           \
-           echo 'Starting MMVA build process:' >&2 &&
-           source .profile &&
-           sudo JAVA_HOME="\$JAVA_HOME" \
-             make all PLATFORM='$platform' &&
-           echo 'MMVA build complete.' >&2 &&
-           \
-           echo -n 'Building EBS images:' >&2 &&
-           ./vm-toaster/scripts/build-ebs-image \
-             '$platform' 'output/image-$platform-xen' \
-             'MMVA $platform - `date +%Y%m%d`' /dev/sdb \
-           \
-           echo 'EBS images built successfully.' >&2 &&
-           echo 'Uploading ISO images:' >&2 &&
-           ./vm-toaster/scripts/upload-iso-images \
-             "$UPLOAD_METHOD" "$UPLOAD_USER" \
-               "$UPLOAD_HOST" "$UPLOAD_TARGET" "$UPLOAD_OPTIONS" && \
-           echo 'ISO images uploaded successfully.'"
+      "echo 'done.' >&2 &&
+         echo 'Connection established successfully.' >&2 &&
+         echo -n 'Setting up environment... ' >&2 &&
+         \
+         export TZ='$time_zone' &&
+         source mmva-src/vm-toaster/config/aws-current/settings &&
+         echo 'done.' >&2 &&
+         \
+         echo -n 'Updating system packages... ' >&2 &&
+         sudo yum -q -y update &>/dev/null &&
+         echo 'done.' >&2 &&
+         \
+         echo 'Downloading MMVA core:' >&2 &&
+         curl -O# '$mmva_url_base/mmva-core-src-current.tar.xz' &&
+         echo 'Downloading MMVA JDK/JRE module:' >&2 &&
+         curl -O# '$mmva_url_base/mmva-java-$platform-current.tar.xz' &&
+         echo -n 'Extracting MMVA core image... ' >&2 &&
+         sudo tar xJf mmva-core-src-current.tar.xz &&
+         echo 'done.' >&2 &&
+         \
+         echo -n 'Extracting MMVA JDK/JRE module... ' >&2 &&
+         sudo tar xJf 'mmva-java-$platform-current.tar.xz' &&
+         echo 'done.' >&2 && cd mmva-src &&
+         sudo ln -nsf '$platform' java-current/selected &&
+         \
+         echo -n 'Installing build-time dependencies... ' >&2 &&
+         sudo ./vm-toaster/config/redhat/scripts/yum-install \
+           -q -y &>/dev/null &&
+         echo 'done.' >&2 &&
+         \
+         echo -n 'Applying latest MMVA updates... ' >&2 &&
+         (cd vm-toaster && sudo git remote set-url origin \
+           https://github.com/browndav/vm-toaster && sudo git pull -q) &&
+         echo 'done.' >&2 &&
+         \
+         echo 'Starting MMVA build process:' >&2 &&
+         source .profile &&
+         sudo JAVA_HOME="\$JAVA_HOME" \
+           make all PLATFORM='$platform' &&
+         echo 'MMVA build complete.' >&2 &&
+         \
+         echo -n 'Building EBS images:' >&2 &&
+         ./vm-toaster/scripts/build-ebs-image \
+           '$platform' 'output/image-$platform-xen' \
+           'MMVA $platform - `date +%Y%m%d`' /dev/sdb \
+         \
+         echo 'EBS images built successfully.' >&2 &&
+         echo 'Uploading ISO images:' >&2 &&
+         ./vm-toaster/scripts/upload-iso-images \
+           "$UPLOAD_METHOD" "$UPLOAD_USER" \
+             "$UPLOAD_HOST" "$UPLOAD_TARGET" "$UPLOAD_OPTIONS" && \
+         echo 'ISO images uploaded successfully.'"
 
     rv="$?"
 
@@ -181,6 +185,8 @@ main() {
       echo 'failed.' >&2
       fatal 'Remote build process failed'
     fi
+
+    echo 'retrying.' >&2
   done
 
   if [ "$rv" -eq 255 ]; then
