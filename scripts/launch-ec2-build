@@ -112,14 +112,14 @@ main() {
   while [ "$n" -gt 0 ]; do
     sleep 5 && n=$[n - 1]
 
-    $ssh_command  "$ssh_host"
-      'mkdir -p mmva-src/vm-toaster/config/aws-current' &&
+    $ssh_command  "$ssh_host" \
+      'mkdir -p mmva-src/vm-toaster/config/aws-current .ssh' &&
     \
     echo "$settings" | $ssh_command  "$ssh_host"
       'cat > mmva-src/vm-toaster/config/aws-current/settings' && \
     \
     echo "$ssh_private_key" | $ssh_command  "$ssh_host" \
-      'cat >> ~/.ssh/authorized_keys' && \
+      'cat >> .ssh/authorized_keys' && \
     \
     $ssh_command  "$ssh_host"
         "echo 'done.' >&2 &&
