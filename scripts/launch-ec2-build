@@ -106,20 +106,27 @@ main() {
 
   n='30'
   local rv='0'
+  local ssh_host="ec2-user@$external_fqdn"
+  local ssh_command='ssh -q -o StrictHostKeyChecking=no -o RequestTTY=yes'
 
   while [ "$n" -gt 0 ]; do
     sleep 5 && n=$[n - 1]
 
-    ssh -q -o StrictHostKeyChecking=no -o RequestTTY=yes \
-      ec2-user@"$external_fqdn" \
+    $ssh_command  "$ssh_host"
+      'mkdir -p mmva-src/vm-toaster/config/aws-current' &&
+    \
+    echo "$settings" | $ssh_command  "$ssh_host"
+      'cat > mmva-src/vm-toaster/config/aws-current/settings' && \
+    \
+    echo "$ssh_private_key" | $ssh_command  "$ssh_host" \
+      'cat >> ~/.ssh/authorized_keys' && \
+    \
+    $ssh_command  "$ssh_host"
         "echo 'done.' >&2 &&
            echo 'Connection established successfully.' >&2 &&
            echo -n 'Setting up environment... ' >&2 &&
            \
            export TZ='$time_zone' &&
-           mkdir -p mmva-src/vm-toaster/config/aws-current &&
-           echo "$settings" > mmva-src/vm-toaster/config/aws-current/settings &&
-           echo "$ssh_private_key" >> ~/.ssh/authorized_keys &&
            source mmva-src/vm-toaster/config/aws-current/settings &&
            echo 'done.' >&2 &&
            \
