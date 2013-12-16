@@ -102,6 +102,7 @@ main() {
 
   echo "done." >&2
   echo "Instance name: $external_fqdn"
+  echo -n 'Waiting for instance to start... ' >&2
 
   n='15'
   local rv='0'
@@ -111,13 +112,12 @@ main() {
   while [ "$n" -gt 0 ]; do
 
     sleep 5 && n=$[n - 1]
-    echo -n 'Waiting for instance to start... ' >&2
 
     $ssh_command  "$ssh_host" \
       'mkdir -p mmva-src/vm-toaster/config/aws-current .ssh' &&
     \
     echo 'done.' >&2 &&
-    echo 'Connecting to instance... ' >&2 &&
+    echo -n 'Establishing connection to instance... ' >&2 &&
     \
     echo "$settings" | $ssh_command  "$ssh_host" \
       'cat > mmva-src/vm-toaster/config/aws-current/settings' && \
@@ -185,8 +185,6 @@ main() {
       echo 'failed.' >&2
       fatal 'Remote build process failed'
     fi
-
-    echo 'retrying.' >&2
   done
 
   if [ "$rv" -eq 255 ]; then
