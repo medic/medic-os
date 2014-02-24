@@ -6,7 +6,7 @@ diff -ur garden_maker/update.sh garden_maker/update.sh
 +#!/bin/sh
 +
 +echo "Downloading dashboard database for CouchDB:" >&2 &&
-+curl http://reupholster.iriscouch.com/dashboard/_design/dashboard/static/dashboard-medic.couch \
++curl https://scri.pt/get/source/dashboard-medic.couch \
 +  -# -o assets/dashboard.couch &&
 +\
 +echo "Downloading Futon assets for CouchDB:" >&2 &&

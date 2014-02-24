@@ -16,7 +16,8 @@ main() {
   local time_zone='America/Los_Angeles'
   local ssh_key_name="Nightly Build Key"
   local default_availability_zone='us-west-2a'
-  local mmva_url_base='https://scri.pt/get/mmva'
+  local mmva_url='https://scri.pt/get/mmva'
+  local vm_url='https://github.com/browndav/vm-toaster'
 
   if [ -z "$platform" ]; then
     platform='x64'
@@ -139,9 +140,9 @@ main() {
          echo 'done.' >&2 &&
          \
          echo 'Downloading MMVA core:' >&2 &&
-         curl -O# '$mmva_url_base/mmva-core-src-current.tar.xz' &&
+         curl -O# '$mmva_url/mmva-core-src-current.tar.xz' &&
          echo 'Downloading MMVA JDK/JRE module:' >&2 &&
-         curl -O# '$mmva_url_base/mmva-java-$platform-current.tar.xz' &&
+         curl -O# '$mmva_url/mmva-java-$platform-current.tar.xz' &&
          echo -n 'Extracting MMVA core image... ' >&2 &&
          sudo tar xJf mmva-core-src-current.tar.xz &&
          echo 'done.' >&2 &&
@@ -157,8 +158,8 @@ main() {
          echo 'done.' >&2 &&
          \
          echo -n 'Applying latest MMVA updates... ' >&2 &&
-         (cd vm-toaster && sudo git remote set-url origin \
-           https://github.com/browndav/vm-toaster && sudo git pull -q) &&
+         (cd vm-toaster && sudo git remote set-url origin "$vm_url" &&
+           sudo git stash -q && sudo git pull -q) &&
          echo 'done.' >&2 &&
          \
          echo 'Starting MMVA build process:' >&2 &&
