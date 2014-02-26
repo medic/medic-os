@@ -13,22 +13,14 @@ rename()
 
 apply_patches()
 {
-  (cd linux && patch -s -p1 \
-    < ../../patches/grsecurity-2.9.1-linux-3.10.32.diff) &&
-  (cd linux && patch -s -p1 \
-    < ../../patches/linux-export-final_putname-3.7.5.diff) &&
-  (cd linux && patch -s -p1 \
-    < ../../patches/linux-grsec-do_const-3.8.4.diff) &&
-  (cd linux && patch -s -p1 \
-    < ../../patches/linux-grsec-localversion-3.8.13.diff) &&
-  (cd busybox && patch -s -p1 \
-    < ../../patches/busybox-1.21.1-depmod.diff)
+  (cd gcc && patch -s -p1 \
+    < ../../patches/gcc-4.8.2-stack-protector-strong.diff)
 }
 
-finished_path="$base_dir/../../status/core.finished"
+finished_path="$base_dir/../../status/compiler.finished"
 
 if [ -f "$finished_path" ]; then
-  echo "Tree already rearranged for collection 'core'; skipping" >&2
+  echo "Tree already rearranged for collection 'compiler'; skipping" >&2
   exit 0
 fi
 

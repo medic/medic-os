@@ -10,6 +10,14 @@ disable_parallelism()
   export MAKE="`echo "$MAKE" | sed 's/--\?j\(obs\)\? *[0-9]\+//g;'`"
 }
 
+disable_stack_protector()
+{
+  local regex='s/ *-fstack-protector[A-Za-z0-9-]*//g;'
+
+  export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+  export CXXFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+}
+
 simple_cflags()
 {
   export CFLAGS="$CFLAGS_SIMPLE"
@@ -511,9 +519,13 @@ builder_setup_environment()
     export LDFLAGS_SIMPLE="-arch i386"
   fi
 
+  export CFLAGS_SIMPLE="-Os"
   export LDFLAGS="$LDFLAGS_SIMPLE -L$prefix/lib"
-  export CFLAGS_SIMPLE="-Os -fstack-protector-all"
   export CFLAGS_INCLUDE="-I$prefix/include -L$prefix/lib"
+
+  if [ -z "$NO_STACK_PROTECTOR" ]; then
+    export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -fstack-protector-strong"
+  fi
 
   if [ "$architecture" = 'intel' ]; then
     export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -m$bits"

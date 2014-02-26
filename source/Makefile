@@ -24,7 +24,7 @@ QMAKE := ${MAKE} --no-print-directory
 
 CFLAGS += -Os -fstack-protector-all
 
-KERNEL_VERSION := 3.10.17
+KERNEL_VERSION := 3.10.32
 KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}")
 
 

@@ -1,0 +1,26 @@
+
+BITS ?= 32
+PLATFORM ?= x86
+
+all:
+	@mkdir -p '${ROOT}' && \
+	./scripts/build-all '${ROOT}' '${START}' '${START_VERSION}' \
+		'${STOP}' '${STOP_VERSION}' '${PLATFORM}' '${BITS}' '${PARALLEL}'
+
+clean-logs:
+	rm -f logs/*/*.log
+
+clean: clean-logs
+	./scripts/clean-all; \
+	find . \( \( -name '*.o' -o -name '*.a' \) -a -type f \) -exec rm -f {} \;
+
+stats: recalculate-stats
+
+recalculate-stats:
+	for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
+		stats_file="stats/${PLATFORM}/` \
+			basename "$$file" .log | sed 's/-${TS}//g;' \
+		`.count" && \
+		wc -l < "$$file" > "$$stats_file"; \
+	done
+
