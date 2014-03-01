@@ -32,10 +32,14 @@ clean:
 	rm -rf "images/${PLATFORM}/iso/packages"/*
 
 distclean: clean
-	rm -rf "initrd/${PLATFORM}/lib/modules/"* && \
-	rm -f "images/${PLATFORM}/iso/boot/kernel" \
-	  "images/${PLATFORM}/iso/boot/image.xz" \
-		"images/${PLATFORM}/iso/packages"/* && \
+	for platform in x86 x64 armv6; do \
+	  rm -rf "initrd/$$platform/lib/modules/"* && \
+	  for type in iso xen; do \
+	    rm -f "images/$$platform/$$type/boot/kernel" \
+	      "images/$$platform/$$type/boot/image.xz" \
+		  "images/$$platform/$$type/packages"/*; \
+	  done; \
+	done && \
 	(cd source && ${MAKE} clean)
 
 clean-compiler:
