@@ -20,8 +20,8 @@ main()
 
   # Clean each platform
   for platform in $platforms; do
-    (cd mmva-src &&
-      make clean delete PLATFORM="$platform")
+
+    (cd mmva-src && make clean delete PLATFORM="$platform")
 
     if [ "$?" -ne 0 ]; then
       echo 'failed.' >&2
@@ -30,7 +30,6 @@ main()
   done
 
   # Primary source tree
-  (cd mmva-src && make delete) &&
   echo -n "Building core MMVA archive... " >&2 &&
   \
   tar -cf - mmva-src \

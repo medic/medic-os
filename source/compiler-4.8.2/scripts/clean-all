@@ -14,6 +14,9 @@ clean_all()
   for i in *; do
     if [ -h "$i" -a -f "$i/Makefile" ]; then
       ( cd "$i" && make clean )
+      if [ "$i" = 'gcc' ]; then
+        (cd "$i" && make distclean)
+      fi
     fi
   done
 

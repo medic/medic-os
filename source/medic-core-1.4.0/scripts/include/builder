@@ -33,6 +33,15 @@ disable_library_path()
 {
   unset LD_LIBRARY_PATH
   unset DYLD_LIBRARY_PATH
+
+  export LD_LIBRARY_PATH="$INITIAL_LD_LIBRARY_PATH"
+  export DYLD_LIBRARY_PATH="$INITIAL_DYLD_LIBRARY_PATH"
+}
+
+remove_cppflags_from_cflags()
+{
+  export CFLAGS="$CFLAGS_SIMPLE $CFLAGS_INCLUDE"
+  export CXXFLAGS="$CFLAGS"
 }
 
 build_version()
@@ -499,7 +508,9 @@ builder_setup_environment()
   export MAKE='gmake'
   export GNUMAKE='gmake'
   export PATH="$prefix/bin:$PATH"
+  export INITIAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
   export LD_LIBRARY_PATH="$prefix/lib:$LD_LIBRARY_PATH"
+  export INITIAL_DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH"
   export DYLD_LIBRARY_PATH="$prefix/lib:$DYLD_LIBRARY_PATH"
   export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
 
@@ -519,13 +530,9 @@ builder_setup_environment()
     export LDFLAGS_SIMPLE="-arch i386"
   fi
 
-  export CFLAGS_SIMPLE="-Os"
-  export LDFLAGS="$LDFLAGS_SIMPLE -L$prefix/lib"
+  export CPPFLAGS_SIMPLE="-D_FORTIFY_SOURCE=2"
+  export CFLAGS_SIMPLE="-Os -fstack-protector-strong"
   export CFLAGS_INCLUDE="-I$prefix/include -L$prefix/lib"
-
-  if [ -z "$NO_STACK_PROTECTOR" ]; then
-    export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -fstack-protector-strong"
-  fi
 
   if [ "$architecture" = 'intel' ]; then
     export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -m$bits"
@@ -534,7 +541,9 @@ builder_setup_environment()
     export CFLAGS_SIMPLE="$CFLAGS_SIMPLE $cflags_arch"
   fi
 
-  export CFLAGS="$CFLAGS_SIMPLE $CFLAGS_INCLUDE"
+  export CPPFLAGS="$CPPFLAGS_SIMPLE"
+  export LDFLAGS="$LDFLAGS_SIMPLE -L$prefix/lib"
+  export CFLAGS="$CFLAGS_SIMPLE $CFLAGS_INCLUDE $CPPFLAGS"
   export CXXFLAGS="$CFLAGS"
 }
 

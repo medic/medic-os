@@ -4,9 +4,11 @@ PARALLEL ?= 16
 PLATFORM ?= x86
 
 JAVA_VERSION := 1.7.45
+COMPILER_VERSION := 4.8.2
 VM_TOOLS_VERSION := 9.4.0
 MEDIC_CORE_VERSION := 1.4.0
 
+COMPILER_ROOT := /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
@@ -52,6 +54,17 @@ finalize-all: finalize-initrd
 clean: clean-all
 
 clean-all: clean-core clean-vm-tools clean-medic-core clean-java
+
+
+compiler: build-compiler
+
+build-compiler:
+	@(cd compiler && ${QMAKE} \
+		ROOT='${COMPILER_ROOT}' BITS='${BITS}' \
+		PLATFORM='${PLATFORM}' PARALLEL='${PARALLEL}')
+
+clean-compiler:
+	(cd compiler && ${MAKE} clean)
 
 
 core: build-core copy-core

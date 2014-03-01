@@ -158,14 +158,14 @@ main() {
          echo 'done.' >&2 &&
          \
          echo -n 'Applying latest MMVA updates... ' >&2 &&
-         (cd vm-toaster && sudo git remote set-url origin "$vm_url" &&
+         (cd vm-toaster &&
+           sudo git remote set-url origin "$vm_url" &&
            sudo git stash -q && sudo git pull -q) &&
          echo 'done.' >&2 &&
          \
          echo 'Starting MMVA build process:' >&2 &&
          source .profile &&
-         sudo JAVA_HOME="\$JAVA_HOME" \
-           make all PLATFORM='$platform' &&
+         sudo JAVA_HOME="\$JAVA_HOME" make all PLATFORM='$platform' &&
          echo 'MMVA build complete.' >&2 &&
          \
          echo -n 'Building EBS images:' >&2 &&
@@ -178,6 +178,7 @@ main() {
          ./vm-toaster/scripts/upload-iso-images \
            "$UPLOAD_METHOD" "$UPLOAD_USER" \
              "$UPLOAD_HOST" "$UPLOAD_TARGET" "$UPLOAD_OPTIONS" && \
+         \
          echo 'ISO images uploaded successfully.'"
 
     rv="$?"
