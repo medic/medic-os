@@ -18,6 +18,10 @@ compile:
 copy:
 	@(cd source && ${QMAKE} copy)
 
+compiler:
+	@(cd source && ${QMAKE} compiler)
+
+
 packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg kujua-transport-pkg
 
 clean:
@@ -33,6 +37,10 @@ distclean: clean
 	  "images/${PLATFORM}/iso/boot/image.xz" \
 		"images/${PLATFORM}/iso/packages"/* && \
 	(cd source && ${MAKE} clean)
+
+clean-compiler:
+	(cd source && ${MAKE} clean-compiler)
+
 
 build-iso: verify-packages build-initrd
 	@echo -n 'Creating ISO image... ' && \
@@ -187,6 +195,8 @@ download:
 	@rm -f status/download.finished && \
 	./scripts/retrieve-sources core source/core/incoming && \
 	  (cd source/core && ./scripts/rearrange-sources) && \
+	./scripts/retrieve-sources compiler source/compiler/incoming && \
+	  (cd source/compiler && ./scripts/rearrange-sources) && \
 	./scripts/retrieve-sources medic-core source/medic-core/incoming && \
 	  (cd source/medic-core && ./scripts/rearrange-sources) && \
 	./scripts/retrieve-sources vm-tools source/vm-tools/incoming && \
@@ -196,6 +206,7 @@ download:
 move-downloaded:
 	@if ! [ -f status/move.finished ]; then \
 	  (cd source/core && mv incoming/* source) && \
+	  (cd source/compiler && mv incoming/* source) && \
 	  (cd source/vm-tools && mv incoming/* source) && \
 	  (cd source/medic-core && mv incoming/* source) && \
 	  touch status/move.finished; \
@@ -204,7 +215,7 @@ move-downloaded:
 delete-downloaded:
 	@rm -f status/* && \
 	for type in incoming source; do \
-	  for pkg in core vm-tools medic-core; do \
+	  for pkg in core compiler vm-tools medic-core; do \
 		(cd source && rm -rf "$$pkg/$$type"/*); \
 		done; \
 	done

@@ -142,7 +142,8 @@ main()
   (disable_library_path && build_autoconf 'readline' \
     "$stdarg --build=\"$build_arch\" --enable-static=no --enable-shared=yes") &&
   \
-  (simple_cflags && build_autoconf 'curl' \
+  (remove_cppflags_from_cflags &&
+   simple_cflags && build_autoconf 'curl' \
     "$stdarg --with-ssl-dir=\"$prefix\" \
      --with-zlib=\"$prefix\" --with-libidn=\"$prefix\" \
      --with-ca-bundle=\"$prefix/share/curl/ca-bundle.crt\"") && \

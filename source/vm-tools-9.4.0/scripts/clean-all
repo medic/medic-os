@@ -9,7 +9,7 @@ fix_modules()
 {
   if ! [ -d source/open-vm-tools/modules/linux ]; then
     return 0
-	fi
+  fi
 
   find source/open-vm-tools/modules/linux \
     -type f -a -name Makefile.kernel | while read path; do

@@ -42,6 +42,8 @@ main()
     "$pkg_start" "$pkg_start_version" "$pkg_stop" \
       "$pkg_stop_version" "$uname" "$architecture" "$bits" "$parallel" &&
   \
+  disable_stack_protector &&
+  \
   build_autoconf 'gmp' "$stdarg" &&
   build_autoconf 'mpfr' "$stdarg" &&
   build_autoconf 'mpc' "$stdarg" &&
@@ -50,13 +52,17 @@ main()
   build_autoconf 'dejagnu' "$stdarg" &&
   \
   (disable_stack_protector &&
+    \
+    export CFLAGS_FOR_TARGET="$CFLAGS" &&
+    export CXX_FLAGS_FOR_TARGET="$CXXFLAGS" &&
+    \
     build_autoconf 'gcc' \
-     "$stdarg --disable-multilib \
-      --with-gnu-ld --enable-tls --enable-libssp \
-      --enable-lto --enable-checking=release --with-system-zlib \
-      --with-mpfr='$prefix' --enable-__cxa_atexit --with-gmp='$prefix' \
+     "$stdarg --disable-multilib --enable-shared \
+      --enable-checking=release --with-system-zlib --with-gnu-ld \
+      --enable-lto --enable-tls --enable-bootstrap --enable-libssp \
+      --enable-__cxa_atexit --with-mpfr='$prefix' --with-gmp='$prefix' \
       --with-isl='$prefix' --with-cloog='$prefix' --with-mpc='$prefix' \
-      --enable-languages=c,c++ --enable-threads=posix --with-fpmath=sse") &&
+      --enable-languages=c,c++ --enable-threads=posix") &&
   \
   remove_library_executable_bits "$prefix"
 
