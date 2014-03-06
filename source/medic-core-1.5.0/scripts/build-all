@@ -226,6 +226,7 @@ main()
   \
   build_npm_remote 'async' "$prefix" &&
   build_npm_remote 'express' "$prefix" &&
+  build_npm_remote 'garden-core' "$prefix" &&
   build_npm_remote 'kanso' "$prefix" &&
   build_npm_remote 'lazy' "$prefix" &&
   build_npm_remote 'request' "$prefix" &&

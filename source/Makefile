@@ -6,7 +6,7 @@ PLATFORM ?= x86
 JAVA_VERSION := 1.7.45
 COMPILER_VERSION := 4.8.2
 VM_TOOLS_VERSION := 9.4.0
-MEDIC_CORE_VERSION := 1.4.0
+MEDIC_CORE_VERSION := 1.5.0
 
 COMPILER_ROOT := /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
@@ -98,7 +98,7 @@ rebuild-vm-tools-modules:
 vm-tools: build-vm-tools copy-vm-tools
 
 clean-vm-tools:
-	(cd vm-tools && ${MAKE} clean)
+	@rm -rf /srv/software/vm-tools && (cd vm-tools && ${MAKE} clean)
 
 build-vm-tools:
 	@(cd vm-tools && ${QMAKE} \

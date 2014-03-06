@@ -3,7 +3,7 @@ MAKE ?= make
 PLATFORM ?= x86
 QMAKE := ${MAKE} --no-print-directory
 
-MEDIC_CORE_VERSION := 1.4.0
+MEDIC_CORE_VERSION := 1.5.0
 MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
 all: packages build-iso build-xen-image compress-xen-image build-x86-image-nopae
