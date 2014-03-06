@@ -10,23 +10,32 @@ rename()
     chown -R root:root . &&
    \
   for file in apache-*; do
-    mv "$file" "`echo "$file" | sed 's/^apache-//;'`";
+    if [ -d "$file" ]; then
+      mv "$file" "`echo "$file" | sed 's/^apache-//;'`";
+    fi
   done &&
    \
   for file in otp_src*; do
-    mv "$file" "erlang-`
-      echo "$file" | sed 's/^otp_src_//;' | tr '[A-Z]' '[a-z]'
-    `";
+    if [ -d "$file" ]; then
+      mv "$file" "erlang-`
+        echo "$file" | \
+          sed 's/^otp_src_\([^-\.]\+\).*$/\1/;' | tr '[A-Z]' '[a-z]'
+      `";
+    fi
   done &&
    \
   for file in xdelta3-*; do
-    mv "$file" "`echo "$file" | sed 's/^xdelta3-/xdelta-/;'`";
+    if [ -d "$file" ]; then
+      mv "$file" "`echo "$file" | sed 's/^xdelta3-/xdelta-/;'`";
+    fi
   done &&
   \
   for pkg in rebar nodelint gammu-json \
     node-gammu-json node-fs-ext garden_maker; do
     \
-    mv "$pkg" "`echo "$pkg" | tr '_' '-'`-devel";
+    if [ -d "$pkg" ]; then
+      mv "$pkg" "`echo "$pkg" | tr '_' '-'`-devel";
+    fi
   done &&
   \
   local version="`find_version icu4c*.tgz`" &&
@@ -73,7 +82,7 @@ apply_patches()
   (cd ant && patch -s -p1 \
     < ../../patches/ant-disable-junit.diff) &&
   (cd erlang && patch -s -p1 \
-    < ../../patches/erlang-r15-pcre-fix.diff) &&
+    < ../../patches/erlang-r16-pcre-fix.diff) &&
   (cd maven && patch -s -p1 \
     < ../../patches/maven-preserve-destination.diff) &&
   (cd gammu && patch -s -p1 \
