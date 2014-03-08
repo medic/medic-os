@@ -1,8 +1,28 @@
 #!/bin/bash
 
+prepend_path()
+{
+  for dir in "$@"; do
+    export PATH="$dir/bin:$PATH"
+    export LD_LIBRARY_PATH="$dir/lib:$LD_LIBRARY_PATH"
+    export DYLD_LIBRARY_PATH="$dir/lib:$DYLD_LIBRARY_PATH"
+    export PKG_CONFIG_PATH="$dir/lib/pkgconfig:$PKG_CONFIG_PATH"
+  done
+}
+
+append_path()
+{
+  for dir in "$@"; do
+    export PATH="$PATH:$dir/bin"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$dir/lib"
+    export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:$dir/lib"
+    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dir/lib/pkgconfig"
+  done
+}
+
 log()
 {
-  logger "$1" "$original_platform"
+  logger "$1" "$platform"
 }
 
 disable_parallelism()
@@ -90,6 +110,23 @@ build_config()
     && sh -c "$MAKE install $make_install_args") 2>&1 | log "$name"
   
   builder_check_status "$name" "${PIPESTATUS[0]}"
+}
+
+builder_normalize_platform()
+{
+  local platform="$1"
+
+  if [[ "$platform" = x86_64* ]]; then
+    rv='x64'
+  elif [[ "$platform" = x86* ]]; then
+    rv='x86'
+  elif [[ "$platform" = i?86 ]]; then
+    rv='x86'
+  else
+    rv='x86'
+  fi
+
+  echo "$rv"
 }
 
 builder_platform_to_architecture()
@@ -507,20 +544,19 @@ builder_setup_environment()
   export CXX='g++'
   export MAKE='gmake'
   export GNUMAKE='gmake'
-  export PATH="$prefix/bin:$PATH"
+
   export INITIAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
-  export LD_LIBRARY_PATH="$prefix/lib:$LD_LIBRARY_PATH"
   export INITIAL_DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH"
-  export DYLD_LIBRARY_PATH="$prefix/lib:$DYLD_LIBRARY_PATH"
-  export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
+
+  prepend_path "$prefix"
 
   builder_detect_system \
     || fatal 'Unsupported system; please edit Makefile'
 
-	if [ "$bits" -eq 64 ]; then
-	  (cd "$prefix" && rm -rf lib64 && mkdir -p lib && ln -s lib lib64) \
-	    || fatal 'Failed to create symbolic link for 64-bit libraries'
-	fi
+  if [ "$bits" -eq 64 ]; then
+    (cd "$prefix" && rm -rf lib64 && mkdir -p lib && ln -s lib lib64) \
+      || fatal 'Failed to create symbolic link for 64-bit libraries'
+  fi
 
   if [ "$parallel" ]; then
     export MAKE="$MAKE -j$parallel"
@@ -549,13 +585,29 @@ builder_setup_environment()
 
 builder_detect_system()
 {
-  # Detect machine word size
+  # Ensure `uname` is set
+  if [ -z "$uname" ]; then
+    uname="`uname -s`"
+  fi
+
+  # Ensure `platform` is set
+  if [ -z "$platform" ]; then
+    local machine="`uname -m`"
+    platform="`builder_normalize_platform "$machine"`"
+  fi
+
+  # Guess machine word size if necessary
   if [ -z "$bits" ]; then
-    if [ "`uname -m | grep 64$`" ]; then
+    if [ "`echo "$platform" | grep 64$`" ]; then
       bits='64'
     else
       bits='32'
     fi
+  fi
+
+  # Ensure architecture is set
+  if [ -z "$architecture" ]; then
+    architecture="`builder_platform_to_architecture "$platform"`"
   fi
 
   # Detect architecture/platform

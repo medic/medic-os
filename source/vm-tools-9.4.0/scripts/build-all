@@ -19,28 +19,23 @@ main()
   local parallel="$8"
   local kernel_version="$9"
 
-  local kernel_module_path="`
-    readlink -f "${10}" 2>/dev/null || realpath "${10}"
-  `"
-
   check_args "$@" || usage
-
-  # Processor and system options:
-  #  These are used by `builder_setup_environment` to set
-  #  environment variables and compilation flags appropriately.
-
-  original_platform="$platform"
-  bits="`builder_platform_to_bits "$platform" "$bits"`"
-  architecture="`builder_platform_to_architecture "$platform" "$bits"`"
 
   local uname="`uname -s`"
   local stdarg="--prefix=\"$prefix\""
 
+  local kernel_module_path="`
+    readlink -f "${10}" 2>/dev/null || realpath "${10}"
+  `"
+
   builder_initialize &&
   builder_setup_environment "$prefix" \
     "$pkg_start" "$pkg_start_version" "$pkg_stop" \
-      "$pkg_stop_version" "$uname" "$architecture" "$bits" "$parallel" &&
-  \
+      "$pkg_stop_version" "$uname" "$architecture" "$bits" "$parallel"
+
+  [ $? -eq 0 ] \
+    || fatal 'Failed to set up build environment'
+
   build_autoconf 'pv' "$stdarg" &&
   \
   (disable_parallelism && simple_cflags &&

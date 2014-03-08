@@ -1,16 +1,18 @@
 
+PARALLEL ?= 16
+PLATFORM := $(shell ../../scripts/detect-platform)
+
 MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
-
-PLATFORM ?= x86
 KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}
+
 
 all: build
 
 build: build-all
 
-build-all: build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-busybox
+build-all: status build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-busybox
 
 
 copy: copy-all
@@ -24,14 +26,17 @@ clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-busybox
 	rm -f logs/*/*
 
 
+status:
+	@echo && ./scripts/print-status 'start' \
+		'Building package `core` for `${PLATFORM}`'
+
 pv: build-pv
 
 build-pv:
 	@(cd ../medic-core && \
 		${QMAKE} ROOT='${MEDIC_CORE_ROOT}' \
-			START='pv' STOP='pv' \
-			PLATFORM='${PLATFORM}' \
-			BITS='${BITS}' PARALLEL='${PARALLEL}')
+			START='pv' STOP='pv' PLATFORM='${PLATFORM}' \
+			SKIP_STATUS=1 BITS='${BITS}' PARALLEL='${PARALLEL}')
 
 
 dhcpcd: build-dhcpcd
@@ -49,7 +54,7 @@ build-dhcpcd: build-pv
 			SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
 
 clean-dhcpcd:
-	@if [ -f source/dhcpcd ]; then \
+	@if [ -h source/dhcpcd ]; then \
 		(cd source/dhcpcd && ${QMAKE} clean); \
 	fi
 
@@ -57,7 +62,7 @@ clean-dhcpcd:
 kernel: build-kernel copy-kernel install-kernel-modules
 
 clean-kernel:
-	@if [ -f source/linux ]; then \
+	@if [ -h source/linux ]; then \
 		(cd source/linux && ${QMAKE} mrproper); \
 	fi
 
@@ -87,7 +92,7 @@ install-kernel-modules:
 busybox: build-busybox copy-busybox
 
 clean-busybox:
-	@if [ -f source/busybox ]; then \
+	@if [ -h source/busybox ]; then \
 		(cd source/busybox && ${MAKE} clean); \
 	fi
 
@@ -107,8 +112,9 @@ copy-busybox:
 syslinux: build-syslinux copy-syslinux
 
 clean-syslinux:
-	@if [ -f source/syslinux ]; then \
-	  (cd source/syslinux && ${MAKE} clean); \
+	@if [ -h source/syslinux ]; then \
+	  (cd source/syslinux && ${MAKE} clean; \
+	    find . -name '*.o' -exec rm -f {} \;); \
 	fi
 
 build-syslinux: build-pv

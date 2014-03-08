@@ -1,10 +1,11 @@
 
 MAKE ?= make
-PLATFORM ?= x86
 QMAKE := ${MAKE} --no-print-directory
+PLATFORM := $(shell ./scripts/detect-platform)
 
-MEDIC_CORE_VERSION := 1.5.0
-MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
+COMPILER_VERSION ?= 4.8.2
+COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
+
 
 all: packages build-iso build-xen-image compress-xen-image build-x86-image-nopae
 
@@ -13,13 +14,20 @@ iso: build-iso
 xen: build-xen-image
 
 compile:
-	@(cd source && ${QMAKE})
+	@if [ '${COMPILER}' ]; then \
+	  ${QMAKE} compiler || exit 1; \
+	fi
+	@(cd source && ../scripts/prepend-path \
+	  '${COMPILER_ROOT}' ${QMAKE} PLATFORM='${PLATFORM}')
 
 copy:
-	@(cd source && ${QMAKE} copy)
+	@(cd source && \
+	  ${QMAKE} copy PLATFORM='${PLATFORM}')
 
 compiler:
-	@(cd source && ${QMAKE} compiler)
+	@(cd source && \
+	  ${QMAKE} compiler \
+	    PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
 
 
 packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg kujua-transport-pkg
@@ -28,25 +36,25 @@ clean:
 	rm -rf output/* && \
 	rm -rf staging/packages && \
 	rm -rf packages/vm-tools/software && \
-	rm -rf packages/medic-core/software && \
-	rm -rf "images/${PLATFORM}/iso/packages"/*
+	rm -rf packages/medic-core/software
 
 distclean: clean
+	(cd source && ${MAKE} clean) && \
 	for platform in x86 x64 armv6; do \
+	  rm -rf "images/$$platform/iso/packages"/* && \
 	  rm -rf "initrd/$$platform/lib/modules/"* && \
 	  for type in iso xen; do \
 	    rm -f "images/$$platform/$$type/boot/kernel" \
 	      "images/$$platform/$$type/boot/image.xz" \
 		  "images/$$platform/$$type/packages"/*; \
 	  done; \
-	done && \
-	(cd source && ${MAKE} clean)
+	done
 
 clean-compiler:
 	(cd source && ${MAKE} clean-compiler)
 
 
-build-iso: verify-packages build-initrd
+build-iso: build-initrd
 	@echo -n 'Creating ISO image... ' && \
 	cd "images/${PLATFORM}/iso" && mkisofs -J -R \
 		-V 'Medic Mobile VM' \
@@ -143,11 +151,6 @@ build-x86-image-nopae:
 strip-binaries:
 	@echo -n "Removing unnecessary symbols... " && \
 	./scripts/strip-binaries packages && \
-	echo 'done.'
-
-verify-packages:
-	@echo -n "Verifying package contents... " && \
-	./scripts/verify-packages "${MEDIC_CORE_ROOT}" && \
 	echo 'done.'
 
 concierge-pkg:

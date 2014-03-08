@@ -1,24 +1,18 @@
 
-BITS ?= 32
 PARALLEL ?= 16
-PLATFORM ?= x86
+PLATFORM := $(shell ../scripts/detect-platform)
 
-JAVA_VERSION := 1.7.45
-COMPILER_VERSION := 4.8.2
-VM_TOOLS_VERSION := 9.4.0
-MEDIC_CORE_VERSION := 1.5.0
+JAVA_VERSION ?= 1.7.45
+VM_TOOLS_VERSION ?= 9.4.0
+MEDIC_CORE_VERSION ?= 1.5.0
 
-COMPILER_ROOT := /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
-VM_TOOLS_ROOT := /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
-MEDIC_CORE_ROOT := /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
+VM_TOOLS_ROOT ?= /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
+MEDIC_CORE_ROOT ?= /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
-PKG_DIR := ../packages
-JAVA_PKG_ROOT := ${PKG_DIR}/java/software/java/v${JAVA_VERSION}/${PLATFORM}
-VM_TOOLS_PKG_ROOT := ${PKG_DIR}/vm-tools/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
-MEDIC_CORE_PKG_ROOT := ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
-
-PATH := ${PATH}:${VM_TOOLS_ROOT}/bin
-PATH := ${PATH}:${MEDIC_CORE_ROOT}/bin
+PKG_DIR ?= ../packages
+JAVA_PKG_ROOT ?= ${PKG_DIR}/java/software/java/v${JAVA_VERSION}/${PLATFORM}
+VM_TOOLS_PKG_ROOT ?= ${PKG_DIR}/vm-tools/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
+MEDIC_CORE_PKG_ROOT ?= ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
 MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
@@ -42,18 +36,15 @@ copy: copy-all
 
 copy-all: copy-core copy-medic-core copy-vm-tools set-pax-flags
 
-copy-core:
-	@(cd core && ${MAKE} copy PLATFORM='${PLATFORM}')
-
 
 finalize: finalize-all
 
-finalize-all: finalize-initrd
+finalize-all: verify-packages finalize-initrd
 
 
 clean: clean-all
 
-clean-all: clean-core clean-vm-tools clean-medic-core clean-java
+clean-all: clean-core clean-vm-tools clean-medic-core clean-java clean-compiler
 
 
 compiler: build-compiler
@@ -75,8 +66,13 @@ build-core:
 		MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}' PLATFORM='${PLATFORM}' \
 		KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' PARALLEL='${PARALLEL}')
 
+copy-core:
+	@(cd core && \
+	  ${MAKE} copy PLATFORM='${PLATFORM}')
+
 clean-core:
 	(cd core && ${MAKE} clean)
+
 
 rebuild-kernel:
 	@(cd core && \
@@ -165,4 +161,9 @@ finalize-initrd:
 	@for symlink in source build; do \
 		rm -f "../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}/$$symlink"; \
 	done
+
+verify-packages:
+	@echo -n "Verifying package contents... " && \
+	./scripts/verify-packages "${MEDIC_CORE_ROOT}" && \
+	echo 'done.'
 

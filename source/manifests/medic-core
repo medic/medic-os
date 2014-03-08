@@ -5,7 +5,7 @@ bladox-tools, https://scri.pt/get/source/bladox-tools-1.5.24.tar.xz
 bzip2, http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
 couchdb, http://apache.osuosl.org/couchdb/source/1.5.0/apache-couchdb-1.5.0.tar.gz
 couchdb-lucene, https://scri.pt/get/source/couchdb-lucene-0.9.0.tar.gz
-curl, http://curl.haxx.se/download/curl-7.31.0.tar.bz2
+curl, http://curl.haxx.se/download/curl-7.35.0.tar.lzma
 diffutils, http://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz
 erica, https://github.com/downloads/benoitc/erica/erica-0.3.0.tar.gz
 erlang, http://www.erlang.org/download/otp_src_R16B03-1.tar.gz

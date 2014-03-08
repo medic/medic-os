@@ -1,8 +1,8 @@
 
-BITS ?= 32
-PLATFORM ?= x86
+PARALLEL ?= 16
+PLATFORM := $(shell ../../scripts/detect-platform)
 
-all:
+all: status
 	@mkdir -p '${ROOT}' && \
 	for file in templates/common/* templates/'${PLATFORM}'/*; do \
 		if [ -e "$$file" ]; then \
@@ -11,6 +11,12 @@ all:
 	done && \
 	./scripts/build-all '${ROOT}' '${START}' '${START_VERSION}' \
 		'${STOP}' '${STOP_VERSION}' '${PLATFORM}' '${BITS}' '${PARALLEL}'
+
+status:
+	@if [ -z "${SKIP_STATUS}" ]; then \
+		echo && ./scripts/print-status 'start' \
+        	'Building package `medic-core` for `${PLATFORM}`'; \
+	fi
 
 gardenize:
 	@./scripts/gardenize-couchdb '${ROOT}'

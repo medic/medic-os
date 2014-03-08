@@ -1,7 +1,7 @@
 #!/bin/sh
 
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
-base_dir="`dirname "$self"`/.."
+base_dir="`dirname "$self"`/../.."
 
 check_pax()
 {

@@ -28,6 +28,15 @@ load_timestamp()
   return 0
 }
 
+print_status()
+{
+  local name="$1"
+  local message="$2"
+
+  printf "\033[1A\r\033[K\r%9s: %s\n" \
+    "$name" "$message" >&2
+}
+
 logger()
 {
   local name="$1"
@@ -63,12 +72,13 @@ logger()
       else
         echo "$x" >> "$output_path"
       fi
-    done | pv -petl -i 0.5 -N "$safe_name" -s "$expected_lines" \
+    done | pv -petlc -i 0.5 -N "$safe_name" -s "$expected_lines" \
       > "$output_path"
 
-    local date="at `date +'%I:%M:%S%P'`"
-    printf "\033[1A\r\033[K\r%9s: %s %s\n" \
-      "$name" 'Build process completed' "$date" >&2
+    local date="`date +'%I:%M:%S%P'`"
+
+    print_status "$name" \
+      "Build process completed at $date" >&2
   else
     while read i; do
       line=$[$line + 1]

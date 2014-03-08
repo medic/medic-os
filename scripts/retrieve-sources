@@ -59,12 +59,14 @@ extract()
         tar xzf "$archive" ;;
       xz)
         tar xJf "$archive" ;;
+      lzma)
+        lzma -dc "$archive" | tar -xf - ;;
       *)
-        ;;
+        false ;;
     esac
 
     if [ "$?" -ne 0 ]; then
-      warn "Failed to extracting source code from '$archive'"
+      warn "Failed to extract source code from '$archive'"
       return "$?"
     fi
 

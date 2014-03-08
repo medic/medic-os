@@ -1,0 +1,29 @@
+#!/bin/bash
+
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/../source/medic-core/"
+
+usage()
+{
+    echo "Usage: $0 path command [args...]" >&2
+    exit 111
+}
+
+source "$base_dir/scripts/include/builder" 2>/dev/null \
+    || fatal 'Unable to load a required library'
+
+main()
+{
+  local path="$1"
+  shift 1
+
+  if [ -z "$path" -o $# -le 0 ]; then
+    usage
+  fi
+
+  prepend_path "$path" && exec "$@"
+}
+
+main "$@"
+exit $?
+

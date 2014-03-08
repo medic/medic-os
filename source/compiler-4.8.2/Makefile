@@ -1,11 +1,12 @@
 
-BITS ?= 32
-PLATFORM ?= x86
-
-all:
+all: status
 	@mkdir -p '${ROOT}' && \
 	./scripts/build-all '${ROOT}' '${START}' '${START_VERSION}' \
 		'${STOP}' '${STOP_VERSION}' '${PLATFORM}' '${BITS}' '${PARALLEL}'
+
+status:
+	@echo && ./scripts/print-status 'start' \
+        'Building package `compiler` for `${PLATFORM}`'
 
 clean-logs:
 	rm -f logs/*/*.log
