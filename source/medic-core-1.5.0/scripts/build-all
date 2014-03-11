@@ -57,10 +57,11 @@ main()
     erlang_extra_options="--enable-m${bits}-build"
   fi
 
-  build_autoconf 'pv' "$stdarg" &&
+  (disable_stack_protector &&
+    build_autoconf 'pv' "$stdarg") &&
   \
   (disable_parallelism && simple_cflags &&
-      build_autoconf 'zlib' "--shared $stdarg") &&
+    build_autoconf 'zlib' "--shared $stdarg") &&
   \
   builder_remove_static_libraries 'z' &&
   \

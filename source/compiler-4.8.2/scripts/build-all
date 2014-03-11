@@ -44,7 +44,9 @@ main()
   \
   disable_stack_protector &&
   \
-  build_autoconf 'gmp' "$stdarg" &&
+  (ABI="$bits" \
+    build_autoconf 'gmp' "$stdarg --enable-cxx") &&
+  \
   build_autoconf 'mpfr' "$stdarg" &&
   build_autoconf 'mpc' "$stdarg" &&
   build_autoconf 'isl' "$stdarg" &&

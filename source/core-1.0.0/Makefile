@@ -28,34 +28,34 @@ clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-busybox
 
 status:
 	@echo && ./scripts/print-status 'start' \
-		'Building package `core` for `${PLATFORM}`'
+	  'Building package `core` for `${PLATFORM}`'
 
 pv: build-pv
 
 build-pv:
 	@(cd ../medic-core && \
-		${QMAKE} ROOT='${MEDIC_CORE_ROOT}' \
-			START='pv' STOP='pv' PLATFORM='${PLATFORM}' \
-			SKIP_STATUS=1 BITS='${BITS}' PARALLEL='${PARALLEL}')
+	  ${QMAKE} ROOT='${MEDIC_CORE_ROOT}' \
+	    START='pv' STOP='pv' PLATFORM='${PLATFORM}' \
+	    SKIP_STATUS=1 BITS='${BITS}' PARALLEL='${PARALLEL}')
 
 
 dhcpcd: build-dhcpcd
 
 build-dhcpcd: build-pv
 	@./scripts/logger 'dhcpcd' '${PLATFORM}' \
-		'cd source/dhcpcd && \
-		./configure --libexecdir=/lib/dhcpcd \
-			--dbdir=/run/dhcpcd --sysconfdir=/etc && \
-		${MAKE} all CFLAGS="${CFLAGS}" && \
-		${MAKE} _proginstall _scriptsinstall _confinstall \
-			DESTDIR="../../../../initrd/${PLATFORM}" && \
-		cd dhcpcd-hooks && \
-		${MAKE} install DESTDIR="../../../../../initrd/${PLATFORM}" \
-			SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
+	  'cd source/dhcpcd && \
+	    ./configure --libexecdir=/lib/dhcpcd \
+	      --dbdir=/run/dhcpcd --sysconfdir=/etc && \
+	    ${MAKE} all CFLAGS="${CFLAGS}" && \
+	    ${MAKE} _proginstall _scriptsinstall _confinstall \
+	      DESTDIR="../../../../initrd/${PLATFORM}" && \
+	    cd dhcpcd-hooks && \
+	      ${MAKE} install DESTDIR="../../../../../initrd/${PLATFORM}" \
+	        SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
 
 clean-dhcpcd:
 	@if [ -h source/dhcpcd ]; then \
-		(cd source/dhcpcd && ${QMAKE} clean); \
+	  (cd source/dhcpcd && ${QMAKE} clean); \
 	fi
 
 
@@ -63,49 +63,50 @@ kernel: build-kernel copy-kernel install-kernel-modules
 
 clean-kernel:
 	@if [ -h source/linux ]; then \
-		(cd source/linux && ${QMAKE} mrproper); \
+	  (cd source/linux && ${QMAKE} mrproper); \
 	fi
 
 build-kernel: build-pv
 	@(cd source/linux && \
-		cp ../../../../config/kernel/common/boot-logo/logo-medic.ppm \
-			./drivers/video/logo/logo_linux_clut224.ppm && \
-		cp -H "${KERNEL_CONFIG}${KERNEL_EXTRA}" .config) && \
-		./scripts/logger 'linux' '${PLATFORM}' \
-			'unset MAKEFLAGS && cd source/linux && \
-			   ${PMAKE} bzImage && ${PMAKE} modules'
+	  cp ../../../../config/kernel/common/boot-logo/logo-medic.ppm \
+	    ./drivers/video/logo/logo_linux_clut224.ppm && \
+	  cp -H "${KERNEL_CONFIG}${KERNEL_EXTRA}" .config) && \
+	    ./scripts/logger 'linux' '${PLATFORM}' \
+	      'unset MAKEFLAGS && cd source/linux && \
+	        ${PMAKE} bzImage && ${PMAKE} modules'
 
 copy-kernel:
 	@cp source/linux/arch/x86/boot/bzImage \
-		"../../images/${PLATFORM}/iso/boot/kernel" && \
+	  "../../images/${PLATFORM}/iso/boot/kernel" && \
 	strip -o source/linux/vmlinux-stripped source/linux/vmlinux && \
 	mkdir -p "../../images/${PLATFORM}/xen/boot" && \
 	gzip -c9 source/linux/vmlinux-stripped \
-		> "../../images/${PLATFORM}/xen/boot/kernel"
+	  > "../../images/${PLATFORM}/xen/boot/kernel"
 
 install-kernel-modules:
 	@rm -rf "../../initrd/${PLATFORM}/lib/modules"/* && \
 	(cd source/linux && ${MAKE} modules_install \
-		INSTALL_MOD_PATH="../../../../initrd/${PLATFORM}" &>/dev/null)
+	  INSTALL_MOD_PATH="../../../../initrd/${PLATFORM}" &>/dev/null)
 
 
 busybox: build-busybox copy-busybox
 
 clean-busybox:
 	@if [ -h source/busybox ]; then \
-		(cd source/busybox && ${MAKE} clean); \
+	  (cd source/busybox && ${MAKE} clean); \
 	fi
 
 build-busybox: build-pv
-	@(cd source/busybox && cp ../../../../busybox/dot-config-1.21.1 .config) && \
+	@(cd source/busybox && \
+	  cp ../../../../config/busybox/dot-config-1.21.1 .config) && \
 	./scripts/logger 'busybox' '${PLATFORM}' \
-		'cd source/busybox && ${PMAKE}'
+	  'cd source/busybox && ${PMAKE}'
 
 copy-busybox:
 	@echo -n "Copying files for 'busybox'... " && \
 	mkdir -p "../../initrd/${PLATFORM}/bin" && \
 	(cd source/busybox && cp busybox \
-		../../../../initrd/${PLATFORM}/bin/busybox) && \
+	  ../../../../initrd/${PLATFORM}/bin/busybox) && \
 	echo 'done.'
 
 
@@ -119,14 +120,14 @@ clean-syslinux:
 
 build-syslinux: build-pv
 	@./scripts/logger 'syslinux' '${PLATFORM}' \
-		'cd source/syslinux && ${PMAKE} bios MAKEFLAGS='
+	  'cd source/syslinux && ${PMAKE} bios MAKEFLAGS='
 
 copy-syslinux:
 	@echo -n "Copying files for 'syslinux'... " && \
 	(cd source/syslinux && \
 	  cp bios/core/isolinux.bin \
-			bios/com32/elflink/ldlinux/ldlinux.c32 \
-		  "../../../../images/${PLATFORM}/iso/boot/isolinux/") && \
+	    bios/com32/elflink/ldlinux/ldlinux.c32 \
+	      "../../../../images/${PLATFORM}/iso/boot/isolinux/") && \
 	echo 'done.'
 
 
@@ -134,9 +135,9 @@ stats: recalculate-stats
 
 recalculate-stats:
 	for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
-		stats_file="stats/${PLATFORM}/` \
-			basename "$$file" .log | sed 's/-${TS}//g;' \
-		`.count" && \
-		wc -l < "$$file" > "$$stats_file"; \
+	  stats_file="stats/${PLATFORM}/` \
+	    basename "$$file" .log | sed 's/-${TS}//g;' \
+	  `.count" && \
+	  wc -l < "$$file" > "$$stats_file"; \
 	done
 

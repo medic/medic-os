@@ -14,7 +14,7 @@ iso: build-iso
 xen: build-xen-image
 
 compile:
-	@if [ '${COMPILER}' ]; then \
+	@if [ -z '${SKIP_COMPILER}' ]; then \
 	  ${QMAKE} compiler || exit 1; \
 	fi
 	@(cd source && ../scripts/prepend-path \
@@ -46,7 +46,7 @@ distclean: clean
 	  for type in iso xen; do \
 	    rm -f "images/$$platform/$$type/boot/kernel" \
 	      "images/$$platform/$$type/boot/image.xz" \
-		  "images/$$platform/$$type/packages"/*; \
+	        "images/$$platform/$$type/packages"/*; \
 	  done; \
 	done
 
@@ -57,11 +57,11 @@ clean-compiler:
 build-iso: build-initrd
 	@echo -n 'Creating ISO image... ' && \
 	cd "images/${PLATFORM}/iso" && mkisofs -J -R \
-		-V 'Medic Mobile VM' \
-		-o "../../../output/image-${PLATFORM}${ISO_EXTRA}.iso" \
-		-boot-load-size 4 -boot-info-table \
-		-no-emul-boot -b boot/isolinux/isolinux.bin \
-		-c boot/isolinux/boot.cat . &>/dev/null && \
+	  -V 'Medic Mobile VM' \
+	  -o "../../../output/image-${PLATFORM}${ISO_EXTRA}.iso" \
+	  -boot-load-size 4 -boot-info-table \
+	  -no-emul-boot -b boot/isolinux/isolinux.bin \
+	  -c boot/isolinux/boot.cat . &>/dev/null && \
 	echo 'done.'
 
 build-xen-image:
@@ -71,7 +71,7 @@ build-xen-image:
 	image_path="output/image-${PLATFORM}-xen" && \
 	\
 	dd if=/dev/zero of="$$image_path" \
-		bs=1048576 seek=1023 count=1 &>/dev/null && \
+	  bs=1048576 seek=1023 count=1 &>/dev/null && \
 	\
 	mkfs.ext4 -F "$$image_path" &>/dev/null && \
 	mount -o loop "$$image_path" "$$loop_path" && \
@@ -79,7 +79,7 @@ build-xen-image:
 	mkdir -p "$$loop_path/packages" && \
 	\
 	cp -a "images/${PLATFORM}/iso/packages"/* \
-		"$$loop_path/packages" && \
+	  "$$loop_path/packages" && \
 	\
 	sync && umount "$$loop_path" && sync && \
 	echo 'done.'
@@ -101,16 +101,16 @@ build-ami-image:
 	ln -f "output/image-${PLATFORM}-xen" "output/image" && \
 	\
 	ec2-bundle-image \
-		-c "$$EC2_CERTIFICATE" -k "$$EC2_PRIVATE_KEY" \
-		-u "$$AWS_ID" -d "output/image-${PLATFORM}-ami" \
-		-i "output/image" -r "$$architecture" >/dev/null || exit "$$?"; \
+	  -c "$$EC2_CERTIFICATE" -k "$$EC2_PRIVATE_KEY" \
+	  -u "$$AWS_ID" -d "output/image-${PLATFORM}-ami" \
+	  -i "output/image" -r "$$architecture" >/dev/null || exit "$$?"; \
 	\
 	rm -f "output/image"; \
 	echo 'done.'
 
 compress-xen-image:
 	@gzip -qcf9 "output/image-${PLATFORM}-xen" \
-		> "output/image-${PLATFORM}-xen.gz"
+	  > "output/image-${PLATFORM}-xen.gz"
 
 upload: upload-ami-image
 
@@ -121,31 +121,31 @@ upload-ami-image: build-ami-image
 	export PATH="$$EC2_HOME/bin:$$PATH" && \
 	\
 	ec2-upload-bundle \
-		-a "$$AWS_ACCESS_KEY" \
-		-s "$$AWS_SECRET_KEY" -b "$$S3_BUCKET" \
-		-m "output/image-${PLATFORM}-ami/image.manifest.xml" \
-			|| exit "$$?"; \
+	  -a "$$AWS_ACCESS_KEY" \
+	  -s "$$AWS_SECRET_KEY" -b "$$S3_BUCKET" \
+	  -m "output/image-${PLATFORM}-ami/image.manifest.xml" \
+	    || exit "$$?"; \
 	echo 'done.'
 
 build-initrd:
 	@echo -n 'Creating initrd image... ' && \
 	cp -a initrd/common/* "initrd/${PLATFORM}/" && \
 	(cd "initrd/${PLATFORM}" && \
-		find * | cpio -o -H newc 2>/dev/null \
-		  | sh ../../source/core/source/linux/scripts/xz_wrap.sh \
-			> "../../images/${PLATFORM}/iso/boot/image.xz") && \
+	  find * | cpio -o -H newc 2>/dev/null \
+	    | sh ../../source/core/source/linux/scripts/xz_wrap.sh \
+	      > "../../images/${PLATFORM}/iso/boot/image.xz") && \
 	(cd "images/${PLATFORM}" && \
-		[ -d xen ] && cp -a "iso/boot/image.xz" "xen/boot/") && \
+	  [ -d xen ] && cp -a "iso/boot/image.xz" "xen/boot/") && \
 	echo 'done.'
 
 build-x86-image-nopae:
 	@if [ "${PLATFORM}" = 'x86' ]; then \
-		echo 'Building x86 image with PAE disabled...' && \
-		(cd source && \
-		  ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
-		  ${QMAKE} rebuild-vm-tools-modules) && \
-		\
-		${QMAKE} build-iso ISO_EXTRA='-nopae'; \
+	  echo 'Building x86 image with PAE disabled...' && \
+	  (cd source && \
+	    ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
+	    ${QMAKE} rebuild-vm-tools-modules) && \
+	  \
+	  ${QMAKE} build-iso ISO_EXTRA='-nopae'; \
 	fi
 
 strip-binaries:
@@ -193,9 +193,9 @@ kujua-transport-pkg:
 
 convert-boot-logo:
 	for file in logo-medic logo-medic-gray; do \
-		pngtopnm "config/kernel/common/boot-logo/$$file.png" \
-		  | ppmquant 224 2>/dev/null | pnmtoplainpnm \
-			> "config/kernel/common/boot-logo/$$file.ppm"; \
+	  pngtopnm "config/kernel/common/boot-logo/$$file.png" \
+	    | ppmquant 224 2>/dev/null | pnmtoplainpnm \
+	      > "config/kernel/common/boot-logo/$$file.ppm"; \
 	done
 
 download:
@@ -223,7 +223,7 @@ delete-downloaded:
 	@rm -f status/* && \
 	for type in incoming source; do \
 	  for pkg in core compiler vm-tools medic-core; do \
-		(cd source && rm -rf "$$pkg/$$type"/*); \
-		done; \
+	    (cd source && rm -rf "$$pkg/$$type"/*); \
+	  done; \
 	done
 
