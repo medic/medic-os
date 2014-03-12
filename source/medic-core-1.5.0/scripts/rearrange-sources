@@ -57,7 +57,7 @@ rename()
 remove()
 {
   rm -f *.downloaded *.finished &&
-  rm -f *.tar.bz2 *.tar.gz *.tar.xz *.tgz
+  rm -f *.tar.xz *.tar.lzma *.tar.bz2 *.tar.gz *.tgz
 }
 
 symlink()

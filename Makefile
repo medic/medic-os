@@ -129,6 +129,7 @@ upload-ami-image: build-ami-image
 
 build-initrd:
 	@echo -n 'Creating initrd image... ' && \
+	chmod 0440 initrd/common/etc/sudoers && \
 	cp -a initrd/common/* "initrd/${PLATFORM}/" && \
 	(cd "initrd/${PLATFORM}" && \
 	  find * | cpio -o -H newc 2>/dev/null \
