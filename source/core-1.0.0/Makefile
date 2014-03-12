@@ -115,7 +115,7 @@ syslinux: build-syslinux copy-syslinux
 clean-syslinux:
 	@if [ -h source/syslinux ]; then \
 	  (cd source/syslinux && ${MAKE} clean; \
-	    find . -name '*.o' -exec rm -f {} \;); \
+	    find . -name '*.o' -o -name zbin -exec rm -f {} \;); \
 	fi
 
 build-syslinux: build-pv
