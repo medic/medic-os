@@ -13,10 +13,13 @@ clean_all()
 {
   for i in *; do
     if [ -h "$i" -a -f "$i/Makefile" ]; then
-      ( cd "$i" && make clean )
-      if [ "$i" = 'gcc' ]; then
-        (cd "$i" && make distclean)
-      fi
+      (cd "$i" && make clean)
+    fi
+  done
+
+  for i in gmp gcc; do
+    if [ -h "$i" -a -f "$i/Makefile" ]; then
+      (cd "$i" && make distclean)
     fi
   done
 
