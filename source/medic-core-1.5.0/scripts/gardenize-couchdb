@@ -24,10 +24,6 @@ main()
   (cd "$prefix/share/couchdb" &&
     \
     mkdir -p garden && cp "$assets_dir/dashboard.couch" garden &&
-    \
-    # unzip -qq "$assets_dir/futon.zip" &&
-    # rm -rf www && mv "$unzip_dir/www" . && rm -rf "$unzip_dir" &&
-    \
     cp "$images_dir/$logo_file" www/image/logo.png)
 
   return "$?"
