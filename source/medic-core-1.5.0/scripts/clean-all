@@ -17,6 +17,12 @@ clean_all()
     fi
   done
 
+  for i in js; do
+    if [ -h "$i" -a -f "$i/Makefile" ]; then
+      ( cd "$i" && make distclean )
+    fi
+  done
+
   (cd gammu && rm -f CMakeCache.txt)
   return 0
 }
