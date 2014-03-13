@@ -23,8 +23,6 @@ CFLAGS += -Os -fstack-protector-all
 KERNEL_VERSION := 3.10.32
 KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}")
 
-#PATH := ${MEDIC_CORE_ROOT}/bin:${PATH}
-
 
 all: build copy finalize
 
@@ -81,6 +79,7 @@ rebuild-kernel:
 	  ${QMAKE} clean-kernel &>/dev/null && \
 	  ${QMAKE} kernel \
 	    PLATFORM='${PLATFORM}' \
+	    PATH="${MEDIC_CORE_ROOT}/bin:$$PATH" \
 	    MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}' \
 	    KERNEL_VERSION='${KERNEL_VERSION}' KERNEL_EXTRA='${KERNEL_EXTRA}' \
 	    KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' PARALLEL='${PARALLEL}')
