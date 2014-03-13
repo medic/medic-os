@@ -20,7 +20,7 @@ QMAKE := ${MAKE} --no-print-directory
 
 CFLAGS += -Os -fstack-protector-all
 
-KERNEL_VERSION := 3.10.32
+KERNEL_VERSION := 3.10.33
 KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}")
 
 #PATH := ${MEDIC_CORE_ROOT}/bin:${PATH}
