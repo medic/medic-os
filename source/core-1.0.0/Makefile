@@ -5,6 +5,9 @@ PLATFORM := $(shell ../../scripts/detect-platform)
 MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
+
+KERNEL_SOURCE_PATH := $(shell readlink -f source/linux)
+INITRD_STAGING_PATH := $(shell readlink -f ../../initrd/${PLATFORM})
 KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}
 
 
@@ -128,6 +131,49 @@ copy-syslinux:
 	  cp bios/core/isolinux.bin \
 	    bios/com32/elflink/ldlinux/ldlinux.c32 \
 	      "../../../../images/${PLATFORM}/iso/boot/isolinux/") && \
+	echo 'done.'
+
+
+iptables: build-iptables copy-iptables
+
+clean-iptables:
+	@if [ -h source/iptables ]; then \
+	  (cd source/iptables && ${MAKE} clean) \
+	fi && \
+	rm -rf "${INITRD_STAGING_PATH}/lib/xtables" \
+	  "${INITRD_STAGING_PATH}/bin/iptables-"* && \
+	for type in ip4tc ip6tc ipq iptc xtables; do \
+	  rm -f "${INITRD_STAGING_PATH}/lib/lib$$type".so*; \
+	done && \
+	for type in xtables iptables ip6tables; do \
+	  rm -rf "${INITRD_STAGING_PATH}/sbin/$$type"*; \
+	done
+
+build-iptables:
+	@./scripts/logger 'iptables' '${PLATFORM}' \
+	  "cd source/iptables && \
+	    ./configure --prefix=/ \
+	      --enable-shared --disable-static \
+	      --with-kernel='${KERNEL_SOURCE_PATH}' \
+	      --with-pkgconfigdir=/usr/lib/pkgconfig \
+	      --enable-libipq --with-xtlibdir=/lib/xtables \
+	      --bindir=/bin --sbindir=/sbin --libdir=/lib && \
+	   make && \
+	   make install DESTDIR='${INITRD_STAGING_PATH}'"
+
+copy-iptables:
+	@echo -n "Copying files for 'iptables'... " && \
+	for type in ip4tc ip6tc ipq iptc xtables; do \
+	  ./scripts/strip-all "${INITRD_STAGING_PATH}/lib/lib$$type".so*; \
+	done && \
+	./scripts/strip-all \
+	  '${INITRD_STAGING_PATH}/lib/xtables' \
+	  '${INITRD_STAGING_PATH}/sbin/xtables-multi' && \
+	cd source/iptables && \
+	rm -rf '${INITRD_STAGING_PATH}/share' \
+	  '${INITRD_STAGING_PATH}/include' \
+	  '${INITRD_STAGING_PATH}/usr/lib/pkgconfig' \
+	  '${INITRD_STAGING_PATH}/lib/libxtables.la' && \
 	echo 'done.'
 
 
