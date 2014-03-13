@@ -1,4 +1,7 @@
 
+PARALLEL ?= 16
+PLATFORM := $(shell ../../scripts/detect-platform)
+
 all: pv status
 	@mkdir -p '${ROOT}' && \
 	./scripts/build-all '${ROOT}' '${START}' '${START_VERSION}' \
