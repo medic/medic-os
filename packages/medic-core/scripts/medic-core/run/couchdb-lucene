@@ -17,7 +17,7 @@ start()
   done
 
   # Update password:
-   #   This rewrites the CouchDB URI in couchdb-lucene.ini.
+  #   This rewrites the CouchDB URI in couchdb-lucene.ini.
 
   "$base/../setup/couchdb-lucene" &&
   \

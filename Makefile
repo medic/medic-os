@@ -156,7 +156,7 @@ strip-binaries:
 
 concierge-pkg:
 	@echo -n "Compressing package 'concierge'... " && \
-	scripts/build-package 'concierge' 1000 "${PLATFORM}" && \
+	scripts/build-package 'concierge' 1001 "${PLATFORM}" && \
 	echo 'done.'
 
 java-pkg:
@@ -166,12 +166,12 @@ java-pkg:
 
 medic-core-pkg:
 	@echo -n "Compressing package 'medic-core'... " && \
-	scripts/build-package 'medic-core' 1400 "${PLATFORM}" && \
+	scripts/build-package 'medic-core' 1500 "${PLATFORM}" && \
 	echo 'done.'
 
 system-services-pkg:
 	@echo -n "Compressing package 'system-services'... " && \
-	scripts/build-package 'system-services' 1000 "${PLATFORM}" && \
+	scripts/build-package 'system-services' 1001 "${PLATFORM}" && \
 	echo 'done.'
 
 vm-tools-pkg:
@@ -189,7 +189,7 @@ gardener-pkg: shrink-gardener
 
 kujua-transport-pkg:
 	@echo -n "Compressing package 'kujua-transport'... " && \
-	scripts/build-package 'kujua-transport' 1000 "${PLATFORM}" && \
+	scripts/build-package 'kujua-transport' 1001 "${PLATFORM}" && \
 	echo 'done.'
 
 convert-boot-logo:
