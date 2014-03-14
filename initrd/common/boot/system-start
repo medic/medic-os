@@ -35,7 +35,7 @@ wait_for_ip_address()
 
 main()
 {
-  local version='1000'
+  local version='1001'
   local swap_size='1024'
   local source_device='/dev/sr0'
 
