@@ -50,7 +50,12 @@ main()
   for platform in $platforms; do
     echo -n "Building JDK/JRE archive for '$platform'... " >&2 &&
     \
-    tar -cf - "mmva-src/java" "mmva-src/java-current/$platform" \
+    (cd 'mmva-src/java-current' && \
+      rm -f selected && ln -sf "$platform" selected) && \
+    \
+    tar -cf - 'mmva-src/java' \
+      'mmva-src/java-current/selected' \
+      "mmva-src/java-current/$platform" \
       "mmva-src/vm-toaster/templates/java/$platform" \
         | xz -9ec > "mmva-java-$platform-$ts.tar.xz"
 
