@@ -36,6 +36,7 @@ main() {
   local time_zone='America/Los_Angeles'
   local ssh_key_name="Nightly Build Key"
   local default_availability_zone='us-west-2a'
+
   local mmva_url='https://scri.pt/get/mmva'
   local vm_url='https://github.com/browndav/vm-toaster'
 
@@ -48,7 +49,11 @@ main() {
   fi
 
   if [ -z "$instance_type" ]; then
-    instance_type='m1.small'
+    if [ "$platform" = 'x86' ]; then
+      instance_type='c1.medium'
+    else
+      instance_type='c3.xlarge'
+    fi
   fi
 
   local ami='';
