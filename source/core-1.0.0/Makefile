@@ -15,17 +15,17 @@ all: build
 
 build: build-all
 
-build-all: status build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-busybox
+build-all: status build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-iptables build-busybox
 
 
 copy: copy-all
 
-copy-all: copy-syslinux copy-kernel copy-busybox
+copy-all: copy-syslinux copy-kernel copy-iptables copy-busybox
 
 
 clean: clean-all
 
-clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-busybox
+clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-iptables clean-busybox
 	rm -f logs/*/*
 
 
