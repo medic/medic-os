@@ -20,8 +20,13 @@ ssh_command() {
   local identity="$2"
   local remote_command="$3"
 
-  ssh -o StrictHostKeyChecking=no -o RequestTTY=yes \
-    -i "$identity" "$host" "$remote_command"
+  local ssh_options='-q -o StrictHostKeyChecking=no -o RequestTTY=yes'
+
+  if [ -z "$identity" ]; then
+    ssh $ssh_options "$host" "$remote_command"
+  else
+    ssh $ssh_options -i "$identity" "$host" "$remote_command"
+  fi
 
   return "$?"
 }
@@ -141,6 +146,10 @@ main() {
   local rv='0'
   local ssh_id="$ssh_private_key_path"
   local ssh_host="ec2-user@$external_fqdn"
+
+  if ! [ -f "$ssh_id" ]; then
+    fatal "SSH private key file `$ssh_id` not found"
+  fi
 
   while [ "$n" -gt 0 ]; do
 
