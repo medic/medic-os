@@ -201,14 +201,18 @@ convert-boot-logo:
 
 download:
 	@rm -f status/download.finished && \
-	./scripts/retrieve-sources core source/core/incoming && \
-	  (cd source/core && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources compiler source/compiler/incoming && \
-	  (cd source/compiler && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources medic-core source/medic-core/incoming && \
-	  (cd source/medic-core && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources vm-tools source/vm-tools/incoming && \
-	  (cd source/vm-tools && ./scripts/rearrange-sources) && \
+	./scripts/retrieve-sources \
+	  core source/core/incoming "${URL}" && \
+	    (cd source/core && ./scripts/rearrange-sources) && \
+	./scripts/retrieve-sources \
+	  compiler source/compiler/incoming "${URL}" && \
+	    (cd source/compiler && ./scripts/rearrange-sources) && \
+	./scripts/retrieve-sources \
+	  medic-core source/medic-core/incoming "${URL}" && \
+	    (cd source/medic-core && ./scripts/rearrange-sources) && \
+	./scripts/retrieve-sources \
+	  vm-tools source/vm-tools/incoming "${URL}" && \
+	    (cd source/vm-tools && ./scripts/rearrange-sources) && \
 	touch status/download.finished
 
 move-downloaded:
