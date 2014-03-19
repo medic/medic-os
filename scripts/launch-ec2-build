@@ -39,6 +39,7 @@ main() {
 
   local mmva_url='https://scri.pt/get/mmva'
   local vm_url='https://github.com/browndav/vm-toaster'
+  local mirror_url='https://s3-us-west-2.amazonaws.com/medicmobile.org/mmva'
 
   if [ -z "$settings" -o $# -gt 3 ]; then
     usage
@@ -196,7 +197,9 @@ main() {
          echo 'done.' >&2 &&
          \
          echo 'Starting MMVA build process:' >&2 &&
-         sudo JAVA_HOME="\$JAVA_HOME" make all PLATFORM='$platform' &&
+         sudo JAVA_HOME="\$JAVA_HOME" \
+           make all URL='$mirror_url' PLATFORM='$platform' &&
+         \
          echo 'MMVA build complete.' >&2 &&
          \
          echo -n 'Building EBS images:' >&2 &&
