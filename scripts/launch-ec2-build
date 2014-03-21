@@ -41,6 +41,7 @@ main() {
   local instance_type="$3"
   local build_options="$4"
 
+  local fs_size='20'
   local security_group='basic'
   local time_zone='America/Los_Angeles'
   local ssh_key_name="Nightly Build Key"
@@ -106,7 +107,8 @@ main() {
   echo -n 'Creating instance... ' >&2
 
   local instance_data="`
-    ec2-run-instances "$ami" -t "$instance_type" \
+    ec2-run-instances "$ami" \
+      -t "$instance_type" -b "/dev/sda1=:$fs_size" \
       -k "$ssh_key_name" -z "$EC2_AVAILABILITY_ZONE" -g "$security_group"
   `" &&
   \
@@ -179,6 +181,10 @@ main() {
          \
          export TZ='$time_zone' &&
          source mmva-src/vm-toaster/config/aws-current/settings &&
+         echo 'done.' >&2 &&
+         \
+         echo -n 'Resizing filesystem... ' >&2 &&
+         sudo resize2fs /dev/xvda1 &>/dev/null &&
          echo 'done.' >&2 &&
          \
          echo -n 'Updating system packages... ' >&2 &&
