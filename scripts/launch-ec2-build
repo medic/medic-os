@@ -10,7 +10,10 @@ fatal() {
 usage() {
 
   local app="`basename "$0"`"
-  echo "Usage: $app settings_path [ platform [ instance_type ] ]" >&2
+  local required_args='settings_path'
+  local optional_args='platform [ instance_type [ build_options ] ]'
+
+  echo "Usage: $app $required_args [ $optional_args ]" >&2
   exit 1
 }
 
@@ -36,17 +39,19 @@ main() {
   local settings="$1"
   local platform="$2"
   local instance_type="$3"
+  local build_options="$4"
 
   local security_group='basic'
   local time_zone='America/Los_Angeles'
   local ssh_key_name="Nightly Build Key"
   local default_availability_zone='us-west-2a'
+  local s3_base_url='https://s3-us-west-2.amazonaws.com'
 
-  local mmva_url='https://scri.pt/get/mmva'
   local vm_url='https://github.com/browndav/vm-toaster'
-  local mirror_url='https://s3-us-west-2.amazonaws.com/medicmobile.org/mmva'
+  local mmva_url="$s3_base_url/medicmobile.org/mmva/source"
+  local mirror_url="$s3_base_url/medicmobile.org/mmva/mirror"
 
-  if [ -z "$settings" -o $# -gt 3 ]; then
+  if [ -z "$settings" -o $# -gt 4 ]; then
     usage
   fi
 
@@ -184,6 +189,7 @@ main() {
          curl -O# '$mmva_url/mmva-core-src-current.tar.xz' &&
          echo 'Downloading MMVA JDK/JRE module:' >&2 &&
          curl -O# '$mmva_url/mmva-java-$platform-current.tar.xz' &&
+         \
          echo -n 'Extracting MMVA core image... ' >&2 &&
          sudo tar xJf mmva-core-src-current.tar.xz &&
          echo 'done.' >&2 &&
@@ -206,8 +212,8 @@ main() {
          echo 'done.' >&2 &&
          \
          echo 'Starting MMVA build process:' >&2 &&
-         sudo JAVA_HOME="\$JAVA_HOME" \
-           make all URL='$mirror_url' PLATFORM='$platform' &&
+         sudo JAVA_HOME="\$JAVA_HOME" make all \
+           URL='$mirror_url' PLATFORM='$platform' $build_options &&
          \
          echo 'MMVA build complete.' >&2 &&
          \
@@ -217,6 +223,7 @@ main() {
            'MMVA $platform - `date +%Y%m%d`' /dev/sdb \
          \
          echo 'EBS images built successfully.' >&2 &&
+         \
          echo 'Uploading ISO images:' >&2 &&
          ./vm-toaster/scripts/upload-iso-images \
            "$UPLOAD_METHOD" "$UPLOAD_USER" \
