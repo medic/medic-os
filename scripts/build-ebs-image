@@ -158,7 +158,7 @@ main()
 
   wait_for_volume_availability "$volume_id" &&
   \
-  ec2-delete-volume "$volume_id" \
+  ec2-delete-volume "$volume_id" &>/dev/null \
     || warn "Failure while deleting volume '$volume_id'"
 
   echo 'done.' >&2

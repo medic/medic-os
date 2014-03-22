@@ -235,20 +235,43 @@ main() {
            "$UPLOAD_METHOD" "$UPLOAD_USER" \
              "$UPLOAD_HOST" "$UPLOAD_TARGET" "$UPLOAD_OPTIONS" && \
          \
-         echo 'ISO images uploaded successfully.'"
+         echo 'ISO images uploaded successfully.' && sync"
 
     rv="$?"
 
-    if [ "$rv" -ne 0 -a "$rv" -ne 255 ]; then
-      echo 'failed.' >&2
-      fatal 'Remote build process failed'
+    if [ "$rv" -ne 255 ]; then
+      break
     fi
   done
 
   if [ "$rv" -eq 255 ]; then
+    echo 'timeout.' >&2
     fatal 'Failed to connect to instance; timeout exceeded'
+  elif [ "$rv" -ne 0 ]; then
+    echo && echo 'Remote build process failed.' >&2
   fi
 
+  echo -n 'Pausing before instance termination... ' >&2
+
+  if [ "$rv" -eq 0 ]; then
+    sleep 10
+  else
+    sleep 90
+  fi
+
+  echo 'done.' >&2
+  echo -n 'Terminating instance... ' >&2
+
+  ec2-terminate-instances "$instance_id" &>/dev/null \
+    || fatal 'Failed to terminate instance'
+
+  echo 'done.' >&2
+
+  if [ "$rv" -ne 0 ]; then
+    fatal 'Build process unsuccessful; no images created'
+  fi
+  
+  echo 'Build complete.' >&2
   return 0
 }
 
