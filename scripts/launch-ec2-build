@@ -218,7 +218,7 @@ main() {
          echo 'done.' >&2 &&
          \
          echo 'Starting MMVA build process:' >&2 &&
-         sudo JAVA_HOME="\$JAVA_HOME" make all \
+         sudo make all \
            URL='$mirror_url' PLATFORM='$platform' $build_options &&
          \
          echo 'MMVA build complete.' >&2 &&

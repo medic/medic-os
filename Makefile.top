@@ -9,7 +9,9 @@ download-and-build: download
 build: reset-time
 	@echo >&2
 	@echo "`tput bold`Building packages`tput sgr0`" >&2 && echo >&2
-	@(cd vm-toaster && source ./.profile && ${QMAKE} compile all)
+	@(cd vm-toaster && \
+	  export HOME="`readlink -f ../..`" && \
+	  source ./.profile && ${QMAKE} compile all)
 
 reset-time:
 	@echo -n 'Synchronizing system time... ' && \
