@@ -51,9 +51,9 @@ prepend_path()
     local lib="$dir/lib"
     local pkg="$dir/lib/pkgconfig"
     export PATH="$bin${PATH+:}$PATH"
-    export PKG_CONFIG_PATH="$pkg${PKG_CONFIG_PATH+:}$PKG_CONFIG_PATH"
-    export LD_LIBRARY_PATH="$lib${LD_LIBRARY_PATH+:}$LD_LIBRARY_PATH"
-    export DYLD_LIBRARY_PATH="$lib${DYLD_LIBRARY_PATH+:}$DYLD_LIBRARY_PATH"
+    export PKG_CONFIG_PATH="$pkg${PKG_CONFIG_PATH:+:}$PKG_CONFIG_PATH"
+    export LD_LIBRARY_PATH="$lib${LD_LIBRARY_PATH:+:}$LD_LIBRARY_PATH"
+    export DYLD_LIBRARY_PATH="$lib${DYLD_LIBRARY_PATH:+:}$DYLD_LIBRARY_PATH"
   done
 }
 
@@ -64,9 +64,9 @@ append_path()
     local lib="$dir/lib"
     local pkg="$dir/lib/pkgconfig"
     export PATH="$PATH${PATH+:}$bin"
-    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH${PKG_CONFIG_PATH+:}$pkg"
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH${LD_LIBRARY_PATH+:}$lib"
-    export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH${DYLD_LIBRARY_PATH+:}$lib"
+    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH${PKG_CONFIG_PATH:+:}$pkg"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH${LD_LIBRARY_PATH:+:}$lib"
+    export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH${DYLD_LIBRARY_PATH:+:}$lib"
   done
 }
 
