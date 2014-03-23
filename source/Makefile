@@ -2,7 +2,7 @@
 PARALLEL ?= 16
 PLATFORM := $(shell ../scripts/detect-platform)
 
-JAVA_VERSION ?= 1.7.45
+JAVA_VERSION ?= 1.7.51
 VM_TOOLS_VERSION ?= 9.4.0
 MEDIC_CORE_VERSION ?= 1.5.0
 

@@ -8,7 +8,7 @@ install()
   source "$base/env" &&
   merge_environment /srv || return 255
 
-	local platform="`cat /etc/platform`"
+  local platform="`cat /etc/platform`"
 
   (cd "$PACKAGE_ROOT/../" &&
     rm -f default && ln -sf "$platform" default) &&
