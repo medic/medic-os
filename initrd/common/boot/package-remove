@@ -1,0 +1,30 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/package'
+source '/boot/include/supervisor'
+source '/boot/include/hypervisor'
+
+main()
+{
+  if [ $# -le 0 ]; then
+    usage
+  fi
+
+  for package in "$@"; do
+    package_remove "$package" \
+      || fatal "Failed to remove package '$package'"
+  done
+
+  return 0
+}
+
+usage()
+{
+  echo "Usage: $0 <package-name>..." >&2
+  exit 111
+}
+
+main "$@"
+exit "$?"
+

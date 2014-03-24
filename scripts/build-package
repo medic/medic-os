@@ -29,11 +29,20 @@ main()
 {
   local package="$1"
   local version="$2"
+  local platform="$3"
 
-  local architecture='x86'
+  if [ -z "$platform" ]; then
+    platform='x86'
+  fi
+
   local staging_dir="staging/packages/$package"
+  local package_name="$package-v$version-$platform.vpkg"
 
-  if [ $# -gt 2 -o -z "$package" -o -z "version" ]; then
+  if [ $# -lt 2 -o $# -gt 3 ]; then
+    usage
+  fi
+
+  if [ -z "$package" -o -z "$version" ]; then
     usage
   fi
 
@@ -61,7 +70,7 @@ main()
   \
   # Combine data and metadata to produce package
   (cd "$staging_dir" &&
-    ar -rcs "../../../iso/packages/$package-v$version-$architecture.vpkg" *) &&
+    ar -rcs "../../../images/$platform/iso/packages/$package_name" *) &&
 
   if [ "$?" -ne 0 ]; then
     fatal "Package creation step for '$package' failed"
@@ -83,7 +92,7 @@ fatal()
 
 usage()
 {
-  echo "Usage: $1 package-name version-number"
+  echo "Usage: $1 package-name version-number [platform]"
   exit 2
 }
 

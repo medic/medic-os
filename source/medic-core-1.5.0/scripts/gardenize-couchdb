@@ -1,0 +1,34 @@
+#!/bin/sh
+
+self="`readlink -f "$0"`"
+base_dir="`dirname "$self"`/.."
+
+main()
+{
+  local prefix="$1"
+
+  if ! [ -d "$prefix" ]; then
+    echo "Usage: $0 <prefix>" >&2
+    exit 111
+  fi
+
+  local assets_dir="`readlink -f ./garden-maker/assets`" \
+    || return 111
+
+  local images_dir="`readlink -f ./images`" \
+    || return 111
+
+  local unzip_dir='garden-futon-master'
+  local logo_file='futon-logo-medic.png'
+
+  (cd "$prefix/share/couchdb" &&
+    \
+    mkdir -p garden && cp "$assets_dir/dashboard.couch" garden &&
+    cp "$images_dir/$logo_file" www/image/logo.png)
+
+  return "$?"
+}
+
+cd "$base_dir/source" && main "$@"
+exit "$?"
+

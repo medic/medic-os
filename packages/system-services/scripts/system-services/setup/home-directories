@@ -1,0 +1,58 @@
+#!/bin/sh
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv || return 255
+
+  for user in vm; do
+
+    local source="/home/$user"
+    local destination="/srv/storage/system-services/home/$user" 
+
+    # Create persistent home directory:
+    #   If there's anything is in the way that isn't a directory,
+    #   delete it before attempting to create/verify the directory.
+
+    if [ ! -d "$destination" ]; then
+      rm -f "$destination"
+    fi
+
+    mkdir -p "$destination" || return 1
+
+    # Copy home directory, including dot files:
+    #   This copies any data currently located in the volatile
+    #   /home directory to the persistent storage maintained by
+    #   the `system-services` package in /srv/storage/system-servics.
+
+    if [ -d "$source" ]; then
+
+      find "$source" -mindepth 0 -maxdepth 1 \
+        \! \( -name '.' -o -name '..' \) \
+          -exec cp -a \{\} "$destination" \; || return 2
+    fi
+
+    # Create symbolic link:
+    #   Now that we've copied all data out of the volatile home
+    #   directory, remove it and link to the persistent copy.
+
+    rm -rf "$source" && ln -sf "$destination" "$source" \
+      || return 3
+
+  done
+
+  return 0
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+

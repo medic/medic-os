@@ -1,0 +1,11 @@
+--- erlang/erts/emulator/Makefile.in~	2013-07-09 02:26:01.627997183 -0700
++++ erlang/erts/emulator/Makefile.in	2013-07-09 02:26:40.042000036 -0700
+@@ -646,7 +646,7 @@
+ endif
+ 
+ $(OBJDIR)/%.o: beam/%.c
+-	$(V_CC) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@
++	$(V_CC) $(INCLUDES) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) -c $< -o $@
+ 
+ $(OBJDIR)/%.o: $(TARGET)/%.c
+ 	$(V_CC) $(CFLAGS) $(INCLUDES) -Idrivers/common -c $< -o $@

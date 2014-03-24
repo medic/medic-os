@@ -8,7 +8,7 @@ find_ntp_server()
 detect_vmware()
 {
   # FIXME: Need to improve hypervisor detection method
-  dmesg | grep -i '^Hypervisor detected: VMware' &>/dev/null
+  dmesg | grep -i '^DMI: VMware' &>/dev/null
   return "$?"
 }
 
@@ -25,9 +25,9 @@ start()
       >> "$PACKAGE_STORAGE/logs/ntpd.log" 2>&1
   fi
 
-  modprobe -a vmci vmblock vsock vmhgfs vmxnet &&
+  modprobe -a vmci vsock vmxnet vmxnet3 vmhgfs vmblock vmsync &&
   \
-  exec nohup vmtoolsd \
+  exec vmtoolsd \
     >> "$PACKAGE_STORAGE/logs/vmtoolsd.log" 2>&1
 }
 

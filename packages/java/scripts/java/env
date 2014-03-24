@@ -4,11 +4,11 @@ merge_environment()
 {
   local name='java'
 
-  local cpu='x86'
-  local version='1.7.21'
+  local version='1.7.51'
+  local platform="`cat /etc/platform`"
 
   local prefix="$1"
-  local root="$prefix/software/$name/v$version/$cpu"
+  local root="$prefix/software/$name/v$version/$platform"
 
   export PACKAGE_ROOT="$root"
   export PACKAGE_NAME="$name"

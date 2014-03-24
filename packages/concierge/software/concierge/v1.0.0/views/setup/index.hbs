@@ -56,9 +56,16 @@
   <input id="submit" type="submit" class="hidden" value="Save" />
   <div id="save" type="submit" class="button">
     <div class="circle">
-      <div class="icon icon-lock-open"></div>
+      <div class="icon icon-check"></div>
     </div>
     <div class="label">Save</div>
+  </div>
+  <input id="submit" type="submit" class="hidden" value="Lock" />
+  <div id="lock" type="submit" class="button {{#unless options.lock}}disabled{{/unless}}">
+    <div class="circle">
+      <div class="icon icon-lock-closed"></div>
+    </div>
+    <div class="label">Lock</div>
   </div>
 </div>
 

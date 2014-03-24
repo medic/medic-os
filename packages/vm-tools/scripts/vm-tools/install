@@ -1,0 +1,22 @@
+#!/bin/sh
+
+install()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/env" &&
+  merge_environment /srv || return 255
+
+  local platform="`cat /etc/platform`"
+
+  (cd "$PACKAGE_ROOT/../" &&
+    rm -f default && ln -sf "$platform" default) &&
+  \
+  (cd "$PACKAGE_ROOT/../../" &&
+    rm -f v9.4 && ln -sf v9.4.0 v9.4 &&
+    rm -f current && ln -sf v9.4.0 current)
+
+  return "$?"
+}
+

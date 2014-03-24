@@ -1,0 +1,19 @@
+#!/bin/sh
+
+if [ -z "$log" ]; then
+  log() {
+    [ -z "$verbose" ] || echo "$*" >&2
+  }
+fi
+
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 1
+}
+

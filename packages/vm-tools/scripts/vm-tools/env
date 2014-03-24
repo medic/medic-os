@@ -4,11 +4,11 @@ merge_environment()
 {
   local name='vm-tools'
 
-  local cpu='x86'
-  local version='9.2.2'
+  local version='9.4.0'
+  local platform="`cat /etc/platform`"
 
   local prefix="$1"
-  local root="$prefix/software/$name/v$version/$cpu"
+  local root="$prefix/software/$name/v$version/$platform"
 
   export PACKAGE_ROOT="$root"
   export PACKAGE_NAME="$name"

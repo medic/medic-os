@@ -1,0 +1,372 @@
+diff -ur inotify-tools-3.14/libinotifytools/src/inotifytools/inotifytools.h inotify-tools-3.14-dev/libinotifytools/src/inotifytools/inotifytools.h
+--- inotify-tools-3.14/libinotifytools/src/inotifytools/inotifytools.h	2010-03-12 05:53:46.000000000 -0800
++++ inotify-tools-3.14-dev/libinotifytools/src/inotifytools/inotifytools.h	2013-10-17 22:15:19.260453847 -0700
+@@ -28,7 +28,8 @@
+                                                  int events,
+                                                  char const ** exclude_list );
+                                                  // [UH]
+-int inotifytools_ignore_events_by_regex( char const *pattern, int flags );
++int inotifytools_ignore_events_by_regex( char const *pattern,
++                                         int flags, int invert );
+ struct inotify_event * inotifytools_next_event( int timeout );
+ struct inotify_event * inotifytools_next_events( int timeout, int num_events );
+ int inotifytools_error();
+diff -ur inotify-tools-3.14/libinotifytools/src/inotifytools.c inotify-tools-3.14-dev/libinotifytools/src/inotifytools.c
+--- inotify-tools-3.14/libinotifytools/src/inotifytools.c	2010-03-12 05:53:46.000000000 -0800
++++ inotify-tools-3.14-dev/libinotifytools/src/inotifytools.c	2013-10-17 22:15:19.260453847 -0700
+@@ -149,6 +149,7 @@
+ static int init = 0;
+ static char* timefmt = 0;
+ static regex_t* regex = 0;
++static int invert_regex = 0;
+ 
+ int isdir( char const * path );
+ void record_stats( struct inotify_event const * event );
+@@ -1103,12 +1104,14 @@
+ 	static ssize_t bytes;
+ 	static jmp_buf jmp;
+ 	static char match_name[MAX_STRLEN];
++    static int rv;
+ 
+ #define RETURN(A) {\
+ 	if (regex) {\
+ 		inotifytools_snprintf(match_name, MAX_STRLEN, A, "%w%f");\
+-		if (0 == regexec(regex, match_name, 0, 0, 0)) {\
+-			longjmp(jmp,0);\
++		rv = regexec(regex, match_name, 0, 0, 0); \
++        if ((!invert_regex && 0 == rv) || (invert_regex && 0 != rv)) { \
++            longjmp(jmp,0); \
+ 		}\
+ 	}\
+ 	if ( collect_stats ) {\
+@@ -1999,7 +2002,8 @@
+  * events occur.  If the regular expression matches, the matched event will be
+  * ignored.
+  */
+-int inotifytools_ignore_events_by_regex( char const *pattern, int flags ) {
++int inotifytools_ignore_events_by_regex( char const *pattern,
++                                         int flags, int invert ) {
+ 	if (!pattern) {
+ 		if (regex) {
+ 			regfree(regex);
+@@ -2013,7 +2017,11 @@
+ 	else       { regex = (regex_t *)malloc(sizeof(regex_t)); }
+ 
+ 	int ret = regcomp(regex, pattern, flags | REG_NOSUB);
+-	if (0 == ret) return 1;
++
++	if (0 == ret) {
++        invert_regex = invert;
++        return 1;
++    }
+ 
+ 	regfree(regex);
+ 	free(regex);
+diff -ur inotify-tools-3.14/src/inotifywait.c inotify-tools-3.14-dev/src/inotifywait.c
+--- inotify-tools-3.14/src/inotifywait.c	2010-03-12 05:53:46.000000000 -0800
++++ inotify-tools-3.14-dev/src/inotifywait.c	2013-10-17 22:23:29.050451745 -0700
+@@ -48,7 +48,9 @@
+   char ** fromfile,
+   char ** outfile,
+   char ** regex,
+-  char ** iregex
++  char ** iregex,
++  char ** include_regex,
++  char ** include_iregex
+ );
+ 
+ void print_help();
+@@ -157,16 +159,30 @@
+ 	char * outfile = NULL;
+ 	char * regex = NULL;
+ 	char * iregex = NULL;
++	char * include_regex = NULL;
++	char * include_iregex = NULL;
++   bool invert_regex = false;
+ 	pid_t pid;
+     int fd;
+ 
+ 	// Parse commandline options, aborting if something goes wrong
+-	if ( !parse_opts(&argc, &argv, &events, &monitor, &quiet, &timeout,
+-	                 &recursive, &csv, &daemon, &syslog, &format, &timefmt, 
+-                         &fromfile, &outfile, &regex, &iregex) ) {
++	if ( !parse_opts(&argc, &argv, &events, &monitor,
++                    &quiet, &timeout, &recursive, &csv, &daemon,
++                    &syslog, &format, &timefmt, &fromfile, &outfile,
++                    &regex, &iregex, &include_regex, &include_iregex) ) {
+ 		return EXIT_FAILURE;
+ 	}
+ 
++    if (include_regex) {
++        regex = include_regex;
++        invert_regex = true;
++    }
++    
++    if (include_iregex) {
++        iregex = include_iregex;
++        invert_regex = true;
++    }
++
+ 	if ( !inotifytools_initialize() ) {
+ 		fprintf(stderr, "Couldn't initialize inotify.  Are you running Linux "
+ 		                "2.6.13 or later, and was the\n"
+@@ -180,11 +196,14 @@
+ 
+ 	if ( timefmt ) inotifytools_set_printf_timefmt( timefmt );
+ 	if (
+-		(regex && !inotifytools_ignore_events_by_regex(regex, REG_EXTENDED) ) ||
+-		(iregex && !inotifytools_ignore_events_by_regex(iregex, REG_EXTENDED|
+-		                                                        REG_ICASE))
++		(regex && !inotifytools_ignore_events_by_regex(regex,
++                                                       REG_EXTENDED,
++                                                       invert_regex) ) ||
++		(iregex && !inotifytools_ignore_events_by_regex(iregex,
++                                                        REG_EXTENDED|REG_ICASE,
++                                                        invert_regex))
+ 	) {
+-		fprintf(stderr, "Error in `exclude' regular expression.\n");
++		fprintf(stderr, "Error in `exclude' or `include' regular expression.\n");
+ 		return EXIT_FAILURE;
+ 	}
+ 
+@@ -423,7 +442,9 @@
+   char ** fromfile,
+   char ** outfile,
+   char ** regex,
+-  char ** iregex
++  char ** iregex,
++  char ** include_regex,
++  char ** include_iregex
+ ) {
+ 	assert( argc ); assert( argv ); assert( events ); assert( monitor );
+ 	assert( quiet ); assert( timeout ); assert( csv ); assert( daemon );
+@@ -434,7 +455,7 @@
+ 	char * opt_string = "mrhcdsqt:fo:e:";
+ 
+ 	// Construct array
+-	struct option long_opts[17];
++	struct option long_opts[19];
+ 
+ 	// --help
+ 	long_opts[0].name = "help";
+@@ -520,11 +541,21 @@
+ 	long_opts[15].has_arg = 1;
+ 	long_opts[15].flag = NULL;
+ 	long_opts[15].val = (int)'b';
++	// --include
++	long_opts[16].name = "include";
++	long_opts[16].has_arg = 1;
++	long_opts[16].flag = NULL;
++	long_opts[16].val = (int)'j';
++	// --includei
++	long_opts[17].name = "includei";
++	long_opts[17].has_arg = 1;
++	long_opts[17].flag = NULL;
++	long_opts[17].val = (int)'k';
+ 	// Empty last element
+-	long_opts[16].name = 0;
+-	long_opts[16].has_arg = 0;
+-	long_opts[16].flag = 0;
+-	long_opts[16].val = 0;
++	long_opts[18].name = 0;
++	long_opts[18].has_arg = 0;
++	long_opts[18].flag = 0;
++	long_opts[18].val = 0;
+ 
+ 	// Get first option
+ 	char curr_opt = getopt_long(*argc, *argv, opt_string, long_opts, NULL);
+@@ -604,6 +635,16 @@
+ 				(*iregex) = optarg;
+ 				break;
+ 
++			// --include
++			case 'j':
++				(*include_regex) = optarg;
++				break;
++
++			// --includei
++			case 'k':
++				(*include_iregex) = optarg;
++				break;
++
+ 			// --fromfile
+ 			case 'z':
+ 				if (*fromfile) {
+@@ -671,6 +712,16 @@
+ 		return false;
+ 	}
+ 
++	if ( *include_regex && *include_iregex ) {
++		fprintf(stderr, "--include and --includei cannot both be specified.\n");
++		return false;
++	}
++
++	if ( ( *include_regex || *include_iregex ) && ( *regex || *iregex ) ) {
++		fprintf(stderr, "Cannot use include and exclude options simultaneously.\n");
++		return false;
++	}
++
+ 	if ( *format && *csv ) {
+ 		fprintf(stderr, "-c and --format cannot both be specified.\n");
+ 		return false;
+@@ -715,6 +766,11 @@
+ 	       "\t              \textended regular expression <pattern>.\n");
+ 	printf("\t--excludei <pattern>\n"
+ 	       "\t              \tLike --exclude but case insensitive.\n");
++	printf("\t--include <pattern>\n"
++	       "\t              \tInclude all events on only those files matching\n"
++	       "\t              \tthe extended regular expression <pattern>.\n");
++	printf("\t--includei <pattern>\n"
++	       "\t              \tLike --include but case insensitive.\n");
+ 	printf("\t-m|--monitor  \tKeep listening for events forever.  Without\n"
+ 	       "\t              \tthis option, inotifywait will exit after one\n"
+ 	       "\t              \tevent is received.\n");
+diff -ur inotify-tools-3.14/src/inotifywatch.c inotify-tools-3.14-dev/src/inotifywatch.c
+--- inotify-tools-3.14/src/inotifywatch.c	2010-03-12 05:53:46.000000000 -0800
++++ inotify-tools-3.14-dev/src/inotifywatch.c	2013-10-17 22:23:31.114451852 -0700
+@@ -43,7 +43,9 @@
+   int * recursive,
+   char ** fromfile,
+   char ** regex,
+-  char ** iregex
++  char ** iregex,
++  char ** include_regex,
++  char ** include_iregex
+ );
+ 
+ void print_help();
+@@ -91,21 +93,37 @@
+ 	done = false;
+ 	char * regex = NULL;
+ 	char * iregex = NULL;
++	char * include_regex = NULL;
++	char * include_iregex = NULL;
++    bool invert_regex = false;
+ 
+ 	signal( SIGINT, handle_impatient_user );
+ 
+ 	// Parse commandline options, aborting if something goes wrong
+-	if ( !parse_opts( &argc, &argv, &events, &timeout, &verbose, &zero, &sort,
+-	                 &recursive, &fromfile, &regex, &iregex ) ) {
++	if ( !parse_opts( &argc, &argv, &events, &timeout,
++                      &verbose, &zero, &sort, &recursive, &fromfile,
++                      &regex, &iregex, &include_regex, &include_iregex ) ) {
+ 		return EXIT_FAILURE;
+ 	}
+ 
++    if (include_regex) {
++        regex = include_regex;
++        invert_regex = true;
++    }
++    
++    if (include_iregex) {
++        iregex = include_iregex;
++        invert_regex = true;
++    }
+ 	if (
+-		(regex && !inotifytools_ignore_events_by_regex(regex, REG_EXTENDED) ) ||
+-		(iregex && !inotifytools_ignore_events_by_regex(iregex, REG_EXTENDED|
+-		                                                        REG_ICASE))
++		(regex && !inotifytools_ignore_events_by_regex(regex,
++                                                       REG_EXTENDED,
++                                                       invert_regex) ) ||
++		(iregex && !inotifytools_ignore_events_by_regex(iregex,
++                                                        REG_EXTENDED|REG_ICASE,
++                                                        invert_regex))
+ 	) {
+-		fprintf(stderr, "Error in `exclude' regular expression.\n");
++		fprintf(stderr, "Error in `exclude' or `include' regular expression.\n");
+ 		return EXIT_FAILURE;
+ 	}
+ 
+@@ -390,7 +408,9 @@
+   int * recursive,
+   char ** fromfile,
+   char ** regex,
+-  char ** iregex
++  char ** iregex,
++  char ** include_regex,
++  char ** include_iregex
+ ) {
+ 	assert( argc ); assert( argv ); assert( events ); assert( timeout );
+ 	assert( verbose ); assert( zero ); assert( sort ); assert( recursive );
+@@ -400,7 +420,7 @@
+ 	char * opt_string = "hra:d:zve:t:";
+ 
+ 	// Construct array
+-	struct option long_opts[12];
++	struct option long_opts[14];
+ 
+ 	// --help
+ 	long_opts[0].name = "help";
+@@ -460,11 +480,21 @@
+ 	long_opts[10].has_arg = 1;
+ 	long_opts[10].flag = NULL;
+ 	long_opts[10].val = (int)'b';
++	// --include
++	long_opts[11].name = "include";
++	long_opts[11].has_arg = 1;
++	long_opts[11].flag = NULL;
++	long_opts[11].val = (int)'j';
++	// --excludei
++	long_opts[12].name = "includei";
++	long_opts[12].has_arg = 1;
++	long_opts[12].flag = NULL;
++	long_opts[12].val = (int)'k';
+ 	// Empty last element
+-	long_opts[11].name = 0;
+-	long_opts[11].has_arg = 0;
+-	long_opts[11].flag = 0;
+-	long_opts[11].val = 0;
++	long_opts[13].name = 0;
++	long_opts[13].has_arg = 0;
++	long_opts[13].flag = 0;
++	long_opts[13].val = 0;
+ 
+ 	// Get first option
+ 	char curr_opt = getopt_long(*argc, *argv, opt_string, long_opts, NULL);
+@@ -506,6 +536,16 @@
+ 				(*iregex) = optarg;
+ 				break;
+ 
++			// --include
++			case 'j':
++				(*include_regex) = optarg;
++				break;
++
++			// --includei
++			case 'k':
++				(*include_iregex) = optarg;
++				break;
++
+ 			// --fromfile
+ 			case 'o':
+ 				if (*fromfile) {
+@@ -625,6 +665,15 @@
+ 		return false;
+ 	}
+ 
++	if ( *include_regex && *include_iregex ) {
++		fprintf(stderr, "--include and --includei cannot both be specified.\n");
++		return false;
++	}
++
++	if ( ( *include_regex || *include_iregex ) && ( *regex || *iregex ) ) {
++		fprintf(stderr, "Cannot use include and exclude options simultaneously.\n");
++		return false;
++	}
+ 	// If ? returned, invalid option
+ 	return (curr_opt != '?');
+ }
+@@ -647,6 +696,11 @@
+ 	       "\t\texpression <pattern>.\n");
+ 	printf("\t--excludei <pattern>\n"
+ 	       "\t\tLike --exclude but case insensitive.\n");
++	printf("\t--include <pattern>\n"
++	       "\t\tInclude all events only those files matching the extended\n"
++	       "\t\tregular expression <pattern>.\n");
++	printf("\t--includei <pattern>\n"
++	       "\t\tLike --include but case insensitive.\n");
+ 	printf("\t-z|--zero\n"
+ 	       "\t\tIn the final table of results, output rows and columns even\n"
+ 	       "\t\tif they consist only of zeros (the default is to not output\n"

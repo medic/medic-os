@@ -1,0 +1,18 @@
+--- libutempter/Makefile	2013-11-22 23:14:40.867702618 -0800
++++ libutempter/Makefile	2013-11-22 23:14:54.063957291 -0800
+@@ -72,12 +72,12 @@
+ 	$(INSTALL) -p -m644 $(PROJECT).h $(DESTDIR)$(includedir)/
+ 	$(INSTALL) -p -m755 $(SHAREDLIB) $(DESTDIR)$(libdir)/$(SHAREDLIB).$(VERSION)
+ 	$(INSTALL) -p -m644 $(STATICLIB) $(DESTDIR)$(libdir)/
+-	ln -s $(SHAREDLIB).$(VERSION) $(DESTDIR)$(libdir)/$(SONAME)
+-	ln -s $(SONAME) $(DESTDIR)$(libdir)/$(SHAREDLIB)
++	ln -sf $(SHAREDLIB).$(VERSION) $(DESTDIR)$(libdir)/$(SONAME)
++	ln -sf $(SONAME) $(DESTDIR)$(libdir)/$(SHAREDLIB)
+ 	$(INSTALL) -p -m644 $(PROJECT).3 $(DESTDIR)$(man3dir)/
+ 	for n in lib$(PROJECT) utempter_add_record utempter_remove_record \
+ 	    utempter_remove_added_record utempter_set_helper; do \
+-		ln -s $(PROJECT).3 $(DESTDIR)$(man3dir)/$$n.3; \
++		ln -sf $(PROJECT).3 $(DESTDIR)$(man3dir)/$$n.3; \
+ 	done
+ 
+ clean:

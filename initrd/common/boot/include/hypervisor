@@ -1,0 +1,15 @@
+#!/bin/sh
+
+hypervisor_type="`cat /sys/hypervisor/type 2>/dev/null`"
+
+is_hypervisor()
+{
+  [ -n "$hypervisor_type" ]
+  return "$?"
+}
+
+hypervisor_type()
+{
+  echo "$hypervisor_type"
+}
+

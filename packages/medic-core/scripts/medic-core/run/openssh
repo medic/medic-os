@@ -8,7 +8,7 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  exec nohup "$PACKAGE_ROOT/sbin/sshd" -D \
+  exec "$PACKAGE_ROOT/sbin/sshd" -D \
     >> "$PACKAGE_STORAGE/openssh/logs/startup.log" 2>&1
 }
 

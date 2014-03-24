@@ -1,0 +1,26 @@
+--- gammu/configure~	2013-05-29 02:49:14.138415233 -0700
++++ gammu/configure	2013-07-09 02:31:32.153999320 -0700
+@@ -57,6 +57,7 @@
+ CMAKE_PYTHON=
+ CMAKE_GNAP=
+ CMAKE_COMPLETE=
++CMAKE_GLIB=
+ 
+ # process command line
+ while [ "$#" -gt 0 ] ; do
+@@ -106,6 +107,9 @@
+         --without-completion)
+             CMAKE_COMPLETE="-DINSTALL_BASH_COMPLETION=OFF"
+             ;;
++        --without-glib)
++            CMAKE_GLIB="-DWITH_Glib=OFF"
++            ;;
+         --build=*)
+             ;;
+         --disable-dependency-tracking)
+@@ -142,4 +146,4 @@
+ cd "$BUILD_DIR"
+ 
+ # invoke cmake to do configuration
+-cmake $SOURCE_DIR $CMAKE_PREFIX $CMAKE_SHARED $CMAKE_DEBUG $CMAKE_BACKUP $CMAKE_CROSS $CMAKE_PROTECTION $CMAKE_PYTHON $CMAKE_GNAP $CMAKE_COMPLETE
++cmake $SOURCE_DIR $CMAKE_PREFIX $CMAKE_SHARED $CMAKE_DEBUG $CMAKE_BACKUP $CMAKE_CROSS $CMAKE_PROTECTION $CMAKE_PYTHON $CMAKE_GNAP $CMAKE_COMPLETE $CMAKE_GLIB

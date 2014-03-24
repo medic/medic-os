@@ -1,0 +1,24 @@
+#!/bin/sh
+
+[ -f /proc/cmdline ] || /bin/mount /proc &>/dev/null
+
+/bin/mount -o remount,rw /
+/bin/mount -a 
+
+/sbin/udevd --daemon 2>&1 >/dev/null
+/sbin/udevadm trigger --action=add 2>&1 >/dev/null &
+
+modprobe loop 2>/dev/null
+
+/sbin/ifconfig lo 127.0.0.1 up
+/sbin/route add 127.0.0.1 lo
+
+/sbin/ldconfig 2>/dev/null
+/etc/init.d/rc.dhcpcd &
+
+chown -R vm:root /home/vm
+/usr/bin/sethostname toaster
+sysctl -w kernel.grsecurity.grsec_lock=1 &>/dev/null
+
+exec /boot/system-start
+

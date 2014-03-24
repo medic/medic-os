@@ -1,6 +1,6 @@
-#/bin/sh
+#!/bin/sh
 
-self="`readlink -f "$0"`"
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
 
 busybox_version='1.20.2'
@@ -56,6 +56,6 @@ main()
   done < "$busybox_manifest"
 }
 
-cd "$base_dir/initrd" && main
+cd "$base_dir/initrd/$1" && main
 exit "$?"
 

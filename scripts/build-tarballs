@@ -1,6 +1,6 @@
 #!/bin/sh
 
-self="`readlink -f "$0"`"
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/../.."
 
 symlink_manifest()
@@ -120,11 +120,11 @@ main()
   \
   upstream_directories \
     | tar -X - -cf - Makefile java-jdk vm-toaster \
-	| xz -9ec > "vm-toaster-git-`date +%Y%m%d`.tar.xz" &&
+  | xz -9ec > "vm-toaster-git-`date +%Y%m%d`.tar.xz" &&
   \
   upstream_directories \
     | tar -T - -cf - | xz -9ec \
-	> "vm-toaster-upstream-`date +%Y%m%d`.tar.xz"
+      > "vm-toaster-upstream-`date +%Y%m%d`.tar.xz"
 
   return "$?"
 }

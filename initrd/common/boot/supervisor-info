@@ -1,0 +1,87 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/supervisor'
+source '/boot/include/hypervisor'
+
+show_package()
+{
+  local package="`basename "$1"`"
+
+  echo "Package '$package':"
+  return 0
+}
+
+show_services()
+{
+  local package="`basename "$1"`"
+  local attributes='watched running restarting down disabled expected'
+
+  local n="`supervisor_list_all_services "$package" | wc -l`"
+  
+  if [ "$?" -ne 0 -o "$n" -le 0 ]; then
+    echo '  <No services found in this package>'
+    echo
+    return 1
+  fi
+  
+  supervisor_list_all_services "$package" | while read service; do
+    echo "  Service '$service':"
+    echo -n '    '
+
+    # Try to give a meaningful short status    
+    if supervisor_is_service_running "$package" "$service"; then
+    	echo -n 'OK'
+    elif supervisor_is_service_disabled "$package" "$service"; then
+    	echo -n 'Disabled'
+    elif supervisor_is_service_down "$package" "$service"; then
+    	echo -n 'Stopped'
+    elif supervisor_is_service_restarting "$package" "$service"; then
+    	echo -n 'Restarting'
+    elif ! supervisor_is_service_watched "$package" "$service"; then
+    	echo -n 'Unsupervised'
+    else
+    	echo -n 'Failure'
+    fi
+    
+    echo -n ' (flags: '
+
+    # Dump all attributes out 
+    for attribute in $attributes; do
+      if "supervisor_is_service_$attribute" "$package" "$service"; then
+        echo -n "$attribute "
+      fi
+    done | sed 's/ \([^$]\)/, \1/g; s/ $//;'
+    echo ')'
+  done
+  
+  echo
+  return 0
+}
+
+main()
+{
+  echo
+  
+  if [ "$#" -gt 0 ]; then
+    for package in "$@"; do
+      show_package "$package"
+      show_services "$package"
+    done
+  else
+    supervisor_list_all_packages | while read package; do
+      show_package "$package"
+      show_services "$package"
+    done
+  fi
+}
+
+usage()
+{
+  echo "Usage: $0 [package-name]..." >&2
+  exit 111
+}
+
+main "$@"
+exit "$?"
+

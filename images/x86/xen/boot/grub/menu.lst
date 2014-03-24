@@ -1,0 +1,10 @@
+
+default=0
+timeout=1
+hiddenmenu
+
+title Medic Mobile Virtual Appliance
+root (hd0)
+kernel /boot/kernel console=hvc0
+initrd /boot/image.xz
+

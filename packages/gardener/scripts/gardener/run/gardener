@@ -29,13 +29,13 @@ start()
   local logs="$PACKAGE_STORAGE/logs" &&
   local url="http://service@localhost:5984" &&
   \
-  local gardener="$PACKAGE_ROOT/node_modules/gardener/bin/gardener" &&
+  local gardener="$PACKAGE_ROOT/bin/gardener" &&
   local gardener_opts='--stdinpass=true --dashboard=dashboard' &&
   local gardener_args="'$url' $gardener_opts --logdir='$logs'" &&
   local gardener_cmd="'`which node`' '$gardener' $gardener_args" &&
   \
   exec nohup su -c "cd '$data' && exec $gardener_cmd" gardener \
-    < "$passwd_file" >> "$PACKAGE_STORAGE/logs/startup.log" 2>&1
+    < "$passwd_file" >> "$logs/startup.log" 2>&1
 }
 
 main()

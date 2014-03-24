@@ -1,5 +1,6 @@
+#!/bin/sh
 
-self="`readlink -f "$0"`"
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
 
 main()
@@ -7,9 +8,12 @@ main()
   local m='node_modules'
   local prefix="$base_dir/packages/gardener/software/gardener/v1.0.3"
 
-  rm -rf "$prefix/$m/gardener/$m/npm/$m/node-gyp"
-  rm -rf "$prefix/$m/gardener/$m/url/$m/punycode/vendor/requirejs/tests"
-  rm -rf "$prefix/$m/gardener/$m/url/$m/punycode/vendor/requirejs/dist/fonts"
+  rm -rf "$prefix/$m/npm/doc"
+  rm -rf "$prefix/$m/npm/man"
+  rm -rf "$prefix/$m/npm/html"
+  rm -rf "$prefix/$m/npm/$m/node-gyp"
+  rm -rf "$prefix/$m/url/$m/punycode/vendor/requirejs/tests"
+  rm -rf "$prefix/$m/url/$m/punycode/vendor/requirejs/dist/fonts"
 }
 
 main

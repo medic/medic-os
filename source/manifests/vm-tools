@@ -1,0 +1,5 @@
+glib, http://ftp.rpmfind.net/linux/gnome.org/sources/glib/2.39/glib-2.39.0.tar.xz
+libdnet, http://hivelocity.dl.sourceforge.net/project/libdnet/libdnet/libdnet-1.11/libdnet-1.11.tar.gz
+libffi, ftp://sourceware.org/pub/libffi/libffi-3.0.13.tar.gz
+procps, http://procps.sourceforge.net/procps-3.2.8.tar.gz
+open-vm-tools, http://hivelocity.dl.sourceforge.net/project/open-vm-tools/open-vm-tools/stable-9.4.x/open-vm-tools-9.4.0-1280544.tar.gz

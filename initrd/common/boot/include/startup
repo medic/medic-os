@@ -1,0 +1,154 @@
+#!/bin/sh
+
+set -o pipefail
+
+is_storage_valid()
+{
+  local device="$1"
+
+  dd if="$device" bs=4096 count=1 &>/dev/null
+  return "$?"
+}
+
+is_storage_empty()
+{
+  local device="$1"
+  
+  local rv="`dd if="$device" bs=4096 count=16 2>/dev/null \
+    | hexdump -v | head -n4096 | grep -v '^[0-9a-f]\+ [ 0]\+$'`"
+
+  [ -z "$rv" ]
+  return "$?"
+}
+
+disconnect_storage()
+{
+  local device="$1"
+  
+  umount -f /srv 2>/dev/null
+  swapoff "${device}1" 2>/dev/null
+
+  return 0
+}
+
+find_storage()
+{
+  local device="$1"
+
+  disconnect_storage "$device"
+  
+  swapon -p16 "${device}1" 2>/dev/null &&
+    mkdir -p /srv && mount "${device}2" /srv 2>/dev/null
+
+  if [ "$?" -ne 0 ]; then
+    disconnect_storage "$device"
+    return 1
+  fi
+ 
+  local version="`cat /srv/receipts/system/version 2>/dev/null`"
+
+  if [ "$?" -ne 0 -o "$version" -le 0 ] &>/dev/null; then
+    disconnect_storage "$device"
+    return 2
+  fi
+
+  echo "$version"
+  return 0
+}
+
+initialize_storage()
+{
+  local device="$1"
+  local swap_size="$2"
+  local version="$3"
+
+  disconnect_storage "$device"
+   
+  echo -e "o\\nn\\np\\n1\\n1\\n+${swap_size}M" \
+    "\\nt\\n82\\nn\\np\\n2\\n\\n\\np\\nw" \
+      | fdisk "$device" &&
+  \
+  sync && sleep 2 && sync &&
+  mkswap "${device}1" && swapon -p16 "${device}1" &&
+  mkfs.ext4 "${device}2" && mkdir -p /srv && mount "${device}2" /srv &&
+  \
+  mkdir -p /srv/software /srv/storage /srv/scripts \
+    /srv/settings/system /srv/receipts/system &&
+  \
+  echo "$version" > /srv/receipts/system/version
+  
+  sync
+  return "$?"
+}
+
+mount_source_image()
+{
+  local device="$1"
+
+  unmount_source_image  
+  mkdir -p /mnt/startup && mount "$device" /mnt/startup
+  
+  return "$?"
+}
+
+unmount_source_image()
+{
+  umount -f /mnt/startup 2>/dev/null
+  return "$?"
+}
+
+update_system()
+{
+  local version="$1"
+
+  echo "$version" > /srv/receipts/system/version
+  return "$?"
+}
+
+discover_ip_address()
+{
+  ip='[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'
+
+  ifconfig eth0 |
+    sed -n "/^ *inet \+\(addr:\)\?/ \
+      s/^ *inet \+\(addr:\)\? *\(${ip}\).*$/\2/p;"
+
+  return "$?"
+}
+
+persist_authentication_database()
+{
+  local sys_settings_dir='/srv/settings/system/core'
+
+  mkdir -p "$sys_settings_dir"
+
+  for file in passwd shadow group; do
+    if ! [ -f "$sys_settings_dir/$file" ]; then
+      cp "/etc/$file" "$sys_settings_dir/$file" \
+        || return 1
+    fi
+    ln -sf "$sys_settings_dir/$file" "/etc/$file" \
+      || return 2
+  done
+
+  sync
+  return 0
+}
+
+attempt_manual_network_configuration()
+{
+  if [ -f /srv/settings/system/network/static ]; then
+    envdir /srv/settings/system/network \
+      /boot/include/scripts/static-ip apply
+  fi
+
+  return "$?"
+}
+
+synchronize_disks()
+{
+  for i in `seq 1 3`; do
+    sync && sleep 1
+  done
+}
+
