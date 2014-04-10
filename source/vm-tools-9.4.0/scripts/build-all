@@ -39,7 +39,7 @@ main()
   build_autoconf 'pv' "$stdarg" &&
   \
   (disable_parallelism && simple_cflags &&
-      build_autoconf 'zlib' "--shared $stdarg") &&
+   build_autoconf 'zlib' "--shared $stdarg") &&
   \
   builder_remove_static_libraries 'z' &&
   \

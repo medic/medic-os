@@ -33,7 +33,7 @@ delete:
 	(cd vm-toaster && ${QMAKE} delete-downloaded) && \
 	echo 'done.'
 
-download:
+download: reset-time
 	@if ! [ -f status/download.finished ]; then \
 		${QMAKE} force-download; \
 	fi && \
