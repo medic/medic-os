@@ -8,8 +8,14 @@ install()
   source "$base/env" &&
   merge_environment /srv || return 255
 
+  local platform="`cat /etc/platform`"
+
+  (cd "$PACKAGE_ROOT/../" &&
+    rm -f default && ln -sf "$platform" default) &&
+
   (cd "$PACKAGE_ROOT/../../" &&
-    rm -f v1.7 && ln -sf "v$PACKAGE_VERSION" v1.7)
+    rm -f v1.7 && ln -sf "v$PACKAGE_VERSION" v1.7 &&
+		rm -f current && ln -sf "v$PACKAGE_VERSION" current)
 
   return "$?"
 }

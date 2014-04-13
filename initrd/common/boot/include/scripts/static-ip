@@ -1,0 +1,131 @@
+#!/bin/sh
+
+source '/boot/include/logger'
+source '/boot/include/utility'
+
+stop_dhcp_server()
+{
+  local interface="$1"
+ 
+  if [ -z "$interface" ]; then
+    interface='eth0'
+  fi
+  
+  kill -TERM "`cat /var/run/udhcpc.$interface.pid`"
+  return "$?"
+}
+  
+apply_static_ip_address()
+{
+  local interface="$1"
+  
+  if [ -z "$interface" ]; then
+    interface='eth0'
+  fi
+
+  # Set up network interface
+  if [ "$ip" -a "$netmask" ]; then
+  
+    log "Stopping DHCP server for '$interface'"
+    stop_dhcp_server "$interface" >> "$log" 2>&1
+
+    # Bring network interface down:
+    #   This flushes out any routing data that refers to the interface.
+    #   If an error occurs, we ignore it and continue trying to bring
+    #   the interface up.
+    
+    log "Resetting network interface '$interface'"
+    ifconfig "$interface" down >> "$log" 2>&1
+    
+    local extra_args=''
+    log "Setting IP for '$interface' to '$ip'"
+    
+    if [ "$broadcast" ]; then
+      extra="broadcast '$broadcast'"
+      log "Broadcast address on '$interface' is '$broadcast'"
+    fi
+    
+    ifconfig "$interface" "$ip" \
+      netmask "$netmask" $extra_args up >>"$log" 2>&1
+    
+    if [ "$?" -ne 0 ]; then
+      return 1
+    fi
+  fi
+
+  # Set default route
+  if [ "$gateway" ]; then
+  
+    log "Setting system-wide default route to '$gateway'"
+    route add default gw "$gateway" >> "$log" 2>&1
+    
+    if [ "$?" -ne 0 ]; then
+      return 2
+    fi
+  fi
+
+  # Add default domain suffix to resolv.conf
+  if [ "$domain" ]; then
+  
+    log "Adding search domain '$domain' to resolv.conf"
+    echo "search $domain" > /etc/resolv.conf 2>>"$log"
+    
+    if [ "$?" -ne 0 ]; then
+      return 3
+    fi
+  fi
+    
+  # Add DNS server(s) to resolv.conf
+  if [ "$dns" ]; then
+  
+    log "Deleting existing resolv.conf"
+    rm -f /etc/resolv.conf >> "$log" 2>&1
+
+    log "Adding new DNS servers to resolv.conf"
+    
+    for server in $dns; do
+    
+      log "Adding DNS server '$server' to resolv.conf"
+      echo "nameserver $server" >> /etc/resolv.conf 2>>"$log"
+      
+      if [ "$?" -ne 0 ]; then
+        return 4
+      fi
+    done
+  fi
+
+  log "Setup of interface '$interface' successful"
+  return 0 
+}
+
+main()
+{
+  if [ $# -ne 1 ]; then
+    usage
+  fi
+
+  case "$1" in
+    'apply')
+      apply_static_ip_address
+      ;;
+    '-h'|'--help')
+      usage
+      ;;
+    *)
+      fatal "Unknown command '$1'"
+      ;;
+  esac
+
+  return "$?"
+}
+
+usage()
+{
+  echo "Usage:" >&2
+  echo "  envdir /srv/settings/system/network $0 apply" >&2
+  exit 111
+}
+
+main "$@"
+exit "$?"
+

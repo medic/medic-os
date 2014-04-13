@@ -1,0 +1,74 @@
+#!/bin/sh
+
+ts="`date +%Y%m%d`"
+base_directory="$1"
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 255
+}
+
+main()
+{
+  local platforms='armv6 x86 x64'
+
+  if [ "$base_directory" ]; then
+    cd "$base_directory" \
+      || fatal "Failed to change directory to '$base_directory'"
+  fi
+
+  # Clean each platform
+  for platform in $platforms; do
+
+    (cd mmva-src && make clean delete PLATFORM="$platform")
+
+    if [ "$?" -ne 0 ]; then
+      echo 'failed.' >&2
+      fatal 'Failed to clean MMVA source tree'
+    fi
+  done
+
+  # Primary source tree
+  echo -n "Building core MMVA archive... " >&2 &&
+  \
+  tar -cf - mmva-src \
+    --exclude 'mmva-src/java' \
+    --exclude 'mmva-src/java-current' \
+    --exclude 'mmva-src/vm-toaster/templates/java' \
+    --exclude 'mmva-src/vm-toaster/config/aws-current' \
+      | xz -9ec > "mmva-core-src-$ts.tar.xz"
+
+  if [ "$?" -ne 0 ]; then
+    echo 'failed.' >&2
+    fatal 'Failed to build core MMVA archive'
+  fi
+  
+  echo 'done.' >&2
+
+  # Platform-specific Java binaries
+  for platform in $platforms; do
+    echo -n "Building JDK/JRE archive for '$platform'... " >&2 &&
+    \
+    (cd 'mmva-src/java-current' && \
+      rm -f selected && ln -sf "$platform" selected) && \
+    \
+    tar -cf - 'mmva-src/java' \
+      'mmva-src/java-current/selected' \
+      "mmva-src/java-current/$platform" \
+      "mmva-src/vm-toaster/templates/java/$platform" \
+        | xz -9ec > "mmva-java-$platform-$ts.tar.xz"
+
+    if [ "$?" -ne 0 ]; then
+      echo 'failed.' >&2
+      fatal "Failed to build JDK/JRE archive for $platform"
+    fi
+
+    echo 'done.' >&2
+  done
+
+}
+
+main "$@"
+exit "$?"
+

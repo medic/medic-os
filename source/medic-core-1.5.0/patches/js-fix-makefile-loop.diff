@@ -1,0 +1,10 @@
+diff -urN js/config/Makefile.in js/config/Makefile.in
+--- js/config/Makefile.in	2011-03-31 12:08:36.000000000 -0700
++++ js/config/Makefile.in	2013-11-08 22:04:25.331319396 -0800
+@@ -105,5 +105,5 @@
+ 
+ ifdef MKDEPEND_DIR
+ clean clobber realclean clobber_all::
+-	cd $(MKDEPEND_DIR); $(MAKE) $@
++	cd $(MKDEPEND_DIR) && $(MAKE) $@; true
+ endif

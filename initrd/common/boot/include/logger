@@ -1,0 +1,20 @@
+#!/bin/sh
+
+log='/var/log/startup.log'
+
+log()
+{
+  echo -e "`date +'[%Y/%m/%d %H:%M:%S]'` $*" >>"$log" 2>&1
+}
+
+print()
+{
+  if [ "`hypervisor_type`" = 'xen' ]; then
+    echo -e "$*" &>/dev/hvc0
+  else
+    echo -e "$*" >&2
+  fi
+
+  return "$?"
+}
+

@@ -1,0 +1,110 @@
+#!/bin/bash
+
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/../../medic-core"
+
+source "$base_dir/scripts/include/logger" 2>/dev/null &&
+source "$base_dir/scripts/include/builder" 2>/dev/null \
+    || fatal 'Unable to load a required library'
+
+main()
+{
+  local prefix="$1"
+  local pkg_start="`echo "$2" | sed 's/\//-/g;'`"
+  local pkg_start_version="$3"
+  local pkg_stop="`echo "$4" | sed 's/\//-/g;'`"
+  local pkg_stop_version="$5"
+  local platform="$6"
+  local bits="$7"
+  local parallel="$8"
+  local kernel_version="$9"
+
+  check_args "$@" || usage
+
+  local uname="`uname -s`"
+  local stdarg="--prefix=\"$prefix\""
+
+  local kernel_module_path="`
+    readlink -f "${10}" 2>/dev/null || realpath "${10}"
+  `"
+
+  builder_initialize &&
+  builder_setup_environment "$prefix" \
+    "$pkg_start" "$pkg_start_version" "$pkg_stop" \
+      "$pkg_stop_version" "$uname" "$architecture" "$bits" "$parallel"
+
+  [ $? -eq 0 ] \
+    || fatal 'Failed to set up build environment'
+
+  build_autoconf 'pv' "$stdarg" &&
+  \
+  (disable_parallelism && simple_cflags &&
+   build_autoconf 'zlib' "--shared $stdarg") &&
+  \
+  builder_remove_static_libraries 'z' &&
+  \
+  build_make 'procps' 'all' 'SHARED=1' 't' &&
+  install_procps 'procps' "$prefix" &&
+  \
+  build_autoconf 'libffi' "$stdarg" &&
+  builder_remove_static_libraries 'ffi' &&
+  \
+  fix_libtool 'libdnet' &&
+  build_autoconf 'libdnet' \
+    "$stdarg --enable-shared --disable-static" &&
+  \
+  build_autoconf 'glib' "$stdarg" &&
+  \
+  (disable_parallelism &&
+   build_autoconf 'open-vm-tools' \
+    "$stdarg --without-x \
+     --with-linuxdir='$kernel_module_path' \
+     --with-kernel-release='$kernel_version' \
+     --without-gtk2 --without-pam --without-icu") &&
+  \
+  builder_remove_static_libraries 'vmtools' 'hgfs' 'guestlib'
+
+  if [ "$?" -ne 0 ]; then
+    fatal 'One or more build steps failed; aborting'
+  fi
+
+  return 0
+}
+
+install_procps()
+{
+  local name="$1"
+  local prefix="$2"
+
+  mkdir -p "$prefix/lib" &&
+  cp "$name/proc/libproc-"*.so "$prefix/lib"
+
+  return "$?"
+}
+
+fatal()
+{
+  echo "$0: fatal: $*" >&2
+  exit 1
+}
+
+check_args()
+{
+  local prefix="$1"
+
+  [ -d "$prefix" ] 
+}
+
+usage()
+{
+  echo
+  echo "Usage:" >&2
+  echo "  $0 root-directory" >&2
+  echo
+
+  exit 111
+}
+
+cd "$base_dir/../vm-tools/source" && main "$@"
+exit $?
+

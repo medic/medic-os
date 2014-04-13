@@ -1,0 +1,34 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/supervisor'
+source '/boot/include/hypervisor'
+
+main()
+{
+  if [ $# -le 0 ]; then
+    usage
+  fi
+
+  local package="$1"
+  shift 1
+  
+  supervisor_start "$package" "$@"
+  local rv="$?"
+
+  if [ "$rv" -ne 0 ]; then
+    warn "Failed to start one or more specified services"
+  fi
+  
+  return "$rv"
+}
+
+usage()
+{
+  echo "Usage: $0 <package-name> [service-name]..." >&2
+  exit 111
+}
+
+main "$@"
+exit "$?"
+

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv || return 255
+
+  exec "$PACKAGE_ROOT/bin/nginx" -p "$PACKAGE_STORAGE/nginx/state" \
+    >> "$PACKAGE_STORAGE/nginx/logs/startup.log" 2>&1
+}
+
+start
+exit "$?"
+

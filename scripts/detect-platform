@@ -1,0 +1,26 @@
+#!/bin/bash
+
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/../source/medic-core/"
+
+fatal()
+{
+  echo "Fatal error: $*" >&2
+  exit 111
+}
+
+source "$base_dir/scripts/include/builder" 2>/dev/null \
+    || fatal 'Unable to load a required library'
+
+main()
+{
+  if [ -n "$PLATFORM" ]; then
+    echo "$PLATFORM"
+  else
+    builder_detect_system && echo "$platform"
+  fi
+}
+
+main "$@"
+exit $?
+

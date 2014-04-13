@@ -1,0 +1,311 @@
+diff '--exclude=*.a' -urN gcc-4.8.2-dist/gcc/cfgexpand.c gcc-4.8.2/gcc/cfgexpand.c
+--- gcc-4.8.2-dist/gcc/cfgexpand.c	2013-03-05 14:31:50.000000000 -0800
++++ gcc-4.8.2/gcc/cfgexpand.c	2014-02-24 00:04:58.536742404 -0800
+@@ -1514,6 +1514,28 @@
+   return size;
+ }
+ 
++/* Helper routine to check if a record or union contains an array field. */
++
++static int
++record_or_union_type_has_array_p (const_tree tree_type)
++{
++  tree fields = TYPE_FIELDS (tree_type);
++  tree f;
++
++  for (f = fields; f; f = DECL_CHAIN (f))
++    {
++      if (TREE_CODE (f) == FIELD_DECL)
++	{
++	  tree field_type = TREE_TYPE (f);
++	  if (RECORD_OR_UNION_TYPE_P (field_type))
++	    return record_or_union_type_has_array_p (field_type);
++	  if (TREE_CODE (field_type) == ARRAY_TYPE)
++	    return 1;
++	}
++    }
++  return 0;
++}
++
+ /* Expand all variables used in the function.  */
+ 
+ static rtx
+@@ -1525,6 +1547,7 @@
+   struct pointer_map_t *ssa_name_decls;
+   unsigned i;
+   unsigned len;
++  bool gen_stack_protect_signal = false;
+ 
+   /* Compute the phase of the stack frame for this function.  */
+   {
+@@ -1576,6 +1599,24 @@
+     }
+   pointer_map_destroy (ssa_name_decls);
+ 
++  if (flag_stack_protect == 2)
++    FOR_EACH_LOCAL_DECL (cfun, i, var)
++      if (!is_global_var (var))
++	{
++	  tree var_type = TREE_TYPE (var);
++	  /* Examine local referenced variables that have their addresses taken,
++	     contain an array, or are arrays.  */
++	  if (TREE_CODE (var) == VAR_DECL
++	      && (TREE_CODE (var_type) == ARRAY_TYPE
++		  || TREE_ADDRESSABLE (var)
++		  || (RECORD_OR_UNION_TYPE_P (var_type)
++		      && record_or_union_type_has_array_p (var_type))))
++	    {
++	      gen_stack_protect_signal = true;
++	      break;
++	    }
++	}
++
+   /* At this point all variables on the local_decls with TREE_USED
+      set are not associated with any block scope.  Lay them out.  */
+ 
+@@ -1662,11 +1703,18 @@
+ 	dump_stack_var_partition ();
+     }
+ 
+-  /* There are several conditions under which we should create a
+-     stack guard: protect-all, alloca used, protected decls present.  */
+-  if (flag_stack_protect == 2
+-      || (flag_stack_protect
+-	  && (cfun->calls_alloca || has_protected_decls)))
++  /* Create stack guard, if
++     a) "-fstack-protector-all" - always;
++     b) "-fstack-protector-strong" - if there are arrays, memory
++     references to local variables, alloca used, or protected decls present;
++     c) "-fstack-protector" - if alloca used, or protected decls present  */
++  if (flag_stack_protect == 3  /* -fstack-protector-all  */
++      || (flag_stack_protect == 2  /* -fstack-protector-strong  */
++	  && (gen_stack_protect_signal || cfun->calls_alloca
++	      || has_protected_decls))
++      || (flag_stack_protect == 1  /* -fstack-protector  */
++	  && (cfun->calls_alloca
++	      || has_protected_decls)))
+     create_stack_guard ();
+ 
+   /* Assign rtl to each variable based on these partitions.  */
+diff '--exclude=*.a' -urN gcc-4.8.2-dist/gcc/common.opt gcc-4.8.2/gcc/common.opt
+--- gcc-4.8.2-dist/gcc/common.opt	2013-03-14 02:13:36.000000000 -0700
++++ gcc-4.8.2/gcc/common.opt	2014-02-23 23:43:12.005739744 -0800
+@@ -1905,8 +1905,12 @@
+ Common Report Var(flag_stack_protect, 1)
+ Use propolice as a stack protection method
+ 
+-fstack-protector-all
++fstack-protector-strong
+ Common Report RejectNegative Var(flag_stack_protect, 2)
++Use a smart stack protection method for certain functions
++
++fstack-protector-all
++Common Report RejectNegative Var(flag_stack_protect, 3)
+ Use a stack protection method for every function
+ 
+ fstack-usage
+diff '--exclude=*.a' -urN gcc-4.8.2-dist/gcc/doc/invoke.texi gcc-4.8.2/gcc/doc/invoke.texi
+--- gcc-4.8.2-dist/gcc/doc/invoke.texi	2013-06-19 12:55:50.000000000 -0700
++++ gcc-4.8.2/gcc/doc/invoke.texi	2014-02-23 23:45:04.135742397 -0800
+@@ -406,8 +406,8 @@
+ -fsel-sched-pipelining -fsel-sched-pipelining-outer-loops @gol
+ -fshrink-wrap -fsignaling-nans -fsingle-precision-constant @gol
+ -fsplit-ivs-in-unroller -fsplit-wide-types -fstack-protector @gol
+--fstack-protector-all -fstrict-aliasing -fstrict-overflow @gol
+--fthread-jumps -ftracer -ftree-bit-ccp @gol
++-fstack-protector-all -fstack-protector-strong -fstrict-aliasing @gol
++-fstrict-overflow -fthread-jumps -ftracer -ftree-bit-ccp @gol
+ -ftree-builtin-call-dce -ftree-ccp -ftree-ch @gol
+ -ftree-coalesce-inline-vars -ftree-coalesce-vars -ftree-copy-prop @gol
+ -ftree-copyrename -ftree-dce -ftree-dominator-opts -ftree-dse @gol
+@@ -8873,6 +8873,12 @@
+ when a function is entered and then checked when the function exits.
+ If a guard check fails, an error message is printed and the program exits.
+ 
++@item -fstack-protector-strong
++@opindex fstack-protector-strong
++Like @option{-fstack-protector} but includes additional functions to be
++protected - those that have local array definitions, or have references to
++local frame addresses.
++
+ @item -fstack-protector-all
+ @opindex fstack-protector-all
+ Like @option{-fstack-protector} except that all functions are protected.
+diff '--exclude=*.a' -urN gcc-4.8.2-dist/gcc/testsuite/g++.dg/fstack-protector-strong.C gcc-4.8.2/gcc/testsuite/g++.dg/fstack-protector-strong.C
+--- gcc-4.8.2-dist/gcc/testsuite/g++.dg/fstack-protector-strong.C	1969-12-31 16:00:00.000000000 -0800
++++ gcc-4.8.2/gcc/testsuite/g++.dg/fstack-protector-strong.C	2014-02-23 23:43:12.011740251 -0800
+@@ -0,0 +1,35 @@
++/* Test that stack protection is done on chosen functions. */
++
++/* { dg-do compile { target i?86-*-* x86_64-*-* } } */
++/* { dg-options "-O2 -fstack-protector-strong" } */
++
++class A
++{
++public:
++  A() {}
++  ~A() {}
++  void method();
++  int state;
++};
++
++/* Frame address exposed to A::method via "this". */
++int
++foo1 ()
++{
++  A a;
++  a.method ();
++  return a.state;
++}
++
++/* Possible destroying foo2's stack via &a. */
++int
++global_func (A& a);
++
++/* Frame address exposed to global_func. */
++int foo2 ()
++{
++  A a;
++  return global_func (a);
++}
++
++/* { dg-final { scan-assembler-times "stack_chk_fail" 2 } } */
+diff '--exclude=*.a' -urN gcc-4.8.2-dist/gcc/testsuite/gcc.dg/fstack-protector-strong.c gcc-4.8.2/gcc/testsuite/gcc.dg/fstack-protector-strong.c
+--- gcc-4.8.2-dist/gcc/testsuite/gcc.dg/fstack-protector-strong.c	1969-12-31 16:00:00.000000000 -0800
++++ gcc-4.8.2/gcc/testsuite/gcc.dg/fstack-protector-strong.c	2014-02-23 23:43:12.011740251 -0800
+@@ -0,0 +1,135 @@
++/* Test that stack protection is done on chosen functions. */
++
++/* { dg-do compile { target i?86-*-* x86_64-*-* } } */
++/* { dg-options "-O2 -fstack-protector-strong" } */
++
++#include<string.h>
++#include<stdlib.h>
++
++extern int g0;
++extern int* pg0;
++int
++goo (int *);
++int
++hoo (int);
++
++/* Function frame address escaped function call. */
++int
++foo1 ()
++{
++  int i;
++  return goo (&i);
++}
++
++struct ArrayStruct
++{
++  int a;
++  int array[10];
++};
++
++struct AA
++{
++  int b;
++  struct ArrayStruct as;
++};
++
++/* Function frame contains array. */
++int
++foo2 ()
++{
++  struct AA aa;
++  int i;
++  for (i = 0; i < 10; ++i)
++    {
++      aa.as.array[i] = i * (i-1) + i / 2;
++    }
++  return aa.as.array[5];
++}
++
++/* Address computation based on a function frame address. */
++int
++foo3 ()
++{
++  int a;
++  int *p;
++  p = &a + 5;
++  return goo (p);
++}
++
++/* Address cast based on a function frame address. */
++int
++foo4 ()
++{
++  int a;
++  return goo (g0 << 2 ? (int *)(3 * (long)(void *)(&a)) : 0);
++}
++
++/* Address cast based on a local array. */
++int
++foo5 ()
++{
++  short array[10];
++  return goo ((int *)(array + 5));
++}
++
++struct BB
++{
++  int one;
++  int two;
++  int three;
++};
++
++/* Address computaton based on a function frame address.*/
++int
++foo6 ()
++{
++  struct BB bb;
++  return goo (&bb.one + sizeof(int));
++}
++
++/* Function frame address escaped via global variable. */
++int
++foo7 ()
++{
++  int a;
++  pg0 = &a;
++  goo (pg0);
++  return *pg0;
++}
++
++/* Check that this covers -fstack-protector. */
++int
++foo8 ()
++{
++  char base[100];
++  memcpy ((void *)base, (const void *)pg0, 105);
++  return (int)(base[32]);
++}
++
++/* Check that this covers -fstack-protector. */
++int
++foo9 ()
++{
++  char* p = alloca (100);
++  return goo ((int *)(p + 50));
++}
++
++int
++global2 (struct BB* pbb);
++
++/* Address taken on struct. */
++int
++foo10 ()
++{
++  struct BB bb;
++  int i;
++  bb.one = global2 (&bb);
++  for (i = 0; i < 10; ++i)
++    {
++      bb.two = bb.one + bb.two;
++      bb.three = bb.one + bb.two + bb.three;
++    }
++  return bb.three;
++}
++
++/* { dg-final { scan-assembler-times "stack_chk_fail" 10 } } */

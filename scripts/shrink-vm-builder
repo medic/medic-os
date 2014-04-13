@@ -1,6 +1,6 @@
 #!/bin/sh
 
-self="`readlink -f "$0"`"
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/../.."
 
 main()
@@ -24,7 +24,7 @@ main()
 
   swapoff -a
   (cd / && dd if=/dev/zero of=./zero bs=4096; rm -f ./zero)
-  #(cd /srv && dd if=/dev/zero of=./zero bs=4096; rm -f ./zero)
+  # (cd /srv && dd if=/dev/zero of=./zero bs=4096; rm -f ./zero)
   dd if=/dev/zero of=/dev/sdb1 bs=4096
   mkswap /dev/sdb1
 

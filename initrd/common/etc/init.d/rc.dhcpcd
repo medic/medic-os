@@ -1,0 +1,16 @@
+#!/bin/sh
+
+/sbin/udevadm settle --timeout=5 &>/dev/null
+
+NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
+
+for DEVICE in $NETDEVICES; do
+  ifconfig "$DEVICE" | grep -q "inet addr"
+  if [ "$?" != 0 ]; then
+    trap 2 3 11
+    /sbin/dhcpcd "$DEVICE" -h "`/bin/hostname`" >/dev/null 2>&1 &
+    trap "" 2 3 11
+    sleep 1
+  fi
+done
+

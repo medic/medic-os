@@ -1,0 +1,39 @@
+#!/bin/sh
+
+self="`readlink -f "$0" || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
+
+source "$base_dir/../medic-core/scripts/include/rearrange"
+
+rename()
+{
+  find . -type d -exec chmod 755 {} \; &&
+    chown -R root:root .
+}
+
+apply_patches()
+{
+  (cd gcc && patch -s -p1 \
+    < ../../patches/gcc-4.8.2-stack-protector-strong.diff)
+}
+
+finished_path="$base_dir/../../status/compiler.finished"
+
+if [ -f "$finished_path" ]; then
+  echo "Tree already rearranged for collection 'compiler'; skipping" >&2
+  exit 0
+fi
+
+cd "$base_dir/incoming" &&
+\
+echo -n "Renaming directories... " >&2 &&
+  rename && echo 'done.' >&2 &&
+echo -n "Removing compressed files... " >&2 &&
+  remove && echo 'done.' >&2 &&
+echo -n "Creating symbolic links... " >&2 &&
+  symlink && echo 'done.' >&2 &&
+echo -n "Applying patches... " >&2 &&
+  apply_patches && echo 'done.' >&2 &&
+\
+touch "$finished_path"
+

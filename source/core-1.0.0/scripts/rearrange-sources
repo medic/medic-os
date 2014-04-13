@@ -1,0 +1,47 @@
+#!/bin/sh
+
+self="`readlink -f "$0" || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
+
+source "$base_dir/../medic-core/scripts/include/rearrange"
+
+rename()
+{
+  find . -type d -exec chmod 755 {} \; &&
+    chown -R root:root .
+}
+
+apply_patches()
+{
+  (cd linux && patch -s -p1 \
+    < ../../patches/grsecurity-2.9.1-linux-3.10.33.diff) &&
+  (cd linux && patch -s -p1 \
+    < ../../patches/linux-export-final_putname-3.7.5.diff) &&
+  (cd linux && patch -s -p1 \
+    < ../../patches/linux-grsec-do_const-3.8.4.diff) &&
+  (cd linux && patch -s -p1 \
+    < ../../patches/linux-grsec-localversion-3.8.13.diff) &&
+  (cd busybox && patch -s -p1 \
+    < ../../patches/busybox-1.21.1-depmod.diff)
+}
+
+finished_path="$base_dir/../../status/core.finished"
+
+if [ -f "$finished_path" ]; then
+  echo "Tree already rearranged for collection 'core'; skipping" >&2
+  exit 0
+fi
+
+cd "$base_dir/incoming" &&
+\
+echo -n "Renaming directories... " >&2 &&
+  rename && echo 'done.' >&2 &&
+echo -n "Removing compressed files... " >&2 &&
+  remove && echo 'done.' >&2 &&
+echo -n "Creating symbolic links... " >&2 &&
+  symlink && echo 'done.' >&2 &&
+echo -n "Applying patches... " >&2 &&
+  apply_patches && echo 'done.' >&2 &&
+\
+touch "$finished_path"
+

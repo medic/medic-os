@@ -1,0 +1,169 @@
+#!/bin/sh
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 111
+}
+
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
+usage()
+{
+  echo "Usage: $0 platform loopback_image description device"
+  exit 1
+}
+
+wait_for_device()
+{
+  local device="$1"
+
+  for i in `seq 1 10`; do
+    if [ -b "$device" ]; then
+      return 0
+    fi
+    sleep 5
+  done
+
+  return 1
+}
+
+wait_for_volume_availability()
+{
+  local volume_id="$1"
+
+  sleep 20
+}
+
+wait_for_snapshot_availability()
+{
+  local snapshot_id="$1"
+
+  sleep 20
+}
+
+main()
+{
+  local platform="$1"
+  local image="$2"
+  local description="$3"
+  local device="$4"
+
+  if [ "$1" = '-h' -o "$1" = '--help' ]; then
+    usage
+  fi
+
+  local aki=''
+  local architecture=''
+
+  case "$platform" in
+    x64)
+      aki='aki-fc37bacc'
+      architecture='x86_64' ;;
+    x86)
+      aki='aki-fa37baca'
+      architecture='i386' ;;
+    *)
+      fatal "Unsupported platform '$platform'" ;;
+  esac
+
+  if ! [ -f "$image" ]; then
+    fatal "Unable to locate Xen image '$image'"
+  fi
+
+  if [ -z "$description" ]; then
+    fatal "An image description must be specified"
+  fi
+
+  if [ -z "$device" -o -e "$device" ]; then
+    fatal "A not-yet-existing block-special device must be specified"
+  fi
+
+  local name="MMVA $platform - `date +%Y%m%d`"
+
+  local volume_id="`
+    ec2-create-volume -s1 \
+      -z "$EC2_AVAILABILITY_ZONE" --region "$EC2_REGION" | cut -f2
+  `" || fatal 'Failed to create volume'
+
+  wait_for_volume_availability "$volume_id" &&
+  \
+  ec2-create-tags "$volume_id" --tag "Name=$name" &>/dev/null \
+    || fatal "Failure while setting tags on volume'$volume_id'"
+
+  ec2-attach-volume "$volume_id" -i "`
+    ec2-metadata -i | cut -d: -f2 | sed 's/^ *//'
+  `" -d "$device" &>/dev/null || fatal 'Failed to attach temporary volume'
+
+  echo "Volume identifier: $volume_id" >&2
+  echo -n 'Building EBS system image... ' >&2
+
+  wait_for_device "$device" \
+    || fatal 'Volume did not attach during timeout period'
+
+  sudo mkfs.ext4 "$device" &>/dev/null \
+    || fatal "Failure while formatting device '$device'"
+
+  sudo mkdir -p /mnt/startup &&
+  sudo mount "$device" /mnt/startup \
+    || fatal "Failure while mounting device '$device'"
+
+  sudo mkdir -p /mnt/loopback &&
+  sudo mount -o loop "$image" /mnt/loopback \
+    || fatal "Failure while mounting loopback image '$image'"
+
+  sudo cp -a /mnt/loopback/* /mnt/startup/ \
+    || fatal 'Failure while copying files'
+
+  sudo umount /mnt/loopback /mnt/startup && sudo sync \
+    || fatal 'Failure while unmounting volumes'
+
+  ec2-detach-volume --region "$EC2_REGION" "$volume_id" &>/dev/null \
+    || fatal 'Failure while detaching volume'
+
+  echo 'done.' >&2
+  echo -n 'Creating EBS snapshot... ' >&2
+
+  local snapshot_id="`
+    ec2-create-snapshot "$volume_id" \
+      --region "$EC2_REGION" -d "$description" | cut -f2 \
+  `" || fatal "Failure while creating snapshot for volume '$volume_id'"
+
+  wait_for_snapshot_availability "$snapshot_id" &&
+  \
+  ec2-create-tags "$snapshot_id" --tag "Name=$name" &>/dev/null \
+    || fatal "Failure while setting tags on snapshot '$snapshot_id'"
+
+  echo 'done.' >&2
+  echo "Snapshot identifier: $snapshot_id"
+
+  echo -n 'Registering AMI... ' >&2
+
+  local ami_id="`
+    ec2-register -a "$architecture" -n "$description" \
+      --kernel "$aki" --root-device-name /dev/sda1 \
+      -d "$description" -s "$snapshot_id" -b '/dev/sdb=:10:false' | cut -f2 \
+  `" || fatal "Failure while registering AMI using snapshot '$snapshot_id'"
+
+  echo 'done.' >&2
+  echo "AMI identifier: $ami_id"
+
+  ec2-create-tags "$ami_id" --tag "Name=$name" &>/dev/null \
+    || fatal "Failure while setting tags on AMI '$ami_id'"
+
+  echo -n "Deleting temporary volume '$volume_id'... " >&2
+
+  wait_for_volume_availability "$volume_id" &&
+  \
+  ec2-delete-volume "$volume_id" &>/dev/null \
+    || warn "Failure while deleting volume '$volume_id'"
+
+  echo 'done.' >&2
+}
+
+main "$@"
+exit "$?"
+

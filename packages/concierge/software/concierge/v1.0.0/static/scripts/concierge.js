@@ -33,7 +33,11 @@ var button_hover = function (_elts) {
   $(_elts).each(function (_i, _elt) {
 
     var elt = $(_elt);
-
+    
+    if (elt.hasClass('disabled')) {
+      return;
+    }
+      
     elt.mouseenter(function () {
       elt.addClass('hover');
     });
@@ -73,10 +77,25 @@ jQuery(function ($) {
 
   resize_handler();
   button_hover('#save');
+  button_hover('#lock');
   textarea_focus('#key');
   button_submit('#submit', '#save');
   $(window).resize(resize_handler);
 
+  $('#lock').click(function (_ev) {
+  
+    if ($(this).hasClass('disabled')) {
+      return false;
+    }
+    
+    $.ajax({
+      url: 'setup/finish',
+      complete: function (_xhr, _status) {
+        window.location.href = 'dashboard/_design/dashboard/_rewrite';
+      }
+    });
+  });
+  
 });
 
 

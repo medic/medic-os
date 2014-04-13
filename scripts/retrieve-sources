@@ -1,0 +1,185 @@
+#!/bin/sh
+
+self="`readlink -f "$0" || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
+
+trim()
+{
+  local str="$1"
+  echo "$str" | sed 's/^ \+//; s/^ \+//;'
+}
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 111
+}
+
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
+finish_curl_progress()
+{
+  if [ "$QUIET" ]; then
+    return 0
+  fi
+
+  # Workaround for curl bug:
+  #   The final frame of the progress bar is emitted on a new
+  #   line when an FTP URL is used; just erase it and continue.
+
+  if [ "`echo "$url" | cut -d: -f1`" = 'ftp' ]; then
+    echo -ne "\033[1K\r"
+  fi
+
+  echo -ne '\033[1A' &&
+  for i in `seq 1 72`; do echo -n '#'; done &&
+  echo ' 100.0%'
+
+  return "$?"
+}
+
+indent()
+{
+  while read line; do echo "  $line"; done
+}
+
+extract()
+{
+  for archive in "$@"; do
+
+    local type="`echo "$archive" | sed 's/.*\.//'`"
+
+    case "$type" in
+      bz2)
+        tar xjf "$archive" ;;
+      *gz)
+        tar xzf "$archive" ;;
+      xz)
+        tar xJf "$archive" ;;
+      lzma)
+        lzma -dc "$archive" | tar -xf - ;;
+      *)
+        false ;;
+    esac
+
+    if [ "$?" -ne 0 ]; then
+      warn "Failed to extract source code from '$archive'"
+      return "$?"
+    fi
+
+  done
+
+  return 0
+}
+
+extract_if_necessary()
+{
+  local url="$1"
+  local name="$2"
+  local origin="$3"
+
+  if ! [ -f "$name.finished" ]; then
+    (extract "`basename "$url"`" && echo -n "$origin" > "$name.finished") &
+  fi
+
+  return 0
+}
+
+main()
+{
+  local manifest_name="$1"
+  local target_directory="$2"
+  local override_base_url="$3"
+
+  if [ $# -lt 2 -o -z "$manifest_name" ]; then
+    echo "Usage: $0 manifest_name target_directory" >&2
+    return 111
+  fi
+
+  cd "$target_directory" \
+    || fatal "Unable to change to target directory '$target_directory'"
+
+  local manifest_path="../../manifests/$manifest_name"
+
+  local lines="`wc -l "$manifest_path" | cut -d' ' -f1`" \
+    || fatal "Unable to read manifest file 'manifests/$manifest_name'"
+
+  if [ -f "$base_dir/status/$manifest_name.retrieved" ]; then
+    echo "Collection '$manifest_name' is already downloaded; skipping" >&2
+    return 0
+  fi
+
+  local n='0'
+
+  echo "Retrieving $lines packages from collection '$manifest_name':" >&2
+
+  while read line; do
+
+    local n="$[$n + 1]"
+
+    local name="`echo "$line" | cut -d, -f1`"
+    name="`basename "$name"`"
+
+    local url="`echo "$line" | cut -d, -f2`"
+    url="`trim "$url"`"
+
+    if [ -f "$name.downloaded" ]; then
+      echo "[$n/$lines] Skipping already-downloaded package '$name'" >&2
+      extract_if_necessary "$url" "$name" 'curl'
+      continue
+    fi
+
+    echo "[$n/$lines] Downloading source code for package '$name'... " >&2
+
+    if [[ "$url" = *.git ]]; then
+
+      git clone "$url" 2>&1 | indent
+
+      [ "${PIPESTATUS[0]}" -eq 0 ] \
+        || fatal "Error occurred while cloning repository '$name'"
+
+      echo -n 'git' > "$name.finished"
+
+    elif [[ "$url" = "npm "* ]]; then
+
+      sh -c "$url" 2>&1 | indent
+
+      [ "${PIPESTATUS[0]}" -eq 0 ] \
+        || fatal "Error occurred while retrieving module '$name'"
+
+      echo -n 'npm' > "$name.finished"
+
+    else
+
+      if [ "$override_base_url" ]; then
+        override_base_url="`
+          echo "$override_base_url" | sed 's/\/\{1,\}$//;'
+        `" || fatal "Error occurred while overriding download URL"
+
+        url="$override_base_url/`basename "$url"`" \
+          || fatal "Error occurred while building download URL"
+      fi
+
+      curl -f -L -O -# "$url" \
+        || fatal "Error occurred while downloading '$name'"
+
+      finish_curl_progress &&
+      extract_if_necessary "$url" "$name" 'curl'
+    fi
+
+    touch "$name.downloaded"
+
+  done < "../../manifests/$manifest_name"
+
+  echo -n 'Waiting for decompression processes to complete... ' >&2
+  wait
+
+  touch "$base_dir/status/$manifest_name.retrieved"
+  echo 'done.' >&2
+}
+
+main "$@"
+

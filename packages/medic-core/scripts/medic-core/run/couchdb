@@ -8,7 +8,7 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  exec nohup su -c "exec '$PACKAGE_ROOT/bin/couchdb'" couchdb \
+  exec su -c "exec '$PACKAGE_ROOT/bin/couchdb'" couchdb \
     >> "$PACKAGE_STORAGE/couchdb/logs/startup.log" 2>&1
 }
 

@@ -41,24 +41,29 @@ app.get('/', function (req, res) {
  */
 app.get('/setup', function (req, res) {
 
-  res.render('setup/index.hbs', {
-    title: (
-      'Set Administrative Password: ' +
-      'Medic Mobile Virtual Server Configuration'
-    ),
-    data: {
-      key: req.flash('key')
-    },
-    messages: {
-      error: req.flash('error'),
-      success: req.flash('success')
-    }
+  read_system_password(function (_err, _system_passwd) {
+    res.render('setup/index.hbs', {
+      title: (
+        'Set Administrative Password: ' +
+        'Medic Mobile Virtual Server Configuration'
+      ),
+      data: {
+        key: req.flash('key')
+      },
+      messages: {
+        error: req.flash('error'),
+        success: req.flash('success')
+      },
+      options: {
+        lock: !_err
+      }
+    });
   });
 });
 
 /**
  */
-app.post('/setup/finish', function (req, res) {
+app.get('/setup/finish', function (req, res) {
 
   disable_concierge_service(req, function (_err) {
     res.send(500);
@@ -368,13 +373,14 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
         return _cb(null, _system_passwd, false);
       }
-      
+
+      /* Generate random 2048-bit password */
       crypto.randomBytes(256, function (_err, _data) {
         if (_err) {
           return _cb(_err);
         }
 
-        return _cb(null, _data.toString('base64'), true);
+        return _cb(null, _data.toString('hex'), true);
       });
     },
 
@@ -515,9 +521,9 @@ var main = function (_argv) {
   }
 
   try {
-    app.listen(80);
+    app.listen(280);
   } catch (e) {
-    fatal("Couldn't bind socket for listening on port 80", e);
+    fatal("Couldn't bind socket for listening on port 280", e);
   }
  
   try {

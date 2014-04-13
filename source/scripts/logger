@@ -1,6 +1,6 @@
 #!/bin/bash
 
-self="`readlink -f "$0"`"
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 source_base_dir="`dirname "$self"`/../"
 
 source "$source_base_dir/medic-core/scripts/include/logger" \
@@ -16,7 +16,7 @@ usage()
 {
   echo
   echo "Usage:" >&2
-  echo "  $0 name command [args...]" >&2
+  echo "  $0 name platform command [args...]" >&2
   echo
 
   exit 111
@@ -25,25 +25,24 @@ usage()
 check_args()
 {
   local name="$1"
-  shift 1
+  local platform="$2"
+  local command="$3"
 
-  local command="$1"
-  shift 1
-
-  [ "$name" -a "$command" ]
+  [ "$name" -a "$platform" -a "$command" ]
 }
 
 main()
 {
   local name="$1"
-  shift 1
+  local platform="$2"
+  shift 2
 
-  check_args "$name" "$@" || usage
+  check_args "$name" "$platform" "$@" || usage
 
-  load_timestamp "$name" \
+  load_timestamp "$name" "$platform" \
     || fatal 'Unable to load last timestamp; retry from root directory'
 
-  (exec sh -c "$*") 2>&1 | logger "$name"
+  (exec sh -c "$*" 2>&1) | logger "$name" "$platform"
   return ${PIPESTATUS[0]}
 }
 

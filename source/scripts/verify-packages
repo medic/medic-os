@@ -1,0 +1,132 @@
+#!/bin/sh
+
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/../.."
+
+check_pax()
+{
+  local pax_prefix="$1"
+  local package="$2"
+  shift 2
+
+  local pax_dir="$pax_prefix/sbin"
+  local pkg_base="$base_dir/packages/$package/software/$package"
+
+  if ! [ -d "$pax_dir" ]; then
+    usage
+  fi
+
+  for file in "$@"; do
+    if ! "$pax_dir/paxctl" -v "$pkg_base"/*/*/"$file" &>/dev/null; then
+      warn "Unable to find required pax header in '$file'"
+      return 1
+    fi
+  done
+
+  return 0
+}
+
+check_binaries()
+{
+  local package="$1"
+  local dir="$2"
+  shift 2
+
+  local pkg_base="$base_dir/packages/$package/software/$package"
+
+  for binary in "$@"; do
+    local file="`
+      find "$pkg_base"/*/*/"$dir/$binary" -prune 2>/dev/null \
+        | head -n1 
+    `"
+    if ! [ -x "$file" ]; then
+      warn "Unable to find binary '$binary' in package '$package'"
+      return 1
+    fi
+  done
+
+  return 0
+}
+
+check_libraries()
+{
+  local package="$1"
+  shift 1
+
+  local pkg_base="$base_dir/packages/$package/software/$package"
+
+  for library in "$@"; do
+    local file="`
+      find "$pkg_base"/*/*/lib/lib* -prune \
+        -name "lib$library*.so" -o -name "lib$library*.so.*" \
+    2>/dev/null | head -n1
+    `"
+    if ! [ -f "$file" ]; then
+      warn "Unable to find library '$library' in package '$package'"
+      return 1
+    fi
+  done
+
+  return 0
+}
+
+
+main()
+{
+  local pax_prefix="$1"
+
+  if ! [ -d "$pax_prefix" ]; then
+    usage
+  fi
+
+  check_pax "$pax_prefix" 'medic-core' 'bin/node' 'lib/couchdb/bin/couchjs' \
+    || fatal 'Failed to find pax header in medic-core binaries'
+
+  check_pax "$pax_prefix" 'java' 'bin/java' \
+    || fatal 'Failed to find pax header in java binaries'
+
+  check_libraries 'medic-core' \
+    z curl acl attr idn usb ssl crypto \
+    lzo2 menu history form panel ncurses icudata \
+      || fatal 'Failed to find a required library in medic-core'
+
+  check_binaries 'medic-core' 'sbin' sshd paxctl logrotate \
+    || fatal 'Failed to find a required binary in medic-core/sbin'
+
+  check_binaries 'medic-core' 'bin' \
+    node couchdb erl gammu curl ssh rsync lrzip lzma \
+      xdelta3 diff patch getfacl getfattr openssl kanso npm nodelint \
+	    || fatal 'Failed to find a required binary in medic-core/bin'
+
+  check_binaries 'java' 'bin' java \
+    || fatal 'Failed to find a required binary in java/bin'
+
+  check_binaries 'vm-tools' 'bin' vmtoolsd \
+    || fatal 'Failed to find a required binary in vm-tools/bin'
+
+  check_libraries  'vm-tools' dnet proc ffi \
+    || fatal 'Failed to find a required library in vm-tools'
+  return 0
+}
+
+warn()
+{
+  echo "Warning: $*" 2>&1
+}
+
+fatal()
+{
+  echo "Fatal: $*" 2>&1
+  exit 1
+}
+
+usage()
+{
+  echo "Usage: $0 pax_prefix" 2>&1
+  exit 1
+}
+
+
+main "$@"
+exit "$?"
+

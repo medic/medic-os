@@ -1,0 +1,38 @@
+#!/bin/bash
+
+self="`readlink -f "$0"`"
+base_dir="`dirname "$self"`/.."
+
+
+check_args()
+{
+  true
+}
+
+clean_all()
+{
+  for i in *; do
+    if [ -h "$i" -a -f "$i/Makefile" ]; then
+      ( cd "$i" && make clean )
+    fi
+  done
+
+  for i in js; do
+    if [ -h "$i" -a -f "$i/Makefile" ]; then
+      ( cd "$i" && make distclean )
+    fi
+  done
+
+  (cd gammu && rm -f CMakeCache.txt)
+  return 0
+}
+
+main()
+{
+  check_args "$@"
+  clean_all
+}
+
+cd "$base_dir/source" && main "$@"
+exit $?
+

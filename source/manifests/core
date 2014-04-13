@@ -1,0 +1,5 @@
+busybox, http://www.busybox.net/downloads/busybox-1.21.1.tar.bz2
+dhcpcd, http://roy.marples.name/downloads/dhcpcd/dhcpcd-6.3.2.tar.bz2
+iptables, http://www.netfilter.org/projects/iptables/files/iptables-1.4.21.tar.bz2
+linux, https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.10.33.tar.xz
+syslinux, https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.01.tar.xz
