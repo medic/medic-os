@@ -130,7 +130,7 @@ upload-ami-image: build-ami-image
 copy-compiler-libraries:
 	@echo -n 'Copying compiler libraries...' && \
 	export PATH="${COMPILER_ROOT}/bin:$$PATH" && \
-	active_compiler_root="$$(dirname $$(which gcc))/../" && \
+	active_compiler_root="$$(dirname "$$(which gcc)")/../" && \
 	\
 	find "$$active_compiler_root"/lib{,64} \
 	  \( -type f -o -type l \) -name 'libssp.so*' \
