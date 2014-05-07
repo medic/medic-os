@@ -72,4 +72,3 @@ install_default_couchdb_databases()
 install "$@"
 exit "$?"
 
-
