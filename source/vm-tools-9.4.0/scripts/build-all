@@ -67,7 +67,7 @@ main()
   \
   build_autoconf 'avahi' \
     "$stdarg --disable-static --enable-shared \
-     --sysconfdir='/srv/settings/vm-tools/avahi' \
+     --sysconfdir='/srv/settings/vm-tools' \
      --disable-qt3 --disable-qt4 --disable-gtk \
      --disable-gtk3 --disable-gdbm --disable-dbus \
      --disable-python --disable-pygtk --disable-mono \
