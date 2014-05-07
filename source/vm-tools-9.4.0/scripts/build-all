@@ -66,11 +66,13 @@ main()
   builder_remove_static_libraries 'daemon' &&
   \
   build_autoconf 'avahi' \
-    "$stdarg --disable-qt3 --disable-qt4 --disable-gtk \
+    "$stdarg --disable-static --enable-shared \
+     --sysconfdir='/srv/settings/vm-tools/avahi' \
+     --disable-qt3 --disable-qt4 --disable-gtk \
      --disable-gtk3 --disable-gdbm --disable-dbus \
      --disable-python --disable-pygtk --disable-mono \
      --with-distro=none --with-xml=expat --disable-doxygen-doc \
-     --disable-xmltoman --disable-manpages --enable-shared" &&
+     --disable-xmltoman --disable-manpages --disable-silent-rules" &&
   \
   (disable_parallelism &&
    build_autoconf 'open-vm-tools' \
