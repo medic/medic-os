@@ -132,7 +132,7 @@ copy-compiler-libraries:
 	export PATH="${COMPILER_ROOT}/bin:$$PATH" && \
 	active_compiler_root="$$(dirname "$$(which gcc)")/../" && \
 	\
-	find "$$active_compiler_root"/lib{,64} \
+	find "$$active_compiler_root"/lib* \
 	  \( -type f -o -type l \) -name 'libssp.so*' \
 	    -exec cp -a {} "initrd/${PLATFORM}/lib" \; && \
 	\
