@@ -20,3 +20,6 @@ install()
   return "$?"
 }
 
+install "$@"
+exit "$?"
+
