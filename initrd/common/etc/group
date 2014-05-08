@@ -4,6 +4,7 @@ nobody:x:65533:nobody
 nogroup:x:65534:nobody
 staff:x:50:
 concierge:x:100:concierge
+avahi:x:200:avahi
 gammu-inject:x:101:vm,gammu
 sshd:x:1000:
 vm:x:1001:
