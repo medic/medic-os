@@ -68,16 +68,17 @@ initialize_storage()
     "\\nt\\n82\\nn\\np\\n2\\n\\n\\np\\nw" \
       | fdisk "$device" &&
   \
-  sync && sleep 2 && sync &&
-  mkswap "${device}1" && swapon -p16 "${device}1" &&
-  mkfs.ext4 "${device}2" && mkdir -p /srv && mount "${device}2" /srv &&
+  sync && sleep 1 && sync &&
+  mkswap "${device}1" && swapon -p 16 "${device}1" &&
+  mkfs.ext4 -b 2048 -i 4096 "${device}2" &&
+  mkdir -p /srv && mount "${device}2" /srv &&
   \
   mkdir -p /srv/software /srv/storage /srv/scripts \
     /srv/settings/system /srv/receipts/system &&
   \
-  echo "$version" > /srv/receipts/system/version
-  
-  sync
+  echo "$version" > /srv/receipts/system/version &&
+  sync && sleep 1 && sync
+
   return "$?"
 }
 
