@@ -15,7 +15,7 @@ all: build
 
 build: build-all
 
-build-all: status build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-iptables build-busybox
+build-all: status build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-iptables build-busybox remove-unnecessary
 
 
 copy: copy-all
@@ -48,7 +48,7 @@ build-dhcpcd: build-pv
 	@./scripts/logger 'dhcpcd' '${PLATFORM}' \
 	  'cd source/dhcpcd && \
 	    ./configure --libexecdir=/lib/dhcpcd \
-	      --dbdir=/run/dhcpcd --sysconfdir=/etc && \
+	      --dbdir=/var/run/dhcpcd --sysconfdir=/etc && \
 	    ${MAKE} all CFLAGS="${CFLAGS}" && \
 	    ${MAKE} _proginstall _scriptsinstall _confinstall \
 	      DESTDIR="../../../../initrd/${PLATFORM}" && \
@@ -186,4 +186,10 @@ recalculate-stats:
 	  `.count" && \
 	  wc -l < "$$file" > "$$stats_file"; \
 	done
+
+remove-unnecessary:
+	@echo -n "Removing unnecessary initrd files... " && \
+	cd "../../initrd/${PLATFORM}" && \
+	rm -rf include share && \
+	echo 'done.'
 
