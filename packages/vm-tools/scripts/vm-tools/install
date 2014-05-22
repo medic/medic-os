@@ -15,8 +15,14 @@ install()
   \
   (cd "$PACKAGE_ROOT/../../" &&
     rm -f v9.4 && ln -sf v9.4.0 v9.4 &&
-    rm -f current && ln -sf v9.4.0 current)
+    rm -f current && ln -sf v9.4.0 current) &&
+  \
+  chown -R root:avahi "$PACKAGE_SETTINGS/avahi" &&
+  chown -R avahi:staff "$PACKAGE_STORAGE/avahi"
 
   return "$?"
 }
+
+install "$@"
+exit "$?"
 

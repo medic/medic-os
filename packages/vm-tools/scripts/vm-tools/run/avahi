@@ -1,0 +1,18 @@
+#!/bin/sh
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv || return 255
+
+  exec "$PACKAGE_ROOT/sbin/avahi-daemon" \
+    -f "$PACKAGE_SETTINGS/avahi/avahi-daemon.conf" \
+      >> "$PACKAGE_STORAGE/avahi/logs/startup.log" 2>&1
+}
+
+start
+exit "$?"
+

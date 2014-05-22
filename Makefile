@@ -127,7 +127,19 @@ upload-ami-image: build-ami-image
 	    || exit "$$?"; \
 	echo 'done.'
 
-build-initrd:
+copy-compiler-libraries:
+	@echo -n 'Copying compiler libraries...' && \
+	export PATH="${COMPILER_ROOT}/bin:$$PATH" && \
+	active_compiler_root="$$(dirname "$$(which gcc)")/../" && \
+	\
+	find "$$active_compiler_root"/lib* \
+	  \( -type f -o -type l \) -name 'libssp.so*' \
+	    -exec cp -a {} "initrd/${PLATFORM}/lib" \; && \
+	\
+	strip --strip-unneeded "initrd/${PLATFORM}/lib/libssp.so"* && \
+	echo 'done.'
+
+build-initrd: copy-compiler-libraries
 	@echo -n 'Creating initrd image... ' && \
 	chmod 0440 initrd/common/etc/sudoers && \
 	cp -a initrd/common/* "initrd/${PLATFORM}/" && \

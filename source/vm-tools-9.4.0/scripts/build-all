@@ -55,8 +55,25 @@ main()
   \
   build_autoconf 'glib' "$stdarg" &&
   \
-  (disable_parallelism &&
-   build_autoconf 'open-vm-tools' \
+  build_autoconf 'expat' \
+    "$stdarg --enable-shared --disable-static" &&
+  \
+  builder_remove_static_libraries 'expat' &&
+  \
+  build_autoconf 'libdaemon' \
+    "$stdarg --enable-shared --disable-static" &&
+  \
+  builder_remove_static_libraries 'daemon' &&
+  \
+  (weaken_fortify_source && build_autoconf 'avahi' \
+    "$stdarg --disable-static --enable-shared \
+     --sysconfdir='/srv/settings/vm-tools' --disable-qt3 \
+     --disable-qt4 --disable-gtk --disable-gtk3 --disable-gdbm \
+     --disable-dbus --disable-python --disable-pygtk --disable-mono \
+     --disable-stack-protector --with-distro=none --with-xml=expat \
+     --disable-doxygen-doc --disable-manpages --disable-silent-rules") &&
+  \
+  (disable_parallelism && build_autoconf 'open-vm-tools' \
     "$stdarg --without-x \
      --with-linuxdir='$kernel_module_path' \
      --with-kernel-release='$kernel_version' \
