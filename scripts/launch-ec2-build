@@ -10,7 +10,10 @@ fatal() {
 usage() {
 
   local app="`basename "$0"`"
-  echo "Usage: $app settings_path [ platform [ instance_type ] ]" >&2
+  local required_args='settings_path'
+  local optional_args='platform [ instance_type [ build_options ] ]'
+
+  echo "Usage: $app $required_args [ $optional_args ]" >&2
   exit 1
 }
 
@@ -20,8 +23,13 @@ ssh_command() {
   local identity="$2"
   local remote_command="$3"
 
-  ssh -o StrictHostKeyChecking=no -o RequestTTY=yes \
-    -i "$identity" "$host" "$remote_command"
+  local ssh_options='-q -o StrictHostKeyChecking=no -o RequestTTY=yes'
+
+  if [ -z "$identity" ]; then
+    ssh $ssh_options "$host" "$remote_command"
+  else
+    ssh $ssh_options -i "$identity" "$host" "$remote_command"
+  fi
 
   return "$?"
 }
@@ -31,16 +39,20 @@ main() {
   local settings="$1"
   local platform="$2"
   local instance_type="$3"
+  local build_options="$4"
 
+  local fs_size='20'
   local security_group='basic'
   local time_zone='America/Los_Angeles'
   local ssh_key_name="Nightly Build Key"
   local default_availability_zone='us-west-2a'
+  local s3_base_url='https://s3-us-west-2.amazonaws.com'
 
-  local mmva_url='https://scri.pt/get/mmva'
   local vm_url='https://github.com/browndav/vm-toaster'
+  local mmva_url="$s3_base_url/medicmobile.org/mmva/source"
+  local mirror_url="$s3_base_url/medicmobile.org/mmva/mirror"
 
-  if [ -z "$settings" -o $# -gt 3 ]; then
+  if [ -z "$settings" -o $# -gt 4 ]; then
     usage
   fi
 
@@ -95,7 +107,8 @@ main() {
   echo -n 'Creating instance... ' >&2
 
   local instance_data="`
-    ec2-run-instances "$ami" -t "$instance_type" \
+    ec2-run-instances "$ami" \
+      -t "$instance_type" -b "/dev/sda1=:$fs_size" \
       -k "$ssh_key_name" -z "$EC2_AVAILABILITY_ZONE" -g "$security_group"
   `" &&
   \
@@ -141,6 +154,10 @@ main() {
   local ssh_id="$ssh_private_key_path"
   local ssh_host="ec2-user@$external_fqdn"
 
+  if ! [ -f "$ssh_id" ]; then
+    fatal "SSH private key file `$ssh_id` not found"
+  fi
+
   while [ "$n" -gt 0 ]; do
 
     sleep 10 && n=$[n - 1]
@@ -166,6 +183,10 @@ main() {
          source mmva-src/vm-toaster/config/aws-current/settings &&
          echo 'done.' >&2 &&
          \
+         echo -n 'Resizing filesystem... ' >&2 &&
+         sudo resize2fs /dev/xvda1 &>/dev/null &&
+         echo 'done.' >&2 &&
+         \
          echo -n 'Updating system packages... ' >&2 &&
          sudo yum -q -y update &>/dev/null &&
          echo 'done.' >&2 &&
@@ -174,6 +195,7 @@ main() {
          curl -O# '$mmva_url/mmva-core-src-current.tar.xz' &&
          echo 'Downloading MMVA JDK/JRE module:' >&2 &&
          curl -O# '$mmva_url/mmva-java-$platform-current.tar.xz' &&
+         \
          echo -n 'Extracting MMVA core image... ' >&2 &&
          sudo tar xJf mmva-core-src-current.tar.xz &&
          echo 'done.' >&2 &&
@@ -196,7 +218,9 @@ main() {
          echo 'done.' >&2 &&
          \
          echo 'Starting MMVA build process:' >&2 &&
-         sudo JAVA_HOME="\$JAVA_HOME" make all PLATFORM='$platform' &&
+         sudo make all \
+           URL='$mirror_url' PLATFORM='$platform' $build_options &&
+         \
          echo 'MMVA build complete.' >&2 &&
          \
          echo -n 'Building EBS images:' >&2 &&
@@ -205,25 +229,49 @@ main() {
            'MMVA $platform - `date +%Y%m%d`' /dev/sdb \
          \
          echo 'EBS images built successfully.' >&2 &&
+         \
          echo 'Uploading ISO images:' >&2 &&
          ./vm-toaster/scripts/upload-iso-images \
            "$UPLOAD_METHOD" "$UPLOAD_USER" \
              "$UPLOAD_HOST" "$UPLOAD_TARGET" "$UPLOAD_OPTIONS" && \
          \
-         echo 'ISO images uploaded successfully.'"
+         echo 'ISO images uploaded successfully.' && sync"
 
     rv="$?"
 
-    if [ "$rv" -ne 0 -a "$rv" -ne 255 ]; then
-      echo 'failed.' >&2
-      fatal 'Remote build process failed'
+    if [ "$rv" -ne 255 ]; then
+      break
     fi
   done
 
   if [ "$rv" -eq 255 ]; then
+    echo 'timeout.' >&2
     fatal 'Failed to connect to instance; timeout exceeded'
+  elif [ "$rv" -ne 0 ]; then
+    echo && echo 'Remote build process failed.' >&2
   fi
 
+  echo -n 'Pausing before instance termination... ' >&2
+
+  if [ "$rv" -eq 0 ]; then
+    sleep 10
+  else
+    sleep 90
+  fi
+
+  echo 'done.' >&2
+  echo -n 'Terminating instance... ' >&2
+
+  ec2-terminate-instances "$instance_id" &>/dev/null \
+    || fatal 'Failed to terminate instance'
+
+  echo 'done.' >&2
+
+  if [ "$rv" -ne 0 ]; then
+    fatal 'Build process unsuccessful; no images created'
+  fi
+  
+  echo 'Build complete.' >&2
   return 0
 }
 

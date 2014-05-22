@@ -1,25 +1,5 @@
 #!/bin/bash
 
-prepend_path()
-{
-  for dir in "$@"; do
-    export PATH="$dir/bin:$PATH"
-    export LD_LIBRARY_PATH="$dir/lib:$LD_LIBRARY_PATH"
-    export DYLD_LIBRARY_PATH="$dir/lib:$DYLD_LIBRARY_PATH"
-    export PKG_CONFIG_PATH="$dir/lib/pkgconfig:$PKG_CONFIG_PATH"
-  done
-}
-
-append_path()
-{
-  for dir in "$@"; do
-    export PATH="$PATH:$dir/bin"
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$dir/lib"
-    export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:$dir/lib"
-    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dir/lib/pkgconfig"
-  done
-}
-
 log()
 {
   logger "$1" "$platform"
@@ -33,6 +13,22 @@ disable_parallelism()
 disable_stack_protector()
 {
   local regex='s/ *-fstack-protector[A-Za-z0-9-]*//g;'
+
+  export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+  export CXXFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+}
+
+weaken_fortify_source()
+{
+  local regex='s/ *-D_FORTIFY_SOURCE=2/ -D_FORTIFY_SOURCE=1/g;'
+
+  export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+  export CXXFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+}
+
+disable_fortify_source()
+{
+  local regex='s/ *-D_FORTIFY_SOURCE=[0-2]*//g;'
 
   export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
   export CXXFLAGS="`echo "$CFLAGS" | sed "$regex"`"
@@ -62,6 +58,32 @@ remove_cppflags_from_cflags()
 {
   export CFLAGS="$CFLAGS_SIMPLE $CFLAGS_INCLUDE"
   export CXXFLAGS="$CFLAGS"
+}
+
+prepend_path()
+{
+  for dir in "$@"; do
+    local bin="$dir/bin"
+    local lib="$dir/lib"
+    local pkg="$dir/lib/pkgconfig"
+    export PATH="$bin${PATH:+:}$PATH"
+    export PKG_CONFIG_PATH="$pkg${PKG_CONFIG_PATH:+:}$PKG_CONFIG_PATH"
+    export LD_LIBRARY_PATH="$lib${LD_LIBRARY_PATH:+:}$LD_LIBRARY_PATH"
+    export DYLD_LIBRARY_PATH="$lib${DYLD_LIBRARY_PATH:+:}$DYLD_LIBRARY_PATH"
+  done
+}
+
+append_path()
+{
+  for dir in "$@"; do
+    local bin="$dir/bin"
+    local lib="$dir/lib"
+    local pkg="$dir/lib/pkgconfig"
+    export PATH="$PATH${PATH:+:}$bin"
+    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH${PKG_CONFIG_PATH:+:}$pkg"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH${LD_LIBRARY_PATH:+:}$lib"
+    export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH${DYLD_LIBRARY_PATH:+:}$lib"
+  done
 }
 
 build_version()

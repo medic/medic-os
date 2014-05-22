@@ -127,7 +127,19 @@ upload-ami-image: build-ami-image
 	    || exit "$$?"; \
 	echo 'done.'
 
-build-initrd:
+copy-compiler-libraries:
+	@echo -n 'Copying compiler libraries...' && \
+	export PATH="${COMPILER_ROOT}/bin:$$PATH" && \
+	active_compiler_root="$$(dirname "$$(which gcc)")/../" && \
+	\
+	find "$$active_compiler_root"/lib* \
+	  \( -type f -o -type l \) -name 'libssp.so*' \
+	    -exec cp -a {} "initrd/${PLATFORM}/lib" \; && \
+	\
+	strip --strip-unneeded "initrd/${PLATFORM}/lib/libssp.so"* && \
+	echo 'done.'
+
+build-initrd: copy-compiler-libraries
 	@echo -n 'Creating initrd image... ' && \
 	chmod 0440 initrd/common/etc/sudoers && \
 	cp -a initrd/common/* "initrd/${PLATFORM}/" && \
@@ -161,7 +173,7 @@ concierge-pkg:
 
 java-pkg:
 	@echo -n "Compressing package 'java'... " && \
-	scripts/build-package 'java' 1745 "${PLATFORM}" && \
+	scripts/build-package 'java' 1751 "${PLATFORM}" && \
 	echo 'done.'
 
 medic-core-pkg:
@@ -201,14 +213,18 @@ convert-boot-logo:
 
 download:
 	@rm -f status/download.finished && \
-	./scripts/retrieve-sources core source/core/incoming && \
-	  (cd source/core && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources compiler source/compiler/incoming && \
-	  (cd source/compiler && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources medic-core source/medic-core/incoming && \
-	  (cd source/medic-core && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources vm-tools source/vm-tools/incoming && \
-	  (cd source/vm-tools && ./scripts/rearrange-sources) && \
+	./scripts/retrieve-sources \
+	  core source/core/incoming "${URL}" && \
+	    (cd source/core && ./scripts/rearrange-sources) && \
+	./scripts/retrieve-sources \
+	  compiler source/compiler/incoming "${URL}" && \
+	    (cd source/compiler && ./scripts/rearrange-sources) && \
+	./scripts/retrieve-sources \
+	  medic-core source/medic-core/incoming "${URL}" && \
+	    (cd source/medic-core && ./scripts/rearrange-sources) && \
+	./scripts/retrieve-sources \
+	  vm-tools source/vm-tools/incoming "${URL}" && \
+	    (cd source/vm-tools && ./scripts/rearrange-sources) && \
 	touch status/download.finished
 
 move-downloaded:

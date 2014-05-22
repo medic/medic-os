@@ -92,6 +92,7 @@ main()
 {
   local manifest_name="$1"
   local target_directory="$2"
+  local override_base_url="$3"
 
   if [ $# -lt 2 -o -z "$manifest_name" ]; then
     echo "Usage: $0 manifest_name target_directory" >&2
@@ -153,7 +154,16 @@ main()
 
     else
 
-      curl -f -L -O -# "`trim "$url"`" \
+      if [ "$override_base_url" ]; then
+        override_base_url="`
+          echo "$override_base_url" | sed 's/\/\{1,\}$//;'
+        `" || fatal "Error occurred while overriding download URL"
+
+        url="$override_base_url/`basename "$url"`" \
+          || fatal "Error occurred while building download URL"
+      fi
+
+      curl -f -L -O -# "$url" \
         || fatal "Error occurred while downloading '$name'"
 
       finish_curl_progress &&

@@ -34,7 +34,7 @@ node-fs-ext, https://github.com/baudehlo/node-fs-ext.git
 node-gammu-json, https://github.com/browndav/node-gammu-json.git
 nodelint, https://github.com/tav/nodelint.git
 openssh, http://ftp3.usa.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.2p2.tar.gz
-openssl, http://www.openssl.org/source/openssl-1.0.1e.tar.gz
+openssl, https://www.openssl.org/source/openssl-1.0.1g.tar.gz
 patch, http://ftp.gnu.org/gnu/patch/patch-2.7.tar.xz
 paxctl, http://pax.grsecurity.net/paxctl-0.7.tar.bz2
 pcre, http://iweb.dl.sourceforge.net/project/pcre/pcre/8.33/pcre-8.33.tar.bz2
@@ -46,8 +46,8 @@ rsync, http://rsync.samba.org/ftp/rsync/src/rsync-3.0.9.tar.gz
 screen, http://ftp.gnu.org/gnu/screen/screen-4.0.3.tar.gz
 strace, http://superb-dca2.dl.sourceforge.net/project/strace/strace/4.8/strace-4.8.tar.xz
 tcpdump, http://www.tcpdump.org/release/tcpdump-4.4.0.tar.gz
-usb-modeswitch, http://www.draisberghof.de/usb_modeswitch/usb-modeswitch-1.2.6.tar.bz2
-usb-modeswitch-data, http://www.draisberghof.de/usb_modeswitch/usb-modeswitch-data-20130610.tar.bz2
+usb-modeswitch, http://www.draisberghof.de/usb_modeswitch/usb-modeswitch-2.1.1.tar.bz2
+usb-modeswitch-data, http://www.draisberghof.de/usb_modeswitch/usb-modeswitch-data-20140327.tar.bz2
 usbutils, https://www.kernel.org/pub/linux/utils/usb/usbutils/usbutils-007.tar.xz
 xdelta, http://xdelta.googlecode.com/files/xdelta3-3.0.6.tar.gz
 xz, http://tukaani.org/xz/xz-5.0.5.tar.xz

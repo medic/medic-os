@@ -20,7 +20,7 @@ cairo:SKP
 chmlib:SKP
 clucene:SKP
 db42:SKP
-db44:SKP
+db44:ADD
 dbus-glib:SKP
 dbus-python:SKP
 desktop-file-utils:SKP
