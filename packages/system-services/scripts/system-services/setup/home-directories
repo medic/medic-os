@@ -26,9 +26,9 @@ start()
     # Copy home directory, including dot files:
     #   This copies any data currently located in the volatile
     #   /home directory to the persistent storage maintained by
-    #   the `system-services` package in /srv/storage/system-servics.
+    #   the `system-services` package in /srv/storage/system-services.
 
-    if [ -d "$source" ]; then
+    if [ -d "$source" -a ! -h "$source" ]; then
 
       find "$source" -mindepth 0 -maxdepth 1 \
         \! \( -name '.' -o -name '..' \) \
