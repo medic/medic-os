@@ -21,7 +21,7 @@ start()
 
   if ! detect_vmware; then
     exec nohup ntpd -ndp "`find_ntp_server`" \
-      >> "$PACKAGE_STORAGE/logs/ntpd.log" 2>&1
+      >> "$PACKAGE_STORAGE/ntpd/logs/startup.log" 2>&1
   fi
 
   modprobe -a \
