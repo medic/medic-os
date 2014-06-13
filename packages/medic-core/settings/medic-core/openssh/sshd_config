@@ -6,19 +6,19 @@ Port 33696
 
 #Protocol 2
 
-#HostKey /srv/software/medic-core/v1.4/default/etc/ssh/ssh_host_key
-#HostKey /srv/software/medic-core/v1.4/default/etc/ssh/ssh_host_rsa_key
-#HostKey /srv/software/medic-core/v1.4/default/etc/ssh/ssh_host_dsa_key
-#HostKey /srv/software/medic-core/v1.4/default/etc/ssh/ssh_host_ecdsa_key
+#HostKey /srv/software/medic-core/current/default/etc/ssh/ssh_host_key
+#HostKey /srv/software/medic-core/current/default/etc/ssh/ssh_host_rsa_key
+#HostKey /srv/software/medic-core/current/default/etc/ssh/ssh_host_dsa_key
+#HostKey /srv/software/medic-core/current/default/etc/ssh/ssh_host_ecdsa_key
 
-#KeyRegenerationInterval 1h
-#ServerKeyBits 1024
+KeyRegenerationInterval 30m
+ServerKeyBits 2048
 
 #SyslogFacility AUTH
 #LogLevel INFO
 
 #LoginGraceTime 2m
-#PermitRootLogin yes
+PermitRootLogin no
 #StrictModes yes
 #MaxAuthTries 6
 #MaxSessions 10
@@ -73,5 +73,5 @@ UsePrivilegeSeparation sandbox
 #VersionAddendum none
 
 #Banner none
-Subsystem	sftp	/srv/software/medic-core/v1.4/default/libexec/sftp-server
+Subsystem	sftp	/srv/software/medic-core/current/default/libexec/sftp-server
 
