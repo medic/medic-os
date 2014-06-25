@@ -38,6 +38,10 @@ fi
    ln -sf ../../../../../settings/medic-core/openssh etc/ssh &&
  rm -rf etc/nginx &&
    ln -sf ../../../../../settings/medic-core/nginx etc/nginx &&
+ rm -rf var/log/nginx &&
+   ln -sf ../../../../../../storage/medic-core/nginx/logs var/log/nginx &&
+ rm -rf var/run/nginx &&
+   ln -sf ../../../../../../storage/medic-core/nginx/state var/run/nginx &&
  rm -rf etc/couchdb &&
    ln -sf ../../../../../settings/medic-core/couchdb etc/couchdb &&
  rm -rf var/log/couchdb &&
