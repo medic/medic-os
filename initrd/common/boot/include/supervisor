@@ -819,7 +819,7 @@ supervisor_is_service_disabled()
   local service="`basename "$2"`"
   
   local pkg_status_dir="$supervise_dir/$package/status"
-  test -f "$pkg_status_dir/volatile/$service.disabled"
+  test -f "$pkg_status_dir/persistent/$service.disabled"
 }
 
 
