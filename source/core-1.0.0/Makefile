@@ -25,7 +25,7 @@ copy-all: copy-syslinux copy-kernel copy-iptables copy-busybox
 
 clean: clean-all
 
-clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-iptables clean-busybox
+clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-iptables clean-xfsprogs clean-busybox
 	rm -f logs/*/*
 
 
@@ -158,15 +158,16 @@ build-iptables:
 	      --with-pkgconfigdir=/usr/lib/pkgconfig \
 	      --enable-libipq --with-xtlibdir=/lib/xtables \
 	      --bindir=/bin --sbindir=/sbin --libdir=/lib && \
-	   make && \
-	   make install DESTDIR='${INITRD_STAGING_PATH}'"
+	   ${MAKE} && \
+	   ${MAKE} install DESTDIR='${INITRD_STAGING_PATH}'"
 
 copy-iptables:
 	@echo -n "Copying files for 'iptables'... " && \
 	for type in ip4tc ip6tc ipq iptc xtables; do \
-	  ./scripts/strip-all "${INITRD_STAGING_PATH}/lib/lib$$type".so*; \
+	  ../../scripts/strip-binaries \
+	    "${INITRD_STAGING_PATH}/lib/lib$$type".so*; \
 	done && \
-	./scripts/strip-all \
+	../../scripts/strip-binaries \
 	  '${INITRD_STAGING_PATH}/lib/xtables' \
 	  '${INITRD_STAGING_PATH}/sbin/xtables-multi' && \
 	cd source/iptables && \
@@ -174,6 +175,27 @@ copy-iptables:
 	  '${INITRD_STAGING_PATH}/include' \
 	  '${INITRD_STAGING_PATH}/usr/lib/pkgconfig' \
 	  '${INITRD_STAGING_PATH}/lib/libxtables.la' && \
+	echo 'done.'
+
+
+xfsprogs: build-xfsprogs copy-xfsprogs
+
+clean-xfsprogs:
+	@cd source/xfsprogs && ${MAKE} clean
+
+build-xfsprogs:
+	@./scripts/logger 'xfsprogs' '${PLATFORM}' \
+	  "cd source/xfsprogs && unset PLATFORM && \
+	    ./configure --prefix='${INITRD_STAGING_PATH}' \
+	      --exec-prefix='${INITRD_STAGING_PATH}' \
+		  --enable-shared=yes --enable-static=no \
+		  --enable-readline=no --enable-gettext=no && ${MAKE}"
+
+copy-xfsprogs:
+	@echo -n "Copying files for 'xfsprogs'... " && \
+	(cd source/xfsprogs && ${MAKE} install &>/dev/null) && \
+	../../scripts/strip-binaries \
+	  '${INITRD_STAGING_PATH}/sbin'/xfs_* && \
 	echo 'done.'
 
 

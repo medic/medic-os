@@ -9,3 +9,7 @@ fi
 (cd "$prefix" &&
   rm -rf etc include man share/man share/info share/glib-2.0)
 
+(cd "$prefix" &&
+ rm -rf var/run/avahi-daemon &&
+   ln -sf ../../../../../../storage/vm-tools/avahi/state var/run/avahi-daemon)
+

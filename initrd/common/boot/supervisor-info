@@ -21,7 +21,6 @@ show_services()
   
   if [ "$?" -ne 0 -o "$n" -le 0 ]; then
     echo '  <No services found in this package>'
-    echo
     return 1
   fi
   

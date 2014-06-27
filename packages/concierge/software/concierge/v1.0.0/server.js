@@ -63,7 +63,11 @@ app.get('/setup', function (req, res) {
 
 /**
  */
-app.get('/setup/finish', function (req, res) {
+app.all('/setup/finish', function (req, res) {
+
+  if (req.method != 'POST' && req.method != 'GET') {
+    res.send(500, 'Invalid HTTP method');
+  }
 
   disable_concierge_service(req, function (_err) {
     res.send(500);
@@ -73,7 +77,13 @@ app.get('/setup/finish', function (req, res) {
 
 /*
  */
-app.post('/setup/password', function (req, res) {
+app.all('/setup/password', function (req, res) {
+
+  req.flash('error', null);
+
+  if (req.method != 'POST' && req.method != 'GET') {
+    res.send(500, 'Invalid HTTP method');
+  }
 
   var key = trim(req.param('key'));
   var password = req.param('password');
@@ -86,34 +96,52 @@ app.post('/setup/password', function (req, res) {
   set_password(req, password, confirmation, function (_err, _system_passwd) {
   
     if (_err) {
-      return res.redirect('/setup');
+      return send_password_response(_err, req, res);
     }
 
     add_couchdb_defaults(req, _system_passwd, function (_err) {
 
       if (_err) {
-        return res.redirect('/setup');
+        return send_password_response(_err, req, res);
       }
       
       if (key.length <= 0) {
-        req.flash('success', 'Password successfully set');
-        return res.redirect('/setup');
+        return send_password_response(
+          null, req, res, 'Password successfully set'
+        );
       }
 
-      add_openssh_public_key(req, key, function (_err) {
-
-        if (!_err) {
-          req.flash('key', null);
-          req.flash('success', 'Password and public key successfully set');
-        }
-        
-        return res.redirect('/setup');
+      add_openssh_public_key(req, key, function (_e) {
+        return send_password_response(
+          _e, req, res, 'Password and public key successfully set'
+        );
       });
     });
 
   });
 
 });
+
+/**
+ * send_password_response:
+ */
+var send_password_response = function (_err, _req, _res, _success_text) {
+
+  if (_req.param('api')) {
+    if (_err) {
+      return _res.send(500, _err.message);
+    } else {
+      return _res.send(200, _success_text);
+    }
+  }
+
+  if (!_err) {
+    _req.flash('success', _success_text);
+  }
+
+  _req.flash('key', null);
+  return _res.redirect('/setup');
+};
 
 /**
  * fatal:

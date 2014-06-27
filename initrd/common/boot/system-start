@@ -174,7 +174,8 @@ main()
 
   for dir in /srv/scripts/*; do
     if [ -f "$dir/start" ]; then
-      supervisor_start "`basename "$dir"`" \
+      local pkg="`basename "$dir"`"
+      supervisor_start "$pkg" \
         || fatal "Failed to start required network service '$pkg'"
     fi
   done

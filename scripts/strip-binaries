@@ -1,5 +1,11 @@
 #!/bin/sh
 
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 111
+}
+
 main()
 {
   if [ $# -le 0 ]; then
@@ -8,8 +14,11 @@ main()
 
   for type in 'executable' 'shared object'; do
     find "$@" -type f | xargs file \
-      | grep -F "$type" | grep ELF | cut -f1 -d: \
-        | xargs strip --strip-unneeded 2>/dev/null
+      | grep -F "$type" | grep ELF | cut -f1 -d: | \
+        while read file; do
+          strip --strip-unneeded "$file" \
+            || fatal "Failure while stripping '$file'"
+        done
   done
 }
 
