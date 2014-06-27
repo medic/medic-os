@@ -17,8 +17,8 @@ create_self_signed_ssl_certificate()
 
   local directory="`dirname "$path"`" &&
 	\
-	mkdir -p "$directory" &&
-	chmod 600 "$directory" &&
+  mkdir -p "$directory" &&
+  chmod 600 "$directory" &&
   chown root:nobody "$directory" &&
   \
   for i in "$country" "$state" "$locality" \

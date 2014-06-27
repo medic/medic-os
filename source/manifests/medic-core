@@ -34,7 +34,7 @@ node-fs-ext, https://github.com/baudehlo/node-fs-ext.git
 node-gammu-json, https://github.com/browndav/node-gammu-json.git
 nodelint, https://github.com/tav/nodelint.git
 openssh, http://ftp3.usa.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.2p2.tar.gz
-openssl, https://www.openssl.org/source/openssl-1.0.1g.tar.gz
+openssl, https://www.openssl.org/source/openssl-1.0.1h.tar.gz
 patch, http://ftp.gnu.org/gnu/patch/patch-2.7.tar.xz
 paxctl, http://pax.grsecurity.net/paxctl-0.7.tar.bz2
 pcre, http://iweb.dl.sourceforge.net/project/pcre/pcre/8.33/pcre-8.33.tar.bz2

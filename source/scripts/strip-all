@@ -1,9 +1,0 @@
-#!/bin/sh
-
-for type in 'executable' 'shared object'; do
-    find "$@" -print0 | xargs -0 file | grep ELF | grep "$type" | cut -f1 -d: | \
-      while read file; do
-	strip --strip-unneeded "$file" 2>/dev/null || exit 11
-      done
-done
-
