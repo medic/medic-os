@@ -196,7 +196,7 @@ shrink-gardener:
 
 gardener-pkg: shrink-gardener
 	@echo -n "Compressing package 'gardener'... " && \
-	scripts/build-package 'gardener' 1003 "${PLATFORM}" && \
+	scripts/build-package 'gardener' 1004 "${PLATFORM}" && \
 	echo 'done.'
 
 kujua-transport-pkg:

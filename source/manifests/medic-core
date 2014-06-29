@@ -16,7 +16,7 @@ git, http://git-core.googlecode.com/files/git-1.8.3.2.tar.gz
 icu, http://download.icu-project.org/files/icu4c/51.2/icu4c-51_2-src.tgz
 inotify-tools, http://github.com/downloads/rvoicilas/inotify-tools/inotify-tools-3.14.tar.gz
 js, http://ftp.mozilla.org/pub/mozilla.org/js/js185-1.0.0.tar.gz
-kujua-transport, https://github.com/browndav/kujua-transport.git
+medic-transport, https://github.com/browndav/medic-transport.git
 libffi, http://mirrors.kernel.org/sources.redhat.com/libffi/libffi-3.0.13.tar.gz
 libidn, http://ftp.gnu.org/gnu/libidn/libidn-1.27.tar.gz
 libpcap, http://www.tcpdump.org/release/libpcap-1.4.0.tar.gz
