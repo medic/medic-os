@@ -51,9 +51,9 @@ var run = function (_user, _password) {
     name: 'gammu-json'
   }, {
     debug: true,
-    name: 'kujua-lite',
+    name: 'medic-mobile',
     user: _user, password: _password,
-    url: 'http://localhost/kujua-lite/_design/kujua-lite/_rewrite'
+    url: 'http://localhost/medic/_design/medic/_rewrite'
   });
 
   return transport.start();
