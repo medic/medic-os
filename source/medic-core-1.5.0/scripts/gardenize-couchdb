@@ -21,8 +21,6 @@ main()
   local unzip_dir='garden-futon-master'
   local logo_file='futon-logo-medic.png'
 
-  (cd garden-maker && sh ./update.sh) &&
-  \
   (cd "$prefix/share/couchdb" &&
     mkdir -p garden && cp "$assets_dir/dashboard.couch" garden &&
     cp "$images_dir/$logo_file" www/image/logo.png)
