@@ -13,16 +13,15 @@ main()
   fi
 
   local assets_dir="`readlink -f ./garden-maker/assets`" \
-    || return 111
+    || return 126
 
   local images_dir="`readlink -f ./images`" \
-    || return 111
+    || return 125
 
   local unzip_dir='garden-futon-master'
   local logo_file='futon-logo-medic.png'
 
   (cd "$prefix/share/couchdb" &&
-    \
     mkdir -p garden && cp "$assets_dir/dashboard.couch" garden &&
     cp "$images_dir/$logo_file" www/image/logo.png)
 
