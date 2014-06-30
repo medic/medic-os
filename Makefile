@@ -30,7 +30,7 @@ compiler:
 	    PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
 
 
-packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg kujua-transport-pkg
+packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg medic-transport-pkg
 
 clean:
 	rm -rf output/* && \
@@ -199,9 +199,9 @@ gardener-pkg: shrink-gardener
 	scripts/build-package 'gardener' 1004 "${PLATFORM}" && \
 	echo 'done.'
 
-kujua-transport-pkg:
-	@echo -n "Compressing package 'kujua-transport'... " && \
-	scripts/build-package 'kujua-transport' 1001 "${PLATFORM}" && \
+medic-transport-pkg:
+	@echo -n "Compressing package 'medic-transport'... " && \
+	scripts/build-package 'medic-transport' 1000 "${PLATFORM}" && \
 	echo 'done.'
 
 convert-boot-logo:
