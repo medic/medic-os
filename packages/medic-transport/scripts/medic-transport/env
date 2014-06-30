@@ -2,7 +2,7 @@
 
 merge_environment()
 {
-  local name='kujua-transport'
+  local name='medic-transport'
   local version='1.0.0'
 
   local prefix="$1"

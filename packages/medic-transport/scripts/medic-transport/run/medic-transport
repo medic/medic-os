@@ -26,9 +26,9 @@ start()
   wait_for_passwd_file "$passwd_file" &&
   \
   local logs="$PACKAGE_STORAGE/logs" &&
-  local kujua_transport_cmd="node '$PACKAGE_ROOT/kujua-transport.js'" &&
+  local medic_transport_cmd="node '$PACKAGE_ROOT/medic-transport.js'" &&
   \
-  exec nohup su -c "exec $kujua_transport_cmd service -" gammu \
+  exec nohup su -c "exec $medic_transport_cmd service -" gammu \
     < "$passwd_file" >> "$logs/startup.log" 2>&1
 }
 

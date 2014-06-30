@@ -1,6 +1,6 @@
 
 var lazy = require('lazy');
-var factory = require('kujua-transport');
+var factory = require('medic-transport');
 
 
 /**
