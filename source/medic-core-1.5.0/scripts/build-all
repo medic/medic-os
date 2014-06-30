@@ -238,7 +238,7 @@ main()
   build_npm_remote 'request' "$prefix" &&
   build_npm_remote 'hbs' "$prefix" &&
   \
-  build_npm_local 'kujua-transport' "$prefix" &&
+  build_npm_local 'medic-transport' "$prefix" &&
   build_npm_local 'node-fs-ext' "$prefix" &&
   build_npm_local 'node-gammu-json' "$prefix" &&
   \
