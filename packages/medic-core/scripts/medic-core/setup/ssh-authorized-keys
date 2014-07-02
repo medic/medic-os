@@ -58,7 +58,7 @@ install_default_ssh_keys()
   fi
 
   (exec "$PACKAGE_ROOT/sbin/ec2-metadata" -u \
-    | grep '^\(ssh\|ecdsa\)-' >> ~vm/.ssh/"$authorized_keys") &>/dev/null &
+    | grep '^\(ssh\|ecdsa\)-' >> ~vm/.ssh/"$authorized_keys") &
 
   return 0
 }

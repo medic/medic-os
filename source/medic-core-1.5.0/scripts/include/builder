@@ -593,7 +593,7 @@ builder_setup_environment()
   export CFLAGS_INCLUDE="-I$prefix/include -L$prefix/lib"
 
   if [ "$architecture" = 'intel' ]; then
-    export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -m$bits"
+    export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -m$bits -mtune=i686"
   elif [[ "$architecture" = armv6* ]]; then
     local cflags_arch="-march=armv6 -mfpu=vfp -mfloat-abi=hard"
     export CFLAGS_SIMPLE="$CFLAGS_SIMPLE $cflags_arch"

@@ -17,7 +17,7 @@ start()
     cp -a lib/udev/usb_modeswitch /lib/udev/ &&
     cp -a lib/udev/rules.d/*usb_modeswitch* /lib/udev/rules.d/) &&
   \
-  udevadm control --reload-rules 2>/dev/null
+  udevadm control --reload-rules
 
   return "$?"
 }
