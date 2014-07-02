@@ -15,7 +15,7 @@ install()
   #   in cases where it's not sensible to modify/create a package.
 
   for t in always hourly daily weekly monthly; do
-    mkdir -p "$PACKAGE_SETTINGS/cron/cron.$t" || return 1
+    mkdir -p "$PACKAGE_SETTINGS/cron/cron.$t" || return "$?"
   done
 
   return 0

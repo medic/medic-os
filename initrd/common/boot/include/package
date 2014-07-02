@@ -196,7 +196,7 @@ package_update()
   log "Running setup tasks for package '$package'"
 
   if ! package_setup "$package"; then
-    warn "Setup script in package '$package' exited with non-zero status"
+    warn "At least one setup script in package '$package' failed"
     warn "Your installation of '$package' may be incomplete"
     return 6
   fi
@@ -225,10 +225,13 @@ package_setup()
   for script in /srv/scripts/$package/setup/*; do
     if [ -x "$script" ]; then
 
-      log "Running setup task '$package/`basename "$script"`"
+      local task_name="$package/`basename "$script"`"
+      log "Running setup task '$task_name'..."
 
-      "$script" \
-        || warn "Setup script '$script' for package '$package' failed"
+      "$script" >> "$log" 2>&1 \
+        || warn "Setup task '$task_name' was not successful"
+      
+      log "Finished setup task '$task_name'"
     fi
   done
 

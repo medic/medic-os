@@ -15,7 +15,7 @@ install()
 
   (cd "$PACKAGE_ROOT/../../" &&
     rm -f v1.7 && ln -sf "v$PACKAGE_VERSION" v1.7 &&
-		rm -f current && ln -sf "v$PACKAGE_VERSION" current)
+    rm -f current && ln -sf "v$PACKAGE_VERSION" current)
 
   return "$?"
 }

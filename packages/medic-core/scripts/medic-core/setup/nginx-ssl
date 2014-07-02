@@ -12,6 +12,7 @@ create_self_signed_ssl_certificate()
   local email="$8"
 
   if [ -f "$path.key" -a -f "$path.crt" ]; then
+    echo 'Certificate and key already exist; not creating' >&2
     return 0
   fi
 
@@ -25,7 +26,9 @@ create_self_signed_ssl_certificate()
     "$organization" "$department" "$common_name" "$email"; do
     echo "$i"
   done | "$PACKAGE_ROOT/bin/openssl" req -x509 -nodes -newkey rsa:4096 \
-    -keyout "$path.key" -out "$path.crt" -days 3650 2>/dev/null
+    -keyout "$path.key" -out "$path.crt" -days 3650 && echo
+
+  return "$?"
 }
 
 start()
