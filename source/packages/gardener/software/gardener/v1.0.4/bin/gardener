@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+
+var options = require('../lib/options'),
+    Gardener = require('../lib/main');
+
+
+
+function usage() {
+    console.log('\nUsage: gardener url [OPTIONS]\n');
+    console.log('Available OPTIONS:');
+    console.log(options.getHelp());
+}
+var args = process.argv.slice(2);
+
+if (!args.length) {
+    return usage();
+}
+
+try {
+    require('npm');
+} catch(e) {
+    console.log('ERROR: Failed to require() npm');
+    console.log('  Solution 1: ln -s  /usr/local/lib/node_modules/npm/ node_modules/npm');
+    console.log('  Solution 2: npm install npm');
+    return;
+}
+
+
+var url = args[0];
+var opts = args.slice(1);
+options.set_options(opts);
+
+new Gardener(url, options).start(function(err){
+    if (err) console.log(err);
+    console.log('Gardener started successfully. Logs in:', options.get_options_value('logdir'));
+});
+
+
