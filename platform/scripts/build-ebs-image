@@ -102,7 +102,7 @@ main()
   wait_for_device "$device" \
     || fatal 'Volume did not attach during timeout period'
 
-  sudo mkfs.ext4 "$device" >/dev/null \
+  sudo mkfs.ext4 -q "$device" >/dev/null \
     || fatal "Failure while formatting device '$device'"
 
   sudo mkdir -p /mnt/startup &&
