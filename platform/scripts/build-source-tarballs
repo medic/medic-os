@@ -1,0 +1,74 @@
+#!/bin/sh
+
+ts="`date +%Y%m%d`"
+base_directory="$1"
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 255
+}
+
+main()
+{
+  local platforms='armv6 x86 x64'
+
+  if [ "$base_directory" ]; then
+    cd "$base_directory" \
+      || fatal "Failed to change directory to '$base_directory'"
+  fi
+
+  # Clean each platform
+  for platform in $platforms; do
+
+    (cd medic-os && make delete PLATFORM="$platform")
+
+    if [ "$?" -ne 0 ]; then
+      echo 'failed.' >&2
+      fatal 'Failed to clean Medic OS source tree'
+    fi
+  done
+
+  # Primary source tree
+  echo -n "Building core Medic OS archive... " >&2 &&
+  \
+  tar -cf - medic-os \
+    --exclude 'medic-os/java' \
+    --exclude 'medic-os/java-current' \
+    --exclude 'medic-os/platform/templates/java' \
+    --exclude 'medic-os/platform/config/aws-current' \
+      | xz -9ec > "medic-os-core-src-$ts.tar.xz"
+
+  if [ "$?" -ne 0 ]; then
+    echo 'failed.' >&2
+    fatal 'Failed to build core Medic OS archive'
+  fi
+  
+  echo 'done.' >&2
+
+  # Platform-specific Java binaries
+  for platform in $platforms; do
+    echo -n "Building JDK/JRE archive for '$platform'... " >&2 &&
+    \
+    (cd 'medic-os/java-current' && \
+      rm -f selected && ln -sf "$platform" selected) && \
+    \
+    tar -cf - 'medic-os/java' \
+      'medic-os/java-current/selected' \
+      "medic-os/java-current/$platform" \
+      "medic-os/platform/templates/java/$platform" \
+        | xz -9ec > "medic-os-java-$platform-$ts.tar.xz"
+
+    if [ "$?" -ne 0 ]; then
+      echo 'failed.' >&2
+      fatal "Failed to build JDK/JRE archive for $platform"
+    fi
+
+    echo 'done.' >&2
+  done
+
+}
+
+main "$@"
+exit "$?"
+

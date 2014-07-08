@@ -1,0 +1,26 @@
+#!/bin/sh
+
+source '/boot/include/package'
+
+install()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/env" &&
+  merge_environment /srv || return 255
+
+  # Create persistent versions of cron.* directories:
+  #   These directories can be used to configure ad-hoc cron jobs,
+  #   in cases where it's not sensible to modify/create a package.
+
+  for t in always hourly daily weekly monthly; do
+    mkdir -p "$PACKAGE_SETTINGS/cron/cron.$t" || return "$?"
+  done
+
+  return 0
+}
+
+install "$@"
+exit "$?"
+

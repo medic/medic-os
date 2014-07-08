@@ -1,0 +1,15 @@
+#!/bin/sh
+
+install()
+{
+  yum "$@" remove ntp &&
+  yum "$@" install \
+    kernel-headers kernel-devel gcc48-c++ gcc48-plugin-devel autoconf \
+    automake bison flex nasm ruby patch git ntpdate intltool ncurses-devel \
+    libuuid-devel tcl libtool gettext-devel expect mkisofs libattr-devel \
+    zlib-devel bzip2-devel perl-devel cmake libdb4-devel iptables-devel
+}
+
+install "$@"
+exit "$?"
+

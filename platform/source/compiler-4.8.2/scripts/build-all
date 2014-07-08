@@ -1,0 +1,109 @@
+#!/bin/bash
+
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
+
+fatal()
+{
+  echo "Fatal error: $*" >&2
+  exit 111
+}
+
+source "$base_dir/scripts/include/logger" 2>/dev/null &&
+source "$base_dir/scripts/include/builder" 2>/dev/null \
+    || fatal 'Unable to load a required library'
+
+main()
+{
+  local prefix="$1"
+  local pkg_start="`echo "$2" | sed 's/\//-/g;'`"
+  local pkg_start_version="$3"
+  local pkg_stop="`echo "$4" | sed 's/\//-/g;'`"
+  local pkg_stop_version="$5"
+  local platform="$6"
+  local bits="$7"
+  local parallel="$8"
+
+  check_args "$@" || usage
+
+  # Processor and system options:
+  #  These are used by `builder_setup_environment` to set
+  #  environment variables and compilation flags appropriately.
+
+  original_platform="$platform"
+  bits="`builder_platform_to_bits "$platform" "$bits"`"
+  architecture="`builder_platform_to_architecture "$platform" "$bits"`"
+
+  local uname="`uname -s`"
+  local stdarg="--prefix=\"$prefix\""
+
+  builder_initialize &&
+  builder_setup_environment "$prefix" \
+    "$pkg_start" "$pkg_start_version" "$pkg_stop" \
+      "$pkg_stop_version" "$uname" "$architecture" "$bits" "$parallel" &&
+  \
+  (ABI="$bits" \
+    build_autoconf 'gmp' "$stdarg --enable-cxx") &&
+  \
+  build_autoconf 'mpfr' "$stdarg" &&
+  build_autoconf 'mpc' "$stdarg" &&
+  build_autoconf 'isl' "$stdarg" &&
+  build_autoconf 'cloog' "$stdarg" &&
+  build_autoconf 'dejagnu' "$stdarg" &&
+  \
+  (disable_stack_protector && disable_cppflags &&
+    \
+    export CFLAGS_FOR_TARGET="$CFLAGS" &&
+    export CXX_FLAGS_FOR_TARGET="$CXXFLAGS" &&
+    \
+    build_autoconf 'gcc' \
+     "$stdarg --disable-multilib --enable-shared \
+      --enable-checking=release --with-system-zlib --with-gnu-ld \
+      --enable-lto --enable-tls --enable-bootstrap --enable-libssp \
+      --enable-__cxa_atexit --with-mpfr='$prefix' --with-gmp='$prefix' \
+      --with-isl='$prefix' --with-cloog='$prefix' --with-mpc='$prefix' \
+      --enable-languages=c,c++ --enable-threads=posix") &&
+  \
+  remove_library_executable_bits "$prefix"
+
+  if [ "$?" -ne 0 ]; then
+    fatal 'One or more build steps failed; aborting'
+  fi
+
+  return 0
+}
+
+remove_library_executable_bits()
+{
+  local prefix="$1"
+
+  find "$prefix" -mindepth 1 -maxdepth 1 \
+    \( -name '*.so.*' -o -name '*.la' \) -type f -exec chmod +x {} \;
+}
+
+fatal()
+{
+  echo "$0: fatal: $*" >&2
+  exit 1
+}
+
+check_args()
+{
+  local prefix="$1"
+
+  [ -d "$prefix" ] 
+}
+
+usage()
+{
+  echo
+  echo "Usage:" >&2
+  echo "  $0 root-directory" >&2
+  echo
+
+  exit 111
+}
+
+cd "$base_dir/source" && main "$@"
+exit $?
+

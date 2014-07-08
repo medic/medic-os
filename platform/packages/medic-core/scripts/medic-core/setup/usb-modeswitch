@@ -1,0 +1,33 @@
+#!/bin/sh
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv || return 255
+
+  (cd "$PACKAGE_ROOT" &&
+    mkdir -p /lib/udev/rules.d/ &&
+    cp -a etc/usb_modeswitch.* /etc/ &&
+    cp -a sbin/usb_modeswitch* /usr/sbin/ &&
+    cp -a share/usb_modeswitch /usr/share/ &&
+    cp -a var/lib/usb_modeswitch /var/lib/ &&
+    cp -a lib/udev/usb_modeswitch /lib/udev/ &&
+    cp -a lib/udev/rules.d/*usb_modeswitch* /lib/udev/rules.d/) &&
+  \
+  udevadm control --reload-rules
+
+  return "$?"
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+

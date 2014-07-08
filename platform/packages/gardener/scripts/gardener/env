@@ -1,0 +1,22 @@
+#!/bin/sh
+
+merge_environment()
+{
+  local name='gardener'
+  local version='1.0.4'
+
+  local prefix="$1"
+  local root="$prefix/software/$name/v$version"
+
+  export PACKAGE_ROOT="$root"
+  export PACKAGE_NAME="$name"
+  export PACKAGE_VERSION="$version"
+
+  export PACKAGE_SCRIPTS="$prefix/scripts/$name"
+  export PACKAGE_STORAGE="$prefix/storage/$name"
+  export PACKAGE_SOFTWARE="$prefix/software/$name"
+  export PACKAGE_SETTINGS="$prefix/settings/$name"
+
+  return 0
+}
+
