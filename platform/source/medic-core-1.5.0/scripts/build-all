@@ -183,15 +183,15 @@ main()
      --lock-path='$prefix/var/run/nginx/nginx.lock'" \
        "LINK='$CC $CFLAGS $LDFLAGS'" &&
   \
-  (simple_cflags && build_autoconf 'node' \
-    "$stdarg --shared-zlib \
-     --shared-zlib-includes='$prefix/include' \
-     --shared-zlib-libpath='$prefix/lib' \
-     --shared-openssl \
-     --shared-openssl-includes='$prefix/include' \
-     --shared-openssl-libpath='$prefix/lib' --dest-cpu='$build_cpu'") &&
+  (simple_cflags &&
+    build_autoconf 'node' \
+      "$stdarg --shared-zlib \
+       --shared-zlib-includes='$prefix/include' \
+       --shared-zlib-libpath='$prefix/lib' \
+       --shared-openssl --shared-openssl-includes='$prefix/include' \
+       --shared-openssl-libpath='$prefix/lib' --dest-cpu='$build_cpu'") &&
   \
-  (disable_parallelism &&
+  (disable_parallelism && disable_cppflags &&
     build_autoconf 'js' \
       "$stdarg --host='$build_arch' --with-cpu-arch='$build_cpu'") &&
   \

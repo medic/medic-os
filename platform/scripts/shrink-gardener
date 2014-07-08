@@ -6,7 +6,7 @@ base_dir="`dirname "$self"`/.."
 main()
 {
   local m='node_modules'
-  local prefix="$base_dir/packages/gardener/software/gardener/v1.0.3"
+  local prefix="$base_dir/packages/gardener/software/gardener/v1.0.4"
 
   rm -rf "$prefix/$m/npm/doc"
   rm -rf "$prefix/$m/npm/man"

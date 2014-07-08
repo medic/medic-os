@@ -48,9 +48,9 @@ main() {
   local default_availability_zone='us-west-2a'
   local s3_base_url='https://s3-us-west-2.amazonaws.com'
 
-  local vm_url='https://github.com/browndav/vm-toaster'
-  local mmva_url="$s3_base_url/medicmobile.org/mmva/source"
-  local mirror_url="$s3_base_url/medicmobile.org/mmva/mirror"
+  local vm_url='https://github.com/browndav/medic-os'
+  local source_url="$s3_base_url/medicmobile.org/medic-os/source"
+  local mirror_url="$s3_base_url/medicmobile.org/medic-os/mirror"
 
   if [ -z "$settings" -o $# -gt 4 ]; then
     usage
@@ -163,13 +163,13 @@ main() {
     sleep 10 && n=$[n - 1]
 
     ssh_command "$ssh_host" "$ssh_id" \
-      'mkdir -p mmva-src/vm-toaster/config/aws-current .ssh' &&
+      'mkdir -p medic-os/platform/config/aws-current .ssh' &&
     \
     echo 'done.' >&2 &&
     echo -n 'Establishing connection to instance... ' >&2 &&
     \
     echo "$settings" | ssh_command  "$ssh_host" "$ssh_id" \
-      'cat > mmva-src/vm-toaster/config/aws-current/settings' && \
+      'cat > medic-os/platform/config/aws-current/settings' && \
     \
     echo "$ssh_private_key_contents" \
       | ssh_command  "$ssh_host" "$ssh_id" 'cat >> .ssh/id_rsa' && \
@@ -180,7 +180,7 @@ main() {
          echo -n 'Setting up environment... ' >&2 &&
          \
          export TZ='$time_zone' &&
-         source mmva-src/vm-toaster/config/aws-current/settings &&
+         source medic-os/platform/config/aws-current/settings &&
          echo 'done.' >&2 &&
          \
          echo -n 'Resizing filesystem... ' >&2 &&
@@ -191,47 +191,47 @@ main() {
          sudo yum -q -y update &>/dev/null &&
          echo 'done.' >&2 &&
          \
-         echo 'Downloading MMVA core:' >&2 &&
-         curl -O# '$mmva_url/mmva-core-src-current.tar.xz' &&
-         echo 'Downloading MMVA JDK/JRE module:' >&2 &&
-         curl -O# '$mmva_url/mmva-java-$platform-current.tar.xz' &&
+         echo 'Downloading Medic OS core:' >&2 &&
+         curl -O# '$source_url/medic-os-src-current.tar.xz' &&
+         echo 'Downloading Medic OS JDK/JRE module:' >&2 &&
+         curl -O# '$source_url/medic-os-java-$platform-current.tar.xz' &&
          \
-         echo -n 'Extracting MMVA core image... ' >&2 &&
-         sudo tar xJf mmva-core-src-current.tar.xz &&
+         echo -n 'Extracting Medic OS core image... ' >&2 &&
+         sudo tar xJf medic-os-src-current.tar.xz &&
          echo 'done.' >&2 &&
          \
-         echo -n 'Extracting MMVA JDK/JRE module... ' >&2 &&
-         sudo tar xJf 'mmva-java-$platform-current.tar.xz' &&
+         echo -n 'Extracting Medic OS JDK/JRE module... ' >&2 &&
+         sudo tar xJf 'medic-os-java-$platform-current.tar.xz' &&
          echo 'done.' >&2 &&
-         cd mmva-src &&
+         cd medic-os &&
          sudo ln -nsf '$platform' java-current/selected &&
          \
          echo -n 'Installing build-time dependencies... ' >&2 &&
-         sudo ./vm-toaster/config/redhat/scripts/yum-install \
+         sudo ./platform/config/redhat/scripts/yum-install \
            -q -y &>/dev/null &&
          echo 'done.' >&2 &&
          \
-         echo -n 'Applying latest MMVA updates... ' >&2 &&
-         (cd vm-toaster &&
+         echo -n 'Applying latest Medic OS updates... ' >&2 &&
+         (cd platform &&
            sudo git remote set-url origin "$vm_url" &&
            sudo git stash -q && sudo git pull -q) &&
          echo 'done.' >&2 &&
          \
-         echo 'Starting MMVA build process:' >&2 &&
+         echo 'Starting Medic OS build process:' >&2 &&
          sudo make all \
            URL='$mirror_url' PLATFORM='$platform' $build_options &&
          \
-         echo 'MMVA build complete.' >&2 &&
+         echo 'Medic OS build complete.' >&2 &&
          \
          echo -n 'Building EBS images:' >&2 &&
-         ./vm-toaster/scripts/build-ebs-image \
+         ./platform/scripts/build-ebs-image \
            '$platform' 'output/image-$platform-xen' \
-           'MMVA $platform - `date +%Y%m%d`' /dev/sdb \
+           'Medic OS $platform - `date +%Y%m%d`' /dev/sdb \
          \
          echo 'EBS images built successfully.' >&2 &&
          \
          echo 'Uploading ISO images:' >&2 &&
-         ./vm-toaster/scripts/upload-iso-images \
+         ./platform/scripts/upload-iso-images \
            "$UPLOAD_METHOD" "$UPLOAD_USER" \
              "$UPLOAD_HOST" "$UPLOAD_TARGET" "$UPLOAD_OPTIONS" && \
          \
