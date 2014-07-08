@@ -1,16 +1,16 @@
 
 export S3_BUCKET='s3-bucket'
-export EC2_HOME=~/mmva-src/ec2-api-tools
+export EC2_HOME=~/medic-os/ec2-api-tools
 
 export EC2_REGION='us-west-2'
 export EC2_AVAILABILITY_ZONE='us-west-2a'
 export EC2_URL='https://us-west-2.ec2.amazonaws.com'
 
-export EC2_CERTIFICATE=~/mmva-src/vm-toaster/config/aws/id-x509.crt
-export EC2_PRIVATE_KEY=~/mmva-src/vm-toaster/config/aws/id-x509.key
+export EC2_CERTIFICATE=~/medic-os/platform/config/aws/id-x509.crt
+export EC2_PRIVATE_KEY=~/medic-os/platform/config/aws/id-x509.key
 
-export SSH_PUBLIC_KEY=~/mmva-src/vm-toaster/config/aws/ssh-identity.pub
-export SSH_PRIVATE_KEY=~/mmva-src/vm-toaster/config/aws/ssh-identity.key
+export SSH_PUBLIC_KEY=~/medic-os/platform/config/aws/ssh-identity.pub
+export SSH_PRIVATE_KEY=~/medic-os/platform/config/aws/ssh-identity.key
 
 export AWS_ID='000000000000'
 export AWS_ACCESS_KEY='XXXXXXXXXXXXXXXXXXXX'
