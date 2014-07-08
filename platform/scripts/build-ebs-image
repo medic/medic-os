@@ -149,7 +149,7 @@ main()
   echo 'done.' >&2
   echo "AMI identifier: $ami_id"
 
-  ec2-create-tags "$ami_id" --tag "Name=$name" >/dev/null \
+  ec2-create-tags "$ami_id" --tag "Name=$description" >/dev/null \
     || fatal "Failure while setting tags on AMI '$ami_id'"
 
   echo -n "Deleting temporary volume '$volume_id'... " >&2
