@@ -51,9 +51,8 @@ main()
   build_autoconf 'cloog' "$stdarg" &&
   build_autoconf 'dejagnu' "$stdarg" &&
   \
-  (disable_stack_protector &&
+  (disable_stack_protector && disable_cppflags &&
     \
-    unset CPPFLAGS &&
     export CFLAGS_FOR_TARGET="$CFLAGS" &&
     export CXX_FLAGS_FOR_TARGET="$CXXFLAGS" &&
     \

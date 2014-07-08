@@ -45,6 +45,11 @@ simple_ldflags()
   export LDFLAGS="$LDFLAGS_SIMPLE"
 }
 
+disable_cppflags()
+{
+  unset CPPFLAGS
+}
+
 disable_library_path()
 {
   unset LD_LIBRARY_PATH

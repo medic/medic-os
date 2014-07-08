@@ -191,7 +191,7 @@ main()
        --shared-openssl --shared-openssl-includes='$prefix/include' \
        --shared-openssl-libpath='$prefix/lib' --dest-cpu='$build_cpu'") &&
   \
-  (disable_parallelism && unset CPPFLAGS &&
+  (disable_parallelism && disable_cppflags &&
     build_autoconf 'js' \
       "$stdarg --host='$build_arch' --with-cpu-arch='$build_cpu'") &&
   \
