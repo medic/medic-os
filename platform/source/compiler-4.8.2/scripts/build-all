@@ -42,8 +42,6 @@ main()
     "$pkg_start" "$pkg_start_version" "$pkg_stop" \
       "$pkg_stop_version" "$uname" "$architecture" "$bits" "$parallel" &&
   \
-  disable_stack_protector &&
-  \
   (ABI="$bits" \
     build_autoconf 'gmp' "$stdarg --enable-cxx") &&
   \
