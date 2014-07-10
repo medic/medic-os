@@ -42,6 +42,8 @@ main()
     "$pkg_start" "$pkg_start_version" "$pkg_stop" \
       "$pkg_stop_version" "$uname" "$architecture" "$bits" "$parallel" &&
   \
+  disable_stack_protector_strong &&
+  \
   (ABI="$bits" \
     build_autoconf 'gmp' "$stdarg --enable-cxx") &&
   \
@@ -51,7 +53,7 @@ main()
   build_autoconf 'cloog' "$stdarg" &&
   build_autoconf 'dejagnu' "$stdarg" &&
   \
-  (disable_stack_protector && disable_cppflags &&
+  (disable_cppflags &&
     \
     export CFLAGS_FOR_TARGET="$CFLAGS" &&
     export CXX_FLAGS_FOR_TARGET="$CXXFLAGS" &&
