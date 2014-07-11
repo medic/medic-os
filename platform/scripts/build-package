@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 create_package_digest()
 {
   local staging_dir="$1"

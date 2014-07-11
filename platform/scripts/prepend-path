@@ -5,12 +5,12 @@ base_dir="`dirname "$self"`/../source/medic-core/"
 
 usage()
 {
-    echo "Usage: $0 path command [args...]" >&2
-    exit 111
+  echo "Usage: $0 path command [args...]" >&2
+  exit 111
 }
 
 source "$base_dir/scripts/include/builder" 2>/dev/null \
-    || fatal 'Unable to load a required library'
+  || fatal 'Unable to load a required library'
 
 main()
 {

@@ -1,8 +1,5 @@
 #!/bin/sh
 
-ts="`date +%Y%m%d`"
-base_directory="$1"
-
 fatal()
 {
   echo "Fatal: $*" >&2
@@ -11,11 +8,15 @@ fatal()
 
 main()
 {
+  local base_dir="$1"
+  shift 1
+
+  ts="`date +%Y%m%d`"
   local platforms='armv6 x86 x64'
 
-  if [ "$base_directory" ]; then
-    cd "$base_directory" \
-      || fatal "Failed to change directory to '$base_directory'"
+  if [ "$base_dir" ]; then
+    cd "$base_dir" \
+      || fatal "Failed to change directory to '$base_dir'"
   fi
 
   # Clean each platform

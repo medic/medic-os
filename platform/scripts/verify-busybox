@@ -11,6 +11,7 @@ main()
   echo "Checking filesystem:"
 
   for path in bin/* sbin/* usr/bin/* usr/sbin/*; do
+
     if [ -h "$path" ]; then
       local file="`basename "$path"`"
       local target="`readlink "$path"`"

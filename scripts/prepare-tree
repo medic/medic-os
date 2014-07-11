@@ -1,0 +1,92 @@
+#!/bin/sh
+
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 255
+}
+
+extract_initrd_device_nodes()
+{
+  tar xJf bootstrap/initrd-devices.tar.xz
+  return "$?"
+}
+
+create_empty_directories()
+{
+  (
+    cd platform && mkdir -p \
+      initrd/common/etc/sysconfig \
+      initrd/common/mnt \
+      initrd/common/home/vm/.ssh \
+      initrd/common/var/empty \
+      packages/java/storage \
+      packages/java/storage/java \
+      packages/medic-transport/storage \
+      packages/medic-transport/storage/medic-transport \
+      packages/medic-transport/storage/medic-transport/logs \
+      packages/vm-tools/storage \
+      packages/vm-tools/storage/vm-tools \
+      packages/vm-tools/storage/vm-tools/logs \
+      packages/system-services/storage \
+      packages/system-services/storage/system-services \
+      packages/system-services/storage/system-services/logs \
+      packages/system-services/settings/system-services/cron \
+      packages/medic-core/storage/medic-core/gammu \
+      packages/medic-core/storage/medic-core/gammu/inbox \
+      packages/medic-core/storage/medic-core/gammu/outbox \
+      packages/medic-core/storage/medic-core/gammu/sent \
+      packages/medic-core/storage/medic-core/gammu/errors \
+      packages/medic-core/storage/medic-core/gammu/logs \
+      packages/medic-core/storage/medic-core/nginx \
+      packages/medic-core/storage/medic-core/nginx/state \
+      packages/medic-core/storage/medic-core/nginx/data \
+      packages/medic-core/storage/medic-core/nginx/logs \
+      packages/medic-core/storage/medic-core/openssh \
+      packages/medic-core/storage/medic-core/openssh/logs \
+      packages/medic-core/storage/medic-core/couchdb-lucene/indexes \
+      packages/medic-core/storage/medic-core/couchdb-lucene/logs \
+      packages/medic-core/storage/medic-core/couchdb \
+      packages/medic-core/storage/medic-core/couchdb/state \
+      packages/medic-core/storage/medic-core/couchdb/data \
+      packages/medic-core/storage/medic-core/couchdb/logs \
+      packages/medic-core/settings/medic-core/couchdb-lucene \
+      packages/medic-core/settings/medic-core/logrotate/logrotate.d \
+      packages/medic-core/settings/medic-core/couchdb/default.d \
+      packages/medic-core/settings/medic-core/couchdb/local.d \
+      packages/concierge/storage \
+      packages/concierge/storage/concierge \
+      packages/concierge/storage/concierge/passwd \
+      packages/concierge/storage/concierge/logs \
+      packages/gardener/storage \
+      packages/gardener/storage/gardener \
+      packages/gardener/storage/gardener/data \
+      packages/gardener/storage/gardener/private \
+      packages/gardener/storage/gardener/logs \
+      packages/gardener/scripts/gardener/private \
+      images/armv6 \
+      images/x86/iso/packages \
+      images/x64/iso/packages
+  )
+
+  return "$?"
+}
+
+main()
+{
+  cd "$base_dir" \
+    || fatal 'Unable to locate base directory'
+
+  create_empty_directories \
+    || fatal 'Failed to create one or more directories'
+  
+  extract_initrd_device_nodes \
+    || fatal 'Failed to extract initrd device nodes'
+}
+
+main "$@"
+exit "$?"
+
