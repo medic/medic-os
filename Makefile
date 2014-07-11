@@ -36,11 +36,11 @@ delete:
 
 download: reset-time
 	@if ! [ -f status/download.finished ]; then \
-		${QMAKE} force-download; \
+	  ${QMAKE} force-download; \
 	fi && \
 	\
 	if ! [ -f status/move.finished ]; then \
-		${QMAKE} force-move-downloaded; \
+	  ${QMAKE} force-move-downloaded; \
 	fi
 
 force-download:
