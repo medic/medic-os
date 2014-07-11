@@ -101,7 +101,7 @@ main() {
     EC2_AVAILABILITY_ZONE="$default_availability_zone"
   fi
 
-  local n='15'
+  local n='16'
   local tab="`printf '\t'`"
 
   echo -n 'Creating instance... ' >&2
@@ -149,7 +149,7 @@ main() {
   echo "Instance name: $external_fqdn"
   echo -n 'Waiting for instance to start... ' >&2
 
-  n='12'
+  local n='16'
   local rv='0'
   local ssh_id="$ssh_private_key_path"
   local ssh_host="ec2-user@$external_fqdn"
