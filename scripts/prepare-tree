@@ -22,7 +22,11 @@ create_empty_directories()
       initrd/common/etc/sysconfig \
       initrd/common/mnt \
       initrd/common/home/vm/.ssh \
+      initrd/common/var/cache \
       initrd/common/var/empty \
+      initrd/common/var/lib \
+      initrd/common/var/lock \
+      initrd/common/var/log \
       packages/java/storage \
       packages/java/storage/java \
       packages/medic-transport/storage \
