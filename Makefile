@@ -26,7 +26,8 @@ clean:
 distclean: clean clean-target
 
 clean-target:
-	@rm -rf /srv/software
+	@cd /srv && \
+	rm -rf software settings storage
 
 delete:
 	@echo -n 'Deleting downloaded source code... ' && \
