@@ -15,6 +15,12 @@ extract_initrd_device_nodes()
   return "$?"
 }
 
+set_permissions()
+{
+  chmod +t platform/initrd/common/tmp
+  return "$?"
+}
+
 create_empty_directories()
 {
   (
@@ -22,6 +28,9 @@ create_empty_directories()
       initrd/common/etc/sysconfig \
       initrd/common/mnt \
       initrd/common/home/vm/.ssh \
+      initrd/common/proc \
+      initrd/common/sys \
+      initrd/common/tmp \
       initrd/common/var/cache \
       initrd/common/var/empty \
       initrd/common/var/lib \
@@ -79,6 +88,7 @@ create_empty_directories()
   return "$?"
 }
 
+
 main()
 {
   cd "$base_dir" \
@@ -86,6 +96,9 @@ main()
 
   create_empty_directories \
     || fatal 'Failed to create one or more directories'
+  
+  set_permissions \
+    || fatal 'Failed to set directory permissions'
   
   extract_initrd_device_nodes \
     || fatal 'Failed to extract initrd device nodes'
