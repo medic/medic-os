@@ -101,7 +101,7 @@ clean-busybox:
 
 build-busybox: build-pv
 	@(cd source/busybox && \
-	  cp ../../../../config/busybox/dot-config-1.21.1 .config) && \
+	  cp ../../../../config/busybox/dot-config .config) && \
 	./scripts/logger 'busybox' '${PLATFORM}' \
 	  'cd source/busybox && ${PMAKE}'
 
