@@ -3,6 +3,9 @@ MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 PLATFORM := $(shell ./scripts/detect-platform)
 
+SYSTEM_NAME ?= Medic OS
+SYSTEM_VERSION_STRING ?= 0.5.0
+
 COMPILER_VERSION ?= 4.8.2
 COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 
@@ -57,7 +60,7 @@ clean-compiler:
 build-iso: build-initrd
 	@echo -n 'Creating ISO image... ' && \
 	cd "images/${PLATFORM}/iso" && mkisofs -J -R \
-	  -V 'Medic Mobile VM' \
+	  -V '${SYSTEM_NAME} v${SYSTEM_VERSION_STRING}' \
 	  -o "../../../output/image-${PLATFORM}${ISO_EXTRA}.iso" \
 	  -boot-load-size 4 -boot-info-table \
 	  -no-emul-boot -b boot/isolinux/isolinux.bin \
