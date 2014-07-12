@@ -100,7 +100,7 @@ clean-vm-tools:
 	(cd vm-tools && ${MAKE} clean)
 
 build-vm-tools:
-	(cd vm-tools && ${QMAKE} \
+	@(cd vm-tools && ${QMAKE} \
 	  PLATFORM='${PLATFORM}' \
 	  KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' \
 	  BITS='${BITS}' KERNEL_VERSION='${KERNEL_VERSION}' \
