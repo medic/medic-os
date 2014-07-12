@@ -30,7 +30,7 @@ lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
 maven, http://mirrors.ibiblio.org/apache/maven/maven-3/3.0.5/source/apache-maven-3.0.5-src.tar.gz
 ncurses, http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
 nginx, http://nginx.org/download/nginx-1.5.2.tar.gz
-node, http://nodejs.org/dist/v0.10.26/node-v0.10.29.tar.gz
+node, http://nodejs.org/dist/v0.10.29/node-v0.10.29.tar.gz
 node-fs-ext, https://github.com/baudehlo/node-fs-ext.git
 node-gammu-json, https://github.com/browndav/node-gammu-json.git
 nodelint, https://github.com/tav/nodelint.git
@@ -50,6 +50,6 @@ tcpdump, http://www.tcpdump.org/release/tcpdump-4.4.0.tar.gz
 usb-modeswitch, http://www.draisberghof.de/usb_modeswitch/usb-modeswitch-2.1.1.tar.bz2
 usb-modeswitch-data, http://www.draisberghof.de/usb_modeswitch/usb-modeswitch-data-20140327.tar.bz2
 usbutils, https://www.kernel.org/pub/linux/utils/usb/usbutils/usbutils-007.tar.xz
-xdelta, http://xdelta.googlecode.com/files/xdelta3-3.0.8.tar.gz
+xdelta, http://xdelta.googlecode.com/files/xdelta3-3.0.8.tar.xz
 xz, http://tukaani.org/xz/xz-5.0.5.tar.xz
 zlib, http://zlib.net/zlib-1.2.8.tar.xz
