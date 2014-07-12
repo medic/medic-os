@@ -6,7 +6,7 @@ all: download-and-build
 download-and-build: download
 	@${QMAKE} build
 
-build: reset-time
+build: prepare-tree reset-time
 	@echo >&2
 	@echo "`tput bold`Building packages`tput sgr0`" >&2 && echo >&2
 	@(cd platform && \
@@ -16,6 +16,11 @@ build: reset-time
 reset-time:
 	@echo -n 'Synchronizing system time... ' && \
 	ntpdate pool.ntp.org >/dev/null && \
+	echo 'done.'
+
+prepare-tree:
+	@echo -n 'Preparing source tree... ' && \
+	./scripts/prepare-tree && \
 	echo 'done.'
 
 clean:

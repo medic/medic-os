@@ -21,12 +21,12 @@ main()
 
   check_args "$@" || usage
 
-  local uname="`uname -s`"
-  local stdarg="--prefix=\"$prefix\""
-
   local kernel_module_path="`
     readlink -f "${10}" 2>/dev/null || realpath "${10}"
   `"
+
+  local uname="`uname -s`"
+  local stdarg="--prefix=\"$prefix\""
 
   builder_initialize &&
   builder_setup_environment "$prefix" \
