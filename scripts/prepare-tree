@@ -43,7 +43,10 @@ create_empty_directories()
       packages/medic-transport/storage/medic-transport/logs \
       packages/vm-tools/storage \
       packages/vm-tools/storage/vm-tools \
-      packages/vm-tools/storage/vm-tools/logs \
+      packages/vm-tools/storage/vm-tools/avahi/logs \
+      packages/vm-tools/storage/vm-tools/avahi/state \
+      packages/vm-tools/storage/vm-tools/ntpd/logs \
+      packages/vm-tools/storage/vm-tools/vmtoolsd/logs \
       packages/system-services/storage \
       packages/system-services/storage/system-services \
       packages/system-services/storage/system-services/logs \
