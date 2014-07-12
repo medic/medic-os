@@ -17,7 +17,14 @@ extract_initrd_device_nodes()
 
 set_permissions()
 {
-  chmod +t platform/initrd/common/tmp
+  chmod +t \
+    platform/initrd/common/tmp &&
+  \
+  chmod u+s \
+    platform/initrd/x86/usr/bin/sudo \
+    platform/initrd/x64/usr/bin/sudo \
+    platform/initrd/armv6/usr/bin/sudo
+
   return "$?"
 }
 
