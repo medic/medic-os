@@ -21,7 +21,7 @@ QMAKE := ${MAKE} --no-print-directory
 CFLAGS += -Os -fstack-protector-all
 
 KERNEL_VERSION := 3.10.33
-KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}")
+KERNEL_MODULE_PATH := ${CURDIR}/../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}
 
 
 all: build copy finalize
