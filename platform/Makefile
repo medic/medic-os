@@ -171,27 +171,27 @@ strip-binaries:
 
 concierge-pkg:
 	@echo -n "Compressing package 'concierge'... " && \
-	scripts/build-package 'concierge' 1001 "${PLATFORM}" && \
+	scripts/build-package 'concierge' 1010 "${PLATFORM}" && \
 	echo 'done.'
 
 java-pkg:
 	@echo -n "Compressing package 'java'... " && \
-	scripts/build-package 'java' 1751 "${PLATFORM}" && \
+	scripts/build-package 'java' 1760 "${PLATFORM}" && \
 	echo 'done.'
 
 medic-core-pkg:
 	@echo -n "Compressing package 'medic-core'... " && \
-	scripts/build-package 'medic-core' 1500 "${PLATFORM}" && \
+	scripts/build-package 'medic-core' 1600 "${PLATFORM}" && \
 	echo 'done.'
 
 system-services-pkg:
 	@echo -n "Compressing package 'system-services'... " && \
-	scripts/build-package 'system-services' 1001 "${PLATFORM}" && \
+	scripts/build-package 'system-services' 1010 "${PLATFORM}" && \
 	echo 'done.'
 
 vm-tools-pkg:
 	@echo -n "Compressing package 'vm-tools'... " && \
-	scripts/build-package 'vm-tools' 9400 "${PLATFORM}" && \
+	scripts/build-package 'vm-tools' 9401 "${PLATFORM}" && \
 	echo 'done.'
 
 shrink-gardener:
@@ -204,7 +204,7 @@ gardener-pkg: shrink-gardener
 
 medic-transport-pkg:
 	@echo -n "Compressing package 'medic-transport'... " && \
-	scripts/build-package 'medic-transport' 1000 "${PLATFORM}" && \
+	scripts/build-package 'medic-transport' 1010 "${PLATFORM}" && \
 	echo 'done.'
 
 convert-boot-logo:

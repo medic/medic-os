@@ -2,9 +2,9 @@
 PARALLEL ?= 16
 PLATFORM := $(shell ../scripts/detect-platform)
 
-JAVA_VERSION ?= 1.7.51
+JAVA_VERSION ?= 1.7.60
 VM_TOOLS_VERSION ?= 9.4.0
-MEDIC_CORE_VERSION ?= 1.5.0
+MEDIC_CORE_VERSION ?= 1.6.0
 
 VM_TOOLS_ROOT ?= /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
 MEDIC_CORE_ROOT ?= /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
