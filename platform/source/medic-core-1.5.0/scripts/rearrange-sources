@@ -89,6 +89,8 @@ apply_patches()
     < ../../patches/gammu-disable-glib.diff) &&
   (cd gammu && patch -s -p1 \
     < ../../patches/gammu-fix-files-backend.diff) &&
+  (cd gammu && patch -s -p1 \
+    < ../../patches/gammu-utf16-sms-multipart.diff) &&
   (cd garden-maker && patch -s -p1 \
     < ../../patches/garden-maker-medic.diff) &&
   (cd icu && patch -s -p2 \
