@@ -17,7 +17,7 @@ modprobe loop 2>/dev/null
 /etc/init.d/rc.dhcpcd &
 
 chown -R vm:root /home/vm
-/usr/bin/sethostname mmva
+/usr/bin/sethostname "`cat /etc/hostname`"
 sysctl -w kernel.grsecurity.grsec_lock=1 &>/dev/null
 
 exec /boot/system-start
