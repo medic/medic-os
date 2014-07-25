@@ -106,7 +106,7 @@ apply_patches()
   (cd js && patch -s -p1 \
     < ../../../../patches/js-fix-makefile-loop.diff) &&
   (cd xdelta && patch -s -p1 \
-    < ../../../../patches/xdelta-fix-compilation-error.diff)
+    < ../../patches/xdelta-fix-compilation-error.diff)
 }
 
 enforce_minimum_size()
