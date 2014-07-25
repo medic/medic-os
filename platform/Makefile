@@ -176,7 +176,7 @@ concierge-pkg:
 
 java-pkg:
 	@echo -n "Compressing package 'java'... " && \
-	scripts/build-package 'java' 1760 "${PLATFORM}" && \
+	scripts/build-package 'java' 1765 "${PLATFORM}" && \
 	echo 'done.'
 
 medic-core-pkg:
