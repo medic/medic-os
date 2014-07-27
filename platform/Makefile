@@ -136,10 +136,18 @@ copy-compiler-libraries:
 	active_compiler_root="$$(dirname "$$(which gcc)")/../" && \
 	\
 	find "$$active_compiler_root"/lib* \
-	  \( -type f -o -type l \) -name 'libssp.so*' \
+	  \( -type f -o -type l \) -a \
+	  \( -name 'libssp.so*' -o -name 'libgcc_s.so*' \) \
 	    -exec cp -a {} "initrd/${PLATFORM}/lib" \; && \
 	\
-	strip --strip-unneeded "initrd/${PLATFORM}/lib/libssp.so"* && \
+	for file in \
+	  "initrd/${PLATFORM}/lib/libssp.so"* \
+	  "initrd/${PLATFORM}/lib/libgcc_s.so"*; do \
+	  \
+	  chmod +x "$$file" && \
+	  strip --strip-unneeded "$$file" || exit "$$?"; \
+	done && \
+	\
 	echo 'done.'
 
 build-initrd: copy-compiler-libraries
