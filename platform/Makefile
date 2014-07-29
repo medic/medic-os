@@ -39,7 +39,8 @@ clean:
 	rm -rf output/* && \
 	rm -rf staging/packages && \
 	rm -rf packages/vm-tools/software && \
-	rm -rf packages/medic-core/software
+	rm -rf packages/medic-core/software && \
+	rm -rf 'staging/software/${PLATFORM}'/*
 
 distclean: clean
 	(cd source && ${MAKE} clean) && \

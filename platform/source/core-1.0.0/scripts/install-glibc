@@ -11,9 +11,21 @@ fatal()
   exit 127
 }
 
+usage()
+{
+  echo "Usage: `basename "$0"` from_prefix to_prefix" >&2
+  exit 1
+}
+
 install()
 {
-  local prefix="$1"
+  local from_prefix="$1"
+  local to_prefix="$2"
+
+  [ $# -eq 2 ] || usage
+
+  cd "$from_prefix" \
+    || fatal "Unable to locate source directory '$from_prefix'"
 
   for l in \
     ld libc libanl libcrypt libdl libm libnsl libnss_compat \
@@ -25,8 +37,8 @@ install()
     for file in lib/$l.so lib/$l.so.* lib/$l-*.so lib/$l-*.so.*; do
       if [ -f "$file" ]; then
 
-        rm -f "$prefix/$file" &&
-        cp -av "$file" "$prefix/lib"
+        rm -f "$to_prefix/$file" &&
+        cp -a "$file" "$to_prefix/lib"
 
         if [ "$?" -ne 0 ]; then
           warn "Unable to copy '$file' for '$l'"
@@ -44,22 +56,22 @@ install()
   done &&
   \
   # Remove linker scripts
-  for f in "$prefix/lib"/*; do
+  for f in "$to_prefix/lib"/*; do
     if ! [ -x "$f" ]; then
       rm -f "$f" || return 3
     fi
   done &&
   \
   # Copy binaries
-  mkdir -p "$prefix/sbin" &&
-  cp -a sbin/ldconfig "$prefix/sbin" &&
+  mkdir -p "$to_prefix/sbin" &&
+  cp -a sbin/ldconfig "$to_prefix/sbin" &&
   \
   # Copy iconv libraries
-  mkdir -p "$prefix/lib/gconv" &&
-  rm -f "$prefix/lib/gconv"/*.so &&
+  mkdir -p "$to_prefix/lib/gconv" &&
+  rm -f "$to_prefix/lib/gconv"/*.so &&
   \
   cp -a lib/gconv/UNICODE.* lib/gconv/UTF-* \
-    "$prefix/lib/gconv" &&
+    "$to_prefix/lib/gconv" &&
 
   return "$?"
 }
