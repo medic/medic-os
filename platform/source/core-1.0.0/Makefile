@@ -203,7 +203,7 @@ glibc: build-glibc copy-glibc
 
 build-glibc:
 	@./scripts/logger 'glibc' '${PLATFORM}' \
-	  "(cd source/glibc && \
+	  "(cd source/glibc && unset MAKEFLAGS && \
 	    mkdir -p '${STAGING_PATH}/glibc' && \
 	    mkdir -p build-directory && cd build-directory && \
 	    CFLAGS='-Os' ../configure --prefix='' \
