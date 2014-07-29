@@ -240,10 +240,10 @@ copy-e2fsprogs:
 	@echo -n "Copying files for 'e2fsprogs'... " && \
 	cd '${STAGING_PATH}/e2fsprogs' && \
 	  rm -rf etc share && \
-	  for type in ext2 ext3 ext4 ext4dev; do \
-	    (cd sbin && rm -f "fsck.$$type" "mkfs.$$type" && \
-		 ln -sf e2fsck "fsck.$type" && ln -sf mke2fs "mkfs.$type") \
-	  done && \
+	  (cd sbin && for type in ext2 ext3 ext4 ext4dev; do \
+	    rm -f "fsck.$$type" "mkfs.$$type" && \
+		 ln -sf e2fsck "fsck.$$type" && ln -sf mke2fs "mkfs.$$type"; \
+	  done) && \
 	cp -a * '${INITRD_PATH}' && \
 	echo 'done.'
 
