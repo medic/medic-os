@@ -16,17 +16,17 @@ all: build
 
 build: build-all
 
-build-all: status build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-glibc build-iptables build-busybox remove-unnecessary
+build-all: status build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc remove-unnecessary
 
 
 copy: copy-all
 
-copy-all: copy-syslinux copy-kernel copy-glibc copy-iptables copy-busybox
+copy-all: copy-syslinux copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
 
 
 clean: clean-all
 
-clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-glibc clean-iptables clean-xfsprogs clean-busybox
+clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc
 	rm -f logs/*/*
 
 
@@ -207,8 +207,7 @@ build-glibc:
 	    mkdir -p '${STAGING_PATH}/glibc' && \
 	    mkdir -p build-directory && cd build-directory && \
 	    CFLAGS='-Os' ../configure --prefix='' \
-	      --enable-shared --disable-static --disable-nscd \
-		  --enable-stackguard-randomization --enable-multi-arch && \
+	      --enable-shared --disable-static --disable-nscd && \
 	    make && \
 		make install DESTDIR='${STAGING_PATH}/glibc') && \
 		../../scripts/strip-binaries '${STAGING_PATH}/glibc'"
@@ -244,7 +243,7 @@ copy-e2fsprogs:
 	    rm -f "fsck.$$type" "mkfs.$$type" && \
 		 ln -sf e2fsck "fsck.$$type" && ln -sf mke2fs "mkfs.$$type"; \
 	  done) && \
-	cp -a * '${INITRD_PATH}' && \
+	cp -av * '${INITRD_PATH}' && \
 	echo 'done.'
 
 
