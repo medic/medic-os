@@ -244,7 +244,7 @@ copy-e2fsprogs:
 	    rm -f "fsck.$$type" "mkfs.$$type" && \
 	    ln -sf e2fsck "fsck.$$type" && ln -sf mke2fs "mkfs.$$type"; \
 	  done) && \
-	cp -av * '${INITRD_PATH}' && \
+	cp -a * '${INITRD_PATH}' && \
 	echo 'done.'
 
 
