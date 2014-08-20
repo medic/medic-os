@@ -1,5 +1,8 @@
 
 var child = require('child_process'),
+    cookieParser = require('cookie-parser'),
+    session = require('express-session'),
+    bodyParser = require('body-parser'),
     flash = require('connect-flash'),
     request = require('request'),
     express = require('express'),
@@ -8,6 +11,8 @@ var child = require('child_process'),
     fs = require('fs'),
     app = express();
 
+/**
+ */
 var user = 'vm';
 var protocol = 'http://';
 var server = 'localhost:5984';
@@ -16,19 +21,16 @@ var system_passwd_path = '/srv/storage/concierge/passwd/system';
 
 /**
  */
-app.configure(function () {
+app.use(flash());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser({ saveUninitialized: true, resave: true }));
 
-  app.use(flash());
-  app.use(express.cookieParser());
-  app.use(express.bodyParser());
+app.set('views', __dirname + '/views');
+app.use('/static', express.static(__dirname + '/static'));
 
-  app.set('views', __dirname + '/views');
-  app.use('/static', express.static(__dirname + '/static'));
-
-  app.use(express.session({
-    secret: '2f6f99e7102059d7acb40bbe4fa8cf547ea18f96'
-  }));
-});
+app.use(session({
+  secret: '2f6f99e7102059d7acb40bbe4fa8cf547ea18f96'
+}));
 
 /**
  */
