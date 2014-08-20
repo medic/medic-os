@@ -189,8 +189,8 @@ build-xfsprogs:
 	  "cd source/xfsprogs && unset PLATFORM && \
 	    ./configure --prefix='${INITRD_PATH}' \
 	      --exec-prefix='${INITRD_PATH}' \
-		  --enable-shared=yes --enable-static=no \
-		  --enable-readline=no --enable-gettext=no && ${MAKE}"
+	      --enable-shared=yes --enable-static=no \
+	      --enable-readline=no --enable-gettext=no && ${MAKE}"
 
 copy-xfsprogs:
 	@echo -n "Copying files for 'xfsprogs'... " && \
@@ -207,10 +207,11 @@ build-glibc:
 	    mkdir -p '${STAGING_PATH}/glibc' && \
 	    mkdir -p build-directory && cd build-directory && \
 	    CFLAGS='-Os' ../configure --prefix='' \
-	      --enable-shared --disable-static --disable-nscd && \
+	      --enable-shared --disable-static \
+	      --disable-multi-arch --disable-nscd && \
 	    make && \
-		make install DESTDIR='${STAGING_PATH}/glibc') && \
-		../../scripts/strip-binaries '${STAGING_PATH}/glibc'"
+	    make install DESTDIR='${STAGING_PATH}/glibc') && \
+	    ../../scripts/strip-binaries '${STAGING_PATH}/glibc'"
 
 copy-glibc:
 	@echo -n "Copying files for 'glibc'... " && \
@@ -228,12 +229,12 @@ build-e2fsprogs:
 	@./scripts/logger 'e2fsprogs' '${PLATFORM}' \
 	  "(cd source/e2fsprogs && \
 	    ./configure --prefix='' --enable-shared \
-		  --disable-static --enable-fsck --enable-quota \
-		  --enable-elf-shlibs --enable-tls --disable-uuidd \
-		  --disable-e2initrd-helper --disable-debugfs && \
+	      --disable-static --enable-fsck --enable-quota \
+	      --enable-elf-shlibs --enable-tls --disable-uuidd \
+	      --disable-e2initrd-helper --disable-debugfs && \
 	    make && \
-		make install DESTDIR='${STAGING_PATH}/e2fsprogs' && \
-		../../scripts/strip-binaries '${STAGING_PATH}/e2fsprogs')"
+	    make install DESTDIR='${STAGING_PATH}/e2fsprogs' && \
+	    ../../scripts/strip-binaries '${STAGING_PATH}/e2fsprogs')"
 
 copy-e2fsprogs:
 	@echo -n "Copying files for 'e2fsprogs'... " && \
@@ -241,7 +242,7 @@ copy-e2fsprogs:
 	  rm -rf etc share && \
 	  (cd sbin && for type in ext2 ext3 ext4 ext4dev; do \
 	    rm -f "fsck.$$type" "mkfs.$$type" && \
-		 ln -sf e2fsck "fsck.$$type" && ln -sf mke2fs "mkfs.$$type"; \
+	    ln -sf e2fsck "fsck.$$type" && ln -sf mke2fs "mkfs.$$type"; \
 	  done) && \
 	cp -av * '${INITRD_PATH}' && \
 	echo 'done.'
