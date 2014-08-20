@@ -4,7 +4,7 @@ merge_environment()
 {
   local name='java'
 
-  local version='1.7.51'
+  local version='1.7.65'
   local platform="`cat /etc/platform`"
 
   local prefix="$1"

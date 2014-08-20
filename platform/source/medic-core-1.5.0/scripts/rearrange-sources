@@ -89,6 +89,8 @@ apply_patches()
     < ../../patches/gammu-disable-glib.diff) &&
   (cd gammu && patch -s -p1 \
     < ../../patches/gammu-fix-files-backend.diff) &&
+  (cd gammu && patch -s -p1 \
+    < ../../patches/gammu-utf16-sms-multipart.diff) &&
   (cd garden-maker && patch -s -p1 \
     < ../../patches/garden-maker-medic.diff) &&
   (cd icu && patch -s -p2 \
@@ -102,7 +104,9 @@ apply_patches()
   (cd screen && patch -s -p1 \
     < ../../patches/screen-fix-stropts-include.diff) &&
   (cd js && patch -s -p1 \
-    < ../../../../patches/js-fix-makefile-loop.diff)
+    < ../../../../patches/js-fix-makefile-loop.diff) &&
+  (cd xdelta && patch -s -p1 \
+    < ../../patches/xdelta-fix-compilation-error.diff)
 }
 
 enforce_minimum_size()

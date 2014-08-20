@@ -1,0 +1,87 @@
+#!/bin/sh
+
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 127
+}
+
+usage()
+{
+  echo "Usage: `basename "$0"` from_prefix to_prefix" >&2
+  exit 1
+}
+
+install()
+{
+  local from_prefix="$1"
+  local to_prefix="$2"
+
+  [ $# -eq 2 ] || usage
+
+  cd "$from_prefix" \
+    || fatal "Unable to locate source directory '$from_prefix'"
+
+  for l in \
+    ld libc libanl libcrypt libdl libm libnsl libnss_compat \
+    libnss_dns libnss_files libpthread libresolv librt libutil; do
+
+    local found_library=''
+
+    # Copy libraries
+    for file in lib/$l.so lib/$l.so.* lib/$l-*.so lib/$l-*.so.*; do
+      if [ -f "$file" ]; then
+
+        rm -f "$to_prefix/$file" &&
+        cp -a "$file" "$to_prefix/lib"
+
+        if [ "$?" -ne 0 ]; then
+          warn "Unable to copy '$file' for '$l'"
+          return 1
+        fi
+
+        found_library='1'
+      fi
+    done
+
+    if [ -z "$found_library" ]; then
+      warn "Unable to find any usable files for '$l'"
+      return 2
+    fi
+  done &&
+  \
+  # Remove linker scripts
+  for f in "$to_prefix/lib"/*; do
+    if ! [ -x "$f" ]; then
+      rm -f "$f" || return 3
+    fi
+  done &&
+  \
+  # Copy binaries
+  mkdir -p "$to_prefix/sbin" &&
+  cp -a sbin/ldconfig "$to_prefix/sbin" &&
+  \
+  # Copy iconv libraries
+  mkdir -p "$to_prefix/lib/gconv" &&
+  rm -f "$to_prefix/lib/gconv"/*.so &&
+  \
+  cp -a lib/gconv/UNICODE.* lib/gconv/UTF-* \
+    "$to_prefix/lib/gconv" &&
+
+  return "$?"
+}
+
+main()
+{
+  install "$@" \
+    || fatal 'One or more files could not be properly installed'
+}
+
+main "$@"
+exit "$?"
+

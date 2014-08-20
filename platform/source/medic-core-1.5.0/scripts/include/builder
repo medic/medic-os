@@ -18,6 +18,14 @@ disable_stack_protector()
   export CXXFLAGS="`echo "$CFLAGS" | sed "$regex"`"
 }
 
+disable_stack_protector_strong()
+{
+  local regex='s/ *-fstack-protector-strong[A-Za-z0-9-]*//g;'
+
+  export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+  export CXXFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+}
+
 weaken_fortify_source()
 {
   local regex='s/ *-D_FORTIFY_SOURCE=2/ -D_FORTIFY_SOURCE=1/g;'

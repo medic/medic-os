@@ -10,7 +10,7 @@ fatal()
 }
 
 source "$base_dir/scripts/include/builder" 2>/dev/null \
-    || fatal 'Unable to load a required library'
+  || fatal 'Unable to load a required library'
 
 main()
 {

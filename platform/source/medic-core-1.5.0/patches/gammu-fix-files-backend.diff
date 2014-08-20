@@ -1,4 +1,3 @@
-Binary files gammu-1.32.0-prev/smsd/services/.files.c.swp and gammu-1.32.0/smsd/services/.files.c.swp differ
 diff -urN gammu-1.32.0-prev/smsd/services/files.c gammu-1.32.0/smsd/services/files.c
 --- gammu-1.32.0-prev/smsd/services/files.c	2013-03-14 20:11:34.781046927 -0700
 +++ gammu-1.32.0/smsd/services/files.c	2013-03-14 20:20:47.548047063 -0700
@@ -10,7 +9,7 @@ diff -urN gammu-1.32.0-prev/smsd/services/files.c gammu-1.32.0/smsd/services/fil
 -	for (i = 0; i < sms->Number && !done; i++) {
 +	done = (sms->Number <= 0);
 +
-+        /* Loop in reverse:
++	/* Loop in reverse:
 +	 *  This allows other applications to assume that parts 1-N exist
 +	 *  at the time they receive notification of part zero's creation. */
 +

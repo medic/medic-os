@@ -24,7 +24,7 @@ main()
 
 usage()
 {
-  echo "Usage: $0 base_directory..." >&2
+  echo "Usage: `basename $0` base_directory..." >&2
   exit 111
 }
 

@@ -2,9 +2,9 @@
 PARALLEL ?= 16
 PLATFORM := $(shell ../scripts/detect-platform)
 
-JAVA_VERSION ?= 1.7.51
+JAVA_VERSION ?= 1.7.65
 VM_TOOLS_VERSION ?= 9.4.0
-MEDIC_CORE_VERSION ?= 1.5.0
+MEDIC_CORE_VERSION ?= 1.6.0
 
 VM_TOOLS_ROOT ?= /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
 MEDIC_CORE_ROOT ?= /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
@@ -20,8 +20,8 @@ QMAKE := ${MAKE} --no-print-directory
 
 CFLAGS += -Os -fstack-protector-all
 
-KERNEL_VERSION := 3.10.33
-KERNEL_MODULE_PATH := $(shell readlink -f "../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}")
+KERNEL_VERSION := 3.10.48
+KERNEL_MODULE_PATH := ${CURDIR}/../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}
 
 
 all: build copy finalize

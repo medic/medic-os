@@ -14,7 +14,7 @@ rename()
 apply_patches()
 {
   (cd linux && patch -s -p1 \
-    < ../../patches/grsecurity-2.9.1-linux-3.10.33.diff) &&
+    < ../../patches/grsecurity-2.9.1-linux-3.10.48.diff) &&
   (cd linux && patch -s -p1 \
     < ../../patches/linux-export-final_putname-3.7.5.diff) &&
   (cd linux && patch -s -p1 \

@@ -1,0 +1,74 @@
+# GNU libc iconv configuration.
+# Copyright (C) 1997-2004, 2005, 2007, 2008 Free Software Foundation, Inc.
+# This file is part of the GNU C Library.
+
+# The GNU C Library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+
+# The GNU C Library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with the GNU C Library; if not, write to the Free
+# Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# 02111-1307 USA.
+
+# All lines contain the following information:
+
+# If the lines start with `module'
+#  fromset:	either a name triple or a regular expression triple.
+#  toset:	a name triple or an expression with \N to get regular
+#		expression matching results.
+#  filename:	filename of the module implementing the transformation.
+#		If it is not absolute the path is made absolute by prepending
+#		the directory the configuration file is found in.
+#  cost:	optional cost of the transformation.  Default is 1.
+
+# If the lines start with `alias'
+#  alias:	alias name which is not really recognized.
+#  name:	the real name of the character set
+
+#	from			to			module		cost
+alias	UTF16//			UTF-16//
+module	UTF-16//		INTERNAL		UTF-16		1
+module	INTERNAL		UTF-16//		UTF-16		1
+
+#	from			to			module		cost
+alias	UTF16LE//		UTF-16LE//
+module	UTF-16LE//		INTERNAL		UTF-16		1
+module	INTERNAL		UTF-16LE//		UTF-16		1
+
+#	from			to			module		cost
+alias	UTF16BE//		UTF-16BE//
+module	UTF-16BE//		INTERNAL		UTF-16		1
+module	INTERNAL		UTF-16BE//		UTF-16		1
+
+#	from			to			module		cost
+alias	CSUNICODE//		UNICODE//
+module	UNICODE//		INTERNAL		UNICODE		1
+module	INTERNAL		UNICODE//		UNICODE		1
+
+#	from			to			module		cost
+alias	UTF32//			UTF-32//
+module	UTF-32//		INTERNAL		UTF-32		1
+module	INTERNAL		UTF-32//		UTF-32		1
+
+#	from			to			module		cost
+alias	UTF32LE//		UTF-32LE//
+module	UTF-32LE//		INTERNAL		UTF-32		1
+module	INTERNAL		UTF-32LE//		UTF-32		1
+
+#	from			to			module		cost
+alias	UTF32BE//		UTF-32BE//
+module	UTF-32BE//		INTERNAL		UTF-32		1
+module	INTERNAL		UTF-32BE//		UTF-32		1
+
+#	from			to			module		cost
+alias	UTF7//			UTF-7//
+module	UTF-7//			INTERNAL		UTF-7		1
+module	INTERNAL		UTF-7//			UTF-7		1
+
