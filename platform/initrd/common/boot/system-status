@@ -49,7 +49,7 @@ main()
 
     clear_text 'y'
     restore_cursor_position
-    sleep 1
+    sleep 3
 
   done
 
