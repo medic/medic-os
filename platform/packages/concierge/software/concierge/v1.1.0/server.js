@@ -23,14 +23,14 @@ var system_passwd_path = '/srv/storage/concierge/passwd/system';
  */
 app.use(flash());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser({ saveUninitialized: true, resave: true }));
 
+app.use(cookieParser('2f6f99e7102059d7acb40bbe4fa8cf547ea18f96', {
+  saveUninitialized: true, resave: true
+}));
+
+app.use(session());
 app.set('views', __dirname + '/views');
 app.use('/static', express.static(__dirname + '/static'));
-
-app.use(session({
-  secret: '2f6f99e7102059d7acb40bbe4fa8cf547ea18f96'
-}));
 
 /**
  */
