@@ -2,7 +2,6 @@
 
 source '/boot/include/utility'
 source '/boot/include/supervisor'
-source '/boot/include/hypervisor'
 
 show_package()
 {
@@ -61,6 +60,7 @@ show_services()
 
 main()
 {
+  require_root
   echo
   
   if [ "$#" -gt 0 ]; then

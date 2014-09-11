@@ -2,11 +2,14 @@
 
 set -o pipefail
 
+source '/boot/include/hypervisor'
+hypervisor_init
+
 set_echo()
 {
   local direction="$1"
 
-  if is_hypervisor; then
+  if hypervisor_has_limited_console; then
     return 0
   fi
 
@@ -21,7 +24,7 @@ set_console_blanking()
 {
   local minutes="$1"
 
-  if is_hypervisor; then
+  if hypervisor_has_limited_console; then
     return 0
   fi
 
@@ -32,7 +35,7 @@ set_cursor()
 {
   local direction="$1"
 
-  if is_hypervisor; then
+  if hypervisor_has_limited_console; then
     return 0
   fi
 
@@ -47,7 +50,7 @@ set_bold()
 {
   local state="$1"
 
-  if is_hypervisor; then
+  if hypervisor_has_limited_console; then
     return 0
   fi
 
@@ -60,7 +63,7 @@ set_bold()
 
 save_cursor_position()
 {
-  if is_hypervisor; then
+  if hypervisor_has_limited_console; then
     return 0
   fi
 
@@ -69,7 +72,7 @@ save_cursor_position()
 
 restore_cursor_position()
 {
-  if is_hypervisor; then
+  if hypervisor_has_limited_console; then
     return 0
   fi
 
@@ -81,7 +84,7 @@ move_cursor()
   local axis="$1"
   local count="$2"
 
-  if is_hypervisor; then
+  if hypervisor_has_limited_console; then
     return 0
   fi
 
@@ -105,7 +108,7 @@ clear_text()
   local axis="$1"
   local is_backward="$2"
 
-  if is_hypervisor; then
+  if hypervisor_has_limited_console; then
     return 0
   fi
 
@@ -167,7 +170,7 @@ display_activity_indicator()
   local final_activity_frame="$1"
   shift 1
 
-  if is_hypervisor; then
+  if hypervisor_has_limited_console; then
     return 0
   fi
 

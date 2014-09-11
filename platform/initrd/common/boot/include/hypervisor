@@ -1,11 +1,19 @@
 #!/bin/sh
 
-hypervisor_type="`cat /sys/hypervisor/type 2>/dev/null`"
-
-is_hypervisor()
+hypervisor_init()
 {
-  [ -n "$hypervisor_type" ]
-  return "$?"
+  if [ "$hypervisor_initialized" ]; then
+    return 0
+  fi
+
+  use_package vm-tools
+  export hypervisor_type="`compute_hypervisor_type`"
+
+  if [ "$hypervisor_type" ]; then
+    export is_hypervisor='1'
+  fi
+
+  export hypervisor_initialized='1'
 }
 
 hypervisor_type()
@@ -13,3 +21,66 @@ hypervisor_type()
   echo "$hypervisor_type"
 }
 
+is_hypervisor()
+{
+  [ "$is_hypervisor" ]
+}
+
+hypervisor_has_limited_console()
+{
+  if [ "$hypervisor_type" = 'xen' ]; then
+    return 0
+  fi
+
+  return 1
+}                                     
+
+compute_hypervisor_type()
+{
+  # In-kernel hypervisor
+  if [ -r /sys/hypervisor/type ]; then
+    cat /sys/hypervisor/type
+    return "$?"
+  fi
+
+  # VMware (full virtualization)
+  if vmware-checkvm &>/dev/null; then
+    echo 'vmware'
+    return 0
+  fi
+
+  # Nothing found
+  return 127
+}
+
+set_hypervisor_variable()
+{
+  local key="$1"
+  local value="$2"
+
+  case "`hypervisor_type`" in
+    vmware)
+      vmware-rpctool "info-set guestinfo.$key $value" >/dev/null
+      return "$?"
+      ;;
+    *)
+      return 0
+      ;;
+  esac
+}
+
+get_hypervisor_variable()
+{
+  local key="$1"
+
+  case "`hypervisor_type`" in
+    vmware)
+      vmware-rpctool "info-get guestinfo.$key"
+      return "$?"
+      ;;
+    *)
+      return 0
+      ;;
+  esac
+}
+                                                                
