@@ -8,6 +8,7 @@ var child = require('child_process'),
     express = require('express'),
     crypto = require('crypto'),
     async = require('async'),
+    clone = require('clone'),
     fs = require('fs'),
     app = express();
 
@@ -24,11 +25,15 @@ var system_passwd_path = '/srv/storage/concierge/passwd/system';
 app.use(flash());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(cookieParser('2f6f99e7102059d7acb40bbe4fa8cf547ea18f96', {
+app.use(cookieParser('50a812553b4e5a5660cbdb18525ee9f01120d11f', {
   saveUninitialized: true, resave: true
 }));
 
-app.use(session());
+app.use(session({
+  saveUninitialized: true, resave: true,
+  secret: '491dfd0f53bbfcafe6e8bba45a89fdec9a1f298a'
+}));
+
 app.set('views', __dirname + '/views');
 app.use('/static', express.static(__dirname + '/static'));
 
@@ -361,7 +366,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
   var admins_uri = server + '/_config/admins'
 
-  var put = {
+  var put_template = {
     body: JSON.stringify(_passwd),
     uri: protocol + admins_uri + '/admin',
     headers: { 'Content-type': 'application/json' }
@@ -377,7 +382,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     
       read_system_password(function (_err, _system_passwd) {
         if (!_err) {
-          put.auth = { user: 'service', pass: _system_passwd };
+          put_template.auth = { user: 'service', pass: _system_passwd };
         }
         /* Ignore errors: file might not exist */
         return _cb(null, _system_passwd);
@@ -386,6 +391,8 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     
     /* Step 1: Primary password change (i.e. admin) */
     function (_system_passwd, _cb) {
+
+      var put = clone(put_template);
 
       request.put(put, function (_err, _resp, _body) {
         return check_response(
@@ -400,7 +407,6 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     function (_system_passwd, _cb) {
     
       if (_system_passwd) {
-
         return _cb(null, _system_passwd, false);
       }
 
@@ -418,18 +424,19 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     function (_system_passwd, _first_run, _cb) {
     
       if (_first_run) {
-        put.auth = { user: 'admin', pass: _passwd };
+        put_template.auth = { user: 'admin', pass: _passwd };
       } else {
-        put.auth = { user: 'service', pass: _system_passwd };
+        put_template.auth = { user: 'service', pass: _system_passwd };
       }
-      
+
+      var put = clone(put_template);
       put.body = JSON.stringify(_system_passwd);
       put.uri = protocol + admins_uri + '/service';
 
       request.put(put, function (_err, _resp, _body) {
-        return check_response(
-          _err, _resp, _req, 'System account creation', function (_e) {
 
+        return check_response(
+          _err, _resp, _req, 'Service account creation', function (_e) {
             return _cb(_e, _system_passwd, _first_run);
           }
         );
@@ -448,6 +455,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
         type: 'user', name: 'admin', password: null
       };
       
+      var put = clone(put_template);
       put.body = JSON.stringify(doc);
       put.uri = protocol + server + '/_users/' + doc._id,
       
