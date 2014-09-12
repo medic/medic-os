@@ -20,7 +20,7 @@ QMAKE := ${MAKE} --no-print-directory
 
 CFLAGS += -Os -fstack-protector-all
 
-KERNEL_VERSION := 3.10.48
+KERNEL_VERSION := 3.10.54
 KERNEL_MODULE_PATH := ${CURDIR}/../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}
 
 
