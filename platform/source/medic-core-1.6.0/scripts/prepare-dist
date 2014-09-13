@@ -17,9 +17,10 @@ if [ -d "$prefix/lib64" ]; then
 fi
 
 (cd "$prefix" &&
-  rm -rf lib/*.a lib/python?.? lib/erlang/usr lib/erlang/Install \
-    info include man java/manual share/man share/gtk-doc share/doc doc \
-    logs html share/info share/emacs etc/ssh_host* libexec/ssh-keysign)
+  rm -rf lib/*.a lib/python?.? lib/erlang/usr \
+    lib/erlang/Install info include man java/manual share/man \
+    share/gtk-doc share/doc doc logs html share/info share/emacs \
+    etc/ssh_host* libexec/ssh-keysign usr/share/man etc/ssl/man)
 
 (cd "$prefix/lib/erlang/lib" && mkdir -p .save &&
   mv asn1-* crypto-* compiler-* inets-* kernel-* os_mon-* public_key-* \
@@ -67,13 +68,14 @@ fi
   done)
 
 (cd "$prefix/lib" &&
+  rm -rf erlang/erts-5.10.4/man &&
   chmod +x libacl.so.* libattr.so.*)
 
 (cd "$prefix/sbin" &&
   rm -f tcpdump.*)
 
 (cd "$prefix/lib/node_modules" &&
-  rm -rf node-gyp)
+  rm -rf node-gyp npm/man nodelint/man1)
 
 (cd "$prefix/lib/node_modules/medic-transport/node_modules" &&
   rm -rf node-gammu-json && ln -sf ../../node-gammu-json)
