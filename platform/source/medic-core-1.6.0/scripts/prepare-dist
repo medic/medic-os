@@ -75,3 +75,6 @@ fi
 (cd "$prefix/lib/node_modules" &&
   rm -rf node-gyp)
 
+(cd "$prefix/lib/node_modules/medic-transport/node_modules" &&
+  rm -rf node-gammu-json && ln -sf ../../node-gammu-json)
+
