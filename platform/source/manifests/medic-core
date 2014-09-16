@@ -30,7 +30,7 @@ lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
 maven, http://mirrors.ibiblio.org/apache/maven/maven-3/3.0.5/source/apache-maven-3.0.5-src.tar.gz
 ncurses, http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
 nginx, http://nginx.org/download/nginx-1.5.2.tar.gz
-node, http://nodejs.org/dist/v0.10.29/node-v0.10.29.tar.gz
+node, http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz
 node-fs-ext, https://github.com/baudehlo/node-fs-ext.git
 node-gammu-json, https://github.com/browndav/node-gammu-json.git
 nodelint, https://github.com/tav/nodelint.git
