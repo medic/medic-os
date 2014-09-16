@@ -82,7 +82,7 @@ apply_patches()
   (cd ant && patch -s -p1 \
     < ../../patches/ant-disable-junit.diff) &&
   (cd erlang && patch -s -p1 \
-    < ../../patches/erlang-r16-pcre-fix.diff) &&
+    < ../../patches/erlang-r17-pcre-fix.diff) &&
   (cd maven && patch -s -p1 \
     < ../../patches/maven-preserve-destination.diff) &&
   (cd gammu && patch -s -p1 \

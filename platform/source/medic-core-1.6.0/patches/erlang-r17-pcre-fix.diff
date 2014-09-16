@@ -1,0 +1,12 @@
+diff -ur otp_src_17.1-stock/erts/emulator/Makefile.in otp_src_17.1-new/erts/emulator/Makefile.in
+--- otp_src_17.1-stock/erts/emulator/Makefile.in	2014-06-23 12:10:57.000000000 -0700
++++ otp_src_17.1-new/erts/emulator/Makefile.in	2014-09-16 12:46:00.126415711 -0700
+@@ -682,7 +682,7 @@
+ endif
+ 
+ $(OBJDIR)/%.o: beam/%.c
+-	$(V_CC) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@
++	$(V_CC) $(INCLUDES) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) -c $< -o $@
+ 
+ $(OBJDIR)/%.o: $(TARGET)/%.c
+ 	$(V_CC) $(CFLAGS) $(INCLUDES) -Idrivers/common -c $< -o $@
