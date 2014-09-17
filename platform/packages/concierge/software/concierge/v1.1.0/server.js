@@ -76,11 +76,11 @@ app.get('/setup', function (_req, _res) {
  */
 app.all('/setup/finish', function (_req, _res) {
 
-  if (req.method != 'POST' && _req.method != 'GET') {
+  if (_req.method != 'POST' && _req.method != 'GET') {
     _res.status(500).send('Invalid HTTP method');
   }
 
-  disable_concierge_service(req, function (_err) {
+  disable_concierge_service(_req, function (_err) {
     _res.status(500).send('Service shutdown failed');
   });
 
