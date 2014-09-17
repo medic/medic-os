@@ -17,7 +17,7 @@ extract_initrd_device_nodes()
 
 set_permissions()
 {
-  chmod +t \
+  chmod 1777 \
     platform/initrd/common/tmp &&
   \
   chmod u+s \
