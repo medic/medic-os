@@ -1,8 +1,8 @@
 #!/bin/sh
 
+source '/boot/include/utility'
 source '/boot/include/logger'
 source '/boot/include/cursor'
-source '/boot/include/utility'
 source '/boot/include/startup'
 source '/boot/include/package'
 source '/boot/include/supervisor'

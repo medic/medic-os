@@ -14,15 +14,15 @@ rename()
 apply_patches()
 {
   (cd linux && patch -s -p1 \
-    < ../../patches/grsecurity-2.9.1-linux-3.10.33.diff) &&
+    < ../../patches/grsecurity-2.9.1-linux.diff) &&
   (cd linux && patch -s -p1 \
-    < ../../patches/linux-export-final_putname-3.7.5.diff) &&
+    < ../../patches/linux-export-final_putname.diff) &&
   (cd linux && patch -s -p1 \
-    < ../../patches/linux-grsec-do_const-3.8.4.diff) &&
+    < ../../patches/linux-grsec-do_const.diff) &&
   (cd linux && patch -s -p1 \
-    < ../../patches/linux-grsec-localversion-3.8.13.diff) &&
+    < ../../patches/linux-grsec-localversion.diff) &&
   (cd busybox && patch -s -p1 \
-    < ../../patches/busybox-1.21.1-depmod.diff)
+    < ../../patches/busybox-depmod.diff)
 }
 
 finished_path="$base_dir/../../status/core.finished"

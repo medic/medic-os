@@ -15,6 +15,19 @@ extract_initrd_device_nodes()
   return "$?"
 }
 
+set_permissions()
+{
+  chmod 1777 \
+    platform/initrd/common/tmp &&
+  \
+  chmod u+s \
+    platform/initrd/x86/usr/bin/sudo \
+    platform/initrd/x64/usr/bin/sudo \
+    platform/initrd/armv6/usr/bin/sudo
+
+  return "$?"
+}
+
 create_empty_directories()
 {
   (
@@ -22,7 +35,14 @@ create_empty_directories()
       initrd/common/etc/sysconfig \
       initrd/common/mnt \
       initrd/common/home/vm/.ssh \
+      initrd/common/proc \
+      initrd/common/sys \
+      initrd/common/tmp \
+      initrd/common/var/cache \
       initrd/common/var/empty \
+      initrd/common/var/lib \
+      initrd/common/var/lock \
+      initrd/common/var/log \
       packages/java/storage \
       packages/java/storage/java \
       packages/medic-transport/storage \
@@ -30,7 +50,10 @@ create_empty_directories()
       packages/medic-transport/storage/medic-transport/logs \
       packages/vm-tools/storage \
       packages/vm-tools/storage/vm-tools \
-      packages/vm-tools/storage/vm-tools/logs \
+      packages/vm-tools/storage/vm-tools/avahi/logs \
+      packages/vm-tools/storage/vm-tools/avahi/state \
+      packages/vm-tools/storage/vm-tools/ntpd/logs \
+      packages/vm-tools/storage/vm-tools/vmtoolsd/logs \
       packages/system-services/storage \
       packages/system-services/storage/system-services \
       packages/system-services/storage/system-services/logs \
@@ -75,6 +98,7 @@ create_empty_directories()
   return "$?"
 }
 
+
 main()
 {
   cd "$base_dir" \
@@ -82,6 +106,9 @@ main()
 
   create_empty_directories \
     || fatal 'Failed to create one or more directories'
+  
+  set_permissions \
+    || fatal 'Failed to set directory permissions'
   
   extract_initrd_device_nodes \
     || fatal 'Failed to extract initrd device nodes'

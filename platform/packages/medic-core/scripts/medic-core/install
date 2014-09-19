@@ -10,14 +10,16 @@ install()
   source "$base/env" &&
   merge_environment /srv || return 255
 
+  local version="$PACKAGE_VERSION"
   local platform="`cat /etc/platform`"
+  local major_version="`echo "$version" | sed 's/\.[0-9]\+$//;'`"
 
   (cd "$PACKAGE_ROOT/../" &&
     rm -f default && ln -sf "$platform" default) &&
   \
   (cd "$PACKAGE_ROOT/../../" &&
-    rm -f v1.4 && ln -sf v1.5.0 v1.5 &&
-    rm -f current && ln -sf v1.5.0 current) &&
+    ln -sf "v$version" "v$major_version" &&
+    rm -f current && ln -sf v"$version" current) &&
   \
   (cd "$PACKAGE_STORAGE/nginx/state" && \
     ln -sf ../logs logs) &&

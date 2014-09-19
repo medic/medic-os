@@ -3,6 +3,9 @@ MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 PLATFORM := $(shell ./scripts/detect-platform)
 
+SYSTEM_NAME ?= Medic OS
+SYSTEM_VERSION_STRING ?= 0.5.0
+
 COMPILER_VERSION ?= 4.8.2
 COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 
@@ -36,7 +39,8 @@ clean:
 	rm -rf output/* && \
 	rm -rf staging/packages && \
 	rm -rf packages/vm-tools/software && \
-	rm -rf packages/medic-core/software
+	rm -rf packages/medic-core/software && \
+	rm -rf 'staging/software/${PLATFORM}'/*
 
 distclean: clean
 	(cd source && ${MAKE} clean) && \
@@ -57,7 +61,7 @@ clean-compiler:
 build-iso: build-initrd
 	@echo -n 'Creating ISO image... ' && \
 	cd "images/${PLATFORM}/iso" && mkisofs -J -R \
-	  -V 'Medic Mobile VM' \
+	  -V '${SYSTEM_NAME} v${SYSTEM_VERSION_STRING}' \
 	  -o "../../../output/image-${PLATFORM}${ISO_EXTRA}.iso" \
 	  -boot-load-size 4 -boot-info-table \
 	  -no-emul-boot -b boot/isolinux/isolinux.bin \
@@ -133,10 +137,19 @@ copy-compiler-libraries:
 	active_compiler_root="$$(dirname "$$(which gcc)")/../" && \
 	\
 	find "$$active_compiler_root"/lib* \
-	  \( -type f -o -type l \) -name 'libssp.so*' \
-	    -exec cp -a {} "initrd/${PLATFORM}/lib" \; && \
+	  \( -type f -o -type l \) -a \( \
+	     -name 'libstdc++.so*' -o \
+		 -name 'libssp.so*' -o -name 'libgcc_s.so*' \
+	  \) -exec cp -a {} "initrd/${PLATFORM}/lib" \; && \
 	\
-	strip --strip-unneeded "initrd/${PLATFORM}/lib/libssp.so"* && \
+	for file in \
+	  "initrd/${PLATFORM}/lib/libssp.so"* \
+	  "initrd/${PLATFORM}/lib/libgcc_s.so"*; do \
+	  \
+	  chmod +x "$$file" && \
+	  strip --strip-unneeded "$$file" || exit "$$?"; \
+	done && \
+	\
 	echo 'done.'
 
 build-initrd: copy-compiler-libraries
@@ -168,27 +181,27 @@ strip-binaries:
 
 concierge-pkg:
 	@echo -n "Compressing package 'concierge'... " && \
-	scripts/build-package 'concierge' 1001 "${PLATFORM}" && \
+	scripts/build-package 'concierge' 1010 "${PLATFORM}" && \
 	echo 'done.'
 
 java-pkg:
 	@echo -n "Compressing package 'java'... " && \
-	scripts/build-package 'java' 1751 "${PLATFORM}" && \
+	scripts/build-package 'java' 1765 "${PLATFORM}" && \
 	echo 'done.'
 
 medic-core-pkg:
 	@echo -n "Compressing package 'medic-core'... " && \
-	scripts/build-package 'medic-core' 1500 "${PLATFORM}" && \
+	scripts/build-package 'medic-core' 1600 "${PLATFORM}" && \
 	echo 'done.'
 
 system-services-pkg:
 	@echo -n "Compressing package 'system-services'... " && \
-	scripts/build-package 'system-services' 1001 "${PLATFORM}" && \
+	scripts/build-package 'system-services' 1010 "${PLATFORM}" && \
 	echo 'done.'
 
 vm-tools-pkg:
 	@echo -n "Compressing package 'vm-tools'... " && \
-	scripts/build-package 'vm-tools' 9400 "${PLATFORM}" && \
+	scripts/build-package 'vm-tools' 9401 "${PLATFORM}" && \
 	echo 'done.'
 
 shrink-gardener:
@@ -196,12 +209,12 @@ shrink-gardener:
 
 gardener-pkg: shrink-gardener
 	@echo -n "Compressing package 'gardener'... " && \
-	scripts/build-package 'gardener' 1004 "${PLATFORM}" && \
+	scripts/build-package 'gardener' 1100 "${PLATFORM}" && \
 	echo 'done.'
 
 medic-transport-pkg:
 	@echo -n "Compressing package 'medic-transport'... " && \
-	scripts/build-package 'medic-transport' 1000 "${PLATFORM}" && \
+	scripts/build-package 'medic-transport' 1010 "${PLATFORM}" && \
 	echo 'done.'
 
 convert-boot-logo:

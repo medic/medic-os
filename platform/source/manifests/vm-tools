@@ -1,7 +1,7 @@
 avahi, http://avahi.org/download/avahi-0.6.31.tar.gz
 expat, http://superb-dca2.dl.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz
 glib, http://ftp.rpmfind.net/linux/gnome.org/sources/glib/2.39/glib-2.39.0.tar.xz
-libdaemon, http://0pointer.de/lennart/projects/libdaemon/libdaemon-0.14.tar.gz
+libdaemon, http://pkgs.fedoraproject.org/repo/pkgs/libdaemon/libdaemon-0.14.tar.gz/509dc27107c21bcd9fbf2f95f5669563/libdaemon-0.14.tar.gz
 libdnet, http://hivelocity.dl.sourceforge.net/project/libdnet/libdnet/libdnet-1.11/libdnet-1.11.tar.gz
 libffi, ftp://sourceware.org/pub/libffi/libffi-3.0.13.tar.gz
 procps, http://procps.sourceforge.net/procps-3.2.8.tar.gz

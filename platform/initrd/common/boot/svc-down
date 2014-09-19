@@ -2,7 +2,6 @@
 
 source '/boot/include/utility'
 source '/boot/include/supervisor'
-source '/boot/include/hypervisor'
 
 down()
 {
@@ -23,6 +22,8 @@ main()
   if [ -z "$package" ]; then
     usage
   fi
+
+  require_root
 
   if [ "$#" -le 0 ]; then
     supervisor_list_expected_services "$package" | while read service; do

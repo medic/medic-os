@@ -2,7 +2,6 @@
 
 source '/boot/include/utility'
 source '/boot/include/supervisor'
-source '/boot/include/hypervisor'
 
 main()
 {
@@ -12,6 +11,8 @@ main()
   if [ "$package" = '-h' -o "$package" = '--help' ]; then
     usage
   fi
+
+  require_root
 
   if [ -z "$package" -o "$package" = 'all' ]; then
     supervisor_list_all_packages

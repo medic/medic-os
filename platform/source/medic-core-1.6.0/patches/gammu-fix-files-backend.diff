@@ -1,0 +1,36 @@
+diff -urN gammu-1.32.0-prev/smsd/services/files.c gammu-1.32.0/smsd/services/files.c
+--- gammu-1.32.0-prev/smsd/services/files.c	2013-03-14 20:11:34.781046927 -0700
++++ gammu-1.32.0/smsd/services/files.c	2013-03-14 20:20:47.548047063 -0700
+@@ -42,8 +42,13 @@
+ 	*Locations = NULL;
+ 
+ 	j = 0;
+-	done = FALSE;
+-	for (i = 0; i < sms->Number && !done; i++) {
++	done = (sms->Number <= 0);
++
++	/* Loop in reverse:
++	 *  This allows other applications to assume that parts 1-N exist
++	 *  at the time they receive notification of part zero's creation. */
++
++	for (i = sms->Number - 1; !done && i >= 0; i--) {
+ 		strcpy(ext, "txt");
+ 		if (sms->SMS[i].Coding == SMS_Coding_8bit)
+ 			strcpy(ext, "bin");
+@@ -52,10 +57,14 @@
+ 		   any xxxx_yy_01,02, must be garbage, that can be overwritten */
+ 		file = NULL;
+ 		do {
++			/* Always use timestamp from part zero:
++			 *  This allows other applications to easily map the file
++			 *  name of part N to the file name of part N+1 (if it exists). */
++
+ 			sprintf(FileName,
+ 				"IN%02d%02d%02d_%02d%02d%02d_%02i_%s_%02i.%s",
+-				sms->SMS[i].DateTime.Year, sms->SMS[i].DateTime.Month, sms->SMS[i].DateTime.Day,
+-				sms->SMS[i].DateTime.Hour, sms->SMS[i].DateTime.Minute, sms->SMS[i].DateTime.Second, j, buffer2, i, ext);
++				sms->SMS[0].DateTime.Year, sms->SMS[0].DateTime.Month, sms->SMS[0].DateTime.Day,
++				sms->SMS[0].DateTime.Hour, sms->SMS[0].DateTime.Minute, sms->SMS[0].DateTime.Second, j, buffer2, i, ext);
+ 			strcpy(FullName, Config->inboxpath);
+ 			strcat(FullName, FileName);
+ 			if (file)

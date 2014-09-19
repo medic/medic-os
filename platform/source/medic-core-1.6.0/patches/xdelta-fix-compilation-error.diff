@@ -1,0 +1,11 @@
+--- xdelta-3.0.8/testing/regtest.cc	2014-07-24 19:31:15.419496548 -0700
++++ xdelta-3.0.8/testing/regtest.cc	2014-07-24 19:31:49.260498253 -0700
+@@ -12,7 +12,7 @@
+     Options() : encode_srcwin_maxsz(1<<20), 
+ 		block_size(Constants::BLOCK_SIZE),
+ 		size_known(false) { }
+-    size_t encode_srcwin_maxsz;
++    xoff_t encode_srcwin_maxsz;
+     size_t block_size;
+     bool size_known;
+   };

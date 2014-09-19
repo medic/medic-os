@@ -207,7 +207,7 @@ main() {
          sudo ln -nsf '$platform' java-current/selected &&
          \
          echo -n 'Installing build-time dependencies... ' >&2 &&
-         sudo ./platform/config/redhat/scripts/yum-install \
+         sudo ./platform/config/redhat/scripts/prepare-system \
            -q -y &>/dev/null &&
          echo 'done.' >&2 &&
          \

@@ -1,5 +1,8 @@
 #!/bin/sh
 
+source '/boot/include/hypervisor'
+hypervisor_init
+
 log='/var/log/startup.log'
 
 log()

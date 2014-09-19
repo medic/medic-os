@@ -3,7 +3,7 @@
 merge_environment()
 {
   local name='medic-transport'
-  local version='1.0.0'
+  local version='1.1.0'
 
   local prefix="$1"
   local root="$prefix/software/$name/v$version"

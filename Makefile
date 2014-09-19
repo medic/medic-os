@@ -6,7 +6,7 @@ all: download-and-build
 download-and-build: download
 	@${QMAKE} build
 
-build: reset-time
+build: prepare-tree reset-time
 	@echo >&2
 	@echo "`tput bold`Building packages`tput sgr0`" >&2 && echo >&2
 	@(cd platform && \
@@ -18,6 +18,11 @@ reset-time:
 	ntpdate pool.ntp.org >/dev/null && \
 	echo 'done.'
 
+prepare-tree:
+	@echo -n 'Preparing source tree... ' && \
+	./scripts/prepare-tree && \
+	echo 'done.'
+
 clean:
 	@echo -n 'Cleaning source tree... ' && \
 	(cd platform && ${QMAKE} distclean) &>/dev/null && \
@@ -26,7 +31,8 @@ clean:
 distclean: clean clean-target
 
 clean-target:
-	@rm -rf /srv/software
+	@cd /srv && \
+	rm -rf software settings storage
 
 delete:
 	@echo -n 'Deleting downloaded source code... ' && \
@@ -35,11 +41,11 @@ delete:
 
 download: reset-time
 	@if ! [ -f status/download.finished ]; then \
-		${QMAKE} force-download; \
+	  ${QMAKE} force-download; \
 	fi && \
 	\
 	if ! [ -f status/move.finished ]; then \
-		${QMAKE} force-move-downloaded; \
+	  ${QMAKE} force-move-downloaded; \
 	fi
 
 force-download:
