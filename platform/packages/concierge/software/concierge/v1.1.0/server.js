@@ -7,6 +7,7 @@ var child = require('child_process'),
     request = require('request'),
     express = require('express'),
     crypto = require('crypto'),
+    _ = require('underscore'),
     async = require('async'),
     clone = require('clone'),
     fs = require('fs'),
@@ -39,6 +40,8 @@ app.set('views', __dirname + '/views');
 app.use('/static', express.static(__dirname + '/static'));
 
 /**
+ * Root directory:
+ *   HTTP API method. Redirect to `/setup`.
  */
 app.get('/', function (_req, _res) {
 
@@ -46,6 +49,8 @@ app.get('/', function (_req, _res) {
 });
 
 /**
+ * /setup:
+ *   HTML API method. Emit the main user interface.
  */
 app.get('/setup', function (_req, _res) {
 
@@ -158,43 +163,46 @@ app.get('/setup/poll', function (_req, _res) {
 
 /**
  * poll_required_services:
+ *   Helper function for the `/setup/poll` REST API method.
+ *   Figure out if the required background services are
+ *   running, then call `_callback(_err, _data)`. The `_err`
+ *   parameter is an object describing a connection error
+ *   (or null if there was no connection error); `_data` is
+ *   an object describing the state of the background services,
+ *   including a boolean `ready` property, and a human-readable
+ *   `detail` property (a string).
  */
 var poll_required_services = function (_req, _res, _callback) {
-      
-  var get = {
-    uri: protocol + api_server + '/api/info'
-  };
+
+  var rv = { ready: false, handler: 'concierge' };
+  var get = { uri: protocol + api_server + '/api/info' };
 
   request.get(get, function (_err, _resp, _body) {
 
     if (_err) {
-      return _callback({
-        ready: false,
+      return _callback(_.extend(rv, {
         detail: 'Unable to contact the medic-api service'
-      });
+      }));
     }
 
     if (_resp.statusCode != 200) {
-      return _callback({
-        ready: false,
+      return _callback(_.extend(rv, {
         detail: 'Error requesting medic-api version information'
-      });
+      }));
     }
 
     try {
       var info = JSON.parse(_body);
     } catch (_e) {
-      return _callback({
-        ready: false,
+      return _callback(_.extend(rv, {
         detail: 'Invalid JSON response returned by medic-api'
-      });
+      }));
     }
 
-    return _callback({
-      ready: true,
-      version: info.version,
+    return _callback(_.extend(rv, {
+      ready: true, version: info.version,
       detail: 'All required services are currently running'
-    });
+    }));
   });
   
 };
