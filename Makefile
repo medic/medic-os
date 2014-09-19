@@ -3,7 +3,7 @@ QMAKE := ${MAKE} --no-print-directory
 
 all: download build
 
-build: prepare-tree reset-time
+build: reset-time prepare-tree
 	@echo >&2
 	@echo "`tput bold`Building packages`tput sgr0`" >&2 && echo >&2
 	@(cd platform && \
@@ -36,7 +36,7 @@ delete:
 	(cd platform && ${QMAKE} delete-downloaded) && \
 	echo 'done.'
 
-download: prepare-tree reset-time
+download: reset-time prepare-tree
 	@if ! [ -f status/download.finished ]; then \
 	  ${QMAKE} force-download; \
 	fi && \
