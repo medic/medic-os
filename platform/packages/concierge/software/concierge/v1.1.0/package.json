@@ -9,6 +9,7 @@
     "clone": "0.x",
     "request": "2.x",
     "express": "4.x",
+    "underscore": "1.x",
     "body-parser": "1.x",
     "cookie-parser": "1.x",
     "connect-flash": "0.x",
