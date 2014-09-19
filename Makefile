@@ -1,10 +1,7 @@
 
 QMAKE := ${MAKE} --no-print-directory
 
-all: download-and-build
-
-download-and-build: download
-	@${QMAKE} build
+all: download build
 
 build: prepare-tree reset-time
 	@echo >&2
