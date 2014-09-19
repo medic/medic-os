@@ -1,11 +1,10 @@
 #!/bin/sh
 
-source '/boot/include/cursor'
 source '/boot/include/utility'
+source '/boot/include/cursor'
 source '/boot/include/startup'
 source '/boot/include/supervisor'
 source '/boot/include/hypervisor'
-
 
 main()
 {
@@ -16,7 +15,8 @@ main()
   set_cursor 0
   move_cursor 'y' -1
   set_console_blanking 0
-  
+
+  hypervisor_init  
   trap '' INT STOP HUP QUIT
   local ip_address="`discover_ip_address`"
 
@@ -32,9 +32,9 @@ main()
       set_bold 0
     fi
 
-    if is_hypervisor; then
+    if [ "`hypervisor_type`" = 'xen' ]; then
       display_centered "System booted successfully."
-      display_centered "Hypervisor present; suppressing status display."
+      display_centered "Xen hypervisor present; suppressing status display."
       while true; do sleep 3600; done
     fi
 
@@ -49,7 +49,7 @@ main()
 
     clear_text 'y'
     restore_cursor_position
-    sleep 1
+    sleep 3
 
   done
 
@@ -62,14 +62,17 @@ display_connectivity()
 
   if [ -f "$base_dir/detected" ]; then
     display_centered "Modem is attached and functioning properly."
+    set_hypervisor_variable modem_status 2
   elif [ -f "$base_dir/detecting" ]; then
     set_bold 1
     display_centered "Detected a USB GSM modem; configuring device..."
     set_bold 0
+    set_hypervisor_variable modem_status 1
   else
     set_bold 1
     display_centered "Warning: No supported GSM modem attached."
     set_bold 0
+    set_hypervisor_variable modem_status 0
   fi
 
   echo && display_centered

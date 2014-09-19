@@ -1,11 +1,12 @@
 {
   "name": "concierge",
   "description": "Setup/configuration application for Medic OS",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": true,
   "dependencies": {
     "hbs": "1.x",
     "async": "0.x",
+    "clone": "0.x",
     "request": "2.x",
     "express": "4.x",
     "body-parser": "1.x",

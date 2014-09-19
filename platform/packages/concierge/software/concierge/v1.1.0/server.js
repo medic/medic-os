@@ -8,6 +8,7 @@ var child = require('child_process'),
     express = require('express'),
     crypto = require('crypto'),
     async = require('async'),
+    clone = require('clone'),
     fs = require('fs'),
     app = express();
 
@@ -16,6 +17,7 @@ var child = require('child_process'),
 var user = 'vm';
 var protocol = 'http://';
 var server = 'localhost:5984';
+var api_server = 'localhost:5988';
 var private_path = '/srv/scripts/concierge/private';
 var system_passwd_path = '/srv/storage/concierge/passwd/system';
 
@@ -23,38 +25,42 @@ var system_passwd_path = '/srv/storage/concierge/passwd/system';
  */
 app.use(flash());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser({ saveUninitialized: true, resave: true }));
+
+app.use(cookieParser('50a812553b4e5a5660cbdb18525ee9f01120d11f', {
+  saveUninitialized: true, resave: true
+}));
+
+app.use(session({
+  saveUninitialized: true, resave: true,
+  secret: '491dfd0f53bbfcafe6e8bba45a89fdec9a1f298a'
+}));
 
 app.set('views', __dirname + '/views');
 app.use('/static', express.static(__dirname + '/static'));
 
-app.use(session({
-  secret: '2f6f99e7102059d7acb40bbe4fa8cf547ea18f96'
-}));
-
 /**
  */
-app.get('/', function (req, res) {
+app.get('/', function (_req, _res) {
 
-  res.redirect('/setup');
+  _res.redirect('/setup');
 });
 
 /**
  */
-app.get('/setup', function (req, res) {
+app.get('/setup', function (_req, _res) {
 
-  read_system_password(function (_err, _system_passwd) {
-    res.render('setup/index.hbs', {
+  read_system_password(function (_err, _sys_passwd) {
+    _res.render('setup/index.hbs', {
       title: (
         'Set Administrative Password: ' +
         'Medic Mobile Virtual Server Configuration'
       ),
       data: {
-        key: req.flash('key')
+        key: _req.flash('key')
       },
       messages: {
-        error: req.flash('error'),
-        success: req.flash('success')
+        error: _req.flash('error'),
+        success: _req.flash('success')
       },
       options: {
         lock: !_err
@@ -64,65 +70,134 @@ app.get('/setup', function (req, res) {
 });
 
 /**
+ * /setup/finish:
+ *   REST API method. Shut down concierge, and allow the
+ *   frontend nginx proxy to fail over.
  */
-app.all('/setup/finish', function (req, res) {
+app.all('/setup/finish', function (_req, _res) {
 
-  if (req.method != 'POST' && req.method != 'GET') {
-    res.send(500, 'Invalid HTTP method');
+  if (_req.method != 'POST' && _req.method != 'GET') {
+    _res.status(500).send('Invalid HTTP method');
   }
 
-  disable_concierge_service(req, function (_err) {
-    res.send(500);
+  disable_concierge_service(_req, function (_err) {
+    _res.status(500).send('Service shutdown failed');
   });
 
 });
 
-/*
+/**
+ * /setup/password:
+ *   REST API method. Set the administrative password.
+ *   Parameters are ordinary non-JSON POST parameters; the
+ *   `password` and `confirmation` parameters are required,
+ *   and the `key` parameter is optional.
  */
-app.all('/setup/password', function (req, res) {
+app.all('/setup/password', function (_req, _res) {
 
-  req.flash('error', null);
+  _req.flash('error', null);
 
-  if (req.method != 'POST' && req.method != 'GET') {
-    res.send(500, 'Invalid HTTP method');
+  if (_req.method != 'POST' && _req.method != 'GET') {
+    _res.status(500).send('Invalid HTTP method');
   }
 
-  var key = trim(req.param('key'));
-  var password = req.param('password');
-  var confirmation = req.param('confirmation');
+  var key = trim(_req.param('key'));
+  var password = _req.param('password');
+  var confirmation = _req.param('confirmation');
 
   if (key.length > 0) {
-    req.flash('key', key);
+    _req.flash('key', key);
   }
 
-  set_password(req, password, confirmation, function (_err, _system_passwd) {
+  set_password(_req, password, confirmation, function (_err, _sys_passwd) {
   
     if (_err) {
-      return send_password_response(_err, req, res);
+      return send_password_response(_err, _req, _res);
     }
 
-    add_couchdb_defaults(req, _system_passwd, function (_err) {
+    add_couchdb_defaults(_req, _sys_passwd, function (_err) {
 
       if (_err) {
-        return send_password_response(_err, req, res);
+        return send_password_response(_err, _req, _res);
       }
       
       if (key.length <= 0) {
         return send_password_response(
-          null, req, res, 'Password successfully set'
+          null, _req, _res, 'Password successfully set'
         );
       }
 
-      add_openssh_public_key(req, key, function (_e) {
+      add_openssh_public_key(_req, key, function (_e) {
         return send_password_response(
-          _e, req, res, 'Password and public key successfully set'
+          _e, _req, _res, 'Password and public key successfully set'
         );
       });
     });
 
   });
-
 });
+
+/**
+ * /setup/poll:
+ *   REST API method. Check to see whether or not gardener has
+ *   started all required services (e.g. the API server/proxy).
+ *   Returns a JSON-encoded object containing a `status` property
+ *   (a string) and a `detail` property (an object).
+ */
+app.get('/setup/poll', function (_req, _res) {
+
+  if (_req.method != 'POST' && _req.method != 'GET') {
+    _res.status(500).send('Invalid HTTP method');
+  }
+
+  poll_required_services(_req, _res, function (_rv) {
+    _res.set('Content-Type', 'application/json');
+    return _res.status(200).send(JSON.stringify(_rv));
+  });
+});
+
+/**
+ * poll_required_services:
+ */
+var poll_required_services = function (_req, _res, _callback) {
+      
+  var get = {
+    uri: protocol + api_server + '/api/info'
+  };
+
+  request.get(get, function (_err, _resp, _body) {
+
+    if (_err) {
+      return _callback({
+        ready: false,
+        detail: 'Unable to contact the medic-api service'
+      });
+    }
+
+    if (_resp.statusCode != 200) {
+      return _callback({
+        ready: false,
+        detail: 'Error requesting medic-api version information'
+      });
+    }
+
+    try {
+      var info = JSON.parse(_body);
+    } catch (_e) {
+      return _callback({
+        ready: false,
+        detail: 'Invalid JSON response returned by medic-api'
+      });
+    }
+
+    return _callback({
+      ready: true,
+      version: info.version,
+      detail: 'All required services are currently running'
+    });
+  });
+  
+};
 
 /**
  * send_password_response:
@@ -131,9 +206,9 @@ var send_password_response = function (_err, _req, _res, _success_text) {
 
   if (_req.param('api')) {
     if (_err) {
-      return _res.send(500, _err.message);
+      return _res.status(500).send(_err.message);
     } else {
-      return _res.send(200, _success_text);
+      return _res.status(200).send(_success_text);
     }
   }
 
@@ -361,7 +436,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
   var admins_uri = server + '/_config/admins'
 
-  var put = {
+  var put_template = {
     body: JSON.stringify(_passwd),
     uri: protocol + admins_uri + '/admin',
     headers: { 'Content-type': 'application/json' }
@@ -377,7 +452,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     
       read_system_password(function (_err, _system_passwd) {
         if (!_err) {
-          put.auth = { user: 'service', pass: _system_passwd };
+          put_template.auth = { user: 'service', pass: _system_passwd };
         }
         /* Ignore errors: file might not exist */
         return _cb(null, _system_passwd);
@@ -386,6 +461,8 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     
     /* Step 1: Primary password change (i.e. admin) */
     function (_system_passwd, _cb) {
+
+      var put = clone(put_template);
 
       request.put(put, function (_err, _resp, _body) {
         return check_response(
@@ -400,7 +477,6 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     function (_system_passwd, _cb) {
     
       if (_system_passwd) {
-
         return _cb(null, _system_passwd, false);
       }
 
@@ -418,18 +494,19 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     function (_system_passwd, _first_run, _cb) {
     
       if (_first_run) {
-        put.auth = { user: 'admin', pass: _passwd };
+        put_template.auth = { user: 'admin', pass: _passwd };
       } else {
-        put.auth = { user: 'service', pass: _system_passwd };
+        put_template.auth = { user: 'service', pass: _system_passwd };
       }
-      
+
+      var put = clone(put_template);
       put.body = JSON.stringify(_system_passwd);
       put.uri = protocol + admins_uri + '/service';
 
       request.put(put, function (_err, _resp, _body) {
-        return check_response(
-          _err, _resp, _req, 'System account creation', function (_e) {
 
+        return check_response(
+          _err, _resp, _req, 'Service account creation', function (_e) {
             return _cb(_e, _system_passwd, _first_run);
           }
         );
@@ -448,6 +525,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
         type: 'user', name: 'admin', password: null
       };
       
+      var put = clone(put_template);
       put.body = JSON.stringify(doc);
       put.uri = protocol + server + '/_users/' + doc._id,
       

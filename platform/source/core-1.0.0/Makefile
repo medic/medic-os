@@ -261,6 +261,6 @@ recalculate-stats:
 remove-unnecessary:
 	@echo -n "Removing unnecessary initrd files... " && \
 	cd "../../initrd/${PLATFORM}" && \
-	rm -rf include share && \
+	rm -rf include share lib/*.py && \
 	echo 'done.'
 

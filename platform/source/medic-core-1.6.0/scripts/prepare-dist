@@ -1,0 +1,82 @@
+#!/bin/sh
+
+prefix="$1"
+
+if ! [ -d "$prefix" ]; then
+  echo "Usage: $0 <prefix>" >&2
+  exit 111
+fi
+
+if [ -L "$prefix/lib64" ]; then
+  rm -f "$prefix/lib64"
+fi
+
+if [ -d "$prefix/lib64" ]; then
+  cp -a "$prefix/lib64"/* "$prefix/lib" &&
+    rm -rf "$prefix/lib64" && ln -sf lib "$prefix/lib64"
+fi
+
+(cd "$prefix" &&
+  rm -rf lib/*.a lib/python?.? lib/erlang/usr \
+    lib/erlang/Install info include man java/manual share/man \
+    share/gtk-doc share/doc doc logs html share/info share/emacs \
+    etc/ssh_host* libexec/ssh-keysign usr/share/man etc/ssl/man)
+
+(cd "$prefix/lib/erlang/lib" && mkdir -p .save &&
+  mv asn1-* crypto-* compiler-* inets-* kernel-* os_mon-* public_key-* \
+    sasl-* ssl-* stdlib-* tools-* syntax_tools-* xmerl-* .save &&
+      rm -rf * && mv .save/* . && rmdir .save)
+
+(cd "$prefix/java/lib" && 
+  rm -f vorbis-java-*.jar poi-*.jar xmlbeans-*.jar dom4j-*.jar \
+    rome-*.jar pdfbox-*.jar jdom-*.jar pdfbox-*.jar fontbox-*.jar \
+    jempbox-*.jar tagsoup-*.jar javaassist-*.jar isoparser-*.jar \
+    scannotation-*.jar ant*.jar ant*.pom maven*.jar aether-*.jar \
+    tika-*.jar bcprov-*.jar bcmail-*.jar netcdf-*.jar bcprov-*.jar)
+
+(cd "$prefix" &&
+ rm -rf etc/ssh &&
+   ln -sf ../../../../../settings/medic-core/openssh etc/ssh &&
+ rm -rf etc/nginx &&
+   ln -sf ../../../../../settings/medic-core/nginx etc/nginx &&
+ rm -rf var/log/nginx &&
+   ln -sf ../../../../../../storage/medic-core/nginx/logs var/log/nginx &&
+ rm -rf var/run/nginx &&
+   ln -sf ../../../../../../storage/medic-core/nginx/state var/run/nginx &&
+ rm -rf etc/couchdb &&
+   ln -sf ../../../../../settings/medic-core/couchdb etc/couchdb &&
+ rm -rf var/log/couchdb &&
+   ln -sf ../../../../../../storage/medic-core/couchdb/logs var/log/couchdb &&
+ rm -rf var/lib/couchdb &&
+   ln -sf ../../../../../../storage/medic-core/couchdb/data var/lib/couchdb &&
+ rm -rf var/run/couchdb &&
+   ln -sf ../../../../../../storage/medic-core/couchdb/state var/run/couchdb &&
+ rm -rf java/logs &&
+   ln -sf ../../../../../storage/medic-core/couchdb-lucene/logs java/logs &&
+ rm -rf java/conf &&
+   ln -sf ../../../../../settings/medic-core/couchdb-lucene java/conf &&
+ rm -rf java/indexes &&
+   ln -sf ../../../../../storage/medic-core/couchdb-lucene/indexes java/indexes)
+
+(cd "$prefix/bin" &&
+  rm -f gitk libusb.py jadmaker *-config node-gyp &&
+  for binary in git-receive-pack git-upload-archive; do
+    rm -f "$binary" && ln -sf git "$binary";
+  done &&
+  for binary in git git-cvsserver git-shell git-upload-pack; do
+    rm -f "$binary" && ln -sf "../libexec/git-core/$binary" "$binary";
+  done)
+
+(cd "$prefix/lib" &&
+  rm -rf erlang/erts-5.10.4/man &&
+  chmod +x libacl.so.* libattr.so.*)
+
+(cd "$prefix/sbin" &&
+  rm -f tcpdump.*)
+
+(cd "$prefix/lib/node_modules" &&
+  rm -rf node-gyp npm/man nodelint/man1)
+
+(cd "$prefix/lib/node_modules/medic-transport/node_modules" &&
+  rm -rf node-gammu-json && ln -sf ../../node-gammu-json)
+

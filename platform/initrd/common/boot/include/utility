@@ -17,3 +17,50 @@ fatal()
   exit 1
 }
 
+require_root()
+{
+  if [ "`id -u`" -ne 0 ]; then
+    fatal 'You must be root to use this command'
+  fi
+}                                 
+
+prepend_path()
+{
+  for dir in "$@"; do
+    local bin="$dir/bin"
+    local lib="$dir/lib"
+    local pkg="$dir/lib/pkgconfig"
+    export PATH="$bin${PATH:+:}$PATH"
+    export PKG_CONFIG_PATH="$pkg${PKG_CONFIG_PATH:+:}$PKG_CONFIG_PATH"
+    export LD_LIBRARY_PATH="$lib${LD_LIBRARY_PATH:+:}$LD_LIBRARY_PATH"
+    export DYLD_LIBRARY_PATH="$lib${DYLD_LIBRARY_PATH:+:}$DYLD_LIBRARY_PATH"
+  done
+}
+
+append_path()
+{
+  for dir in "$@"; do
+    local bin="$dir/bin"
+    local lib="$dir/lib"
+    local pkg="$dir/lib/pkgconfig"
+    export PATH="$PATH${PATH:+:}$bin"
+    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH${PKG_CONFIG_PATH:+:}$pkg"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH${LD_LIBRARY_PATH:+:}$lib"
+    export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH${DYLD_LIBRARY_PATH:+:}$lib"
+  done
+}
+
+use_package()
+{
+  local package="$1"
+  local prepend="$2"
+
+  if [ "$prepend" ]; then
+    local command='prepend_path'
+  else
+    local command='append_path'
+  fi
+
+  $command "/srv/software/$package/current/default"
+}
+

@@ -1,0 +1,173 @@
+#!/bin/sh
+
+self="`readlink -f "$0" || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
+
+
+rename()
+{
+  find . -type d -exec chmod 755 {} \; &&
+    chown -R root:root . &&
+   \
+  for file in apache-*; do
+    if [ -d "$file" ]; then
+      mv "$file" "`echo "$file" | sed 's/^apache-//;'`";
+    fi
+  done &&
+   \
+  for file in otp_src*; do
+    if [ -d "$file" ]; then
+      mv "$file" "erlang-`
+        echo "$file" | \
+          sed 's/^otp_src_\([^-\.]\+\).*$/\1/;' | tr '[A-Z]' '[a-z]'
+      `";
+    fi
+  done &&
+   \
+  for file in xdelta3-*; do
+    if [ -d "$file" ]; then
+      mv "$file" "`echo "$file" | sed 's/^xdelta3-/xdelta-/;'`";
+    fi
+  done &&
+  \
+  for pkg in rebar nodelint gammu-json \
+    node-gammu-json node-fs-ext garden_maker; do
+    \
+    if [ -d "$pkg" ]; then
+      mv "$pkg" "`echo "$pkg" | tr '_' '-'`-devel";
+    fi
+  done &&
+  \
+  local version="`find_version icu4c*.tgz`" &&
+  mv icu "icu-`fix_version "$version"`" &&
+  \
+  local version="`find_version usbutils-*.tar.*`" &&
+  local source="`find * -prune -type d -name 'usbutils-*'`" &&
+  mv "$source" "usbutils-`fix_version "$version"`" &&
+  \
+  local version="`find_version usb-modeswitch-*.*.*.tar.*`" &&
+  local source="`find * -prune -type d -name 'usb-modeswitch-data-*'`" &&
+  mv "$source" "usb-modeswitch-data-$version" &&
+  \
+  local version="`find_version node-v*.tar.*`" &&
+  local source="`find * -prune -type d -name 'node-v*'`" &&
+  mv "$source" "node-$version"
+}
+
+remove()
+{
+  rm -f *.downloaded *.finished &&
+  rm -f *.tar.xz *.tar.lzma *.tar.bz2 *.tar.gz *.tgz
+}
+
+symlink()
+{
+  find * -prune -type d | while read dir; do
+    ln -sf "$dir" "`echo "$dir" | sed 's/-[0-9\.a-z]\+$//;'`"
+  done &&
+  \
+  for dir in logs stats images; do
+    ln -sf "../$dir" "$dir";
+  done &&
+  \
+  local icu_target="`readlink icu`" && \
+  rm -f icu && ln -sf "$icu_target/source" icu &&
+  \
+  local js_target="`readlink js`" && \
+  rm -f js && ln -sf "$js_target/js/src" js
+}
+
+apply_patches()
+{
+  (cd ant && patch -s -p1 \
+    < ../../patches/ant-disable-junit.diff) &&
+  (cd erlang && patch -s -p1 \
+    < ../../patches/erlang-r17-pcre-fix.diff) &&
+  (cd maven && patch -s -p1 \
+    < ../../patches/maven-preserve-destination.diff) &&
+  (cd gammu && patch -s -p1 \
+    < ../../patches/gammu-disable-glib.diff) &&
+  (cd gammu && patch -s -p1 \
+    < ../../patches/gammu-fix-files-backend.diff) &&
+  (cd gammu && patch -s -p1 \
+    < ../../patches/gammu-utf16-sms-multipart.diff) &&
+  (cd garden-maker && patch -s -p1 \
+    < ../../patches/garden-maker-medic.diff) &&
+  (cd icu && patch -s -p2 \
+    < ../../../patches/icu-libicudata-linkage.diff) &&
+  (cd nodelint && patch -s -p1 \
+    < ../../patches/nodelint-install-script.diff) &&
+  (cd inotify-tools && patch -s -p1 \
+    < ../../patches/inotify-tools-include.diff) &&
+  (cd libutempter && patch -s -p1 \
+    < ../../patches/libutempter-fix-makefile-links.diff) &&
+  (cd screen && patch -s -p1 \
+    < ../../patches/screen-fix-stropts-include.diff) &&
+  (cd js && patch -s -p1 \
+    < ../../../../patches/js-fix-makefile-loop.diff) &&
+  (cd xdelta && patch -s -p1 \
+    < ../../patches/xdelta-fix-compilation-error.diff)
+}
+
+enforce_minimum_size()
+{
+  local bytes="$1"
+  local file="$2"
+
+  if [ "`wc -c < "$file"`" -ge "$bytes" ]; then
+    return 0
+  fi
+
+  echo "File '$file' is below $bytes byte limit; likely corrupted" >&2
+  return 1
+}
+
+update_garden_maker()
+{
+  local assets_path='garden-maker/assets'
+
+  for i in `seq 1 5`; do
+    (cd garden-maker && ./update.sh) &&
+      enforce_minimum_size 10240 "$assets_path/futon.zip" &&
+        enforce_minimum_size 10240 "$assets_path/dashboard.couch" && return 0
+
+    echo 'Failure while updating garden-maker; retrying...' >&2
+  done
+
+  echo 'Too many failures while updating garden-maker; aborting' >&2
+  return 1
+}
+
+find_version()
+{
+  echo "$@" | sed 's/^[A-Za-z0-9-]\+-v\?\([0-9\._]\+\).*$/\1/; s/\.$//;'
+}
+
+fix_version()
+{
+  echo "$@" | sed 's/^\([0-9]\)\([0-9]\)_\?\([0-9]\+\)/\1.\2.\3/;'
+}
+
+
+finished_path="$base_dir/../../status/medic-core.finished"
+
+if [ -f "$finished_path" ]; then
+  echo "Tree already rearranged for collection 'medic-core'; skipping" >&2
+  exit 0
+fi
+
+cd "$base_dir/incoming" &&
+\
+echo -n "Renaming directories... " >&2 &&
+  rename && echo 'done.' >&2 &&
+echo -n "Removing compressed files... " >&2 &&
+  remove && echo 'done.' >&2 &&
+echo -n "Creating symbolic links... " >&2 &&
+  symlink && echo 'done.' >&2 &&
+echo -n "Applying patches... " >&2 &&
+  apply_patches && echo 'done.' >&2 &&
+echo "Updating garden-maker:" >&2 &&
+  update_garden_maker &&
+\
+touch "$finished_path"
+

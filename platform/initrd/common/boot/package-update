@@ -2,8 +2,6 @@
 
 source '/boot/include/utility'
 source '/boot/include/package'
-source '/boot/include/supervisor'
-source '/boot/include/hypervisor'
 
 main()
 {
@@ -17,6 +15,8 @@ main()
   if [ $# -le 0 ]; then
     usage
   fi
+
+  require_root
 
   for package in "$@"; do
     package_update "$package" "$force_install" \

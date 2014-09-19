@@ -209,7 +209,7 @@ shrink-gardener:
 
 gardener-pkg: shrink-gardener
 	@echo -n "Compressing package 'gardener'... " && \
-	scripts/build-package 'gardener' 1004 "${PLATFORM}" && \
+	scripts/build-package 'gardener' 1100 "${PLATFORM}" && \
 	echo 'done.'
 
 medic-transport-pkg:
