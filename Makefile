@@ -36,7 +36,7 @@ delete:
 	(cd platform && ${QMAKE} delete-downloaded) && \
 	echo 'done.'
 
-download: reset-time
+download: prepare-tree reset-time
 	@if ! [ -f status/download.finished ]; then \
 	  ${QMAKE} force-download; \
 	fi && \
