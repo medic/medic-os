@@ -64,8 +64,7 @@ app.get('/setup', function (_req, _res) {
   read_system_password(function (_err, _sys_passwd) {
     _res.render('setup/index.hbs', {
       title: (
-        'Set Administrative Password: ' +
-        'Medic Mobile Virtual Server Configuration'
+        'Setup - Medic Mobile'
       ),
       data: {
         key: _req.flash('key'),

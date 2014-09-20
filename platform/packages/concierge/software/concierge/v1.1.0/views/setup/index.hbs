@@ -9,19 +9,21 @@
 <div class="body">
   <div class="content">
     <div class="steps">
-      <div class="step {{#cmp data.step '>' 1}}finished{{/cmp}}">
+      <div class="step{{#cmp data.step '>' 1}} finished{{/cmp}}">
         <div class="number">
           <span class="before">1</span>
           <span class="after fa fa-check"></span>
         </div>
         <label>Set up an administrator account</label>
       </div>
-      <div class="step {{#cmp data.step '>' 2}}finished{{/cmp}}">
+      {{#cmp data.step '>' 1}}
+      <div class="step {{#cmp data.step '>' 2}} finished{{/cmp}}">
         <div class="number">
           <span>2</span>
         </div>
-        <label>Start up required services</label>
+        <label>Start required services</label>
       </div>
+      {{/cmp}}
     </div>
 
     {{#cmp data.step '<=' 1}}
@@ -78,15 +80,83 @@
     </div>
     {{/cmp}}
 
-    {{#cmp data.step '===' 2}}
+    {{#cmp data.step '==' 2}}
     <div class="inner">
+      <p>
+        Please wait while Medic Mobile finishes installing,
+        setting up, and starting the platform. This process may
+        take up to a minute, depending upon the speed of your computer.
+      </p>
+      <p>
+        This process will only need to be completed once.
+      </p>
+      <div class="progress">
+        <div id="success" class="success" style="display: none;">
+          <span class="fa fa-check-square-o"></span>
+        </div>
+        <div id="failure" class="failure" style="display: none;">
+          <span class="fa fa-ambulance"></span>
+        </div>
+        <div id="spinner" class="spinner">
+          <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+          </div>
+          <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+          </div>
+          <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+          </div>
+        </div>
+        <div class="text">
+          Configuring the platform...
+        </div>
+      </div>
+      <div id="success-text" class="success-text" style="display: none;">
+        <p>
+          You're all set! Press <em>Finish</em> to stop this setup
+          application and launch Medic Mobile. If you ever need to
+          return here, open Medic Mobile's <em>Configuration...</em>
+          screen and follow the instructions listed there.
+        </p>
+      </div>
+      <div id="failure-text" class="failure-text" style="display: none;">
+        <p>
+          Well, this is embarassing. The platform appears to be having
+          trouble starting up.
+          <br /><br />
+          We'll continue trying to start in the background, but
+          success appears unlikely. If you're running Medic Mobile
+          on a slower-than-average machine, you may want to
+          <a id="retry" href="#">try again</a>. If you continue to have
+          difficulty, please <a href="http://medicmobile.org">contact</a>
+          Medic Mobile and we'll try to help out.
+        </p>
+      </div>
     </div>
+    <script type="text/javascript">
+      jQuery(function () {
+        show_services_startup();
+      });
+    </script>
     {{/cmp}}
   </div>
 
   <div class="actions">
     <div class="status">
       {{#if messages.error}}
+        <div class="number">
+          <span class="fa fa-times"></span>
+        </div>
         <span class="error">
           {{messages.error}}.
         </span>
@@ -102,19 +172,20 @@
       {{/if}}
     </div>
     {{#cmp data.step '>=' 2}}
-      <button id="finish" class="button">
-        <label>Finish</label>
+      <button id="finish" class="button" disabled="disabled">
+        <label for="finish">Finish</label>
       </button>
     {{else}}
-      <button id="next" class="right">
-        <label>Next Step</label>
+      <button id="next" class="right" {{#cmp data.step '==' 2}} disabled="disabled"{{/cmp}}>
+        <label for="next">Next Step</label>
         <span class="icon fa fa-chevron-right"></span>
       </button>
     {{/cmp}}
-    <button id="back" {{#cmp data.step '<=' 1}}disabled="disabled{{/cmp}}">
+    <button id="back"{{#cmp data.step '<=' 1}} disabled="disabled"{{/cmp}}>
       <span class="icon fa fa-chevron-left"></span>
-      <label>Previous Step</label>
+      <label for="back">Previous Step</label>
     </button>
+    <input type="hidden" name="action" />
   </div>
 
 </div>
