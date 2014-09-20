@@ -1,6 +1,6 @@
 
-html, body, input, textarea {
-  font-size: 10.5pt;
+html, body, input, textarea, button {
+  font-size: 10pt;
   font-family: "Open Sans", sans-serif;
 }
 
@@ -34,10 +34,10 @@ body {
 .body {
   margin: 0;
   position: absolute;
-  left: 4%;
-  right: 4%;
-  top: 7em;
-  bottom: 3em;
+  left: 2.5%;
+  right: 2.5%;
+  top: 6.5em;
+  bottom: 2em;
   min-height: 25em;
   border: solid 1px rgba(0, 0, 0, 0.25);
   background-color: rgba(255, 255, 255, 0.95);
@@ -46,7 +46,7 @@ body {
 
 .step {
   color: #aaa;
-  padding: 1em;
+  padding: 1.25em 1em;
   border-bottom: solid 1px #ccc;
 }
 
@@ -54,7 +54,7 @@ body {
   color: #555;
   display: block;
   font-size: 1.65em;
-  line-height: 1.5em;
+  line-height: 1.35em;
   margin: 0 1em 0 2.25em;
   overflow: hidden;
   white-space: nowrap;
@@ -99,46 +99,46 @@ body {
   background-color: rgba(255, 255, 255, 0.8);
 }
 
-.button {
+button {
   color: #fff;
-  height: 1.5em;
-  margin: 0.75em;
-  padding: 1em;
+  margin: 0.65em;
+  padding: 1em 1.25em;
   float: right;
   display: block;
   cursor: pointer;
   border-radius: 0.25em;
+  border: none;
   background-color: rgba(191, 72, 28, 0.8);
 }
 
-.button:hover {
+button:hover {
   background-color: rgba(191, 72, 28, 0.95);
 }
 
-.button.disabled {
+button[disabled] {
   cursor: not-allowed;
   background-color: rgba(128, 128, 128, 0.4);
 }
 
-.button.disabled label {
+button[disabled] label {
   cursor: not-allowed;
 }
 
-.button label {
+button label {
   cursor: pointer;
   line-height: 1.75em;
   text-transform: uppercase;
 }
 
-.button .icon {
+button .icon {
   padding: 0 0.25em;
 }
 
-.button label, .button .icon {
+button label, button .icon {
   font-size: 0.95em;
 }
 
-.button.right {
+button.right {
   text-align: right;
 }
 
@@ -172,6 +172,14 @@ body {
   display: block;
   float: left;
   line-height: 1.75em;
+}
+
+.row .hint {
+  float: left;
+  clear: left;
+  color: #aaa;
+  display: block;
+  font-size: 0.65em;
 }
 
 .row .field {
@@ -220,32 +228,66 @@ body {
   right: 22.5em;
 }
 
-@media screen and (max-width: 480px) {
+.step .number .fa-check {
+  line-height: 2.05em;
+}
+
+.step .number .before,
+.step.finished .number .after {
+  display: inline;
+}
+
+.step .number .after,
+.step.finished .number .before {
+  display: none;
+}
+
+.step.finished .number {
+  background-color: rgb(109, 183, 120);
+}
+
+.step.finished label {
+  color: rgb(109, 183, 120);
+}
+
+@media screen and (max-width: 639px) {
+
   .row {
     overflow: visible;
   }
+
+  .row label {
+    width: auto;
+  }
+
   .row .field {
     position: relative;
     left: 0;
     right: 1em;
     clear: left;
   }
+
   .row input, .row textarea {
     float: none;
     display: block;
   }
+
   .row textarea {
     height: 100%;
   }
+
   .field {
     height: 100%;
   }
+
   .rows {
-    padding: 0 1em;
+    padding: 0 1em 0 0.25em;
   }
+
   .inner {
     padding-bottom: 9em;
   }
+
   .content, .body {
     overflow: visible;
     position: relative;
@@ -254,6 +296,7 @@ body {
     right: auto;
     top: auto;
   }
+
   .actions {
     position: fixed;
     bottom: 0;
@@ -261,13 +304,32 @@ body {
     right: 0;
     background-color: rgba(255, 255, 255, 0.95);
   }
+
   .step label {
     font-size: 1.35em;
     line-height: 1.75em;
     margin-left: 2.5em;
   }
+
+  .row .hint {
+    float: right;
+    clear: right;
+    font-size: 0.55em;
+  }
+
   html, body {
     height: auto;
   }
+
+}
+
+@media screen and (max-width: 360px) {
+
+  .step label {
+    font-size: 1.05em;
+    line-height: 2.15em;
+    margin-left: 3em;
+  }
+
 }
 

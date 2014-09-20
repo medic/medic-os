@@ -9,13 +9,22 @@
 <div class="body">
   <div class="content">
     <div class="steps">
-      <div class="step">
+      <div class="step {{#cmp data.step '>' 1}}finished{{/cmp}}">
         <div class="number">
-          <span>1</span>
+          <span class="before">1</span>
+          <span class="after fa fa-check"></span>
         </div>
         <label>Set up an administrator account</label>
       </div>
+      <div class="step {{#cmp data.step '>' 2}}finished{{/cmp}}">
+        <div class="number">
+          <span>2</span>
+        </div>
+        <label>Start up required services</label>
+      </div>
     </div>
+
+    {{#cmp data.step '<=' 1}}
     <div class="inner">
       <p>
         Welcome to Medic Mobile! To get started, we'll need to create
@@ -52,11 +61,14 @@
       <p>
         A <em>public key</em> lets you share administrator access
         with someone else. If you have a public key or Medic Mobile
-        has provided one to you, please enter it here.
+        has provided one to you, please enter it here. Otherwise,
+        leave this blank and only you will have administrative access.
       </p>
       <div class="rows">
         <div class="row tall">
           <label for="key">Public Key(s)</label>
+          <div class="hint"><b>Optional field</b></div>
+          <div class="hint">OpenSSH format only</div>
           <div class="field">
             <textarea id="key"
               name="key" spellcheck="false">{{data.key}}</textarea>
@@ -64,7 +76,14 @@
         </div>
       </div>
     </div>
+    {{/cmp}}
+
+    {{#cmp data.step '===' 2}}
+    <div class="inner">
+    </div>
+    {{/cmp}}
   </div>
+
   <div class="actions">
     <div class="status">
       {{#if messages.error}}
@@ -82,17 +101,20 @@
         {{/if}}
       {{/if}}
     </div>
-    <div id="finish" class="button hidden">
-      <label>Finish</label>
-    </div>
-    <div id="next" class="button right">
-      <label>Next Step</label>
-      <span class="icon fa fa-chevron-right"></span>
-    </div>
-    <div id="back" class="button disabled">
+    {{#cmp data.step '>=' 2}}
+      <button id="finish" class="button">
+        <label>Finish</label>
+      </button>
+    {{else}}
+      <button id="next" class="right">
+        <label>Next Step</label>
+        <span class="icon fa fa-chevron-right"></span>
+      </button>
+    {{/cmp}}
+    <button id="back" {{#cmp data.step '<=' 1}}disabled="disabled{{/cmp}}">
       <span class="icon fa fa-chevron-left"></span>
       <label>Previous Step</label>
-    </div>
+    </button>
   </div>
 
 </div>

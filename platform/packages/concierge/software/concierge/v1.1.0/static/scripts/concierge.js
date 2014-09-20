@@ -60,7 +60,11 @@ var wait_for_required_services = function (_url, _options, _callback) {
  */
 jQuery(function ($) {
 
-  $('#lock').click(function (_ev) {
+  $('#next').click(function (_ev) {
+    $('#form').submit();
+  });
+
+  $('#finish').click(function (_ev) {
 
     if ($(this).hasClass('disabled')) {
       return false;
