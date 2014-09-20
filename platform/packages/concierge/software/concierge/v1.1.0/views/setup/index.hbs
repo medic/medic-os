@@ -7,7 +7,6 @@
 </div>
 
 <div class="body">
-
   <div class="content">
     <div class="steps">
       <div class="step">
@@ -17,28 +16,56 @@
         <label>Set up an administrator account</label>
       </div>
     </div>
-
-    <div class="rows">
+    <div class="inner">
+      <p>
+        Welcome to Medic Mobile! To get started, we'll need to create
+        an administrator account for you.
+      </p>
+      <p>
+        You'll use this account to log in and configure the system
+        once it's up and running. Please choose a password that is
+        eight characters or longer, known only to you, and easy for
+        you to remember without writing it down.
+      </p>
+      <div class="rows">
+        <div class="row">
+          <label for="password">User ID</label>
+          <div class="field">
+            <input type="text" disabled="disabled" value="admin" />
+          </div>
+        </div>
         <div class="row">
           <label for="password">Password</label>
-          <input class="full" type="password"
-            id="password" name="password" />
+          <div class="field">
+            <input class="full"
+              type="password" id="password" name="password" />
+          </div>
         </div>
         <div class="row">
-          <label for="confirmation">Password Confirmation</label>
-          <input class="full" type="password"
-            id="confirmation" name="confirmation" />
+          <label for="confirmation">Repeat Password</label>
+          <div class="field">
+            <input class="full" type="password"
+              id="confirmation" name="confirmation" />
+          </div>
         </div>
+      </div>
+      <p>
+        A <em>public key</em> lets you share administrator access
+        with someone else. If you have a public key or Medic Mobile
+        has provided one to you, please enter it here.
+      </p>
+      <div class="rows">
+        <div class="row tall">
+          <label for="key">Public Key(s)</label>
+          <div class="field">
+            <textarea id="key"
+              name="key" spellcheck="false">{{data.key}}</textarea>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="indent">
-      <div class="label-hint">Optional</div>
-      <label for="key">OpenSSH-Formatted Public Key(s)</label>
-    </div>
-    <div class="textarea-wrapper">
-      <textarea id="key" name="key"
-        class="full" spellcheck="false">{{data.key}}</textarea>
-    </div>
-
+  </div>
+  <div class="actions">
     <div class="status">
       {{#if messages.error}}
         <span class="error">
@@ -55,23 +82,16 @@
         {{/if}}
       {{/if}}
     </div>
-  </div>
-
-  <div class="actions">
-    <input id="submit" type="submit" class="hidden" value="Save" />
-    <div id="save" type="submit" class="button">
-      <div class="circle">
-        <div class="icon icon-check"></div>
-      </div>
-      <div class="label">Save</div>
+    <div id="finish" class="button hidden">
+      <label>Finish</label>
     </div>
-    <input id="submit" type="submit" class="hidden" value="Lock" />
-    <div id="lock" type="submit"
-      class="button {{#unless options.lock}}disabled{{/unless}}">
-      <div class="circle">
-        <div class="icon icon-lock-closed"></div>
-      </div>
-      <div class="label">Lock</div>
+    <div id="next" class="button right">
+      <label>Next Step</label>
+      <span class="icon fa fa-chevron-right"></span>
+    </div>
+    <div id="back" class="button disabled">
+      <span class="icon fa fa-chevron-left"></span>
+      <label>Previous Step</label>
     </div>
   </div>
 
