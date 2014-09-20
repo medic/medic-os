@@ -11,3 +11,83 @@ html, body {
   font-size: 11pt;
 }
 
+body {
+  background-color: rgb(128, 128, 128);
+}
+
+.logo-wrapper {
+  padding: 0.5em 1em;
+  background-color: rgb(16, 16, 16);
+}
+
+.logo {
+  height: 3.5em;
+  background-size: 10em auto;
+  background-repeat: no-repeat;
+  background-image: url('../images/medic-logo-light.svg');
+}
+
+.body {
+  margin: 0;
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  top: 7em;
+  bottom: 3em;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0.3em 0.3em 0.75em rgba(0, 0, 0, 0.5);
+}
+
+.step {
+  color: #aaa;
+  padding: 1em;
+  border-bottom: solid 1px #ccc;
+}
+
+.step label {
+  color: #555;
+  margin: 0 0.65em;
+  line-height: 1.5em;
+  font-size: 1.5em;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.step .number {
+  float: left;
+  background-color: #777;
+  border-radius: 1em;
+  height: 2em;
+  font-size: 1.15em;
+  width: 2em;
+  color: #fff;
+  text-align: center;
+}
+
+.step .number * {
+  display: inline;
+  line-height: 2em;
+  vertical-align: middle;
+}
+
+.content {
+  position: absolute;
+  top: 0em;
+  bottom: 5em;
+  left: 0;
+  right: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  border: solid 1px #f00;
+}
+
+.actions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5em;
+  border: solid 1px #0f0;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
