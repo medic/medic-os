@@ -71,6 +71,7 @@ var show_services_startup = function () {
 
   $('#spinner').show();
   $('#success, #failure').hide();
+  $('#success-text, #failure-text').hide();
   $('#finish').prop('disabled', true);
 
   /* Common error path */
@@ -131,11 +132,13 @@ jQuery(function ($) {
   $('#back').click(function (_ev) {
     $('#action').val('back');
     $('#form').submit();
+    return false;
   });
 
   $('#next').click(function (_ev) {
     $('#action').val('next');
     $('#form').submit();
+    return false;
   });
 
   $('button').on('mouseover', function (_ev) {
@@ -147,8 +150,8 @@ jQuery(function ($) {
   });
 
   $('#retry').on('click', function (_ev) {
+    $('.progress .text').html('Configuring platform...');
     show_services_startup();
-    _ev.preventDefault();
     return false;
   });
 
@@ -164,6 +167,9 @@ jQuery(function ($) {
         window.location.href = 'medic/_design/medic/_rewrite';
       }
     });
+
+    /* Do nothing else */
+    return false;
   });
 });
 
