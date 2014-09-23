@@ -3,6 +3,7 @@ var child = require('child_process'),
     cookieParser = require('cookie-parser'),
     session = require('express-session'),
     bodyParser = require('body-parser'),
+    helpers = require('./lib/helpers'),
     flash = require('connect-flash'),
     request = require('request'),
     express = require('express'),
@@ -14,6 +15,8 @@ var child = require('child_process'),
     app = express();
 
 /**
+ * Configuration options:
+ *   These are module-global 
  */
 var user = 'vm';
 var protocol = 'http://';
@@ -23,7 +26,10 @@ var private_path = '/srv/scripts/concierge/private';
 var system_passwd_path = '/srv/storage/concierge/passwd/system';
 
 /**
+ * Start express:
+ *   We need to do this before using `app`.
  */
+
 app.use(flash());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -39,12 +45,13 @@ app.use(session({
 app.set('views', __dirname + '/views');
 app.use('/static', express.static(__dirname + '/static'));
 
+helpers.register();
+
 /**
  * Root directory:
  *   HTTP API method. Redirect to `/setup`.
  */
 app.get('/', function (_req, _res) {
-
   _res.redirect('/setup');
 });
 
@@ -57,11 +64,11 @@ app.get('/setup', function (_req, _res) {
   read_system_password(function (_err, _sys_passwd) {
     _res.render('setup/index.hbs', {
       title: (
-        'Set Administrative Password: ' +
-        'Medic Mobile Virtual Server Configuration'
+        'Setup - Medic Mobile'
       ),
       data: {
-        key: _req.flash('key')
+        key: _req.flash('key'),
+        step: _req.flash('step')
       },
       messages: {
         error: _req.flash('error'),
@@ -221,6 +228,7 @@ var send_password_response = function (_err, _req, _res, _success_text) {
   }
 
   if (!_err) {
+    _req.flash('step', 2);
     _req.flash('success', _success_text);
   }
 
@@ -649,5 +657,6 @@ var main = function (_argv) {
   }
 };
 
+/* Start */
 main(process.argv);
 
