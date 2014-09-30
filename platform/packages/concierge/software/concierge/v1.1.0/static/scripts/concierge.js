@@ -164,7 +164,7 @@ jQuery(function ($) {
     $.ajax({
       url: 'setup/finish',
       complete: function (_xhr, _status) {
-        window.location.href = 'medic/_design/medic/_rewrite';
+        window.location.href = '/';
       }
     });
 
