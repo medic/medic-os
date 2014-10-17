@@ -7,6 +7,7 @@ merge_environment()
 
   local prefix="$1"
   local root="$prefix/software/$name/v$version"
+  local settings="$prefix/settings/$name/configuration"
 
   export PACKAGE_ROOT="$root"
   export PACKAGE_NAME="$name"
@@ -16,6 +17,9 @@ merge_environment()
   export PACKAGE_STORAGE="$prefix/storage/$name"
   export PACKAGE_SOFTWARE="$prefix/software/$name"
   export PACKAGE_SETTINGS="$prefix/settings/$name"
+
+  # Package-specific configuration
+  export NODE_ENV="`cat "$settings/node_env"`"
 
   return 0
 }
