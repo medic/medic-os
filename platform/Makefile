@@ -4,7 +4,7 @@ QMAKE := ${MAKE} --no-print-directory
 PLATFORM := $(shell ./scripts/detect-platform)
 
 SYSTEM_NAME ?= Medic OS
-SYSTEM_VERSION_STRING ?= 0.5.0
+SYSTEM_VERSION_STRING ?= 1.6.0
 
 COMPILER_VERSION ?= 4.8.2
 COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
@@ -73,11 +73,12 @@ build-xen-image:
 	\
 	loop_path="staging/loopback" && \
 	image_path="output/image-${PLATFORM}-xen" && \
+	ext4_options='none,extent,large_file,has_journal' && \
 	\
 	dd if=/dev/zero of="$$image_path" \
 	  bs=1048576 seek=1023 count=1 &>/dev/null && \
 	\
-	mkfs.ext4 -F "$$image_path" &>/dev/null && \
+	mkfs.ext4 -O "$$ext4_options" -F "$$image_path" >/dev/null && \
 	mount -o loop "$$image_path" "$$loop_path" && \
 	cp -a "images/${PLATFORM}/xen"/* "$$loop_path" && \
 	mkdir -p "$$loop_path/packages" && \

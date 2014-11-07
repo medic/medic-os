@@ -111,15 +111,17 @@ main()
     || fatal 'Volume did not attach during timeout period'
 
   # Copy disk image:
-  #   GNU GRUB may not support all of the default ext4 options.
-  #   We've disabled the known-incompatible features, but may not
-  #   know all of them. Use the 'direct' method if you have trouble.
-
+  #   There are two supported methods. The `direct` method
+  #   preserves the original filesystem size (even if the target
+  #   device is larger), while the `default` method produces a
+  #   filesystem that is always the exact size of the target device.
+  
   if [ "$method" = 'direct' ]; then
 
     # Direct method:
     #   Make a bit-for-bit copy of the original input image.
-    #   The filesystem size will remain completely unchanged.
+    #   The filesystem size will remain completely unchanged,
+    #   and any ext3/ext4 filesystem options will be preserved.
 
     sudo dd if="$image" of="$device" 2>/dev/null \
       || fatal "Failure while writing image directly to '$device'"
@@ -127,12 +129,16 @@ main()
   else
 
     # Default method:
-    #   Mount the original input image, then copy all of the
-    #   files from inside of it to a newly-created filesystem.
-    #   The filesystem effectively grows to fit the target.
+    #   Mount the original input image, then copy all of the files
+    #   from inside of it to a newly-created filesystem. The new
+    #   filesystem will always be the exact same size as the target
+    #   device. To maximize compatibility, the new filesystem will
+    #   be created with most of the optional ext4 features turned off.
 
-    sudo mkfs.ext4 -O-64bit -q "$device" >/dev/null \
-      || fatal "Failure while formatting device '$device'"
+    local ext4_options='none,extent,large_file,has_journal'
+
+    sudo mkfs.ext4 -O "$ext4_options" -q "$device" >/dev/null \
+        || fatal "Failure while formatting device '$device'"
 
     sudo mkdir -p /mnt/startup &&
     sudo mount "$device" /mnt/startup \
