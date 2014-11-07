@@ -40,10 +40,11 @@ main()
   local source_device='/dev/sr0'
 
   local scan_devices='
-    /dev/sdb /dev/hdb /dev/xvdb /dev/sdc /dev/hdc /dev/xvdc
-      /dev/sdd /dev/hdd /dev/xvdd /dev/sde /dev/hde /dev/xvde
-      /dev/sdf /dev/hdf /dev/xvdf /dev/sdg /dev/hdg /dev/xvdg
-      /dev/sdh /dev/hdh /dev/xvdh /dev/sdi /dev/hdi /dev/xvdi
+    /dev/sda /dev/hda /dev/xvda /dev/sdb /dev/hdb /dev/xvdb
+      /dev/sdc /dev/hdc /dev/xvdc /dev/sdd /dev/hdd /dev/xvdd
+      /dev/sde /dev/hde /dev/xvde /dev/sdf /dev/hdf /dev/xvdf
+      /dev/sdg /dev/hdg /dev/xvdg /dev/sdh /dev/hdh /dev/xvdh
+      /dev/sdi /dev/hdi /dev/xvdi /dev/sdj /dev/hdj /dev/xvdj
   '
 
   local found_device=''
