@@ -78,7 +78,7 @@ build-xen-image:
 	dd if=/dev/zero of="$$image_path" \
 	  bs=1048576 seek=1023 count=1 &>/dev/null && \
 	\
-	mkfs.ext4 -O "$$ext4_options" -F "$$image_path" >/dev/null && \
+	mkfs.ext4 -O "$$ext4_options" -qF "$$image_path" >/dev/null && \
 	mount -o loop "$$image_path" "$$loop_path" && \
 	cp -a "images/${PLATFORM}/xen"/* "$$loop_path" && \
 	mkdir -p "$$loop_path/packages" && \
