@@ -1,6 +1,6 @@
 
-default=0
-timeout=1
+default 0
+timeout 1
 hiddenmenu
 
 title Medic Mobile Virtual Appliance

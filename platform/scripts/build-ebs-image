@@ -13,7 +13,7 @@ warn()
 
 usage()
 {
-  echo "Usage: $0 platform loopback_image description device"
+  echo "Usage: $0 platform image description device [method]"
   exit 1
 }
 
@@ -51,8 +51,13 @@ main()
   local image="$2"
   local description="$3"
   local device="$4"
+  local method="$5"
 
   if [ "$1" = '-h' -o "$1" = '--help' ]; then
+    usage
+  fi
+
+  if [ "$#" -lt 4 -o "$#" -gt 5 ]; then
     usage
   fi
 
@@ -61,10 +66,10 @@ main()
 
   case "$platform" in
     x64)
-      aki='aki-fc37bacc'
+      aki='aki-fc8f11cc'
       architecture='x86_64' ;;
     x86)
-      aki='aki-fa37baca'
+      aki='aki-f08f11c0'
       architecture='i386' ;;
     *)
       fatal "Unsupported platform '$platform'" ;;
@@ -92,7 +97,7 @@ main()
   wait_for_volume_availability "$volume_id" &&
   \
   ec2-create-tags "$volume_id" --tag "Name=$description" >/dev/null \
-    || fatal "Failure while setting tags on volume'$volume_id'"
+    || fatal "Failure while setting tags on volume '$volume_id'"
 
   ec2-attach-volume "$volume_id" -i "`
     ec2-metadata -i | cut -d: -f2 | sed 's/^ *//'
@@ -105,22 +110,47 @@ main()
   wait_for_device "$device" \
     || fatal 'Volume did not attach during timeout period'
 
-  sudo mkfs.ext4 -q "$device" >/dev/null \
-    || fatal "Failure while formatting device '$device'"
+  # Copy disk image:
+  #   GNU GRUB may not support all of the default ext4 options.
+  #   We've disabled the known-incompatible features, but may not
+  #   know all of them. Use the 'direct' method if you have trouble.
 
-  sudo mkdir -p /mnt/startup &&
-  sudo mount "$device" /mnt/startup \
-    || fatal "Failure while mounting device '$device'"
+  if [ "$method" = 'direct' ]; then
 
-  sudo mkdir -p /mnt/loopback &&
-  sudo mount -o loop "$image" /mnt/loopback \
-    || fatal "Failure while mounting loopback image '$image'"
+    # Direct method:
+    #   Make a bit-for-bit copy of the original input image.
+    #   The filesystem size will remain completely unchanged.
 
-  sudo cp -a /mnt/loopback/* /mnt/startup/ \
-    || fatal 'Failure while copying files'
+    sudo dd if="$image" of="$device" 2>/dev/null \
+      || fatal "Failure while writing image directly to '$device'"
 
-  sudo umount /mnt/loopback /mnt/startup && sudo sync \
-    || fatal 'Failure while unmounting volumes'
+  else
+
+    # Default method:
+    #   Mount the original input image, then copy all of the
+    #   files from inside of it to a newly-created filesystem.
+    #   The filesystem effectively grows to fit the target.
+
+    sudo mkfs.ext4 -O-64bit -q "$device" >/dev/null \
+      || fatal "Failure while formatting device '$device'"
+
+    sudo mkdir -p /mnt/startup &&
+    sudo mount "$device" /mnt/startup \
+      || fatal "Failure while mounting device '$device'"
+
+    sudo mkdir -p /mnt/loopback &&
+    sudo mount -o loop "$image" /mnt/loopback \
+      || fatal "Failure while mounting loopback image '$image'"
+
+    sudo cp -a /mnt/loopback/* /mnt/startup/ \
+      || fatal 'Failure while copying files'
+
+    sudo umount /mnt/loopback /mnt/startup \
+      || fatal 'Failure while unmounting volumes'
+  fi
+
+  sudo sync && sleep 1 && sudo sync \
+    || fatal 'Failure while synchronizing disks'
 
   ec2-detach-volume --region "$EC2_REGION" "$volume_id" >/dev/null \
     || fatal 'Failure while detaching volume'
