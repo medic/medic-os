@@ -30,6 +30,9 @@ install()
   chown -R couchdb-lucene:staff \
     "$PACKAGE_STORAGE/couchdb-lucene" &&
   \
+  chmod 0750 "$PACKAGE_SETTINGS/couchdb" \
+    "$PACKAGE_STORAGE/couchdb" "$PACKAGE_STORAGE/couchdb-lucene" &&
+  \
   chown -R gammu:gammu \
     "$PACKAGE_STORAGE/gammu" "$PACKAGE_SETTINGS/gammu" &&
   \
