@@ -2,6 +2,7 @@
 
 source '/boot/include/utility'
 source '/boot/include/package'
+source '/boot/include/supervisor'
 
 main()
 {
@@ -12,7 +13,6 @@ main()
   require_root
 
   for path in "$@"; do
-
     local package="`package_extract_name "$path"`" \
       || fatal "Failed to determine name of package '$path'"
 
@@ -22,11 +22,19 @@ main()
     package_setup "$package" \
       || fatal "Failed to run setup script for package '$path'"
 
-    supervisor_start "$package" \
-      || fatal "Failed to start supervisor for package '$package'"
+    supervisor_start "$package"
+    local rv="$?"
 
+    if [ "$rv" -eq 254 ]; then
+      warn "Package '$package' has no services to start; continuing"
+    elif [ "$rv" -ne 0 ]; then
+      fatal "Failed to start supervisor for package '$package'"
+    fi
+
+    info "Package '$package' successfully installed"
   done
 
+  info 'All specified packages were successfully installed'
   return 0
 }
 

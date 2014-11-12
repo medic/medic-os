@@ -438,7 +438,7 @@ _supervisor_apply()
 
     if [ "$#" -le 0 -a "$service" = '*' ]; then
       warn "Unable to locate any services for package '$package'"
-      return 255
+      return 254
     fi
 
     supervisor_service_exists "$package" "$service" || return 255

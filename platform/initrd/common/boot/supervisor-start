@@ -19,6 +19,8 @@ main()
 
   if [ "$rv" -ne 0 ]; then
     warn "Failed to start one or more specified services"
+  else
+    info "Services in package '$package' started successfully"
   fi
   
   return "$rv"

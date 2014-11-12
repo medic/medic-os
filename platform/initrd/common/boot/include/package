@@ -78,8 +78,8 @@ package_install()
   log "Extracting files for package '$package'"
 
   mkdir -p "/srv/receipts/$package" "/srv/scripts/$package" &&
-    (cd /srv && ar -p "$path" package.tar.xz | xz -dc \
-      | tar -xvf - > "/srv/receipts/$package/manifest") && sync
+    ar -p "$path" package.tar.xz | xz -dc \
+      | (cd /srv && tar -xvf - > "receipts/$package/manifest") && sync
 
   if [ "$?" -ne 0 ]; then
     warn "Failed to extract files for package '$package' from '$path'"
@@ -115,7 +115,12 @@ package_remove()
 
   log "Stopping services for package '$package'"
 
-  if ! supervisor_stop "$package"; then
+  supervisor_stop "$package"
+  local rv="$?"
+
+  if [ "$rv" -eq 254 ]; then
+    warn "Package '$package' has no services to stop; continuing"
+  elif [ "$rv" -ne 0 ]; then
     warn "Failed to stop services for package '$package'"
     return 1
   fi

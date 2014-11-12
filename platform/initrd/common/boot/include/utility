@@ -1,10 +1,9 @@
 #!/bin/sh
 
-if [ -z "$log" ]; then
-  log() {
-    [ -z "$verbose" ] || echo "$*" >&2
-  }
-fi
+info()
+{
+  echo "Info: $*" >&2
+}
 
 warn()
 {
@@ -63,4 +62,23 @@ use_package()
 
   $command "/srv/software/$package/current/default"
 }
+
+# Fallback logging:
+#   If a logger isn't present, provide a very basic logging
+#   implementation. Use stderr if we're running in verbose
+#   mode, and no-op stubs if verbose mode isn't enabled.
+
+if [ -z "$log" ]; then
+  if [ "$verbose" ]; then
+    log='/dev/stderr'
+    log() {
+      echo "$*" >&2
+    }
+  else
+    log='/dev/null'
+    log() {
+      true;
+    }
+  fi
+fi
 
