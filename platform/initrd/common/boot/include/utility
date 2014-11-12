@@ -72,7 +72,7 @@ if [ -z "$log" ]; then
   if [ "$verbose" ]; then
     log='/dev/stderr'
     log() {
-      echo "$*" >&2
+      echo "Debug: $*" >&2
     }
   else
     log='/dev/null'
