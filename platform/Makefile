@@ -60,17 +60,18 @@ clean-compiler:
 
 build-iso: build-initrd
 	@echo -n 'Creating ISO image... ' && \
+	\
 	cd 'images/${PLATFORM}/iso' && mkisofs -J -R \
 	  -V '${SYSTEM_NAME} v${SYSTEM_VERSION_STRING}' \
 	  -o '../../../output/${SYSTEM_ID}-${PLATFORM}${ISO_EXTRA}.iso' \
 	  -boot-load-size 4 -boot-info-table \
 	  -no-emul-boot -b boot/isolinux/isolinux.bin \
 	  -c boot/isolinux/boot.cat . &>/dev/null && \
+	\
 	echo 'done.'
 
 build-xen-image:
 	@echo -n 'Creating Xen image... ' && \
-	\
 	loop_path="staging/loopback" && \
 	image_path='output/${SYSTEM_ID}-${PLATFORM}-xen' && \
 	ext4_options='none,extent,large_file,has_journal' && \
@@ -91,7 +92,6 @@ build-xen-image:
 
 build-ami-image:
 	@echo -n 'Building AMI instance-store image... ' && \
-	\
 	source 'config/aws/settings' && \
 	export PATH="$$EC2_HOME/bin:$$PATH" && \
 	\
@@ -129,8 +129,10 @@ build-linux-tarball:
 
 compress-xen-image:
 	@echo -n 'Compressing Xen image... ' && \
+	\
 	@xz -0qcf 'output/${SYSTEM_ID}-${PLATFORM}-xen' \
 	  > 'output/${SYSTEM_ID}-${PLATFORM}-xen.xz' && \
+	\
 	rm -f 'output/${SYSTEM_ID}-${PLATFORM}-xen' && \
 	echo 'done.'
 
@@ -138,7 +140,6 @@ upload: upload-ami-image
 
 upload-ami-image: build-ami-image
 	@echo -n 'Uploading AMI instance-store image... ' && \
-	\
 	source 'config/aws/settings' && \
 	export PATH="$$EC2_HOME/bin:$$PATH" && \
 	\
@@ -147,6 +148,7 @@ upload-ami-image: build-ami-image
 	  -s "$$AWS_SECRET_KEY" -b "$$S3_BUCKET" \
 	  -m 'output/${SYSTEM_ID}-${PLATFORM}-ami/image.manifest.xml' \
 	    || exit "$$?"; \
+	\
 	echo 'done.'
 
 copy-compiler-libraries:
@@ -174,12 +176,15 @@ build-initrd: copy-compiler-libraries
 	@echo -n 'Creating initrd image... ' && \
 	chmod 0440 initrd/common/etc/sudoers && \
 	cp -a initrd/common/* 'initrd/${PLATFORM}/' && \
+	\
 	(cd 'initrd/${PLATFORM}' && \
 	  find * | cpio -o -H newc 2>/dev/null \
 	    | sh ../../source/core/source/linux/scripts/xz_wrap.sh \
 	      > '../../images/${PLATFORM}/iso/boot/image.xz') && \
+	\
 	(cd 'images/${PLATFORM}' && \
 	  [ -d xen ] && cp -a 'iso/boot/image.xz' 'xen/boot/') && \
+	\
 	echo 'done.'
 
 build-x86-image-nopae:
