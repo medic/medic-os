@@ -169,28 +169,32 @@ package_update()
     return 2
   fi
 
-  if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ] 2>/dev/null; then
+  if [ "$v_prev" ]; then
+    if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ]; then
 
-    warn "A newer version of '$package' is already installed"
-    warn "Use the force-install option if you want to install it anyway"
-    return 3
+      warn "A newer version of '$package' is already installed"
+      warn "Use the force-install option if you want to install it anyway"
+      return 3
 
-  elif [ "$v_prev" -a "$v_prev" -ne "$v_new"] 2>/dev/null; then
+    elif [ "$v_prev" -lt "$v_new"] 2>/dev/null; then
 
-    log "Removing package '$package'"
+      force_install='t'
+      log "Removing package '$package'"
 
-    if ! package_remove "$package"; then
-      warn "Failed to completely remove package '$package'"
-      return 4
+      if ! package_remove "$package"; then
+        warn "Failed to completely remove package '$package'"
+        return 4
+      fi
+    else
+      warn "Version '$v_prev' of package '$package' is already installed"
     fi
-  fi
-
-  if [ -z "$v_prev" -o "$v_prev" -lt "$v_new" ] 2>/dev/null; then
+  else
     force_install='t'
-    log "Update required for package '$package'"
+    log "Package '$package' is not currently installed"
   fi
 
   if [ "$force_install" ]; then
+    log "Installing package '$package'"
     if ! package_install "$path"; then
       warn "Package '$package' encountered an error during installation"
       warn "Software installation from file '$file' was unsuccessful"
