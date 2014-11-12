@@ -17,7 +17,7 @@ if [ -d "$prefix/lib64" ]; then
 fi
 
 (cd "$prefix" &&
-  rm -rf lib/*.a lib/python?.? lib/erlang/usr \
+  rm -rf lib/*.a lib/*.py lib/python?.? lib/erlang/usr \
     lib/erlang/Install info include man java/manual share/man \
     share/gtk-doc share/doc doc logs html share/info share/emacs \
     etc/ssh_host* libexec/ssh-keysign usr/share/man etc/ssl/man)
