@@ -6,12 +6,13 @@ PLATFORM := $(shell ./scripts/detect-platform)
 SYSTEM_ID ?= medic-os
 SYSTEM_NAME ?= Medic OS
 SYSTEM_VERSION_STRING ?= 1.6.0
+SYSTEM_IMAGE_ID := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}-${PLATFORM}
 
 COMPILER_VERSION ?= 4.8.2
 COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 
 
-all: packages build-iso build-xen-image compress-xen-image build-linux-tarball build-x86-image-nopae 
+all: packages build-iso build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae 
 
 iso: build-iso
 
@@ -37,6 +38,7 @@ packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-p
 
 clean:
 	rm -rf output/* && \
+	rm -rf staging/tarball && \
 	rm -rf staging/packages && \
 	rm -rf packages/vm-tools/software && \
 	rm -rf packages/medic-core/software && \
@@ -63,7 +65,7 @@ build-iso: build-initrd
 	\
 	cd 'images/${PLATFORM}/iso' && mkisofs -J -R \
 	  -V '${SYSTEM_NAME} v${SYSTEM_VERSION_STRING}' \
-	  -o '../../../output/${SYSTEM_ID}-${PLATFORM}${ISO_EXTRA}.iso' \
+	  -o '../../../output/${SYSTEM_IMAGE_ID}${ISO_EXTRA}-vm.iso' \
 	  -boot-load-size 4 -boot-info-table \
 	  -no-emul-boot -b boot/isolinux/isolinux.bin \
 	  -c boot/isolinux/boot.cat . &>/dev/null && \
@@ -73,7 +75,7 @@ build-iso: build-initrd
 build-xen-image:
 	@echo -n 'Creating Xen image... ' && \
 	loop_path="staging/loopback" && \
-	image_path='output/${SYSTEM_ID}-${PLATFORM}-xen' && \
+	image_path='output/${SYSTEM_IMAGE_ID}-xen' && \
 	ext4_options='none,extent,large_file,has_journal' && \
 	\
 	dd if=/dev/zero of="$$image_path" \
@@ -101,39 +103,41 @@ build-ami-image:
 	  *) echo 'Fatal: Unsupported platform' >&2; exit 1 ;; \
 	esac && \
 	\
-	rm -rf 'output/${SYSTEM_ID}-${PLATFORM}-ami' && \
-	mkdir -p 'output/${SYSTEM_ID}-${PLATFORM}-ami' && \
-	ln -f 'output/${SYSTEM_ID}-${PLATFORM}-xen' 'output/image' && \
+	rm -rf 'output/${SYSTEM_IMAGE_ID}-ami' && \
+	mkdir -p 'output/${SYSTEM_IMAGE_ID}-ami' && \
+	ln -f 'output/${SYSTEM_IMAGE_ID}-xen' 'output/image' && \
 	\
 	ec2-bundle-image \
 	  -c "$$EC2_CERTIFICATE" -k "$$EC2_PRIVATE_KEY" \
-	  -u "$$AWS_ID" -d 'output/${SYSTEM_ID}-${PLATFORM}-ami' \
+	  -u "$$AWS_ID" -d 'output/${SYSTEM_IMAGE_ID}-ami' \
 	  -i 'output/image' -r "$$architecture" >/dev/null || exit "$$?"; \
 	\
 	rm -f output/image; \
 	echo 'done.'
 
-build-linux-tarball:
+build-native-tarball:
 	@echo -n 'Creating native tarball... ' && \
-	staging_dir='staging/tarball/${PLATFORM}' && \
+	staging_dir='staging/tarball/${PLATFORM}/${SYSTEM_IMAGE_ID}' && \
 	\
+	mkdir -p "$$staging_dir" && \
 	cp -a 'initrd/${PLATFORM}'/* "$$staging_dir/" && \
 	(cd "$$staging_dir" && mkdir -p srv mnt/startup) && \
-	cp -a 'images/${PLATFORM}/iso/packages'/*.vpkg \
+	\
+	cp -a 'images/${PLATFORM}/iso/packages' \
 	  "$$staging_dir/mnt/startup/" && \
 	\
-	(cd "$$staging_dir" && tar -cf - .) \
-	  | xz -9ec > 'output/${SYSTEM_ID}-${PLATFORM}-linux.tar.xz' && \
+	(cd "$$staging_dir/../" && tar -cf - .) \
+	  | xz -9ec > "output/${SYSTEM_IMAGE_ID}-native.tar.xz" && \
 	\
 	echo 'done.'
 
 compress-xen-image:
 	@echo -n 'Compressing Xen image... ' && \
 	\
-	@xz -0qcf 'output/${SYSTEM_ID}-${PLATFORM}-xen' \
-	  > 'output/${SYSTEM_ID}-${PLATFORM}-xen.xz' && \
+	xz -0qcf 'output/${SYSTEM_IMAGE_ID}-xen' \
+	  > 'output/${SYSTEM_IMAGE_ID}-xen.xz' && \
 	\
-	rm -f 'output/${SYSTEM_ID}-${PLATFORM}-xen' && \
+	rm -f 'output/${SYSTEM_IMAGE_ID}-xen' && \
 	echo 'done.'
 
 upload: upload-ami-image
@@ -146,7 +150,7 @@ upload-ami-image: build-ami-image
 	ec2-upload-bundle \
 	  -a "$$AWS_ACCESS_KEY" \
 	  -s "$$AWS_SECRET_KEY" -b "$$S3_BUCKET" \
-	  -m 'output/${SYSTEM_ID}-${PLATFORM}-ami/image.manifest.xml' \
+	  -m 'output/${SYSTEM_IMAGE_ID}-ami/image.manifest.xml' \
 	    || exit "$$?"; \
 	\
 	echo 'done.'
