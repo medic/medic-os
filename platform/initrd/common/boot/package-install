@@ -26,7 +26,7 @@ main()
     local rv="$?"
 
     if [ "$rv" -eq 254 ]; then
-      warn "Package '$package' has no services to start; continuing"
+      info "Package '$package' has no services to start"
     elif [ "$rv" -ne 0 ]; then
       fatal "Failed to start supervisor for package '$package'"
     fi

@@ -35,22 +35,35 @@ prepare_status_directory()
   ln -sf "$pkg_volatile_dir" "$pkg_status_dir/volatile"
 }
 
+# _supervisor_process:
+#   Entry point for the service supervision process.
+#   This reconfigures logging and must be run in a subshell.
+
 _supervisor_process()
 {
   local package="`basename "$1"`"
   local service="`basename "$2"`"
 
+  source '/boot/include/logger'
+  log="$supervise_dir/$package/logs/$service.log"
+
   local pkg_status_dir="$supervise_dir/$package/status"
-  local log="$supervise_dir/$package/logs/$service.log"
 
   trap 'EINTR=1; _supervisor_resync_trap "$package" "$service"' HUP
   trap 'EINTR=1; _supervisor_restart_trap "$package" "$service"' USR1
   trap 'EINTR=1; _supervisor_termination_trap "$package" "$service"' TERM
 
   mkdir -p "$supervise_dir/$package/logs"
-  echo "`date`: Starting supervisor for '$package/$service'" >> "$log"
+  log "Starting supervisor for '$package/$service'"
 
   while true; do
+
+    # Accounting information:
+    #   This keeps track of service uptime, number of restarts, and
+    #   any other information that can help troubleshoot failures.
+
+    _supervisor_accounting_write "$package" "$service" 'restart' \
+      || log "Accounting write failure during restart of '$package/$service'"
 
     # Is service down?
     #   If so, block on the FIFO; a write is our signal to resume.
@@ -65,46 +78,59 @@ _supervisor_process()
     # Fork-and-exec:
     #  This attempts to start the supervised process.
 
-    echo "`date`: Starting run script for '$package/$service'" >> "$log"
-    ( exec "/srv/scripts/$package/run/$service" >> "$log" 2>&1 ) &
+    log "Starting run script for '$package/$service'"
+    (exec "/srv/scripts/$package/run/$service" >> "$log" 2>&1) &
 
     local pid="$!"
     local pid_file="$pkg_status_dir/volatile/$service.pid"
     local restart_file="$pkg_status_dir/volatile/$service.restart"
 
-    echo "`date`: Started '$package/$service'; pid is '$pid'" >> "$log"
+    log "Started '$package/$service'; pid is '$pid'"
 
     echo "$pid" > "$pid_file" \
-      || echo "`date`: Failed to create '$pid_file'" >> "$log"
+      || log "Failed to create '$pid_file'"
 
     rm -f "$restart_file" \
-      || echo "`date`: Failed to remove '$restart_file'" >> "$log"
+      || log "Failed to remove '$restart_file'"
 
     _safe_waitpid "$pid"
     local status="$?"
 
     rm -f "$pid_file" \
-      || echo "`date`: Failed to remove '$pid_file'" >> "$log"
+      || log "Failed to remove '$pid_file'"
 
     if [ "$status" -eq 0 ]; then
-      echo "`date`: Service '$package/$service' (pid '$pid') "
-        "exited with normal status" >> "$log"
+      log "Service '$package/$service' (pid '$pid') exited normally"
     else
-      echo "`date`: Service '$package/$service' (pid '$pid') " \
-        "exited with non-zero status '$status'" >> "$log"
+      log "Service '$package/$service' " \
+        "(pid '$pid') exited with non-zero status '$status'"
 
       if [ "$is_restart_event" ]; then
         is_restart_event=''
       else
+        _supervisor_accounting_write "$package" "$service" 'exit' \
+          || log "Accounting write failure during exit of '$package/$service'"
+
         sleep 5
       fi
     fi
 
     rm -f "$svc_status_fifo"
-    echo "`date`: Restarting service '$package/$service'" >> "$log"
+    log "Restarting service '$package/$service'"
   done
 }
 
+_supervisor_record_uptime()
+{
+  local package="$1"
+  local service="$2"
+  local should_delete="$2"
+
+  local pkg_status_dir="$supervise_dir/$package/status"
+  local svc_restart_count="$pkg_status_dir/volatile/$service.count"
+
+  exit "$?"
+}
 _supervisor_termination_trap()
 {
   local package="$1"
@@ -239,7 +265,7 @@ _wait_for_service_termination()
       # Did we read a number?
       #   If so, this is the supervisor's exit status.
 
-      if [ "$line" -ge 0 ] 2>/dev/null; then
+      if is_integer "$line"; then
         exit_status="$line"
         break;
       fi
@@ -253,7 +279,7 @@ _wait_for_service_termination()
   done
 
   if [ "$exit_status" -ne 0 ]; then
-    warn "Service '$package/$service' exited with status '$exit_status'"
+    info "Service '$package/$service' exited with status $exit_status"
   fi
 
   return 0
@@ -434,7 +460,7 @@ _supervisor_apply()
     return 255
   fi
 
-  supervisor_package_exists "$package" || return 255
+  supervisor_package_exists "$package" || return 254
 
   if [ "$#" -le 0 ]; then
     services="/srv/scripts/$package/run"/*
@@ -449,7 +475,7 @@ _supervisor_apply()
       return 254
     fi
 
-    supervisor_service_exists "$package" "$service" || return 255
+    supervisor_service_exists "$package" "$service" || return 253
 
     if supervisor_is_service_disabled "$package" "$service"; then
       continue
@@ -464,6 +490,71 @@ _supervisor_apply()
   done
 
   return "$rv"
+}
+
+_supervisor_accounting_write()
+{
+  local package="$1"
+  local service="$2"
+  local action_name="$3"
+
+  local pkg_status_dir="$supervise_dir/$package/status"
+  local svc_status_base="$pkg_status_dir/volatile/$service"
+
+  case "$action_name" in
+    'exit')
+      rm -f "$svc_status_base.timestamp" \
+        || return 1
+      ;;
+    'restart')
+      date +'%s' > "$svc_status_base.timestamp" \
+        || return 2
+
+      local file="$svc_status_base.generation"
+      local generation="`read_integer_file "$file" 't'`" \
+        || return 3
+
+      [ -z "$generation" ] && local generation=0
+      echo "$(($generation + 1))" > "$file"
+      ;;
+    *)
+      return 255
+      ;;
+  esac
+
+  return "$?"
+}
+
+supervisor_accounting_read()
+{
+  local package="$1"
+  local service="$2"
+  local attribute_name="$3"
+
+  local pkg_status_dir="$supervise_dir/$package/status"
+  local svc_status_base="$pkg_status_dir/volatile/$service"
+
+  case "$attribute_name" in
+    'timestamp')
+      read_integer_file "$svc_status_base.timestamp" 't'
+      ;;
+    'generation')
+      read_integer_file "$svc_status_base.generation" 't'
+      ;;
+    'uptime')
+      local now="`date +'%s'`" || return 1
+      local start="`read_integer_file "$svc_status_base.timestamp" 't'`" \
+        || return 2
+
+      [ -z "$start" ] && local start="$now"
+      echo "$((now - start))"
+      ;;
+    *)
+      return 255
+      ;;
+  esac
+
+  return "$?"
 }
 
 supervisor_start()

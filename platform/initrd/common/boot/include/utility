@@ -16,6 +16,32 @@ fatal()
   exit 1
 }
 
+is_integer()
+{
+  for n in "$@"; do
+    [ "$n" -eq "$n" ] 2>/dev/null || return 1
+  done
+
+  return 0
+}
+
+read_integer_file()
+{
+  local file="$1"
+  local allow_empty="$2"
+
+  local content="`cat "$file" 2>/dev/null`" \
+    || return 1
+
+  if [ "$allow_empty" -a -z "$content" ]; then
+    return 0
+  elif is_integer "$content"; then
+    echo "$content" && return 0
+  fi
+
+  return 255
+}
+
 require_root()
 {
   if [ "`id -u`" -ne 0 ]; then
