@@ -11,6 +11,7 @@ restart()
   supervisor_service_restart "$package" "$service" \
     || fatal "Failed to restart service '$package/$service'"
 
+  info "Service '$package/$service' restarted successfully"
   return 0
 }
 
@@ -34,7 +35,13 @@ main()
       restart "$package" "$service"
     done
   fi
-    
+
+  if [ $# -le 0 ]; then
+    success "All services in '$package' have restarted"
+  else
+    success "Selected services in '$package' have restarted"
+  fi
+
   return 0
 }
 

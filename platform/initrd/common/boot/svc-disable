@@ -11,6 +11,7 @@ disable()
   supervisor_service_disable "$package" "$service" \
     || fatal "Failed to disable service '$package/$service'"
 
+  info "Service '$package/$service' disabled successfully"
   return 0
 }
 
@@ -34,7 +35,13 @@ main()
       disable "$package" "$service"
     done
   fi
-    
+
+  if [ $# -le 0 ]; then
+    success "All services in '$package' are now disabled"
+  else
+    success "Selected services in '$package' are now disabled"
+  fi
+
   return 0
 }
 

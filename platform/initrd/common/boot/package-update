@@ -23,6 +23,7 @@ main()
       || fatal "Failed to update package '$package'"
   done
 
+  success 'All specified packages have been updated'
   return 0
 }
 

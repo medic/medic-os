@@ -16,55 +16,21 @@ show_services()
   local package="`basename "$1"`"
   local attributes='watched running restarting down disabled expected'
 
-  local n="`supervisor_list_all_services "$package" | wc -l`"
-  
-  if [ "$?" -ne 0 -o "$n" -le 0 ]; then
-    echo '  <No services found in this package>'
-    echo
-    return 1
+  local n='0'
+  local services="`supervisor_list_all_services "$package"`"
+
+  if [ "$services" ]; then
+    n="`echo "$services" | wc -l`"
   fi
-  
-  supervisor_list_all_services "$package" | while read service; do
-    echo "  Service '$service':"
-    echo -n '    '
 
-    # Try to give a meaningful short status    
-    if supervisor_is_service_running "$package" "$service"; then
-    	echo -n 'OK'
-    elif supervisor_is_service_disabled "$package" "$service"; then
-    	echo -n 'Disabled'
-    elif supervisor_is_service_down "$package" "$service"; then
-    	echo -n 'Stopped'
-    elif supervisor_is_service_restarting "$package" "$service"; then
-    	echo -n 'Restarting'
-    elif ! supervisor_is_service_watched "$package" "$service"; then
-    	echo -n 'Unsupervised'
-    else
-    	echo -n 'Failure'
-    fi
-
-    # Get accounting data
-    local uptime="`
-      supervisor_accounting_read "$package" "$service" 'uptime'
-    `"
-    local generation="`
-      supervisor_accounting_read "$package" "$service" 'generation'
-    `"
-
-    # Show accounting data
-    echo " (Uptime: $uptime seconds, Restarts: $(($generation - 1)))"
-
-    # Show attributes
-    echo -n '    Attributes: '
-
-    # Dump all attributes out 
-    for attribute in $attributes; do
-      if "supervisor_is_service_$attribute" "$package" "$service"; then
-        echo -n "$attribute "
-      fi
-    done | sed 's/ \([^$]\)/, \1/g; s/ $//;'
-    echo
-  done
+  if [ "$?" -eq 0 -a "$n" -gt 0 ]; then
+    echo "$services" | while read service; do
+      supervisor_print_service_status "$package" "$service"
+    done
+  else
+    echo -n '  '
+    echo '<No services found in this package>'
+  fi
   
   echo
   return 0
@@ -73,19 +39,26 @@ show_services()
 main()
 {
   require_root
-  echo
-  
+
   if [ "$#" -gt 0 ]; then
     for package in "$@"; do
       show_package "$package"
       show_services "$package"
     done
   else
-    supervisor_list_all_packages | while read package; do
-      show_package "$package"
-      show_services "$package"
-    done
+    local packages="`supervisor_list_all_packages`"
+
+    if [ -z "$packages" ]; then
+      warn 'There are currently no packages installed'
+    else
+      echo && echo "$packages" | while read package; do
+        show_package "$package"
+        show_services "$package"
+      done
+    fi
   fi
+
+  return 0
 }
 
 usage()

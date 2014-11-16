@@ -25,16 +25,16 @@ main()
     supervisor_start "$package"
     local rv="$?"
 
-    if [ "$rv" -eq 254 ]; then
+    if [ "$rv" -eq 253 ]; then
       info "Package '$package' has no services to start"
     elif [ "$rv" -ne 0 ]; then
       fatal "Failed to start supervisor for package '$package'"
     fi
 
-    info "Package '$package' successfully installed"
+    info "Package '$package' was successfully installed"
   done
 
-  info 'All specified packages were successfully installed'
+  success 'All specified packages are installed'
   return 0
 }
 

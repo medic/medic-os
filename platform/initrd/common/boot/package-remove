@@ -19,7 +19,7 @@ main()
     info "Package '$package' successfully removed"
   done
 
-  info 'All specified packages were successfully removed'
+  success 'All specified packages have been removed'
   return 0
 }
 

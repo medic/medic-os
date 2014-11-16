@@ -117,7 +117,7 @@ build-ami-image:
 
 build-native-tarball:
 	@echo -n 'Creating native tarball... ' && \
-	staging_dir='staging/tarball/${PLATFORM}/${SYSTEM_IMAGE_ID}' && \
+	staging_dir='staging/tarball/${PLATFORM}/${SYSTEM_IMAGE_ID}-native' && \
 	\
 	mkdir -p "$$staging_dir" && \
 	cp -a 'initrd/${PLATFORM}'/* "$$staging_dir/" && \

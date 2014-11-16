@@ -20,7 +20,7 @@ main()
   if [ "$rv" -ne 0 ]; then
     warn "Failed to start one or more specified services"
   else
-    info "All services in package '$package' started successfully"
+    success "Supervisor running for all services in package '$package'"
   fi
 
   return "$rv"

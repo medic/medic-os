@@ -11,6 +11,7 @@ enable()
   supervisor_service_enable "$package" "$service" \
     || fatal "Failed to enable service '$package/$service'"
 
+  info "Service '$package/$service' enabled successfully"
   return 0
 }
 
@@ -34,7 +35,12 @@ main()
       enable "$package" "$service"
     done
   fi
-    
+
+  if [ $# -le 0 ]; then
+    success "All services in '$package' are now enabled"
+  else
+    success "Selected services in '$package' are now enabled"
+  fi
   return 0
 }
 

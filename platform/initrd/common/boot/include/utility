@@ -1,5 +1,10 @@
 #!/bin/sh
 
+success()
+{
+  echo "Success: $*" >&2
+}
+
 info()
 {
   echo "Info: $*" >&2

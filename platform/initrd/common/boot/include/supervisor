@@ -102,8 +102,8 @@ _supervisor_process()
     if [ "$status" -eq 0 ]; then
       log "Service '$package/$service' (pid '$pid') exited normally"
     else
-      log "Service '$package/$service' " \
-        "(pid '$pid') exited with non-zero status '$status'"
+      log "Service '$package/$service'" \
+        "(pid '$pid') terminated with exit status '$status'"
 
       if [ "$is_restart_event" ]; then
         is_restart_event=''
@@ -164,12 +164,12 @@ _supervisor_resync_trap()
   local pkg_status_dir="$supervise_dir/$package/status"
   local svc_down_fifo="$pkg_status_dir/volatile/$service.down"
 
-  echo "`date`: Resync signal received for '$package/$service'" >> "$log"
+  log "Resync signal received for '$package/$service'"
 
   if supervisor_is_service_running "$package" "$service"; then
 
     if [ -p "$svc_down_fifo" ]; then
-      echo "`date`: Resync is terminating '$package/$service'" >> "$log"
+      log "Resync is terminating '$package/$service'"
       _supervisor_terminate_service "$package" "$service"
     fi
 
@@ -186,9 +186,13 @@ _start_supervisor_process()
   local pkg_status_dir="$supervise_dir/$package/status"
   local ppid_file="$pkg_status_dir/volatile/$service.ppid"
 
+  if supervisor_is_service_watched "$package" "$service"; then
+    info "Supervisor already running for '$package/$service'"
+    return 0
+  fi
+
   prepare_status_directory "$package" || return 1
   supervisor_service_exists "$package" "$service" || return 2
-  supervisor_is_service_watched "$package" "$service" && return 3
 
   # Start supervisor:
   #   This actually starts the supervisor process; it, in
@@ -279,7 +283,7 @@ _wait_for_service_termination()
   done
 
   if [ "$exit_status" -ne 0 ]; then
-    info "Service '$package/$service' exited with status $exit_status"
+    log "Service '$package/$service' exited with status $exit_status"
   fi
 
   return 0
@@ -327,7 +331,7 @@ _termination_status_send()
       if [ "$str" -ge 0 ] 2>/dev/null; then
         str="Service exited with status '$str'"
       fi
-      echo "'$package/$service': $str" >> "$log"
+      log "'$package/$service': $str"
     fi
   done
 
@@ -341,21 +345,22 @@ _terminate_supervisor_process()
 
   supervisor_service_exists "$package" "$service" || return 1
 
+  if ! supervisor_is_service_watched "$package" "$service"; then
+    info "Supervisor already terminated for '$package/$service'"
+    return 0
+  fi
+
   local pkg_status_dir="$supervise_dir/$package/status"
   local ppid_file="$pkg_status_dir/volatile/$service.ppid"
-
-  if ! supervisor_is_service_watched "$package" "$service"; then
-    return 2
-  fi
 
   local ppid="`cat "$ppid_file" 2>/dev/null`"
 
   if ! [ "$ppid" ]; then
-    return 3
+    return 2
   fi
 
   _create_service_termination_fifo "$package" "$service" \
-    || return 4
+    || return 3
 
   rm -f "$ppid_file" "$pkg_status_dir/volatile/$service.down" &&
 
@@ -363,14 +368,14 @@ _terminate_supervisor_process()
 
   if [ "$?" -ne 0 ]; then
     warn "Couldn't send signal to supervisor of '$package/$service'"
-    return 5
+    return 4
   fi
 
   _wait_for_service_termination "$package" "$service" \
-    || return 6
+    || return 5
 
   _delete_service_termination_fifo "$package" "$service" \
-    || return 7
+    || return 6
 
   info "Service '$package/$service' stopped successfully"
   return 0
@@ -381,8 +386,9 @@ _supervisor_terminate_service()
   local package="$1"
   local service="$2"
 
-  local max_terminate_attempts='5'
+  local max_terminate_attempts='10'
   local termination_wait_interval='2'
+  local termination_status_threshold='5'
 
   local pkg_status_dir="$supervise_dir/$package/status"
   local pid_file="$pkg_status_dir/volatile/$service.pid"
@@ -418,12 +424,15 @@ _supervisor_terminate_service()
   for i in `seq 1 "$max_terminate_attempts"`; do
 
     kill -TERM "$pid" 2>/dev/null
+
     if ! _pid_has_active_process "$pid"; then
       break;
     else
+      if [ "$i" -gt "$termination_status_threshold" ]; then
+        _termination_status_send "$package" "$service" \
+          "Service '$package/$service' remains running; retrying"
+      fi
       sleep "$termination_wait_interval"
-      _termination_status_send "$package" "$service" \
-        "Service '$package/$service' remains running; retrying"
     fi
   done
 
@@ -456,7 +465,7 @@ _supervisor_apply()
   local services="$@"
 
   if ! [ -d "/srv/scripts/$package" ]; then
-    warn "Unable to locate package '$package'"
+    warn "Package '$package' does not appear to be installed"
     return 255
   fi
 
@@ -471,11 +480,11 @@ _supervisor_apply()
     local service="`basename "$service"`"
 
     if [ "$#" -le 0 -a "$service" = '*' ]; then
-      warn "Unable to locate any services for package '$package'"
-      return 254
+      log "No services present for package '$package'"
+      return 253
     fi
 
-    supervisor_service_exists "$package" "$service" || return 253
+    supervisor_service_exists "$package" "$service" || return 252
 
     if supervisor_is_service_disabled "$package" "$service"; then
       continue
@@ -992,4 +1001,53 @@ supervisor_service_exists()
   fi
 
   return 0
+}
+
+supervisor_print_service_status()
+{
+  local package="`basename "$1"`"
+  local service="`basename "$2"`"
+
+  echo "  Service '$service':"
+  echo -n '    Status: '
+
+  # Try to give a meaningful short status    
+  if supervisor_is_service_running "$package" "$service"; then
+    echo 'OK'
+  elif supervisor_is_service_disabled "$package" "$service"; then
+    echo 'Disabled'
+  elif supervisor_is_service_down "$package" "$service"; then
+    echo 'Stopped'
+  elif supervisor_is_service_restarting "$package" "$service"; then
+    echo 'Restarting'
+  elif ! supervisor_is_service_watched "$package" "$service"; then
+    echo 'Unsupervised'
+  else
+    echo 'Failure'
+  fi
+
+  # Get accounting data
+  local uptime="`
+    supervisor_accounting_read "$package" "$service" 'uptime'
+  `"
+  local generation="`
+    supervisor_accounting_read "$package" "$service" 'generation'
+  `"
+
+  # Show accounting data
+  echo -n '    '
+  echo "Up: $uptime seconds, Restarts: $(($generation - 1))"
+
+  # Attributes
+  echo -n '    '
+  echo -n 'Attributes: '
+
+  # Dump all attributes out 
+  for attribute in $attributes; do
+    if "supervisor_is_service_$attribute" "$package" "$service"; then
+      echo -n "$attribute "
+    fi
+  done | sed 's/ \([^$]\)/, \1/g; s/ $//;'
+  echo
+
 }
