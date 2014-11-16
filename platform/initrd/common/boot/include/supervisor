@@ -364,7 +364,6 @@ _terminate_supervisor_process()
     || return 3
 
   rm -f "$ppid_file" "$pkg_status_dir/volatile/$service.down" &&
-
   kill -TERM "$ppid" 2>/dev/null
 
   if [ "$?" -ne 0 ]; then
@@ -523,7 +522,7 @@ _supervisor_accounting_write()
       local generation="`read_integer_file "$file" 't'`" \
         || return 3
 
-      [ -z "$generation" ] && local generation=0
+      [ -z "$generation" ] && generation='0'
       echo "$(($generation + 1))" > "$file"
       ;;
     *)
