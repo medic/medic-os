@@ -37,9 +37,9 @@ main()
   fi
 
   if [ $# -le 0 ]; then
-    success "All services in '$package' have restarted"
+    success "All services in package '$package' have restarted"
   else
-    success "Selected services in '$package' have restarted"
+    success "Selected services in package '$package' have restarted"
   fi
 
   return 0

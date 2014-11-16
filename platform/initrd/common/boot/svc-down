@@ -37,9 +37,9 @@ main()
   fi
 
   if [ $# -le 0 ]; then
-    success "All services in '$package' have stopped"
+    success "All services in package '$package' have stopped"
   else
-    success "Selected services in '$package' have stopped"
+    success "Selected services in package '$package' have stopped"
   fi
 
   return 0

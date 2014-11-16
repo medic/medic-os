@@ -164,12 +164,12 @@ _supervisor_resync_trap()
   local pkg_status_dir="$supervise_dir/$package/status"
   local svc_down_fifo="$pkg_status_dir/volatile/$service.down"
 
-  log "Resync signal received for '$package/$service'"
+  log "Resynchronization triggered for '$package/$service'"
 
   if supervisor_is_service_running "$package" "$service"; then
 
     if [ -p "$svc_down_fifo" ]; then
-      log "Resync is terminating '$package/$service'"
+      log "Resynchronization is terminating '$package/$service'"
       _supervisor_terminate_service "$package" "$service"
     fi
 
@@ -393,7 +393,7 @@ _supervisor_terminate_service()
   local pkg_status_dir="$supervise_dir/$package/status"
   local pid_file="$pkg_status_dir/volatile/$service.pid"
 
-  if ! [ -f "$pid_file" ]; then
+  if ! pidfile_has_active_process "$pid_file"; then
     _termination_status_send "$package" "$service" '0'
     return 0
   fi
@@ -669,15 +669,18 @@ supervisor_service_down()
     || return 4
 
   local pkg_status_dir="$supervise_dir/$package/status"
-  local ppid="`cat "$pkg_status_dir/volatile/$service.ppid"`"
+  local pid_file="$pkg_status_dir/volatile/$service.pid"
   local svc_down_fifo="$pkg_status_dir/volatile/$service.down"
+  local ppid="`cat "$pkg_status_dir/volatile/$service.ppid" 2>/dev/null`"
 
   rm -f "$svc_down_fifo" &&
   mkfifo -m 0600 "$svc_down_fifo" &&
   kill -HUP "$ppid" 2>/dev/null || return 5
 
-  _wait_for_service_termination "$package" "$service" \
-    || return 6
+  if _pidfile_has_active_process "$pid_file"; then
+    _wait_for_service_termination "$package" "$service" \
+      || return 6
+  fi
 
   _delete_service_termination_fifo "$package" "$service" \
     || return 7
@@ -776,7 +779,7 @@ supervisor_service_reload()
   fi
 
   local pkg_status_dir="$supervise_dir/$package/status"
-  local pid="`cat "$pkg_status_dir/volatile/$service.pid"`"
+  local pid="`cat "$pkg_status_dir/volatile/$service.pid" 2>/dev/null`"
 
   kill -HUP "$pid" 2>/dev/null || return 3
   return 0
@@ -1003,6 +1006,28 @@ supervisor_service_exists()
   return 0
 }
 
+supervisor_service_pid()
+{
+  local package="`basename "$1"`"
+  local service="`basename "$2"`"
+
+  local pkg_status_dir="$supervise_dir/$package/status"
+  local pid="`cat "$pkg_status_dir/volatile/$service.pid" 2>/dev/null`"
+
+  _pid_has_active_process "$pid" && echo "$pid"
+}
+
+supervisor_service_ppid()
+{
+  local package="`basename "$1"`"
+  local service="`basename "$2"`"
+
+  local pkg_status_dir="$supervise_dir/$package/status"
+  local ppid="`cat "$pkg_status_dir/volatile/$service.ppid" 2>/dev/null`"
+
+  _pid_has_active_process "$ppid" && echo "$ppid"
+}
+
 supervisor_print_service_status()
 {
   local package="`basename "$1"`"
@@ -1011,7 +1036,7 @@ supervisor_print_service_status()
   echo "  Service '$service':"
   echo -n '    Status: '
 
-  # Try to give a meaningful short status    
+  # Service Status
   if supervisor_is_service_running "$package" "$service"; then
     echo 'OK'
   elif supervisor_is_service_disabled "$package" "$service"; then
@@ -1026,15 +1051,20 @@ supervisor_print_service_status()
     echo 'Failure'
   fi
 
-  # Get accounting data
+  # Accounting Information
   local uptime="`
     supervisor_accounting_read "$package" "$service" 'uptime'
   `"
   local generation="`
     supervisor_accounting_read "$package" "$service" 'generation'
   `"
+  local service_pid="`
+    supervisor_service_pid "$package" "$service"
+  `"
+  local supervisor_pid="`
+    supervisor_service_ppid "$package" "$service"
+  `"
 
-  # Show accounting data
   echo -n '    '
   echo "Up: $uptime seconds, Restarts: $(($generation - 1))"
 
@@ -1042,12 +1072,19 @@ supervisor_print_service_status()
   echo -n '    '
   echo -n 'Attributes: '
 
-  # Dump all attributes out 
   for attribute in $attributes; do
     if "supervisor_is_service_$attribute" "$package" "$service"; then
       echo -n "$attribute "
     fi
   done | sed 's/ \([^$]\)/, \1/g; s/ $//;'
+
   echo
 
+  # Process Identifiers
+  [ -z "$service_pid" ] && service_pid='None'
+  [ -z "$supervisor_pid" ] && supervisor_pid='None'
+
+  echo -n '    '
+  echo "Service PID: $service_pid, Supervisor PID: $supervisor_pid"
 }
+

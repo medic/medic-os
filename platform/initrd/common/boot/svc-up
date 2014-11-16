@@ -37,9 +37,9 @@ main()
   fi
 
   if [ $# -le 0 ]; then
-    success "All services in '$package' have started"
+    success "All services in package '$package' have started"
   else
-    success "Selected services in '$package' have started"
+    success "Selected services in package '$package' have started"
   fi
 
   return 0

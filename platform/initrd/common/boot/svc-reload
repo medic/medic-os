@@ -38,9 +38,9 @@ main()
   fi
  
   if [ $# -le 0 ]; then
-    success "All services in '$package' have reloaded"
+    success "All services in package '$package' have reloaded"
   else
-    success "Selected services in '$package' have reloaded"
+    success "Selected services in package '$package' have reloaded"
   fi
 
   return 0

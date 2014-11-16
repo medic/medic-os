@@ -37,9 +37,9 @@ main()
   fi
 
   if [ $# -le 0 ]; then
-    success "All services in '$package' are now disabled"
+    success "All services in package '$package' are now disabled"
   else
-    success "Selected services in '$package' are now disabled"
+    success "Selected services in package '$package' are now disabled"
   fi
 
   return 0
