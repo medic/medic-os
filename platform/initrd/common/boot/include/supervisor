@@ -64,7 +64,7 @@ _supervisor_process()
     local svc_down_fifo="$pkg_status_dir/volatile/$service.down"
 
     if [ -p "$svc_down_fifo" ]; then
-      read < "$svc_down_fifo" &>/dev/null
+      read &>/dev/null < "$svc_down_fifo"
       rm -f "$svc_down_fifo"
     fi
 
