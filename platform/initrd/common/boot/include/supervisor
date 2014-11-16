@@ -24,7 +24,7 @@ _safe_waitpid()
   return "$status"
 } 
 
-prepare_status_directory()
+_prepare_status_directory()
 {
   local package="`basename "$1"`"
 
@@ -58,13 +58,6 @@ _supervisor_process()
 
   while true; do
 
-    # Accounting information:
-    #   This keeps track of service uptime, number of restarts, and
-    #   any other information that can help troubleshoot failures.
-
-    _supervisor_accounting_write "$package" "$service" 'restart' \
-      || log "Accounting write failure during restart of '$package/$service'"
-
     # Is service down?
     #   If so, block on the FIFO; a write is our signal to resume.
 
@@ -74,6 +67,13 @@ _supervisor_process()
       read < "$svc_down_fifo" &>/dev/null
       rm -f "$svc_down_fifo"
     fi
+
+    # Accounting information:
+    #   This keeps track of service uptime, number of restarts, and
+    #   any other information that can help troubleshoot failures.
+
+    _supervisor_accounting_write "$package" "$service" 'restart' \
+      || log "Accounting write failure during '$package/$service' restart"
 
     # Fork-and-exec:
     #  This attempts to start the supervised process.
@@ -109,7 +109,7 @@ _supervisor_process()
         is_restart_event=''
       else
         _supervisor_accounting_write "$package" "$service" 'exit' \
-          || log "Accounting write failure during exit of '$package/$service'"
+          || log "Accounting write failure during '$package/$service' exit"
 
         sleep 5
       fi
@@ -131,6 +131,7 @@ _supervisor_record_uptime()
 
   exit "$?"
 }
+
 _supervisor_termination_trap()
 {
   local package="$1"
@@ -191,7 +192,7 @@ _start_supervisor_process()
     return 0
   fi
 
-  prepare_status_directory "$package" || return 1
+  _prepare_status_directory "$package" || return 1
   supervisor_service_exists "$package" "$service" || return 2
 
   # Start supervisor:
@@ -393,7 +394,7 @@ _supervisor_terminate_service()
   local pkg_status_dir="$supervise_dir/$package/status"
   local pid_file="$pkg_status_dir/volatile/$service.pid"
 
-  if ! pidfile_has_active_process "$pid_file"; then
+  if ! _pidfile_has_active_process "$pid_file"; then
     _termination_status_send "$package" "$service" '0'
     return 0
   fi
@@ -404,8 +405,7 @@ _supervisor_terminate_service()
   if [ "$rv" -ne 0 -o -z "$pid" ]; then
 
     _termination_status_send "$package" "$service" \
-      "Process identifier is missing from '$pid_file'" \
-      'You may need to manually remove the file and retry'
+      "Failure while trying to read the PID file '$pid_file'"
 
     _termination_status_send "$package" "$service" '254'
     return 254
@@ -414,7 +414,7 @@ _supervisor_terminate_service()
   if ! rm -f "$pid_file"; then
 
     _termination_status_send "$package" "$service" \
-      "Failed to remove file '$pid_file'" \
+      "Failed to remove the PID file '$pid_file'" \
       'Ensure you have write access to package status directories'
 
     _termination_status_send "$package" "$service" '253'
@@ -853,8 +853,8 @@ supervisor_list_watched_services()
 {
   local package="`basename "$1"`"
 
-  # List services where supervisor is running:
-  #   Loop over control data to avoid iterating through everything.
+  # List watched services:
+  #   These are services that have a supervisor running.
 
   local pkg_status_dir="$supervise_dir/$package/status"
 
@@ -874,8 +874,8 @@ supervisor_list_running_services()
 {
   local package="`basename "$1"`"
 
-  # List services where intended process is running:
-  #   Loop over control data to avoid iterating through everything.
+  # List running services:
+  #   These are services with an actual running process.
 
   local pkg_status_dir="$supervise_dir/$package/status"
 
@@ -932,7 +932,6 @@ supervisor_is_service_disabled()
   local pkg_status_dir="$supervise_dir/$package/status"
   test -f "$pkg_status_dir/persistent/$service.disabled"
 }
-
 
 supervisor_is_service_enabled()
 {
@@ -1038,11 +1037,11 @@ supervisor_print_service_status()
 
   # Service Status
   if supervisor_is_service_running "$package" "$service"; then
-    echo 'OK'
+    echo 'Up'
   elif supervisor_is_service_disabled "$package" "$service"; then
     echo 'Disabled'
   elif supervisor_is_service_down "$package" "$service"; then
-    echo 'Stopped'
+    echo 'Down'
   elif supervisor_is_service_restarting "$package" "$service"; then
     echo 'Restarting'
   elif ! supervisor_is_service_watched "$package" "$service"; then
