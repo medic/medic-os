@@ -195,6 +195,10 @@ _start_supervisor_process()
   _prepare_status_directory "$package" || return 1
   supervisor_service_exists "$package" "$service" || return 2
 
+  for ext in generation timestamp; do
+    rm -f "$pkg_status_dir/volatile/$service.$ext" || return 3
+  done
+
   # Start supervisor:
   #   This actually starts the supervisor process; it, in
   #   turn, forks off the actual service to-be-watched.
@@ -212,7 +216,7 @@ _start_supervisor_process()
     warn "Terminating supervisor process '$pid'"
 
     kill -KILL "$ppid"
-    return 5
+    return 4
   fi
 
   info "Service '$package/$service' started successfully"
@@ -376,6 +380,9 @@ _terminate_supervisor_process()
 
   _delete_service_termination_fifo "$package" "$service" \
     || return 6
+
+  _supervisor_accounting_write "$package" "$service" 'exit' \
+    || log "Accounting write failure during '$package/$service' exit"
 
   info "Service '$package/$service' stopped successfully"
   return 0
