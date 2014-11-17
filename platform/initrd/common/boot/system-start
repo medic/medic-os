@@ -220,7 +220,7 @@ fatal()
   set_cursor 1
 
   print 'Attempting to start recovery console...'
-  exec /sbin/getty -nl /bin/sh 38400 tty1
+  exec /sbin/getty -nl /boot/recovery-console 38400 tty1
 }
 
 main

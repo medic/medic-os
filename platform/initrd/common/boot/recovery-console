@@ -1,0 +1,27 @@
+#!/bin/sh
+
+main()
+{
+  # Recovery console:
+  #   Try to set sane environment variables. This is all self-contained,
+  #   just in case files from the base system are missing or damaged.
+
+  for pkg_path in /srv/software/*; do
+    if [ -d "$pkg_path" ]; then
+      local pkg="`basename "$pkg_path"`"
+      for dir in bin sbin; do
+        export PATH="$PATH:/srv/software/$pkg/current/default/$dir"
+      done
+    fi
+  done
+
+  export PS1="\u@\h:\w \$ "
+  export PATH="/boot:$PATH"
+
+  exec /bin/sh - "$@"
+  return "$?"
+}
+
+main "$@"
+exit "$?"
+
