@@ -67,6 +67,8 @@ package_install()
     return 2
   fi
  
+  log "Installing package '$package'"
+
   mkdir -p "/srv/receipts/$package" &&
     echo -n "$version" > "/srv/receipts/$package/version"
 
@@ -78,8 +80,8 @@ package_install()
   log "Extracting files for package '$package'"
 
   mkdir -p "/srv/receipts/$package" "/srv/scripts/$package" &&
-    (cd /srv && ar -p "$path" package.tar.xz | xz -dc \
-      | tar -xvf - > "/srv/receipts/$package/manifest") && sync
+    ar -p "$path" package.tar.xz | xz -dc \
+      | (cd /srv && tar -xvf - > "receipts/$package/manifest") && sync
 
   if [ "$?" -ne 0 ]; then
     warn "Failed to extract files for package '$package' from '$path'"
@@ -113,13 +115,19 @@ package_remove()
 {
   local package="`basename "$1"`"
 
+  log "Removing package '$package'"
   log "Stopping services for package '$package'"
 
-  if ! supervisor_stop "$package"; then
+  supervisor_stop "$package"
+  local rv="$?"
+
+  if [ "$rv" -eq 253 ]; then
+    info "Package '$package' has no services to stop; continuing"
+  elif [ "$rv" -ne 0 ]; then
     warn "Failed to stop services for package '$package'"
     return 1
   fi
-    
+
   log "Removing package '$package'"
 
   if [ -x "/srv/scripts/$package/remove" ]; then
@@ -152,7 +160,8 @@ package_update()
   local v_new="`package_extract_version "$path"`" &&
   local v_prev="`package_retrieve_installed_version "$package"`"
 
-  log "Examining package '$package'"
+  log "Updating package '$package'"
+  log "Examining version information for package '$package'"
 
   if [ "$?" -ne 0 ]; then
     warn "Failed to read metadata from package file '$file'"
@@ -164,28 +173,32 @@ package_update()
     return 2
   fi
 
-  if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ] 2>/dev/null; then
+  if [ "$v_prev" ]; then
+    if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ]; then
 
-    warn "A newer version of '$package' is already installed"
-    warn "Use the force-install option if you want to install it anyway"
-    return 3
+      warn "A newer version of '$package' is already installed"
+      warn "Use the force-install option if you want to install it anyway"
+      return 3
 
-  elif [ "$v_prev" -a "$v_prev" -ne "$v_new"] 2>/dev/null; then
+    elif [ "$v_prev" -lt "$v_new" ] 2>/dev/null; then
 
-    log "Removing package '$package'"
+      force_install='t'
+      log "Removing package '$package'"
 
-    if ! package_remove "$package"; then
-      warn "Failed to completely remove package '$package'"
-      return 4
+      if ! package_remove "$package"; then
+        warn "Failed to completely remove package '$package'"
+        return 4
+      fi
+    else
+      warn "Version '$v_prev' of package '$package' is already installed"
     fi
-  fi
-
-  if [ -z "$v_prev" -o "$v_prev" -lt "$v_new" ] 2>/dev/null; then
+  else
     force_install='t'
-    log "Update required for package '$package'"
+    info "Package '$package' is not installed yet; installing"
   fi
 
   if [ "$force_install" ]; then
+    log "Installing package '$package'"
     if ! package_install "$path"; then
       warn "Package '$package' encountered an error during installation"
       warn "Software installation from file '$file' was unsuccessful"

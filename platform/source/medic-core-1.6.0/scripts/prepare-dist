@@ -17,7 +17,7 @@ if [ -d "$prefix/lib64" ]; then
 fi
 
 (cd "$prefix" &&
-  rm -rf lib/*.a lib/python?.? lib/erlang/usr \
+  rm -rf lib/*.a lib/*.py lib/python?.? lib/erlang/usr \
     lib/erlang/Install info include man java/manual share/man \
     share/gtk-doc share/doc doc logs html share/info share/emacs \
     etc/ssh_host* libexec/ssh-keysign usr/share/man etc/ssl/man)
@@ -28,7 +28,8 @@ fi
       rm -rf * && mv .save/* . && rmdir .save)
 
 (cd "$prefix/java/lib" && 
-  rm -f vorbis-java-*.jar poi-*.jar xmlbeans-*.jar dom4j-*.jar \
+  rm -f ooxml-schemas-*.jar \
+    vorbis-java-*.jar poi-*.jar xmlbeans-*.jar dom4j-*.jar \
     rome-*.jar pdfbox-*.jar jdom-*.jar pdfbox-*.jar fontbox-*.jar \
     jempbox-*.jar tagsoup-*.jar javaassist-*.jar isoparser-*.jar \
     scannotation-*.jar ant*.jar ant*.pom maven*.jar aether-*.jar \

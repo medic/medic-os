@@ -13,7 +13,7 @@ warn()
 
 usage()
 {
-  echo "Usage: $0 platform loopback_image description device"
+  echo "Usage: $0 platform image description device [method]"
   exit 1
 }
 
@@ -51,8 +51,13 @@ main()
   local image="$2"
   local description="$3"
   local device="$4"
+  local method="$5"
 
   if [ "$1" = '-h' -o "$1" = '--help' ]; then
+    usage
+  fi
+
+  if [ "$#" -lt 4 -o "$#" -gt 5 ]; then
     usage
   fi
 
@@ -61,10 +66,10 @@ main()
 
   case "$platform" in
     x64)
-      aki='aki-fc37bacc'
+      aki='aki-fc8f11cc'
       architecture='x86_64' ;;
     x86)
-      aki='aki-fa37baca'
+      aki='aki-f08f11c0'
       architecture='i386' ;;
     *)
       fatal "Unsupported platform '$platform'" ;;
@@ -82,6 +87,8 @@ main()
     fatal "A not-yet-existing block-special device must be specified"
   fi
 
+  echo -n 'Creating temporary volume... ' >&2
+
   local volume_id="`
     ec2-create-volume -s1 \
       -z "$EC2_AVAILABILITY_ZONE" --region "$EC2_REGION" | cut -f2
@@ -90,34 +97,66 @@ main()
   wait_for_volume_availability "$volume_id" &&
   \
   ec2-create-tags "$volume_id" --tag "Name=$description" >/dev/null \
-    || fatal "Failure while setting tags on volume'$volume_id'"
+    || fatal "Failure while setting tags on volume '$volume_id'"
 
   ec2-attach-volume "$volume_id" -i "`
     ec2-metadata -i | cut -d: -f2 | sed 's/^ *//'
   `" -d "$device" >/dev/null || fatal 'Failed to attach temporary volume'
 
+  echo 'done.' >&2
   echo "Volume identifier: $volume_id" >&2
   echo -n 'Building EBS system image... ' >&2
 
   wait_for_device "$device" \
     || fatal 'Volume did not attach during timeout period'
 
-  sudo mkfs.ext4 -q "$device" >/dev/null \
-    || fatal "Failure while formatting device '$device'"
+  # Copy disk image:
+  #   There are two supported methods. The `direct` method
+  #   preserves the original filesystem size (even if the target
+  #   device is larger), while the `default` method produces a
+  #   filesystem that is always the exact size of the target device.
+  
+  if [ "$method" = 'direct' ]; then
 
-  sudo mkdir -p /mnt/startup &&
-  sudo mount "$device" /mnt/startup \
-    || fatal "Failure while mounting device '$device'"
+    # Direct method:
+    #   Make a bit-for-bit copy of the original input image.
+    #   The filesystem size will remain completely unchanged,
+    #   and any ext3/ext4 filesystem options will be preserved.
 
-  sudo mkdir -p /mnt/loopback &&
-  sudo mount -o loop "$image" /mnt/loopback \
-    || fatal "Failure while mounting loopback image '$image'"
+    sudo dd if="$image" of="$device" 2>/dev/null \
+      || fatal "Failure while writing image directly to '$device'"
 
-  sudo cp -a /mnt/loopback/* /mnt/startup/ \
-    || fatal 'Failure while copying files'
+  else
 
-  sudo umount /mnt/loopback /mnt/startup && sudo sync \
-    || fatal 'Failure while unmounting volumes'
+    # Default method:
+    #   Mount the original input image, then copy all of the files
+    #   from inside of it to a newly-created filesystem. The new
+    #   filesystem will always be the exact same size as the target
+    #   device. To maximize compatibility, the new filesystem will
+    #   be created with most of the optional ext4 features turned off.
+
+    local ext4_options='none,extent,large_file,has_journal'
+
+    sudo mkfs.ext4 -O "$ext4_options" -q "$device" >/dev/null \
+        || fatal "Failure while formatting device '$device'"
+
+    sudo mkdir -p /mnt/startup &&
+    sudo mount "$device" /mnt/startup \
+      || fatal "Failure while mounting device '$device'"
+
+    sudo mkdir -p /mnt/loopback &&
+    sudo mount -o loop "$image" /mnt/loopback \
+      || fatal "Failure while mounting loopback image '$image'"
+
+    sudo cp -a /mnt/loopback/* /mnt/startup/ \
+      || fatal 'Failure while copying files'
+
+    sudo umount /mnt/loopback /mnt/startup \
+      || fatal 'Failure while unmounting volumes'
+  fi
+
+  sudo sync && sleep 1 && sudo sync \
+    || fatal 'Failure while synchronizing disks'
 
   ec2-detach-volume --region "$EC2_REGION" "$volume_id" >/dev/null \
     || fatal 'Failure while detaching volume'

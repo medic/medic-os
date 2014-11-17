@@ -11,6 +11,7 @@ down()
   supervisor_service_down "$package" "$service" \
     || fatal "Failed to shut down service '$package/$service'"
 
+  info "Service '$package/$service' stopped successfully"
   return 0
 }
 
@@ -34,7 +35,13 @@ main()
       down "$package" "$service"
     done
   fi
-    
+
+  if [ $# -le 0 ]; then
+    success "All services in package '$package' have stopped"
+  else
+    success "Selected services in package '$package' have stopped"
+  fi
+
   return 0
 }
 

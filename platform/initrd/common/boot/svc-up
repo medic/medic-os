@@ -11,6 +11,7 @@ up()
   supervisor_service_up "$package" "$service" \
     || fatal "Failed to start service '$service' in '$package'"
 
+  info "Service '$package/$service' started successfully"
   return 0
 }
 
@@ -34,7 +35,13 @@ main()
       up "$package" "$service"
     done
   fi
-    
+
+  if [ $# -le 0 ]; then
+    success "All services in package '$package' have started"
+  else
+    success "Selected services in package '$package' have started"
+  fi
+
   return 0
 }
 

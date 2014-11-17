@@ -20,6 +20,7 @@ var fs = require('fs'),
     process_manager = require('./processes'),
     utils = require('./utils'),
     options = require('./options'),
+    dashboard = require('./dashboard'),
 
     working_dir = 'working_dir',
     cache_name = '.details',
@@ -130,7 +131,7 @@ function queue_install(details, callback) {
     _fill_missing_install_details(ddoc_url, pre_details, function(err, all_details) {
         if (err) return callback(err);
         is_installed(all_details, function(err, installed) {
-            if (!installed) {
+            if (!installed && (!all_details.dashboard_managed || pre_details.force_install)) {
                 _install(all_details, callback);
             } else if (!is_running(all_details) && all_details.start_immediate) {
                 start_module(all_details.local_name, callback);
@@ -167,6 +168,12 @@ function _fill_missing_install_details(ddoc_url, other, callback) {
             function is_remote_package(cb) {
                 data.is_remote_package = !utils.is_tgz(data.module_name);
                 cb();
+            },
+            function is_dashboard_managed(cb) {
+                dashboard.is_dashboard_managed(couch_root_url, dashboard_db, other.db_name, function(err, managed) {
+                    data.dashboard_managed = managed;
+                    cb(err);
+                });
             },
             function package_version(cb) {
                 var parts = data.module_name.match(re);
@@ -233,6 +240,15 @@ function module_name(ddoc_url, other, data, cb) {
     return cb('No module details');
 }
 
+var truncate_message = function(str) {
+    var max_length = 41;
+    var joiner = '...';
+    var half_size = (max_length - joiner.length) / 2;
+    if (!str || str.length < max_length) {
+        return str;
+    }
+    return str.substr(0, half_size) + joiner + str.substr(str.length - half_size);
+};
 
 function progress(message, percent, details) {
     logger.info(message);
@@ -246,7 +262,7 @@ function progress(message, percent, details) {
         path:  url.parse(details.ddoc_url).path,
         module: details.module_name,
         percent: percent,
-        'msg': message
+        msg: truncate_message(message)
     };
     request({
         url: dash_db,

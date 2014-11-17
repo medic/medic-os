@@ -3,16 +3,20 @@ var child = require('child_process'),
     cookieParser = require('cookie-parser'),
     session = require('express-session'),
     bodyParser = require('body-parser'),
+    helpers = require('./lib/helpers'),
     flash = require('connect-flash'),
     request = require('request'),
     express = require('express'),
     crypto = require('crypto'),
+    _ = require('underscore'),
     async = require('async'),
     clone = require('clone'),
     fs = require('fs'),
     app = express();
 
 /**
+ * Configuration options:
+ *   These are module-global 
  */
 var user = 'vm';
 var protocol = 'http://';
@@ -22,7 +26,10 @@ var private_path = '/srv/scripts/concierge/private';
 var system_passwd_path = '/srv/storage/concierge/passwd/system';
 
 /**
+ * Start express:
+ *   We need to do this before using `app`.
  */
+
 app.use(flash());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -38,25 +45,30 @@ app.use(session({
 app.set('views', __dirname + '/views');
 app.use('/static', express.static(__dirname + '/static'));
 
+helpers.register();
+
 /**
+ * Root directory:
+ *   HTTP API method. Redirect to `/setup`.
  */
 app.get('/', function (_req, _res) {
-
   _res.redirect('/setup');
 });
 
 /**
+ * /setup:
+ *   HTML API method. Emit the main user interface.
  */
 app.get('/setup', function (_req, _res) {
 
   read_system_password(function (_err, _sys_passwd) {
     _res.render('setup/index.hbs', {
       title: (
-        'Set Administrative Password: ' +
-        'Medic Mobile Virtual Server Configuration'
+        'Setup - Medic Mobile'
       ),
       data: {
-        key: _req.flash('key')
+        key: _req.flash('key'),
+        step: _req.flash('step')
       },
       messages: {
         error: _req.flash('error'),
@@ -158,43 +170,46 @@ app.get('/setup/poll', function (_req, _res) {
 
 /**
  * poll_required_services:
+ *   Helper function for the `/setup/poll` REST API method.
+ *   Figure out if the required background services are
+ *   running, then call `_callback(_err, _data)`. The `_err`
+ *   parameter is an object describing a connection error
+ *   (or null if there was no connection error); `_data` is
+ *   an object describing the state of the background services,
+ *   including a boolean `ready` property, and a human-readable
+ *   `detail` property (a string).
  */
 var poll_required_services = function (_req, _res, _callback) {
-      
-  var get = {
-    uri: protocol + api_server + '/api/info'
-  };
+
+  var rv = { ready: false, handler: 'concierge' };
+  var get = { uri: protocol + api_server + '/api/info' };
 
   request.get(get, function (_err, _resp, _body) {
 
     if (_err) {
-      return _callback({
-        ready: false,
+      return _callback(_.extend(rv, {
         detail: 'Unable to contact the medic-api service'
-      });
+      }));
     }
 
     if (_resp.statusCode != 200) {
-      return _callback({
-        ready: false,
+      return _callback(_.extend(rv, {
         detail: 'Error requesting medic-api version information'
-      });
+      }));
     }
 
     try {
       var info = JSON.parse(_body);
     } catch (_e) {
-      return _callback({
-        ready: false,
+      return _callback(_.extend(rv, {
         detail: 'Invalid JSON response returned by medic-api'
-      });
+      }));
     }
 
-    return _callback({
-      ready: true,
-      version: info.version,
+    return _callback(_.extend(rv, {
+      ready: true, version: info.version,
       detail: 'All required services are currently running'
-    });
+    }));
   });
   
 };
@@ -213,6 +228,7 @@ var send_password_response = function (_err, _req, _res, _success_text) {
   }
 
   if (!_err) {
+    _req.flash('step', 2);
     _req.flash('success', _success_text);
   }
 
@@ -641,5 +657,6 @@ var main = function (_argv) {
   }
 };
 
+/* Start */
 main(process.argv);
 

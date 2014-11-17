@@ -3,11 +3,14 @@
 source '/boot/include/hypervisor'
 hypervisor_init
 
-log='/var/log/startup.log'
+if [ -z "$log" ]; then
+  log='/var/log/startup.log'
+fi
 
 log()
 {
-  echo -e "`date +'[%Y/%m/%d %H:%M:%S]'` $*" >>"$log" 2>&1
+  echo -e "`date +'[%Y/%m/%d %H:%M:%S]'` $*" \
+    >> "$log" 2>&1
 }
 
 print()
