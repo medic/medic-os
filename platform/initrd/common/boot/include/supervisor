@@ -6,6 +6,28 @@ is_restart_event=''
 volatile_dir='/var/run/supervisor'
 supervise_dir='/srv/storage/system/supervisor'
 
+_perform_startup_checks()
+{
+  local rv='0'
+
+  for dir in /proc/self /sys/kernel; do
+    if [ ! -d "$dir" ]; then
+      warn "Unable to locate required directory '$dir'"
+      rv='1'
+    fi
+  done
+
+  if [ "$rv" -ne 0 ]; then
+    warn 'Mount all required filesystems and try again'
+  fi
+
+  return "$rv"
+}
+
+if ! _perform_startup_checks; then
+  fatal 'Startup checks failed for supervisor library'
+fi
+
 _safe_waitpid()
 {
   local pid="$1"

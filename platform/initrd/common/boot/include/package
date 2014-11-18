@@ -194,7 +194,7 @@ package_update()
     fi
   else
     force_install='t'
-    info "Package '$package' is not installed yet; installing"
+    log "Package '$package' is not installed yet; installing"
   fi
 
   if [ "$force_install" ]; then

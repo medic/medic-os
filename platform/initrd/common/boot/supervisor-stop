@@ -17,7 +17,9 @@ main()
   supervisor_stop "$package" "$@"
   local rv="$?"
 
-  if [ "$rv" -ne 0 ]; then
+  if [ "$rv" -eq 253 ]; then
+    warn "Package '$package' has no services to stop"
+  elif [ "$rv" -ne 0 ]; then
     warn "Failed to stop one or more specified services"
   else
     success "Supervisor stopped for all services in package '$package'"
