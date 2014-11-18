@@ -3,28 +3,30 @@
 source '/boot/include/utility'
 source '/boot/include/startup'
 source '/boot/include/package'
-
-mount_filesystems()
-{
-  info 'Mounting filesystems...'
-
-  for fs in /proc /sys /dev/pts /dev/shm; do
-    mount "$fs" \
-      || fatal "Unable to mount the $fs filesystem"
-  done
-
-  return 0
-}
-
-mount_filesystems
 source '/boot/include/supervisor'
 
 main()
 {
+  # Mount all filesystems:
+  #   Do this before initializing the supervisor library,
+  #   because it checks for the presence of /proc at startup.
+
+  info 'Mounting filesystems...'
+
+  mount_special_filesystems proc /proc sysfs /sys \
+    devpts /dev/pts tmpfs /dev/shm cgroup /sys/fs/cgroup
+
+  if [ "$?" -ne 0 ]; then
+    fatal 'Failed to mount one or more required filesystems'
+  fi
+
+  supervisor_init
+
   # Update packages:
   #   Update each package necessary for proper startup; the `package_update`
   #   function will avoid overwriting existing binaries if it's able to.
 
+  log 'Starting software update process'
   info 'Setting up software...'
 
   local total_packages='0'

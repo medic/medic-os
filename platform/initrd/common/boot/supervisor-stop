@@ -10,6 +10,7 @@ main()
   fi
 
   require_root
+  supervisor_init
 
   local package="$1"
   shift 1

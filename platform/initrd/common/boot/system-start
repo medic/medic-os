@@ -54,13 +54,14 @@ main()
     source_device='/dev/xvda1'
   fi
 
+  supervisor_init
+
   set_echo 0
   set_bold 1
   set_cursor 0
   set_console_blanking 0
 
   display_centered 'Starting up...'
-
   log "Storage initialization started at `date`"
 
   mount_source_image "$source_device" \

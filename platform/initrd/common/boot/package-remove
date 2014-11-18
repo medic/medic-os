@@ -11,6 +11,7 @@ main()
   fi
 
   require_root
+  supervisor_init
 
   for package in "$@"; do
     package_remove "$package" \

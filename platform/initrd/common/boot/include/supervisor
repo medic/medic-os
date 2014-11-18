@@ -18,15 +18,11 @@ _perform_startup_checks()
   done
 
   if [ "$rv" -ne 0 ]; then
-    warn 'Mount all required filesystems and try again'
+    warn 'At least one required filesystem is not mounted'
   fi
 
   return "$rv"
 }
-
-if ! _perform_startup_checks; then
-  fatal 'Startup checks failed for supervisor library'
-fi
 
 _safe_waitpid()
 {
@@ -560,6 +556,15 @@ _supervisor_accounting_write()
   esac
 
   return "$?"
+}
+
+supervisor_init()
+{
+  if ! _perform_startup_checks; then
+    fatal 'Startup checks failed for supervisor library'
+  fi
+
+  return 0
 }
 
 supervisor_accounting_read()

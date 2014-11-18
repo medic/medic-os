@@ -24,6 +24,7 @@ main()
   fi
 
   require_root
+  supervisor_init
 
   if [ -z "$package" -o "$package" = 'all' ]; then
     supervisor_list_all_packages

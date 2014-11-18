@@ -11,6 +11,7 @@ main()
   fi
 
   require_root
+  supervisor_init
 
   for path in "$@"; do
     local package="`package_extract_name "$path"`" \

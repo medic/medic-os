@@ -21,6 +21,31 @@ is_storage_empty()
   return "$?"
 }
 
+mount_special_filesystems()
+{
+  local rv='0'
+
+  while [ "$#" -gt 0 ]; do
+
+    local type="$1"
+    local dir="$2"
+    shift 2
+
+    local original_type="`stat -fc %T "$dir"`"
+
+    if [ "$original_type" != "$type" ]; then
+      if ! mount -t "$type" "$type" "$dir"; then
+        warn "Failed to mount a '$type' filesystem at '$dir'"
+        rv="$(($rv + 1))"
+      fi
+    else
+      log "Volume of type '$type' is already mounted at '$dir'"
+    fi
+  done
+
+  return "$?"
+}
+
 disconnect_storage()
 {
   local device="$1"

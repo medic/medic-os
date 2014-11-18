@@ -39,6 +39,7 @@ show_services()
 main()
 {
   require_root
+  supervisor_init
 
   if [ "$#" -gt 0 ]; then
     for package in "$@"; do
