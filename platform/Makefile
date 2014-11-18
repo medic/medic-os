@@ -182,7 +182,7 @@ build-initrd: copy-compiler-libraries
 	cp -a initrd/common/* 'initrd/${PLATFORM}/' && \
 	\
 	date +'%Y/%m/%d %H:%M:%S' \
-	  > 'initrd/${PLATFORM}/etc/build-timestamp' &&
+	  > 'initrd/${PLATFORM}/etc/build-timestamp' && \
 	\
 	(cd 'initrd/${PLATFORM}' && \
 	  find * | cpio -o -H newc 2>/dev/null \
