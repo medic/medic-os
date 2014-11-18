@@ -5,7 +5,7 @@ PLATFORM := $(shell ./scripts/detect-platform)
 
 SYSTEM_ID ?= medic-os
 SYSTEM_NAME ?= Medic OS
-SYSTEM_VERSION_STRING ?= 1.6.0
+SYSTEM_VERSION_STRING ?= 1.1.0
 SYSTEM_IMAGE_ID := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}-${PLATFORM}
 
 COMPILER_VERSION ?= 4.8.2
@@ -211,27 +211,27 @@ strip-binaries:
 
 concierge-pkg:
 	@echo -n 'Compressing package 'concierge'... ' && \
-	scripts/build-package 'concierge' 1010 '${PLATFORM}' && \
+	scripts/build-package 'concierge' 10100 '${PLATFORM}' && \
 	echo 'done.'
 
 java-pkg:
 	@echo -n 'Compressing package 'java'... ' && \
-	scripts/build-package 'java' 1765 '${PLATFORM}' && \
+	scripts/build-package 'java' 17650 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 1600 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 16000 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
 	@echo -n 'Compressing package 'system-services'... ' && \
-	scripts/build-package 'system-services' 1010 '${PLATFORM}' && \
+	scripts/build-package 'system-services' 10100 '${PLATFORM}' && \
 	echo 'done.'
 
 vm-tools-pkg:
 	@echo -n 'Compressing package 'vm-tools'... ' && \
-	scripts/build-package 'vm-tools' 9401 '${PLATFORM}' && \
+	scripts/build-package 'vm-tools' 94010 '${PLATFORM}' && \
 	echo 'done.'
 
 shrink-gardener:
@@ -239,12 +239,12 @@ shrink-gardener:
 
 gardener-pkg: shrink-gardener
 	@echo -n 'Compressing package 'gardener'... ' && \
-	scripts/build-package 'gardener' 1100 '${PLATFORM}' && \
+	scripts/build-package 'gardener' 11000 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-transport-pkg:
 	@echo -n 'Compressing package 'medic-transport'... ' && \
-	scripts/build-package 'medic-transport' 1010 '${PLATFORM}' && \
+	scripts/build-package 'medic-transport' 10100 '${PLATFORM}' && \
 	echo 'done.'
 
 convert-boot-logo:
