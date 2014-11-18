@@ -181,6 +181,9 @@ build-initrd: copy-compiler-libraries
 	chmod 0440 initrd/common/etc/sudoers && \
 	cp -a initrd/common/* 'initrd/${PLATFORM}/' && \
 	\
+	date +'%Y/%m/%d %H:%M:%S' \
+	  > 'initrd/${PLATFORM}/etc/build-timestamp' &&
+	\
 	(cd 'initrd/${PLATFORM}' && \
 	  find * | cpio -o -H newc 2>/dev/null \
 	    | sh ../../source/core/source/linux/scripts/xz_wrap.sh \
