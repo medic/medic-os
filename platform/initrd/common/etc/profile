@@ -3,12 +3,34 @@
 
 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-# Prompt format for Ash
-if [ "`id -u`" -eq 0 ]; then
- 	PS1='\e[1;31m\u\e[0m@\e[1;31m\h\e[0m:\e[1;34m\w\e[0m \$ '
-else
- 	PS1='\e[1;36m\u\e[0m@\e[1;36m\h\e[0m:\e[1;34m\w\e[0m \$ '
-fi
+# set_prompt:
+#   Set up a reasonable command-line prompt for the Busybox
+#   `ash` shell. Include the magic `\[` and `\]` tokens to mark
+#   non-printable ranges, and ensure that the line editing code
+#   still knows exactly where it needs to wrap a long line.
+
+set_prompt()
+{
+  local color='36'
+  local dir_color='34'
+
+  if [ "`id -u`" -eq 0 ]; then
+    color='31'
+  fi
+
+  local user="\\[\\e[1;${color}m\]\\u\\[\\e[0m\\]"
+  local host="\\[\\e[1;${color}m\]\\h\\[\\e[0m\\]"
+  local directory="\\[\\e[1;${dir_color}m\]\\w\\[\\e[0m\\]"
+
+  export PS1="$user@$host:$directory \$ "
+}
+
+# Set prompt for Ash
+set_prompt
+unset set_prompt
+
+# Use colorful directory listings
+alias ls='ls --color=auto'
 
 # Substitute for `ldd` command
 which ldd > /dev/null || alias ldd=LD_TRACE_LOADED_OBJECTS=1
