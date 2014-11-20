@@ -29,14 +29,17 @@ main()
   local host="\\[\\e[1;${color}m\]\\h\\[\\e[0m\\]"
   local directory="\\[\\e[1;${dir_color}m\]\\w\\[\\e[0m\\]"
 
-  export PS1="$user@$host:$directory \$ "
+  export PS1="$user@$host:$directory \\$ "
 
   # Set path:
   #  Include the service and package management scripts.
 
   export PATH="/boot:$PATH"
 
-  exec /bin/sh - "$@"
+  # Finish:
+  #  Execute the interactive shell.
+
+  exec /bin/sh
   return "$?"
 }
 

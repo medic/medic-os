@@ -22,7 +22,7 @@ set_prompt()
   local host="\\[\\e[1;${color}m\]\\h\\[\\e[0m\\]"
   local directory="\\[\\e[1;${dir_color}m\]\\w\\[\\e[0m\\]"
 
-  export PS1="$user@$host:$directory \$ "
+  export PS1="$user@$host:$directory \\$ "
 }
 
 # Set prompt for Ash
