@@ -130,7 +130,7 @@ app.all('/setup/password', function (_req, _res) {
     function (_sys_passwd, _next_fn) {
       add_couchdb_defaults(_req, _sys_passwd, _next_fn);
     }
-    
+
   ], function (_err) {
 
     if (_err) {
@@ -433,7 +433,7 @@ var disable_concierge_service = function (_req, _callback) {
     'sudo', [ private_path + '/concierge-disable' ],
       { stdio: 'pipe' }
   );
-  
+
   disable.stdin.end();
 
   disable.on('exit', function (_code, _signal) {
@@ -442,7 +442,7 @@ var disable_concierge_service = function (_req, _callback) {
         If we're successful, our process will exit on SIGTERM,
         and this exit event will not be reached. If we do see a
         subprocess exit, something went wrong (we're still alive). */
-        
+
     return request_error(
       'Failed to shut down: internal error',
         _req, _callback
@@ -481,7 +481,6 @@ var add_openssh_public_key = function (_req, _key, _callback) {
 
     return _callback();
   });
-
 };
 
 /**
@@ -501,7 +500,7 @@ var save_system_password = function (_req, _passwd, _callback) {
     }
 
     var buffer = _passwd + '\n';
-    
+
     fs.write(_fd, buffer, 0, 'utf-8', function (_err, _len, _buf) {
       if (_err) {
         _req.flash('error', "Internal error: file write failed");
@@ -525,11 +524,11 @@ var read_system_password = function (_callback) {
 
   try {
     fs.readFile(system_passwd_path, function (_err, _data) {
-  
+
       if (_err) {
         return _callback(_err);
       }
-    
+
       return _callback(null, trim(_data.toString()));
     });
   } catch (e) {
@@ -555,7 +554,7 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
 
     passwd.stdin.write(_passwd + '\n' + _confirm + '\n');
     passwd.stdin.end();
-   
+
     passwd.on('exit', function (_code, _signal) {
 
       if (_code != 0) {
@@ -602,7 +601,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
     /* Step 0: Read system password, if it's already set */
     function (_cb) {
-    
+
       read_system_password(function (_err, _system_passwd) {
         if (!_err) {
           put_template.auth = { user: 'service', pass: _system_passwd };
@@ -611,7 +610,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
         return _cb(null, _system_passwd);
       });
     },
-    
+
     /* Step 1: Primary password change (i.e. admin) */
     function (_system_passwd, _cb) {
 
@@ -628,7 +627,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
     /* Step 2: Secondary password generation, if necessary */
     function (_system_passwd, _cb) {
-    
+
       if (_system_passwd) {
         return _cb(null, _system_passwd, false);
       }
@@ -645,7 +644,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
     /* Step 3: Secondary password change */
     function (_system_passwd, _first_run, _cb) {
-    
+
       if (_first_run) {
         put_template.auth = { user: 'admin', pass: _passwd };
       } else {
@@ -668,20 +667,20 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
     /* Step 4: Create user document for `admin` */
     function (_system_passwd, _first_run, _cb) {
-    
+
       if (!_first_run) {
         return _cb(null, _system_passwd);
       }
-      
+
       var doc = {
         _id: 'org.couchdb.user:admin', roles: [],
         type: 'user', name: 'admin', password: null
       };
-      
+
       var put = clone(put_template);
       put.body = JSON.stringify(doc);
       put.uri = protocol + server + '/_users/' + doc._id,
-      
+
       request.put(put, function (_err, _resp, _body) {
         return check_response(
           _err, _resp, _req, 'Administrative account creation',
@@ -691,7 +690,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
         );
       });
     },
-    
+
     /* Step 5: In-filesystem storage of secondary password */
     function (_system_passwd, _cb) {
 
@@ -754,7 +753,7 @@ var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
     auth: { user: 'service', pass: _system_passwd },
     headers: { 'Content-Type': 'application/json' }
   };
-  
+
   async.waterfall([
 
     /* Step 1: Restrict CouchDB to valid users */
@@ -791,7 +790,7 @@ var main = function (_argv) {
   } catch (e) {
     fatal("Couldn't bind socket for listening on port 280", e);
   }
- 
+
   try {
     process.setuid('concierge');
   } catch (e) {
