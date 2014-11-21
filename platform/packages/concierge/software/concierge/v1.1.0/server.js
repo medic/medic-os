@@ -592,7 +592,6 @@ var _delete_couchdb_user = function (_user, _is_admin,
       (_is_admin ? 'admins' : 'users') + '/' + _user
   );
   
-
   /* Secondary URL:
    *   If we're deleting an administrative user, we'll also try
    *   to delete the ordinary user document for that user, if
@@ -605,12 +604,11 @@ var _delete_couchdb_user = function (_user, _is_admin,
   }
 
   var req = _.extend(
-    { method: 'delete', uri: primary_url },
-      (_request_params || {})
+    { uri: primary_url }, (_request_params || {})
   );
 
   /* Let's kill some users */
-  request(req, function (_err, _resp, _body) {
+  request.del(req, function (_err, _resp, _body) {
 
     if (_err || !http_status_successful(_resp.statusCode)) {
       return _callback(new Error('Failed to delete user'));
@@ -623,12 +621,34 @@ var _delete_couchdb_user = function (_user, _is_admin,
       return _callback();
     }
 
-    /* Give this a try */
     req.uri = secondary_url;
 
-    /* Errors are intentionally ignored */
-    request(req, function (_err, _resp, _body) {
-      return _callback();
+    /* Get document revision */
+    request.get(req, function (_err, _resp, _body) {
+
+      /* Errors intentionally ignored */
+      if (_err || !http_status_successful(_resp.statusCode)) {
+        return _callback();
+      }
+
+      try {
+        var doc = JSON.parse(_body);
+      } catch (_e) {
+        return _callback();
+      }
+
+      /* Errors intentionally ignored */
+      if (!_.isObject(doc) || !doc._rev) {
+        return _callback();
+      }
+
+      /* Include revision */
+      req.qs = { rev: doc._rev };
+
+      /* Delete user document; ignore errors */
+      request.del(req, function (_err, _resp, _body) {
+        return _callback();
+      });
     });
   });
 };
@@ -669,7 +689,7 @@ var delete_couchdb_unknown_users = function (_use_admins,
       ));
     }
 
-    /* For each view name... */
+    /* For each user name... */
     async.each(
       _.keys(ddoc),
 
