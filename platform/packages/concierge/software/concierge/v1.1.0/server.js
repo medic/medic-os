@@ -124,7 +124,7 @@ app.all('/setup/password', function (_req, _res) {
   async.waterfall([
 
     function (_next_fn) {
-      set_password(_req, password, confirmation, _next_fn);
+      setup_accounts(_req, user, password, confirmation, _next_fn);
     },
 
     function (_sys_passwd, _next_fn) {
@@ -575,22 +575,19 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
 };
 
 /**
- * set_couchdb_password:
+ * setup_couchdb_accounts:
  *   Set a new administrative password for the local instance of
  *   CouchDB. If this is the first time the function is being used,
  *   the database server will be removed from "admin party" mode, and
  *   start requiring user authentication/authorization for operations.
  */
-var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
+var setup_couchdb_accounts = function (_req, _user,
+                                       _passwd, _confirm, _callback) {
 
-  /* Set CouchDB administrative password:
-      This takes the database out of 'admin party' mode. */
+  var is_first_run = false;
+  var system_passwd = false;
 
-  var admins_uri = server + '/_config/admins'
-
-  var put_template = {
-    body: JSON.stringify(_passwd),
-    uri: protocol + admins_uri + '/admin',
+  var request_template = {
     headers: { 'Content-type': 'application/json' }
   };
 
@@ -599,120 +596,202 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
   async.waterfall([
 
-    /* Step 0: Read system password, if it's already set */
+    /* Step 0:
+     *   Read system password, if it's already set. */
+
     function (_cb) {
 
       read_system_password(function (_err, _system_passwd) {
+
         if (!_err) {
-          put_template.auth = { user: 'service', pass: _system_passwd };
+          request_template.auth = { user: 'service', pass: _system_passwd };
         }
+
         /* Ignore errors: file might not exist */
-        return _cb(null, _system_passwd);
+        system_passwd = _system_passwd;
+        return _cb();
       });
     },
 
-    /* Step 1: Primary password change (i.e. admin) */
-    function (_system_passwd, _cb) {
+    /* Step 1:
+     *   Change the administrator password. */
 
-      var put = clone(put_template);
+    function (_cb) {
+
+      var put = make_couchdb_password_change_request(
+        'admin', _passwd, request_template
+      );
 
       request.put(put, function (_err, _resp, _body) {
         return check_response(
-          _err, _resp, _req, 'Primary password change', function(_e) {
-            return _cb(_e, _system_passwd);
-          }
+          _err, _resp, _req, 'Password setup', _cb
         );
       });
     },
 
-    /* Step 2: Secondary password generation, if necessary */
-    function (_system_passwd, _cb) {
+    /* Step 2:
+     *   Generate a random system password, if necessary. This
+     *   will allow local processes to connect to the database. */
 
-      if (_system_passwd) {
-        return _cb(null, _system_passwd, false);
+    function (_cb) {
+
+      if (system_passwd) {
+        return _cb();
       }
 
       /* Generate random 2048-bit password */
       crypto.randomBytes(256, function (_err, _data) {
+
         if (_err) {
           return _cb(_err);
         }
 
-        return _cb(null, _data.toString('hex'), true);
+        is_first_run = true;
+        system_passwd = _data.toString('hex');
+
+        return _cb();
       });
     },
 
-    /* Step 3: Secondary password change */
-    function (_system_passwd, _first_run, _cb) {
+    /* Step 3:
+     *   Change the password for the system service account. */
 
-      if (_first_run) {
-        put_template.auth = { user: 'admin', pass: _passwd };
+    function (_cb) {
+
+      if (is_first_run) {
+        request_template.auth = { user: 'admin', pass: _passwd };
       } else {
-        put_template.auth = { user: 'service', pass: _system_passwd };
+        request_template.auth = { user: 'service', pass: system_passwd };
       }
 
-      var put = clone(put_template);
-      put.body = JSON.stringify(_system_passwd);
-      put.uri = protocol + admins_uri + '/service';
+      var put = make_couchdb_password_change_request(
+        'service', system_passwd, request_template
+      );
 
       request.put(put, function (_err, _resp, _body) {
-
         return check_response(
-          _err, _resp, _req, 'Service account creation', function (_e) {
-            return _cb(_e, _system_passwd, _first_run);
-          }
+          _err, _resp, _req, 'System password setup', _cb
         );
       });
     },
 
-    /* Step 4: Create user document for `admin` */
-    function (_system_passwd, _first_run, _cb) {
+    /* Step 4:
+     *   Store system password in the local filesystem. */
 
-      if (!_first_run) {
-        return _cb(null, _system_passwd);
+    function (_cb) {
+
+      /* Store system password in filesystem:
+          This is used by local services connecting to CouchDB. */
+
+      save_system_password(_req, system_passwd, function (_err) {
+        return _cb(_err);
+      });
+    },
+
+    /* Step 5:
+     *   Create a user document for the `admin` user. */
+
+    function (_cb) {
+
+      if (!is_first_run) {
+        return _cb();
       }
 
-      var doc = {
-        _id: 'org.couchdb.user:admin', roles: [],
-        type: 'user', name: 'admin', password: null
-      };
-
-      var put = clone(put_template);
-      put.body = JSON.stringify(doc);
-      put.uri = protocol + server + '/_users/' + doc._id,
+      var put = make_couchdb_user_creation_request(
+        'admin', _passwd, request_template
+      );
 
       request.put(put, function (_err, _resp, _body) {
         return check_response(
-          _err, _resp, _req, 'Administrative account creation',
-          function (_e) {
-            return _cb(_e, _system_passwd);
-          }
+          _err, _resp, _req, 'Administrator user creation', _cb
         );
       });
     },
 
-    /* Step 5: In-filesystem storage of secondary password */
-    function (_system_passwd, _cb) {
+    /* Step 6:
+     *   Set up an admin-enabled password for the named user. */
 
-      /* Store secondary administrative password in filesystem:
-          This is used by local services needing to connect to CouchDB. */
+    function (_cb) {
 
-      save_system_password(_req, _system_passwd, function (_err) {
-        return _cb(_err, _system_passwd);
+      var put = make_couchdb_password_change_request(
+        _user, _passwd, request_template
+      );
+
+      request.put(put, function (_err, _resp, _body) {
+        return check_response(
+          _err, _resp, _req, 'User password setup', _cb
+        );
+      });
+    },
+
+    /* Step 7:
+     *   Create a user document for the named user. */
+
+    function (_cb) {
+
+      var put = make_couchdb_user_creation_request(
+        _user, _passwd, request_template
+      );
+
+      request.put(put, function (_err, _resp, _body) {
+        return check_response(
+          _err, _resp, _req, 'User creation', _cb
+        );
       });
     }
 
-  ], function (_err, _system_passwd) {
-    return _callback(_err, _system_passwd);
+  ], function (_err) {
+
+    /* Finished:
+     *   Deliver the randomly-generated password to our caller. */
+
+    return _callback(_err, system_passwd);
   });
 };      
 
 /**
- * set_password:
+ * make_couchdb_user_creation_request:
+ *   Return an PUT request, formatted as an object, that can be
+ *   used with `request` to create a new CouchDB user account.
  */
-var set_password = function (_req, _passwd, _confirm, _callback) {
+var make_couchdb_user_creation_request = function (_name, _passwd,
+                                                   _request_template) {
+  var doc = {
+    _id: 'org.couchdb.user:' + _name,
+    roles: [], type: 'user', name: _name, password: _passwd
+  };
 
-  /* Start of password change:
+  var req = {
+    body: JSON.stringify(doc),
+    uri: protocol + server + '/_users/' + doc._id
+  };
+
+  return _.extend(req, (_request_template || {}));
+};
+
+/**
+ * make_couchdb_password_change_request:
+ */
+make_couchdb_password_change_request = function (_name, _password,
+                                                 _request_template) {
+
+  var admins_uri = server + '/_config/admins';
+
+  var req = {
+    body: JSON.stringify(_password),
+    uri: [ protocol + admins_uri, _name ].join('/')
+  };
+
+  return _.extend(req, (_request_template || {}));
+};
+
+/**
+ * setup_accounts:
+ */
+var setup_accounts = function (_req, _user,
+                               _passwd, _confirm, _callback) {
+
+  /* Start of account setup:
       Validate the supplied password and confirmation. */
 
   if ((_passwd || '').length < 8) {
@@ -729,14 +808,22 @@ var set_password = function (_req, _passwd, _confirm, _callback) {
     );
   }
 
-  /* Password databases are modified here */
-  set_unix_password(_req, _passwd, _confirm, function (_err) {
+  /* Change passwords:
+   *   The system and CouchDB passwords are modified here. */
 
-    if (_err) {
-      return _callback(_err);
+  async.waterfall([
+    function (_next_fn) {
+      set_unix_password(
+        _req, _passwd, _confirm, _next_fn
+      );
+    },
+    function (_next_fn) {
+      setup_couchdb_accounts(
+        _req, _user, _passwd, _confirm, _next_fn
+      );
     }
-
-    set_couchdb_password(_req, _passwd, _confirm, _callback);
+  ], function (_err, _system_passwd) {
+    return _callback(_err, _system_passwd);
   });
 };
 
