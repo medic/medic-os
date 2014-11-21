@@ -194,7 +194,7 @@ var poll_required_services = function (_req, _res, _callback) {
       }));
     }
 
-    if (_resp.statusCode != 200) {
+    if (!http_status_successful(_resp.statusCode)) {
       return _callback(_.extend(rv, {
         detail: 'Error requesting medic-api version information'
       }));
@@ -216,13 +216,14 @@ var poll_required_services = function (_req, _res, _callback) {
 };
 
 /**
- * _regenerate_view:
+ * _regenerate_couchdb_view:
  *   Request `_view_url` using `_request_params`, in order to make
  *   sure a map/reduce view is up to date. Completely ignore the
  *   response body. Call `_callback` when finished, using a normal
  *   Node-style error object as the first parameter.
  */
-var _regenerate_view = function (_view_url, _request_params, _callback) {
+var _regenerate_couchdb_view = function (_view_url,
+                                         _request_params, _callback) {
 
   var get = _.extend(
     { uri: _view_url }, (_request_params || {})
@@ -233,7 +234,7 @@ var _regenerate_view = function (_view_url, _request_params, _callback) {
 
   request.get(get, function (_err, _resp, _body) {
 
-    if (_err || _resp.statusCode != 200) {
+    if (_err || !http_status_successful(_resp.statusCode)) {
       return _callback(new Error(
         'Failed to regenerate index for map/reduce view'
       ));
@@ -248,7 +249,7 @@ var _regenerate_view = function (_view_url, _request_params, _callback) {
 };
 
 /**
- * regenerate_views:
+ * regenerate_couchdb_views:
  *   Helper function for the `/setup/poll` REST API method.
  *   Regenerate all map/reduce views for the CouchDB database
  *   provided in `_database_url`, using views attached to the
@@ -256,8 +257,8 @@ var _regenerate_view = function (_view_url, _request_params, _callback) {
  *   finished regenerating, call `_callback(rv)`, where `rv`
  *   is an object containing at least a `ready` property.
  */
-var regenerate_views = function (_database_url, _ddoc_name,
-                                 _request_params, _callback) {
+var regenerate_couchdb_views = function (_database_url, _ddoc_name,
+                                         _request_params, _callback) {
 
   var rv = { ready: false, handler: 'concierge' };
   var uri = [ _database_url, '_design', _ddoc_name ].join('/');
@@ -268,7 +269,7 @@ var regenerate_views = function (_database_url, _ddoc_name,
 
   request.get(get, function (_err, _resp, _body) {
 
-    if (_err || _resp.statusCode != 200) {
+    if (_err || !http_status_successful(_resp.statusCode)) {
       return _callback(_.extend(rv, {
         detail: 'Failed to retrieve design document'
       }));
@@ -306,7 +307,7 @@ var regenerate_views = function (_database_url, _ddoc_name,
         ].join('/');
 
         /* Actually regenerate the view */
-        _regenerate_view(view_url, _request_params, _fn);
+        _regenerate_couchdb_view(view_url, _request_params, _fn);
       },
 
       /* Completion */
@@ -575,6 +576,130 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
 };
 
 /**
+ * _delete_couchdb_user:
+ */
+var _delete_couchdb_user = function (_user, _is_admin,
+                                     _request_params, _callback) {
+
+  var users_url = protocol + server + '/_users/';
+  var config_url = protocol + server + '/_config/';
+
+  /* Primary URL:
+   *   Either the `admins` document or the user document. */
+
+  var primary_url = (
+    config_url + '/' +
+      (_is_admin ? 'admins' : 'users') + '/' + _user
+  );
+  
+
+  /* Secondary URL:
+   *   If we're deleting an administrative user, we'll also try
+   *   to delete the ordinary user document for that user, if
+   *   it's present. If it's not or deletion fails, ignore it. */
+  
+  var secondary_url = false;
+
+  if (_is_admin) {
+    secondary_url = users_url + 'org.couchdb.user:' + _user;
+  }
+
+  var req = _.extend(
+    { method: 'delete', uri: primary_url },
+      (_request_params || {})
+  );
+
+  /* Let's kill some users */
+  request(req, function (_err, _resp, _body) {
+
+    if (_err || !http_status_successful(_resp.statusCode)) {
+      return _callback(new Error('Failed to delete user'));
+    }
+
+    /* Early exit:
+     *   If we were deleting a non-admin user, we're done. */
+
+    if (!secondary_url) {
+      return _callback();
+    }
+
+    /* Give this a try */
+    req.uri = secondary_url;
+
+    /* Errors are intentionally ignored */
+    request(req, function (_err, _resp, _body) {
+      return _callback();
+    });
+  });
+};
+
+/**
+ * delete_couchdb_unknown_users:
+ */
+var delete_couchdb_unknown_users = function (_use_admins,
+                                             _request_params, _callback) {
+  var uri = (
+    protocol + server + '/_config/' +
+      (_use_admins ? 'admins' : 'users')
+  );
+
+  var get = _.extend(
+    { uri: uri }, (_request_params || {})
+  );
+
+  request.get(get, function (_err, _resp, _body) {
+
+    if (_err || !http_status_successful(_resp.statusCode)) {
+      return _callback(new Error(
+        'Failed to retrieve list of users'
+      ));
+    }
+
+    try {
+      var ddoc = JSON.parse(_body);
+    } catch (_e) {
+      return _callback(new Error(
+        'Invalid JSON response returned by database server'
+      ));
+    }
+
+    if (!_.isObject(ddoc)) {
+      return _callback(new Error(
+        'Database server returned an improperly-structured document'
+      ));
+    }
+
+    /* For each view name... */
+    async.each(
+      _.keys(ddoc),
+
+      /* Iterator */
+      function (_user, _fn) {
+
+        /* Required users: don't delete these */
+        if (_user == 'admin' || _user == 'service') {
+          return _fn();
+        }
+
+        /* Anything else: delete it */
+        _delete_couchdb_user(_user, true, _request_params, _fn);
+      },
+
+      /* Completion */
+      function (_err) {
+
+        if (_err) {
+          return _callback(new Error(
+            'Failure while retrieving list of users'
+          ));
+        }
+        return _callback();
+      }
+    );
+  });
+};
+
+/**
  * setup_couchdb_accounts:
  *   Set a new administrative password for the local instance of
  *   CouchDB. If this is the first time the function is being used,
@@ -709,9 +834,28 @@ var setup_couchdb_accounts = function (_req, _user,
     },
 
     /* Step 6:
+     *   Delete any named users created in previous runs. */
+
+    function (_cb) {
+
+      delete_couchdb_unknown_users(true, request_template, function (_err) {
+
+        if (_err) {
+          return request_error(_err.message, _req, _cb);
+        } else {
+          return _cb();
+        }
+      });
+    },
+
+    /* Step 7:
      *   Set up an admin-enabled password for the named user. */
 
     function (_cb) {
+
+      if (_user == 'admin') {
+        return _cb();
+      }
 
       var put = make_couchdb_password_change_request(
         _user, _passwd, request_template
@@ -724,10 +868,14 @@ var setup_couchdb_accounts = function (_req, _user,
       });
     },
 
-    /* Step 7:
-     *   Create a user document for the named user. */
+    /* Step 8:
+     *   Create a user document for the named administrative user. */
 
     function (_cb) {
+
+      if (_user == 'admin') {
+        return _cb();
+      }
 
       var put = make_couchdb_user_creation_request(
         _user, _passwd, request_template
@@ -792,9 +940,37 @@ var setup_accounts = function (_req, _user,
                                _passwd, _confirm, _callback) {
 
   /* Start of account setup:
-      Validate the supplied password and confirmation. */
+      Validate the supplied user name and password. */
 
-  if ((_passwd || '').length < 8) {
+  if (!_.isString(_user) || _user.length < 4) {
+    return request_error(
+      'User name must be at least four characters',
+        _req, _callback
+    );
+  }
+
+  if (!_user.match(/^[\d\w\-\.]+$/)) {
+    return request_error(
+      'User name cannot contain spaces or punctuation',
+        _req, _callback
+    );
+  }
+
+  if (_user.match(/^[_\-\.]/)) {
+    return request_error(
+      'User name cannot start with punctuation',
+        _req, _callback
+    );
+  }
+
+  if (_user == 'service') {
+    return request_error(
+      'User name already taken; please choose another',
+        _req, _callback
+    );
+  }
+
+  if (!_.isString(_passwd) || _passwd.length < 8) {
     return request_error(
       'Password must be at least eight characters',
         _req, _callback
