@@ -184,7 +184,7 @@ app.get('/setup/poll', function (_req, _res) {
 var poll_required_services = function (_req, _res, _callback) {
 
   var rv = { ready: false, handler: 'concierge' };
-  var get = { uri: protocol + api_server + '/api/info' };
+  var get = { url: protocol + api_server + '/api/info' };
 
   request.get(get, function (_err, _resp, _body) {
 
@@ -226,7 +226,7 @@ var _regenerate_couchdb_view = function (_view_url,
                                          _request_params, _callback) {
 
   var get = _.extend(
-    { uri: _view_url }, (_request_params || {})
+    { url: _view_url }, (_request_params || {})
   );
 
   /* Just request the view:
@@ -261,10 +261,10 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
                                          _request_params, _callback) {
 
   var rv = { ready: false, handler: 'concierge' };
-  var uri = [ _database_url, '_design', _ddoc_name ].join('/');
+  var url = [ _database_url, '_design', _ddoc_name ].join('/');
 
   var get = _.extend(
-    { uri: uri }, (_request_params || {})
+    { url: url }, (_request_params || {})
   );
 
   request.get(get, function (_err, _resp, _body) {
@@ -576,6 +576,16 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
 };
 
 /**
+ * is_builtin_user_name:
+ *   Return true if the user name `_user` is reserved by the
+ *   system for internal use. Otherwise, return false.
+ */
+var is_builtin_user_name = function (_user) {
+
+  return (_user == 'admin' || _user == 'service');
+};
+
+/**
  * _delete_couchdb_user:
  */
 var _delete_couchdb_user = function (_user, _is_admin,
@@ -604,7 +614,7 @@ var _delete_couchdb_user = function (_user, _is_admin,
   }
 
   var req = _.extend(
-    { uri: primary_url }, (_request_params || {})
+    { url: primary_url }, (_request_params || {})
   );
 
   /* Let's kill some users */
@@ -621,7 +631,7 @@ var _delete_couchdb_user = function (_user, _is_admin,
       return _callback();
     }
 
-    req.uri = secondary_url;
+    req.url = secondary_url;
 
     /* Get document revision */
     request.get(req, function (_err, _resp, _body) {
@@ -658,13 +668,13 @@ var _delete_couchdb_user = function (_user, _is_admin,
  */
 var delete_couchdb_unknown_users = function (_use_admins,
                                              _request_params, _callback) {
-  var uri = (
+  var url = (
     protocol + server + '/_config/' +
       (_use_admins ? 'admins' : 'users')
   );
 
   var get = _.extend(
-    { uri: uri }, (_request_params || {})
+    { url: url }, (_request_params || {})
   );
 
   request.get(get, function (_err, _resp, _body) {
@@ -697,7 +707,7 @@ var delete_couchdb_unknown_users = function (_use_admins,
       function (_user, _fn) {
 
         /* Required users: don't delete these */
-        if (_user == 'admin' || _user == 'service') {
+        if (is_builtin_user_name(_user)) {
           return _fn();
         }
 
@@ -873,7 +883,7 @@ var setup_couchdb_accounts = function (_req, _user,
 
     function (_cb) {
 
-      if (_user == 'admin') {
+      if (is_builtin_user_name(_user)) {
         return _cb();
       }
 
@@ -893,7 +903,7 @@ var setup_couchdb_accounts = function (_req, _user,
 
     function (_cb) {
 
-      if (_user == 'admin') {
+      if (is_builtin_user_name(_user)) {
         return _cb();
       }
 
@@ -931,7 +941,7 @@ var make_couchdb_user_creation_request = function (_name, _passwd,
 
   var req = {
     body: JSON.stringify(doc),
-    uri: protocol + server + '/_users/' + doc._id
+    url: protocol + server + '/_users/' + doc._id
   };
 
   return _.extend(req, (_request_template || {}));
@@ -943,11 +953,11 @@ var make_couchdb_user_creation_request = function (_name, _passwd,
 make_couchdb_password_change_request = function (_name, _password,
                                                  _request_template) {
 
-  var admins_uri = server + '/_config/admins';
+  var admins_url = server + '/_config/admins';
 
   var req = {
     body: JSON.stringify(_password),
-    uri: [ protocol + admins_uri, _name ].join('/')
+    url: [ protocol + admins_url, _name ].join('/')
   };
 
   return _.extend(req, (_request_template || {}));
@@ -1041,10 +1051,10 @@ var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
 
     /* Step 1: Restrict CouchDB to valid users */
     function (_cb) {
-      var config_uri = server + '/_config/couch_httpd_auth'
+      var config_url = server + '/_config/couch_httpd_auth'
 
       put.body = '"true"';
-      put.uri = protocol + config_uri + '/require_valid_user';
+      put.url = protocol + config_url + '/require_valid_user';
 
       request.put(put, function (_err, _resp, _body) {
         return check_response(
