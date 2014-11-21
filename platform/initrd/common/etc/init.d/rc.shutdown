@@ -10,6 +10,8 @@ alias swapoff="busybox swapoff"
 alias umount="busybox umount"
 clear 
 
+echo 'Shutting down...'
+
 sync && sync
 swapoff -a 2>/dev/null
 
