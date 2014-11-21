@@ -26,6 +26,15 @@ var private_path = '/srv/scripts/concierge/private';
 var system_passwd_path = '/srv/storage/concierge/passwd/system';
 
 /**
+ * Background view regeneration:
+ *   We start rebuilding views as soon as the account setup is
+ *   finished. This process spans requests; results are reported
+ *   via the `poll` interface as a final step. If this variable is
+ *   an object, view regeneration has completed.
+ */
+var view_regeneration_results = false;
+
+/**
  * Start express:
  *   We need to do this before using `app`.
  */
@@ -208,10 +217,20 @@ var poll_required_services = function (_req, _res, _callback) {
       }));
     }
 
-    return _callback(_.extend(rv, {
-      ready: true, version: info.version,
-      detail: 'All required services are currently running'
-    }));
+    if (!view_regeneration_results) {
+      return _callback(_.extend(rv, {
+        detail: 'Map/reduce views are still regenerating'
+      }));
+    }
+
+    rv = view_regeneration_results;
+
+    if (rv.ready) {
+      rv.version = info.version;
+      rv.detail = 'All required services are currently running';
+    }
+
+    return _callback(rv);
   });  
 };
 
@@ -236,7 +255,7 @@ var _regenerate_couchdb_view = function (_view_url,
 
     if (_err || !http_status_successful(_resp.statusCode)) {
       return _callback(new Error(
-        'Failed to regenerate index for map/reduce view'
+        "Failed to request view from '" + _view_url + "'"
       ));
     }
 
@@ -259,8 +278,10 @@ var _regenerate_couchdb_view = function (_view_url,
  */
 var regenerate_couchdb_views = function (_database_url, _ddoc_name,
                                          _request_params, _callback) {
+  var rv = {
+    handler: 'concierge', failure: true, ready: false
+  };
 
-  var rv = { ready: false, handler: 'concierge' };
   var url = [ _database_url, '_design', _ddoc_name ].join('/');
 
   var get = _.extend(
@@ -312,14 +333,16 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
 
       /* Completion */
       function (_err) {
+
         if (_err) {
           return _callback(_.extend(rv, {
-            failure: true, error: _err.message,
-            detail: 'Failure while regenerating map/reduce views'
+            message: _err.message,
+            detail: 'Failed to regenerate map/reduce views'
           }));
         }
+
         return _callback(_.extend(rv, {
-          ready: true,
+          ready: true, failure: false,
           detail: 'All map/reduce views regenerated successfully'
         }));
       }
@@ -1017,19 +1040,50 @@ var setup_accounts = function (_req, _user,
   /* Change passwords:
    *   The system and CouchDB passwords are modified here. */
 
+  var system_passwd = false;
+
   async.waterfall([
+
     function (_next_fn) {
       set_unix_password(
         _req, _passwd, _confirm, _next_fn
       );
     },
+
     function (_next_fn) {
       setup_couchdb_accounts(
         _req, _user, _passwd, _confirm, _next_fn
       );
+    },
+
+    function (_system_passwd, _next_fn) {
+
+      /* Save return value */
+      system_passwd = _system_passwd;
+
+      /* Background view regeneration:
+       *   View regeneration takes place in the background and
+       *   potentially spans several requests. Results are reported
+       *   in `view_regeneration_results`. Don't wait for completion. */
+
+      if (!view_regeneration_results) {
+
+        var url = protocol + server + '/medic';
+        var req = { auth: { user: 'service', pass: system_passwd } };
+
+        regenerate_couchdb_views(
+          url, 'medic', req, function (_rv) {
+            view_regeneration_results = _rv;
+          }
+        );
+      }
+
+      /* Intentional */
+      return _next_fn();
     }
-  ], function (_err, _system_passwd) {
-    return _callback(_err, _system_passwd);
+
+  ], function (_err) {
+    return _callback(_err, system_passwd);
   });
 };
 
