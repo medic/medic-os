@@ -16,7 +16,7 @@ var child = require('child_process'),
 
 /**
  * Configuration options:
- *   These are module-global 
+ *   These are module-global constants.
  */
 var user = 'vm';
 var protocol = 'http://';
@@ -95,7 +95,6 @@ app.all('/setup/finish', function (_req, _res) {
   disable_concierge_service(_req, function (_err) {
     _res.status(500).send('Service shutdown failed');
   });
-
 });
 
 /**
@@ -145,7 +144,6 @@ app.all('/setup/password', function (_req, _res) {
         );
       });
     });
-
   });
 });
 
@@ -210,12 +208,124 @@ var poll_required_services = function (_req, _res, _callback) {
       ready: true, version: info.version,
       detail: 'All required services are currently running'
     }));
+  });  
+};
+
+/**
+ * _regenerate_view:
+ *   Request `_view_url` using `_request_params`, in order to make
+ *   sure a map/reduce view is up to date. Completely ignore the
+ *   response body. Call `_callback` when finished, using a normal
+ *   Node-style error object as the first parameter.
+ */
+var _regenerate_view = function (_view_url, _request_params, _callback) {
+
+  var get = _.extend(
+    { uri: _view_url }, (_request_params || {})
+  );
+
+  /* Just request the view:
+   *  It will be regenerated *before* the results are returned. */
+
+  request.get(get, function (_err, _resp, _body) {
+
+    if (_err || _resp.statusCode != 200) {
+      return _callback(new Error(
+        'Failed to regenerate index for map/reduce view'
+      ));
+    }
+
+    /* Don't parse result:
+     *   Parsing the JSON would just waste CPU time. Trust the
+     *   HTTP status code, and consider the view regenerated. */
+
+    return _callback();
   });
-  
+};
+
+/**
+ * regenerate_views:
+ *   Helper function for the `/setup/poll` REST API method.
+ *   Regenerate all map/reduce views for the CouchDB database
+ *   provided in `_database_url`, using views attached to the
+ *   design document named `_ddoc_name`. After all views are
+ *   finished regenerating, call `_callback(rv)`, where `rv`
+ *   is an object containing at least a `ready` property.
+ */
+var regenerate_views = function (_database_url, _ddoc_name,
+                                 _request_params, _callback) {
+
+  var rv = { ready: false, handler: 'concierge' };
+  var uri = [ _database_url, '_design', _ddoc_name ].join('/');
+
+  var get = _.extend(
+    { uri: uri }, (_request_params || {})
+  );
+
+  request.get(get, function (_err, _resp, _body) {
+
+    if (_err || _resp.statusCode != 200) {
+      return _callback(_.extend(rv, {
+        detail: 'Failed to retrieve design document'
+      }));
+    }
+
+    try {
+      var ddoc = JSON.parse(_body);
+    } catch (_e) {
+      return _callback(_.extend(rv, {
+        detail: 'Invalid JSON response returned by database server'
+      }));
+    }
+
+    if (!_.isObject(ddoc) || !_.isObject(ddoc.views)) {
+      return _callback(_.extend(rv, {
+        detail: 'Database server returned an improperly-structured document'
+      }));
+    }
+
+    /* For each view name... */
+    async.each(
+      _.keys(ddoc.views),
+
+      /* Iterator */
+      function (_view_name, _fn) {
+
+        /* Skip internal view names */
+        if (_view_name === 'lib') {
+          return _fn();
+        }
+
+        /* Make URL */
+        var view_url = [
+          _database_url, '_design', _ddoc_name, '_view', _view_name
+        ].join('/');
+
+        /* Actually regenerate the view */
+        _regenerate_view(view_url, _request_params, _fn);
+      },
+
+      /* Completion */
+      function (_err) {
+        if (_err) {
+          return _callback(_.extend(rv, {
+            failure: true, error: _err.message,
+            detail: 'Failure while regenerating map/reduce views'
+          }));
+        }
+        return _callback(_.extend(rv, {
+          ready: true,
+          detail: 'All map/reduce views regenerated successfully'
+        }));
+      }
+    );
+  });
 };
 
 /**
  * send_password_response:
+ *   Helper function. Send an appropriate response to the client
+ *   immediately following an administrative password-change operation.
  */
 var send_password_response = function (_err, _req, _res, _success_text) {
 
@@ -238,6 +348,7 @@ var send_password_response = function (_err, _req, _res, _success_text) {
 
 /**
  * fatal:
+ *   Report a process-fatal error and exit.
  */
 var fatal = function (_message, _exception) {
 
@@ -247,6 +358,7 @@ var fatal = function (_message, _exception) {
 
 /**
  * trim:
+ *   Remove leading and trailing whitespace from `_string`.
  */
 var trim = function (_string) {
 
@@ -261,7 +373,6 @@ var trim = function (_string) {
  *  Add `_message` to `_req.flash`, invoke `_cb` with a new
  *  error object, and then return whatever that callback returned.
  */
-
 var request_error = function (_message, _req, _callback) {
 
   _req.flash('error', _message);
@@ -273,6 +384,8 @@ var request_error = function (_message, _req, _callback) {
 
 /**
  * http_status_successful:
+ *   Return true if the code in `_status` is a 2xx status
+ *   code; false otherwise.
  */
 var http_status_successful = function (_status) {
 
@@ -284,7 +397,6 @@ var http_status_successful = function (_status) {
  *  Check both `_err` and `_resp.statusCode`, then fill
  *  `_req.flash` if necessary and return a single `_err` object.
  */
-
 var check_response = function (_err, _resp, _req, _text, _cb) {
 
   if (_err) {
@@ -303,6 +415,10 @@ var check_response = function (_err, _resp, _req, _text, _cb) {
 
 /**
  * disable_concierge_service:
+ *   Commit suicide. Ask the system's service supervisor to disable
+ *   us, so that there's no way our elevated privileges can be used
+ *   to mount an attack on the system. The head-end Nginx proxy is
+ *   configured to fail over transparently.
  */
 var disable_concierge_service = function (_req, _callback) {
 
@@ -333,6 +449,9 @@ var disable_concierge_service = function (_req, _callback) {
 
 /**
  * add_openssh_public_key:
+ *   Add an OpenSSH-style private key to the globally-configured
+ *   user's `authorized_keys` file. This function uses `sudo` and
+ *   `ssh-addkey` to perform the actual file manipulation.
  */
 var add_openssh_public_key = function (_req, _key, _callback) {
 
@@ -363,6 +482,10 @@ var add_openssh_public_key = function (_req, _key, _callback) {
 
 /**
  * save_system_password:
+ *   Save the CouchDB `service` account password to the filesystem,
+ *   in the globally-configured `system_passwd_path`. This password
+ *   allows local services to connect to CouchDB with administrative
+ *   privileges.
  */
 var save_system_password = function (_req, _passwd, _callback) {
 
@@ -390,6 +513,9 @@ var save_system_password = function (_req, _passwd, _callback) {
 
 /**
  * read_system_password:
+ *   Read an existing in-filesystem `service` account password from
+ *   the globally-configured `system_passwd_path`. This password allows
+ *   local services to connect to CouchDB with administrative privileges.
  */
 var read_system_password = function (_callback) {
 
@@ -409,6 +535,9 @@ var read_system_password = function (_callback) {
 
 /**
  * set_unix_password:
+ *   Set the system password for the globally configured `user`
+ *   account. If an error occurs, it is reported back to the client
+ *   via `request_error` using a flash message.
  */
 var set_unix_password = function (_req, _passwd, _confirm, _callback) {
 
@@ -444,6 +573,10 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
 
 /**
  * set_couchdb_password:
+ *   Set a new administrative password for the local instance of
+ *   CouchDB. If this is the first time the function is being used,
+ *   the database server will be removed from "admin party" mode, and
+ *   start requiring user authentication/authorization for operations.
  */
 var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
 
@@ -606,6 +739,10 @@ var set_password = function (_req, _passwd, _confirm, _callback) {
 
 /**
  * add_couchdb_defaults:
+ *   Modify the CouchDB configuration, adding any options that
+ *   are required by Medic Mobile's applications. When execution
+ *   is complete, `_callback` will be invoked with a Node-style
+ *   error parameter.
  */
 var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
 
@@ -637,6 +774,7 @@ var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
 
 /**
  * main:
+ *   Execution begins here.
  */
 var main = function (_argv) {
 
