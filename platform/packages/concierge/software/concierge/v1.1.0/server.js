@@ -112,6 +112,7 @@ app.all('/setup/password', function (_req, _res) {
     _res.status(500).send('Invalid HTTP method');
   }
 
+  var user = _req.param('user');
   var key = trim(_req.param('key'));
   var password = _req.param('password');
   var confirmation = _req.param('confirmation');
@@ -120,29 +121,32 @@ app.all('/setup/password', function (_req, _res) {
     _req.flash('key', key);
   }
 
-  set_password(_req, password, confirmation, function (_err, _sys_passwd) {
-  
+  async.waterfall([
+
+    function (_next_fn) {
+      set_password(_req, password, confirmation, _next_fn);
+    },
+
+    function (_sys_passwd, _next_fn) {
+      add_couchdb_defaults(_req, _sys_passwd, _next_fn);
+    }
+    
+  ], function (_err) {
+
     if (_err) {
       return send_password_response(_err, _req, _res);
     }
 
-    add_couchdb_defaults(_req, _sys_passwd, function (_err) {
+    if (key.length <= 0) {
+      return send_password_response(
+        null, _req, _res, 'Password successfully set'
+      );
+    }
 
-      if (_err) {
-        return send_password_response(_err, _req, _res);
-      }
-      
-      if (key.length <= 0) {
-        return send_password_response(
-          null, _req, _res, 'Password successfully set'
-        );
-      }
-
-      add_openssh_public_key(_req, key, function (_e) {
-        return send_password_response(
-          _e, _req, _res, 'Password and public key successfully set'
-        );
-      });
+    add_openssh_public_key(_req, key, function (_e) {
+      return send_password_response(
+        _e, _req, _res, 'Password and public key successfully set'
+      );
     });
   });
 });
@@ -590,7 +594,7 @@ var set_couchdb_password = function (_req, _passwd, _confirm, _callback) {
     uri: protocol + admins_uri + '/admin',
     headers: { 'Content-type': 'application/json' }
   };
-  
+
   /* Start talking to CouchDB:
       This process involves multiple requests; async used for clarity. */
 
