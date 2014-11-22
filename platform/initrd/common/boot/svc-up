@@ -7,16 +7,50 @@ up()
 {
   local package="$1"
   local service="$2"
+  local is_forced="$3"
+  local is_wildcard="$4"
 
-  supervisor_service_up "$package" "$service" \
-    || fatal "Failed to start service '$service' in '$package'"
+  local is_already_up=''
 
-  info "Service '$package/$service' started successfully"
+  # Automatic service enabling:
+  #   If the `-f` or `--force` argument is provided, try to
+  #   automatically enable any service that's in the down state.
+
+  if supervisor_is_service_disabled "$package" "$service"; then
+    if [ "$is_forced" ]; then
+      supervisor_service_enable "$package" "$service" \
+        || fatal "Failed to enable service '$package/$service'"
+      is_already_up='t'
+    elif [ "$is_wildcard" ]; then
+      warn "Service '$package/$service' is disabled; skipping"
+      return 0
+    fi
+  fi
+
+  if [ "$is_wildcard" -a -z "$is_already_up" ]; then
+    if ! supervisor_is_service_down "$package" "$service"; then
+      warn "Service '$package/$service' is already up; skipping"
+      return 0
+    fi
+  fi
+
+  if [ -z "$is_already_up" ]; then
+    supervisor_service_up "$package" "$service" \
+      || fatal "Failed to start service '$package/$service'"
+  fi
+
+  info "Service '$package/$service' was started successfully"
   return 0
 }
 
 main()
 {
+  local force=''
+
+  if [ "$1" = '-f' -o "$1" = '--force' ]; then
+    force='t'; shift 1
+  fi
+
   local package="$1"
   shift 1
 
@@ -28,17 +62,19 @@ main()
   supervisor_init
 
   if [ "$#" -le 0 ]; then
-    supervisor_list_down_services "$package" | while read service; do
-      up "$package" "$service"
+    supervisor_list_all_services "$package" | while read service; do
+      up "$package" "$service" "$force" 't'
     done
+    local rv="$?"
+    [ "$rv" -ne 0 ] && return "$rv"
   else
     for service in "$@"; do
-      up "$package" "$service"
+      up "$package" "$service" "$force"
     done
   fi
 
   if [ $# -le 0 ]; then
-    success "All services in package '$package' have started"
+    success "Finished starting services in package '$package'"
   else
     success "Selected services in package '$package' have started"
   fi
@@ -48,7 +84,7 @@ main()
 
 usage()
 {
-  echo "Usage: $0 <package-name> [service-name]..."
+  echo "Usage: $0 [ -f | --force ] <package-name> [service-name]..."
   exit 111
 }
 

@@ -3,7 +3,7 @@
 source '/boot/include/utility'
 source '/boot/include/supervisor'
 
-down()
+disable()
 {
   local package="$1"
   local service="$2"
@@ -11,18 +11,15 @@ down()
 
   if [ "$is_wildcard" ]; then
     if supervisor_is_service_disabled "$package" "$service"; then
-      warn "Service '$package/$service' is disabled; skipping"
-      return 0
-    elif supervisor_is_service_down "$package" "$service"; then
-      warn "Service '$package/$service' is already down; skipping"
+      warn "Service '$package/$service is already disabled; skipping"
       return 0
     fi
   fi
 
-  supervisor_service_down "$package" "$service" \
-    || fatal "Failed to shut down service '$package/$service'"
+  supervisor_service_disable "$package" "$service" \
+    || fatal "Failed to disable service '$package/$service'"
 
-  info "Service '$package/$service' was stopped successfully"
+  info "Service '$package/$service' was disabled successfully"
   return 0
 }
 
@@ -40,20 +37,22 @@ main()
 
   if [ "$#" -le 0 ]; then
     supervisor_list_all_services "$package" | while read service; do
-      down "$package" "$service" 't'
+      disable "$package" "$service" 't'
     done
-    rv="$?"
-    [ "$rv" -ne 0 ] && return "$rv"
+    local rv="$?"
+    if [ "$rv" -ne 0 ]; then
+      return "$rv"
+    fi
   else
     for service in "$@"; do
-      down "$package" "$service"
+      disable "$package" "$service"
     done
   fi
 
   if [ $# -le 0 ]; then
-    success "Finished stopping services in package '$package'"
+    success "Finished disabling services in package '$package'"
   else
-    success "Selected services in package '$package' have stopped"
+    success "Selected services in package '$package' are now disabled"
   fi
 
   return 0

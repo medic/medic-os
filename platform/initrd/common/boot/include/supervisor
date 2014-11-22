@@ -206,7 +206,7 @@ _start_supervisor_process()
   local ppid_file="$pkg_status_dir/volatile/$service.ppid"
 
   if supervisor_is_service_watched "$package" "$service"; then
-    info "Supervisor already running for '$package/$service'"
+    warn "Supervisor already running for '$package/$service'"
     return 0
   fi
 
@@ -369,7 +369,7 @@ _terminate_supervisor_process()
   supervisor_service_exists "$package" "$service" || return 1
 
   if ! supervisor_is_service_watched "$package" "$service"; then
-    info "Supervisor already terminated for '$package/$service'"
+    warn "Supervisor not running for '$package/$service'"
     return 0
   fi
 
@@ -488,7 +488,7 @@ _supervisor_apply()
   local rv='0'
   local services="$@"
 
-  if ! [ -d "/srv/scripts/$package" ]; then
+  if ! supervisor_package_exists "$package"; then
     warn "Package '$package' does not appear to be installed"
     return 255
   fi
@@ -511,6 +511,7 @@ _supervisor_apply()
     supervisor_service_exists "$package" "$service" || return 252
 
     if supervisor_is_service_disabled "$package" "$service"; then
+      warn "Service '$package/$service' is disabled; skipping"
       continue
     fi
 
@@ -666,7 +667,7 @@ supervisor_service_enable()
   supervisor_service_exists "$package" "$service" || return 1
 
   if ! supervisor_is_service_disabled "$package" "$service"; then
-    warn "Service '$package/$service' is not currently disabled"
+    warn "Service '$package/$service' is already enabled"
     return 2
   fi
 
@@ -968,7 +969,7 @@ supervisor_is_service_disabled()
 
 supervisor_is_service_enabled()
 {
-  test ! supervisor_is_service_disabled "$@"  
+  ! supervisor_is_service_disabled "$@"  
 }
 
 supervisor_is_service_watched()
@@ -1010,7 +1011,7 @@ supervisor_is_service_expected()
 
 supervisor_is_service_unexpected()
 {
-  test ! supervisor_is_service_expected "$@"
+  ! supervisor_is_service_expected "$@"
 }
 
 supervisor_package_exists()
