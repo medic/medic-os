@@ -6,6 +6,8 @@
   </div>
 </div>
 
+<div class="wrapper">
+<div class="body-container">
 <div class="body">
   <div class="content">
     <div class="steps">
@@ -14,7 +16,7 @@
           <span class="before">1</span>
           <span class="after fa fa-check"></span>
         </div>
-        <label>Set up an administrator account</label>
+        <label>Set up an account</label>
       </div>
       {{#cmp data.step '>' 1}}
       <div class="step {{#cmp data.step '>' 2}} finished{{/cmp}}">
@@ -150,6 +152,7 @@
     </script>
     {{/cmp}}
   </div>
+  </div>
 
   <div class="actions">
     <div class="status">
@@ -188,6 +191,7 @@
     <input type="hidden" name="action" />
   </div>
 
+</div>
 </div>
 
 </form>

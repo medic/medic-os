@@ -1,5 +1,5 @@
 
-html, body, input, textarea, button {
+html, body, textarea, button {
   font-size: 10pt;
   font-family: "Open Sans", sans-serif;
 }
@@ -9,11 +9,6 @@ a {
   cursor: pointer;
   text-decoration: none;
   border-bottom: solid 1px rgba(191, 72, 28, 0.75);
-}
-
-input[type=password] {
-  font-family: sans-serif;
-  letter-spacing: 0.2em;
 }
 
 a:hover {
@@ -47,14 +42,27 @@ body {
   background-image: url('../images/medic-logo-light.svg');
 }
 
-.body {
-  margin: 0;
+.wrapper {
+  overflow: hidden;
   position: absolute;
-  left: 2.5%;
-  right: 2.5%;
-  top: 6.5em;
-  bottom: 2em;
-  min-height: 25em;
+  left: 0;
+  right: 0;
+  top: 5em;
+  bottom: 1em;
+  padding: 1.5em;
+}
+
+.body-container {
+  height: 100%;
+  max-width: 70em;
+  margin: 0 auto;
+}
+
+.body {
+  height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   border: solid 1px rgba(0, 0, 0, 0.25);
   background-color: rgba(255, 255, 255, 0.95);
   box-shadow: 0.3em 0.3em 0.75em rgba(0, 0, 0, 0.5);
@@ -84,7 +92,7 @@ body {
   border-radius: 1em;
   height: 2em;
   font-size: 1.35em;
-  width: 2em;
+ width: 2em;
   color: #fff;
   text-align: center;
 }
@@ -96,23 +104,16 @@ body {
 }
 
 .content {
-  position: absolute;
-  top: 0em;
-  bottom: 5em;
-  left: 0;
-  right: 0;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  padding-bottom: 6em;
 }
 
 .actions {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
   height: 5em;
+  position: relative;
+  top: -5em;
+  width: 100%;
   border-top: solid 1px #ccc;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.95);
 }
 
 button {
@@ -164,8 +165,11 @@ button.right {
 }
 
 .rows {
+  width: 80%;
+  margin: 0 auto;
+  padding: 1em 0;
+  max-width: 35em;
   font-size: 1.25em;
-  padding: 1em 2em 1em 2em;
 }
 
 .row {
@@ -177,6 +181,7 @@ button.right {
 
 .row input {
   font-size: 1.05em;
+  margin-top: 2px;
 }
 
 .row textarea {
@@ -238,10 +243,10 @@ button.right {
   overflow: hidden;
   font-style: italic;
   position: absolute;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   left: 0;
   right: 22.5em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .status .error {
@@ -455,7 +460,11 @@ button.right {
   }
 }
 
-@media screen and (max-width: 639px) {
+@media screen and (max-width: 519px) {
+
+  .wrapper {
+    padding: 0;
+  }
 
   .row {
     overflow: visible;
@@ -489,11 +498,7 @@ button.right {
     padding: 0 1em 0 0.25em;
   }
 
-  .inner {
-    padding-bottom: 9em;
-  }
-
-  .content, .body {
+  .wrapper, .content, .body {
     overflow: visible;
     position: relative;
     bottom: auto;
@@ -512,6 +517,7 @@ button.right {
     bottom: 0;
     left: 0;
     right: 0;
+    top: auto;
     background-color: rgba(255, 255, 255, 0.95);
   }
 
@@ -529,6 +535,10 @@ button.right {
     float: right;
     clear: right;
     font-size: 0.55em;
+  }
+
+  .content {
+    padding-bottom: 8em;
   }
 
   html, body {
