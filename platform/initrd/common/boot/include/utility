@@ -1,5 +1,7 @@
 #!/bin/sh
 
+srv_dir='/srv'
+
 is_integer()
 {
   for n in "$@"; do
@@ -70,7 +72,7 @@ use_package()
     local command='append_path'
   fi
 
-  $command "/srv/software/$package/current/default"
+  $command "$srv_dir/software/$package/current/default"
 }
 
 # Logging:

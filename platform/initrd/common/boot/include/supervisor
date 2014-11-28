@@ -3,8 +3,9 @@
 set -o pipefail
 is_restart_event=''
 
+srv_dir='/srv'
 volatile_dir='/var/run/supervisor'
-supervise_dir='/srv/storage/system/supervisor'
+supervise_dir="$srv_dir/system/storage/supervisor"
 
 _perform_startup_checks()
 {
@@ -97,7 +98,7 @@ _supervisor_process()
     #  This attempts to start the supervised process.
 
     log "Starting run script for '$package/$service'"
-    (exec "/srv/scripts/$package/run/$service" >> "$log" 2>&1) &
+    (exec "$srv_dir/scripts/$package/run/$service" >> "$log" 2>&1) &
 
     local pid="$!"
     local pid_file="$pkg_status_dir/volatile/$service.pid"
@@ -496,7 +497,7 @@ _supervisor_apply()
   supervisor_package_exists "$package" || return 254
 
   if [ "$#" -le 0 ]; then
-    services="/srv/scripts/$package/run"/*
+    services="$srv_dir/scripts/$package/run"/*
   fi
 
   for service in $services; do
@@ -821,7 +822,7 @@ supervisor_service_reload()
 
 supervisor_list_all_packages()
 {
-  for package in "/srv/scripts"/*; do
+  for package in "$srv_dir/scripts"/*; do
     package="`basename "$package"`"
     if [ "$package" != '*' -a "$package" != 'system' ]; then
       echo "$package"
@@ -835,7 +836,7 @@ supervisor_list_all_services()
 {
   local package="`basename "$1"`"
 
-  for service in "/srv/scripts/$package/run"/*; do
+  for service in "$srv_dir/scripts/$package/run"/*; do
     service="`basename "$service"`"
     if [ "$service" != '*' ]; then
       echo "$service"
@@ -1018,7 +1019,7 @@ supervisor_package_exists()
 {
   local package="`basename "$1"`"
 
-  if ! [ -d "/srv/scripts/$package" ]; then
+  if ! [ -d "$srv_dir/scripts/$package" ]; then
     warn "Package '$package' does not exist"
     return 1
   fi
@@ -1031,7 +1032,7 @@ supervisor_service_exists()
   local package="`basename "$1"`"
   local service="`basename "$2"`"
 
-  if ! [ -x "/srv/scripts/$package/run/$service" ]; then
+  if ! [ -x "$srv_dir/scripts/$package/run/$service" ]; then
     warn "Service '$package/$service' does not exist"
     return 1
   fi
