@@ -183,5 +183,3 @@ template_expand_dir()
   done
 }
 
-template_expand_dir 'mustache' 't' "$@"
-
