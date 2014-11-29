@@ -137,11 +137,11 @@ template_expand()
   return "$?"
 }
 
-# template_expand_dir:
+# template_expand_directories:
 #   Recursively copy one directory to another, expanding template
 #   directives along the way for files with the proper extension.
 
-template_expand_dir()
+template_expand_directories()
 {
   local template_style="$1"
   local extension="$2"

@@ -42,6 +42,8 @@ main()
     supervisor_list_all_services "$package" | while read service; do
       restart "$package" "$service" 't'
     done
+    local rv="$?"
+    [ "$rv" -ne 0 ] && return "$rv"
   else
     for service in "$@"; do
       restart "$package" "$service"

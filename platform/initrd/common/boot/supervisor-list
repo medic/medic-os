@@ -5,11 +5,12 @@ source '/boot/include/supervisor'
 
 usage()
 {
-  echo -e "Usage:\n" \
-    "  $0 <package-name | 'all'> [ status-name ]\n"
+  echo 'Usage:'
+  echo "  $0 <package-name> [status-name]"
   echo
-  echo -e "Supported status names:\n" \
-    '  watched, (un)expected, [en|dis]abled, running, restarting, down' >&2
+  echo 'Supported status names:'
+  echo '  watched, expected, unexpected,'
+  echo '  enabled, disabled, running, restarting, down' >&2
 
   exit 111
 }

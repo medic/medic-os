@@ -2,6 +2,7 @@
 
 source '/boot/include/utility'
 source '/boot/include/package'
+source '/boot/include/template'
 source '/boot/include/supervisor'
 
 main()
@@ -22,6 +23,9 @@ main()
 
     package_setup "$package" \
       || fatal "Failed to run setup script for package '$path'"
+
+    package_configure "$package" \
+      || fatal "Failed to build configuration files for package '$package'"
 
     supervisor_start "$package"
     local rv="$?"

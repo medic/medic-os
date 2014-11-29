@@ -32,6 +32,8 @@ main()
     supervisor_list_expected_services "$package" | while read service; do
       reload "$package" "$service"
     done
+    local rv="$?"
+    [ "$rv" -ne 0 ] && return "$rv"
   else
     for service in "$@"; do
       reload "$package" "$service"

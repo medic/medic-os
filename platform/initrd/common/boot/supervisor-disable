@@ -40,9 +40,7 @@ main()
       disable "$package" "$service" 't'
     done
     local rv="$?"
-    if [ "$rv" -ne 0 ]; then
-      return "$rv"
-    fi
+    [ "$rv" -ne 0 ] && return "$rv"
   else
     for service in "$@"; do
       disable "$package" "$service"
