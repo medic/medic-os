@@ -602,7 +602,7 @@ builder_setup_environment()
   fi
 
   export CPPFLAGS_SIMPLE="-D_FORTIFY_SOURCE=2"
-  export CFLAGS_SIMPLE="-Os -fstack-protector-all"
+  export CFLAGS_SIMPLE="-Os -fstack-protector-strong"
   export CFLAGS_INCLUDE="-I$prefix/include -L$prefix/lib"
 
   if [ "$architecture" = 'intel' ]; then
