@@ -70,14 +70,22 @@ app.get('/', function (_req, _res) {
  */
 app.get('/setup', function (_req, _res) {
 
+  if (!_req.session.step) {
+    _req.session.step = 1;
+  }
+
   read_system_password(function (_err, _sys_passwd) {
     _res.render('setup/index.hbs', {
       title: (
         'Setup - Medic Mobile'
       ),
       data: {
-        key: _req.flash('key'),
-        step: _req.flash('step')
+        key: _req.session.key,
+        step: _req.session.step,
+        name: _req.session.name,
+        fullname: _req.session.fullname,
+        password: _req.flash('password'),
+        confirmation: _req.flash('confirmation')
       },
       messages: {
         error: _req.flash('error'),
@@ -115,20 +123,33 @@ app.all('/setup/finish', function (_req, _res) {
  */
 app.all('/setup/password', function (_req, _res) {
 
-  _req.flash('error', null);
+  if (_req.param('action') === 'back') {
+    _req.session.step = 1;
+    return _res.redirect('/setup');
+  }
 
   if (_req.method != 'POST' && _req.method != 'GET') {
     _res.status(500).send('Invalid HTTP method');
   }
 
-  var user = _req.param('user');
+  var user = {
+    name: _req.param('name'),
+    fullname: _req.param('fullname')
+  };
+
+  _req.flash('error', null);
+  _req.flash('success', null);
+
   var key = trim(_req.param('key'));
   var password = _req.param('password');
   var confirmation = _req.param('confirmation');
 
-  if (key.length > 0) {
-    _req.flash('key', key);
-  }
+  _req.flash('password', password);
+  _req.flash('confirmation', confirmation);
+  
+  _req.session.key = key;
+  _req.session.name = user.name;
+  _req.session.fullname = user.fullname;
 
   async.waterfall([
 
@@ -366,11 +387,10 @@ var send_password_response = function (_err, _req, _res, _success_text) {
   }
 
   if (!_err) {
-    _req.flash('step', 2);
+    _req.session.step = 2;
     _req.flash('success', _success_text);
   }
 
-  _req.flash('key', null);
   return _res.redirect('/setup');
 };
 
@@ -600,18 +620,20 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
 
 /**
  * is_builtin_user_name:
- *   Return true if the user name `_user` is reserved by the
- *   system for internal use. Otherwise, return false.
+ *   Return true if the user name `_user_name` is reserved by
+ *   the system for internal use. Otherwise, return false.
  */
-var is_builtin_user_name = function (_user) {
+var is_builtin_user_name = function (_user_name) {
 
-  return (_user == 'admin' || _user == 'service');
+  return (
+    (_user_name == 'admin' || _user_name == 'service')
+  );
 };
 
 /**
  * _delete_couchdb_user:
  */
-var _delete_couchdb_user = function (_user, _is_admin,
+var _delete_couchdb_user = function (_user_name, _is_admin,
                                      _request_params, _callback) {
 
   var users_url = protocol + server + '/_users/';
@@ -622,7 +644,7 @@ var _delete_couchdb_user = function (_user, _is_admin,
 
   var primary_url = (
     config_url + '/' +
-      (_is_admin ? 'admins' : 'users') + '/' + _user
+      (_is_admin ? 'admins' : 'users') + '/' + _user_name
   );
   
   /* Secondary URL:
@@ -633,7 +655,7 @@ var _delete_couchdb_user = function (_user, _is_admin,
   var secondary_url = false;
 
   if (_is_admin) {
-    secondary_url = users_url + 'org.couchdb.user:' + _user;
+    secondary_url = users_url + 'org.couchdb.user:' + _user_name;
   }
 
   var req = _.extend(
@@ -709,14 +731,14 @@ var delete_couchdb_unknown_users = function (_use_admins,
     }
 
     try {
-      var ddoc = JSON.parse(_body);
+      var doc = JSON.parse(_body);
     } catch (_e) {
       return _callback(new Error(
         'Invalid JSON response returned by database server'
       ));
     }
 
-    if (!_.isObject(ddoc)) {
+    if (!_.isObject(doc)) {
       return _callback(new Error(
         'Database server returned an improperly-structured document'
       ));
@@ -724,18 +746,18 @@ var delete_couchdb_unknown_users = function (_use_admins,
 
     /* For each user name... */
     async.each(
-      _.keys(ddoc),
+      _.keys(doc),
 
       /* Iterator */
-      function (_user, _fn) {
+      function (_user_name, _fn) {
 
         /* Required users: don't delete these */
-        if (is_builtin_user_name(_user)) {
+        if (is_builtin_user_name(_user_name)) {
           return _fn();
         }
 
         /* Anything else: delete it */
-        _delete_couchdb_user(_user, true, _request_params, _fn);
+        _delete_couchdb_user(_user_name, true, _request_params, _fn);
       },
 
       /* Completion */
@@ -758,10 +780,10 @@ var delete_couchdb_unknown_users = function (_use_admins,
  *   CouchDB. If this is the first time the function is being used,
  *   the database server will be removed from "admin party" mode, and
  *   start requiring user authentication/authorization for operations.
+ *   The `_user` argument is an object containing a `name` property.
  */
 var setup_couchdb_accounts = function (_req, _user,
                                        _passwd, _confirm, _callback) {
-
   var is_first_run = false;
   var system_passwd = false;
 
@@ -872,7 +894,7 @@ var setup_couchdb_accounts = function (_req, _user,
     function (_cb) {
 
       if (!is_first_run) {
-        return _cb();
+        return _cb(); /* Skip this step */
       }
 
       var put = make_couchdb_user_creation_request(
@@ -906,12 +928,12 @@ var setup_couchdb_accounts = function (_req, _user,
 
     function (_cb) {
 
-      if (is_builtin_user_name(_user)) {
-        return _cb();
+      if (is_builtin_user_name(_user.name)) {
+        return _cb(); /* Skip this step */
       }
 
       var put = make_couchdb_password_change_request(
-        _user, _passwd, request_template
+        _user.name, _passwd, request_template
       );
 
       request.put(put, function (_err, _resp, _body) {
@@ -926,8 +948,8 @@ var setup_couchdb_accounts = function (_req, _user,
 
     function (_cb) {
 
-      if (is_builtin_user_name(_user)) {
-        return _cb();
+      if (is_builtin_user_name(_user.name)) {
+        return _cb(); /* Skip this step */
       }
 
       var put = make_couchdb_user_creation_request(
@@ -954,13 +976,26 @@ var setup_couchdb_accounts = function (_req, _user,
  * make_couchdb_user_creation_request:
  *   Return an PUT request, formatted as an object, that can be
  *   used with `request` to create a new CouchDB user account.
+ *   The `_user` argument must be either an object containing a
+ *   `name` property and optional `fullname` property, or an
+ *   ordinary string representing the user name.
  */
-var make_couchdb_user_creation_request = function (_name, _passwd,
+var make_couchdb_user_creation_request = function (_user, _passwd,
                                                    _request_template) {
+
+  if (!_.isObject(_user)) {
+    _user = { name: _user };
+  }
+
   var doc = {
-    _id: 'org.couchdb.user:' + _name,
-    roles: [], type: 'user', name: _name, password: _passwd
+    type: 'user', roles: [],
+    name: _user.name, password: _passwd,
+    _id: 'org.couchdb.user:' + _user.name,
   };
+
+  if (_user.fullname) {
+    doc.fullname = _user.fullname;
+  }
 
   var req = {
     body: JSON.stringify(doc),
@@ -995,28 +1030,28 @@ var setup_accounts = function (_req, _user,
   /* Start of account setup:
       Validate the supplied user name and password. */
 
-  if (!_.isString(_user) || _user.length < 4) {
+  if (!_.isString(_user.name) || _user.name.length < 4) {
     return request_error(
       'User name must be at least four characters',
         _req, _callback
     );
   }
 
-  if (!_user.match(/^[\d\w\-\.]+$/)) {
+  if (!_user.name.match(/^[\d\w\-\.]+$/)) {
     return request_error(
       'User name cannot contain spaces or punctuation',
         _req, _callback
     );
   }
 
-  if (_user.match(/^[_\-\.]/)) {
+  if (_user.name.match(/^[_\-\.]/)) {
     return request_error(
       'User name cannot start with punctuation',
         _req, _callback
     );
   }
 
-  if (_user == 'service') {
+  if (_user.name == 'service') {
     return request_error(
       'User name already taken; please choose another',
         _req, _callback
