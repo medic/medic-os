@@ -5,6 +5,7 @@ source '/boot/include/logger'
 source '/boot/include/cursor'
 source '/boot/include/startup'
 source '/boot/include/package'
+source '/boot/include/template'
 source '/boot/include/supervisor'
 source '/boot/include/hypervisor'
 

@@ -244,7 +244,7 @@ package_setup()
     if [ -x "$script" ]; then
 
       local task_name="$package/`basename "$script"`"
-      log "Running setup task '$task_name'..."
+      log "Running setup task '$task_name'"
 
       "$script" >> "$log" 2>&1 \
         || warn "Setup task '$task_name' was not successful"
@@ -253,7 +253,31 @@ package_setup()
     fi
   done
 
-  return 0
+  package_regenerate_settings "$package"
+  return "$?"
+}
+
+package_regenerate_settings()
+{
+  local package="`basename "$1"`"
+
+  local src_dir="$srv_dir/settings/$package"
+  local target_dir="$settings_dir/$package"
+
+  log "Regenerating settings for package '$package'"
+
+  if ! [ -d "$src_dir" ]; then
+    log "Package '$package' has no settings directory; skipping"
+    return 0
+  fi
+
+  mkdir -p "$target_dir" &&
+  \
+  template_expand_directories \
+    'mustache' 't' "$src_dir" "$target_dir"
+
+  log "Finished regenerating settings for package '$package'"
+  return "$?"
 }
 
 package_remove_empty_directories()
@@ -273,23 +297,3 @@ package_remove_empty_directories()
 
   return 0
 }
-
-package_configuration_regenerate()
-{
-  local package="`basename "$1"`"
-
-  local src_dir="$srv_dir/settings/$package"
-  local target_dir="$settings_dir/$package"
-
-  if ! [ -d "$src_dir" ]; then
-    return 255
-  fi
-
-  mkdir -p "$target_dir" &&
-  \
-  template_expand_directories \
-    'mustache' 't' "$src_dir" "$target_dir"
-
-  return "$?"
-}
-

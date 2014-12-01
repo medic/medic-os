@@ -24,9 +24,6 @@ main()
     package_setup "$package" \
       || fatal "Failed to run setup script for package '$path'"
 
-    package_configure "$package" \
-      || fatal "Failed to build configuration files for package '$package'"
-
     supervisor_start "$package"
     local rv="$?"
 

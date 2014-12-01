@@ -9,14 +9,14 @@ update()
 {
   if [ "$#" -le 0 ]; then
     supervisor_list_all_packages | while read package; do
-      package_configuration_regenerate "$package" \
+      package_regenerate_settings "$package" \
         || fatal "Failed to update configuration for package '$package'"
     done
     local rv="$?"
     [ "$rv" -ne 0 ] && return "$rv"
   else
     for package in "$@"; do
-      package_configuration_regenerate "$package" \
+      package_regenerate_settings "$package" \
         || fatal "Failed to update configuration for package '$package'"
     done
   fi
@@ -47,7 +47,7 @@ main()
 
 usage()
 {
-  echo "Usage: $0 [package]..." >&2
+  echo "Usage: $0 verb [package]..." >&2
   exit 111
 }
 
