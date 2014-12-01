@@ -8,8 +8,8 @@ install()
   source "$base/env" &&
   merge_environment /srv || return 255
 
-  chown root:gammu "$PACKAGE_STORAGE/logs" &&
-  chmod 0775 "$PACKAGE_STORAGE/logs"
+  chown gammu:staff "$PACKAGE_STORAGE/logs" &&
+  chmod 0750 "$PACKAGE_STORAGE/logs"
 
   return "$?"
 }
