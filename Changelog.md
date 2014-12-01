@@ -2,6 +2,13 @@
 Medic OS: Revision History
 ==========================
 
+v1.1.1-pre
+----------
+
+* Fixed several problems with log rotation.
+* Added a template-processing facility for configuration files.
+* Moved internal settings/storage to a new `/srv/system` directory.
+
 v1.1.0
 ------
 
