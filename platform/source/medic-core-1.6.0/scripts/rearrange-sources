@@ -79,10 +79,8 @@ apply_patches()
     < ../../patches/ant-disable-junit.diff) &&
   (cd erlang && patch -s -p1 \
     < ../../patches/erlang-r17-pcre-fix.diff) &&
-  (cd maven && patch -s -p1 \
-    < ../../patches/maven-preserve-destination.diff) &&
   (cd gammu && patch -s -p1 \
-    < ../../patches/gammu-disable-glib.diff) &&
+    < ../../patches/gammu-add-configure-options.diff) &&
   (cd gammu && patch -s -p1 \
     < ../../patches/gammu-fix-files-backend.diff) &&
   (cd gammu && patch -s -p1 \
@@ -91,16 +89,20 @@ apply_patches()
     < ../../patches/garden-maker-medic.diff) &&
   (cd icu && patch -s -p2 \
     < ../../../patches/icu-libicudata-linkage.diff) &&
+  (cd js && patch -s -p1 \
+    < ../../../../patches/js-fix-makefile-loop.diff) &&
+  (cd maven && patch -s -p1 \
+    < ../../patches/maven-preserve-destination.diff) &&
   (cd nodelint && patch -s -p1 \
     < ../../patches/nodelint-install-script.diff) &&
+  (cd ncurses && patch -s -p1 \
+    < ../../patches/ncurses-reference-fix.diff) &&
   (cd inotify-tools && patch -s -p1 \
     < ../../patches/inotify-tools-include.diff) &&
   (cd libutempter && patch -s -p1 \
     < ../../patches/libutempter-fix-makefile-links.diff) &&
   (cd screen && patch -s -p1 \
     < ../../patches/screen-fix-stropts-include.diff) &&
-  (cd js && patch -s -p1 \
-    < ../../../../patches/js-fix-makefile-loop.diff) &&
   (cd xdelta && patch -s -p1 \
     < ../../patches/xdelta-fix-compilation-error.diff)
 }

@@ -173,15 +173,15 @@ main()
      --without-iconv" '' "NO_INSTALL_HARDLINKS='1'" &&
   \
   build_autoconf 'rsync' "$stdarg" &&
-
-  build_autoconf 'nginx' \
+  \
+  (ldflags_in_cflags && build_autoconf 'nginx' \
     "$stdarg --sbin-path='$prefix/bin' \
      --with-http_ssl_module --with-http_spdy_module \
      --conf-path='$prefix/etc/nginx/nginx.conf' \
      --pid-path='$prefix/var/run/nginx/nginx.pid' \
-     --error-log-path='$prefix/var/log/nginx/error.log' \
-     --lock-path='$prefix/var/run/nginx/nginx.lock'" \
-       "LINK='$CC $CFLAGS $LDFLAGS'" &&
+     --lock-path='$prefix/var/run/nginx/nginx.lock' \
+     --error-log-path='$prefix/var/log/nginx/error.log'" \
+       "LINK='$CC $CFLAGS $LDFLAGS'") &&
   \
   (simple_cflags &&
     build_autoconf 'node' \
