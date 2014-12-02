@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 load_timestamp()
 {
@@ -42,8 +42,8 @@ logger()
   local name="$1"
   local platform="$2"
 
-  local path="`readlink -f "$1"`"
   local directory="`dirname "$name"`" # Defaults to '.'
+  local path="`readlink -f "$name" 2>/dev/null || realpath "$name"`"
 
   local line=0
   local lines_denominator=''

@@ -3,6 +3,8 @@
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
 
+shopt -u xpg_echo
+source "$base_dir/../medic-core/scripts/include/rearrange"
 
 rename()
 {
@@ -52,12 +54,6 @@ rename()
   local version="`find_version node-v*.tar.*`" &&
   local source="`find * -prune -type d -name 'node-v*'`" &&
   mv "$source" "node-$version"
-}
-
-remove()
-{
-  rm -f *.downloaded *.finished &&
-  rm -f *.tar.xz *.tar.lzma *.tar.bz2 *.tar.gz *.tgz
 }
 
 symlink()
@@ -136,16 +132,6 @@ update_garden_maker()
 
   echo 'Too many failures while updating garden-maker; aborting' >&2
   return 1
-}
-
-find_version()
-{
-  echo "$@" | sed 's/^[A-Za-z0-9-]\+-v\?\([0-9\._]\+\).*$/\1/; s/\.$//;'
-}
-
-fix_version()
-{
-  echo "$@" | sed 's/^\([0-9]\)\([0-9]\)_\?\([0-9]\+\)/\1.\2.\3/;'
 }
 
 

@@ -136,11 +136,11 @@ main()
   (disable_parallelism && build_config 'openssl' \
     "shared no-asm zlib-dynamic --openssldir='$prefix/etc/ssl' $stdarg") &&
   \
+  builder_remove_static_libraries 'crypto' 'ssl' &&
+  \
   build_autoconf 'openssh' \
     "$stdarg --sysconfdir=\"$prefix/etc/ssh\" \
      --with-zlib=\"$prefix\" --with-ssl-dir=\"$prefix\"" &&
-  \
-  builder_remove_static_libraries 'crypto' 'ssl' &&
   \
   build_autoconf 'libidn' "$stdarg" &&
   builder_remove_static_libraries 'idn' &&

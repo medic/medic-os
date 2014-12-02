@@ -463,9 +463,9 @@ fix_libtool()
 
 builder_initialize()
 {
-  last_pkg_file="`mktemp`"
-  run_status_file="`mktemp`"
-  last_version_file="`mktemp`"
+  last_pkg_file="`mktemp /tmp/builder-XXXXXXXX`"
+  run_status_file="`mktemp /tmp/builder-XXXXXXXX`"
+  last_version_file="`mktemp /tmp/builder-XXXXXXXX`"
 
   trap builder_cleanup EXIT
 }
@@ -602,7 +602,7 @@ builder_setup_environment()
   fi
 
   export CPPFLAGS_SIMPLE="-D_FORTIFY_SOURCE=2"
-  export CFLAGS_SIMPLE="-Os -fstack-protector-strong"
+  export CFLAGS_SIMPLE="-Os -fstack-protector-all"
   export CFLAGS_INCLUDE="-I$prefix/include -L$prefix/lib"
 
   if [ "$architecture" = 'intel' ]; then
@@ -616,6 +616,8 @@ builder_setup_environment()
   export LDFLAGS="$LDFLAGS_SIMPLE -L$prefix/lib"
   export CFLAGS="$CFLAGS_SIMPLE $CFLAGS_INCLUDE $CPPFLAGS"
   export CXXFLAGS="$CFLAGS"
+
+  return 0
 }
 
 builder_detect_system()
