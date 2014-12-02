@@ -609,7 +609,7 @@ builder_setup_environment()
 
   export CFLAGS_INCLUDE="-I$prefix/include"
   export CPPFLAGS_SIMPLE="-D_FORTIFY_SOURCE=2"
-  export CFLAGS_SIMPLE="-Os -fstack-protector-all"
+  export CFLAGS_SIMPLE="-Os -fstack-protector-strong"
 
   if [ "$architecture" = 'intel' ]; then
     export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -m$bits -mtune=i686"
