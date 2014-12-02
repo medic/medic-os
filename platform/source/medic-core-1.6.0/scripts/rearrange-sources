@@ -16,12 +16,12 @@ rename()
       mv "$file" "`echo "$file" | sed 's/^apache-//;'`";
     fi
   done &&
-   \
+  \
   for file in otp_src*; do
     if [ -d "$file" ]; then
       mv "$file" "erlang-`
         echo "$file" | \
-          sed 's/^otp_src_\([^-\.]\+\).*$/\1/;' | tr '[A-Z]' '[a-z]'
+          sed 's/^otp_src_\([^-]\+\).*$/\1/;' | tr '[A-Z]' '[a-z]'
       `";
     fi
   done &&
