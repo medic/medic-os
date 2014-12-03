@@ -283,7 +283,7 @@ delete-downloaded:
 	@rm -f status/* && \
 	for type in incoming source; do \
 	  for pkg in core compiler vm-tools medic-core; do \
-	    (cd source && rm -rf '$$pkg/$$type"/*); \
+	    (cd source && rm -rf "$$pkg/$$type"/*); \
 	  done; \
 	done
 
