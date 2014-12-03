@@ -51,10 +51,15 @@ main()
   #  These are used to vary configuration based upon
   #  the architecture that we're currently compiling for.
 
+  local gammu_extra_options=""
   local erlang_extra_options=""
 
   if [ "$architecture" = 'intel' -a "$bits" ]; then
     erlang_extra_options="--enable-m${bits}-build"
+  fi
+
+  if [ "$uname" = 'Darwin' ]; then
+    gammu_extra_options='-DWITH_Iconv=OFF'
   fi
 
   (disable_stack_protector &&
@@ -214,8 +219,8 @@ main()
   \
   build_cmake 'gammu' "$prefix" \
     "-DBUILD_SHARED_LIBS=ON -DWITH_Glib=OFF \
-     -DINSTALL_GNAPPLET=OFF -DWITH_BACKUP=OFF \
-     -DINSTALL_BASH_COMPLETION=OFF -DENABLE_PROTECTION=ON" &&
+     -DINSTALL_BASH_COMPLETION=OFF -DENABLE_PROTECTION=ON \
+     -DINSTALL_GNAPPLET=OFF -DWITH_BACKUP=OFF $gammu_extra_options" &&
   \
   build_make_install 'gammu-json' "$prefix" "PREFIX=\"$prefix\"" &&
   \
