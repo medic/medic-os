@@ -79,10 +79,12 @@ main()
   build_autoconf 'libusb-compat' \
     "$stdarg --enable-static=no --enable-shared=yes" &&
   \
-  build_autoconf 'libpcap' "$stdarg --enable-shared --disable-static" &&
-  builder_remove_static_libraries 'pcap' &&
+  build_autoconf 'libpcap' \
+    "$stdarg --enable-shared --disable-static --without-libnl" &&
   \
-  build_autoconf 'tcpdump' "$stdarg --disable-smb" &&
+  builder_remove_static_libraries 'pcap' &&
+  build_autoconf 'tcpdump' "$stdarg --disable-smb --without-libnl" &&
+  \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
   \
   builder_remove_static_libraries 'form' 'form_g' \
