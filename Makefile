@@ -1,7 +1,7 @@
 
 # Variables
 
-MAKE := make
+MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 
 
