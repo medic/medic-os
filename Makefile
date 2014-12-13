@@ -24,10 +24,6 @@ clean:
 
 distclean: clean clean-target
 
-clean-target:
-	@cd /srv && \
-	rm -rf software settings storage
-
 delete:
 	@echo -n 'Deleting downloaded source code... ' && \
 	(cd platform && ${QMAKE} delete-downloaded) && \
@@ -44,6 +40,10 @@ download: reset-time prepare-tree
 
 
 # Private targets
+
+clean-target:
+	@cd /srv && \
+	rm -rf software settings storage
 
 reset-time:
 	@echo -n 'Synchronizing system time... ' && \
