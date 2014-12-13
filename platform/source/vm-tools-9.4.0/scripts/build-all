@@ -66,11 +66,12 @@ main()
   builder_remove_static_libraries 'daemon' &&
   \
   (weaken_fortify_source && build_autoconf 'avahi' \
-    "$stdarg --disable-static --enable-shared \
+    "$stdarg ac_cv_header_sys_capability_h=no \
+     --disable-static --enable-shared --disable-dbus \
      --sysconfdir='/srv/settings/vm-tools' --disable-qt3 \
      --disable-qt4 --disable-gtk --disable-gtk3 --disable-gdbm \
-     --disable-dbus --disable-python --disable-pygtk --disable-mono \
      --disable-stack-protector --with-distro=none --with-xml=expat \
+     --disable-python --disable-pygtk --disable-mono --disable-monodoc \
      --disable-doxygen-doc --disable-manpages --disable-silent-rules") &&
   \
   (disable_parallelism && build_autoconf 'open-vm-tools' \
