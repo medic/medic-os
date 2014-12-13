@@ -16,7 +16,6 @@ build: reset-time prepare-tree
 	  export HOME="`readlink -f ../..`" && \
 	  source ./.profile && ${QMAKE} compile all)
 
-
 clean:
 	@echo -n 'Cleaning source tree... ' && \
 	(cd platform && ${QMAKE} distclean) &>/dev/null && \

@@ -17,8 +17,8 @@ KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSI
 # Meta-targets
 
 all: build
-build: build-all
 
+build: build-all
 build-all: status build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc remove-unnecessary
 
 copy: copy-all

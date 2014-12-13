@@ -19,13 +19,13 @@ COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 
 # Meta-targets
 
-iso: build-iso
+all: packages images timestamp-output
+
+iso: build-iso-image
 xen: build-xen-image
 native: build-native-tarball
 
-all: packages images timestamp-output
-images: build-iso build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae
-
+images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae
 packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg medic-transport-pkg
 
 
@@ -76,7 +76,7 @@ clean-staging:
 	rm -rf packages/medic-core/software && \
 	rm -rf 'staging/software/${PLATFORM}'/*
 
-build-iso: build-initrd
+build-iso-image: build-initrd
 	@echo -n 'Creating ISO image... ' && \
 	\
 	cd 'images/${PLATFORM}/iso' && mkisofs -J -R \
@@ -217,7 +217,7 @@ build-x86-image-nopae:
 	    ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
 	    ${QMAKE} rebuild-vm-tools-modules) && \
 	  \
-	  ${QMAKE} build-iso ISO_EXTRA='-nopae'; \
+	  ${QMAKE} build-iso-image ISO_EXTRA='-nopae'; \
 	fi
 
 strip-binaries:
