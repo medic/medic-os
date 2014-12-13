@@ -6,6 +6,8 @@
   </div>
 </div>
 
+<div class="wrapper">
+<div class="body-container">
 <div class="body">
   <div class="content">
     <div class="steps">
@@ -14,7 +16,7 @@
           <span class="before">1</span>
           <span class="after fa fa-check"></span>
         </div>
-        <label>Set up an administrator account</label>
+        <label>Set up an account</label>
       </div>
       {{#cmp data.step '>' 1}}
       <div class="step {{#cmp data.step '>' 2}} finished{{/cmp}}">
@@ -40,23 +42,31 @@
       </p>
       <div class="rows">
         <div class="row">
+          <label for="password">Full Name</label>
+          <div class="field">
+            <input id="fullname" name="fullname"
+              class="full" type="text" value="{{data.fullname}}" />
+          </div>
+        </div>
+        <div class="row">
           <label for="password">User ID</label>
           <div class="field">
-            <input type="text" disabled="disabled" value="admin" />
+            <input id="name" name="name"
+              class="full" type="text" value="{{data.name}}" />
           </div>
         </div>
         <div class="row">
           <label for="password">Password</label>
           <div class="field">
-            <input class="full"
-              type="password" id="password" name="password" />
+            <input id="password" name="password"
+              class="full" type="password" value="{{data.password}}" />
           </div>
         </div>
         <div class="row">
           <label for="confirmation">Repeat Password</label>
           <div class="field">
-            <input class="full" type="password"
-              id="confirmation" name="confirmation" />
+            <input id="confirmation" name="confirmation"
+              class="full" type="password" value="{{data.confirmation}}" />
           </div>
         </div>
       </div>
@@ -72,8 +82,8 @@
           <div class="hint"><b>Optional field</b></div>
           <div class="hint">OpenSSH format only</div>
           <div class="field">
-            <textarea id="key"
-              name="key" spellcheck="false">{{data.key}}</textarea>
+            <textarea id="key" name="key"
+               spellcheck="false">{{data.key}}</textarea>
           </div>
         </div>
       </div>
@@ -149,6 +159,7 @@
     </script>
     {{/cmp}}
   </div>
+  </div>
 
   <div class="actions">
     <div class="status">
@@ -184,9 +195,10 @@
       <span class="icon fa fa-chevron-left"></span>
       <label for="back">Previous Step</label>
     </button>
-    <input type="hidden" name="action" />
+    <input type="hidden" id="action" name="action" />
   </div>
 
+</div>
 </div>
 
 </form>

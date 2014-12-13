@@ -2,6 +2,7 @@
 
 source '/boot/include/utility'
 source '/boot/include/package'
+source '/boot/include/supervisor'
 
 main()
 {
@@ -10,12 +11,16 @@ main()
   fi
 
   require_root
+  supervisor_init
 
   for package in "$@"; do
     package_remove "$package" \
       || fatal "Failed to remove package '$package'"
+
+    info "Package '$package' successfully removed"
   done
 
+  success 'All specified packages have been removed'
   return 0
 }
 

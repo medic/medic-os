@@ -7,10 +7,22 @@ restart()
 {
   local package="$1"
   local service="$2"
+  local is_wildcard="$3"
+
+  if [ "$is_wildcard" ]; then
+    if supervisor_is_service_disabled "$package" "$service"; then
+      warn "Service '$package/$service' is disabled; skipping"
+      return 0
+    elif supervisor_is_service_down "$package" "$service"; then
+      warn "Service '$package/$service' is stopped; skipping"
+      return 0
+    fi
+  fi
 
   supervisor_service_restart "$package" "$service" \
     || fatal "Failed to restart service '$package/$service'"
 
+  info "Service '$package/$service' restarted successfully"
   return 0
 }
 
@@ -24,17 +36,26 @@ main()
   fi
 
   require_root
+  supervisor_init
 
   if [ "$#" -le 0 ]; then
-    supervisor_list_expected_services "$package" | while read service; do
-      restart "$package" "$service"
+    supervisor_list_all_services "$package" | while read service; do
+      restart "$package" "$service" 't'
     done
+    local rv="$?"
+    [ "$rv" -ne 0 ] && return "$rv"
   else
     for service in "$@"; do
       restart "$package" "$service"
     done
   fi
-    
+
+  if [ $# -le 0 ]; then
+    success "All services in package '$package' have restarted"
+  else
+    success "Selected services in package '$package' have restarted"
+  fi
+
   return 0
 }
 

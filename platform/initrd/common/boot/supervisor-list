@@ -3,6 +3,18 @@
 source '/boot/include/utility'
 source '/boot/include/supervisor'
 
+usage()
+{
+  echo 'Usage:'
+  echo "  $0 <package-name> [status-name]"
+  echo
+  echo 'Supported status names:'
+  echo '  watched, expected, unexpected,'
+  echo '  enabled, disabled, running, restarting, down' >&2
+
+  exit 111
+}
+
 main()
 {
   local package="`basename "$1"`"
@@ -13,6 +25,7 @@ main()
   fi
 
   require_root
+  supervisor_init
 
   if [ -z "$package" -o "$package" = 'all' ]; then
     supervisor_list_all_packages
@@ -22,32 +35,21 @@ main()
     fi
     case "$attribute" in
       watched|expected|unexpected|enabled|disabled|running|restarting|down)
-        ;;
+        true ;;
       '')
         attribute='all' ;;
       *)
-        fatal "Service attribute '$attribute' does not exist"
+        fatal "Service attribute '$attribute' does not exist" ;;
     esac
    
     "supervisor_list_${attribute}_services" "$package"
   fi
 
   if [ "$?" -ne 0 ]; then
-    warn "Failed to one or more specified services"
+    warn "Failed to list one or more specified services"
   fi
   
   return "$?"
-}
-
-usage()
-{
-  echo -e "Usage:\n" \
-    "  $0 <package-name | 'all'> [ status-name ]\n"
-  echo
-  echo -e "Supported status names:\n" \
-    '  watched, (un)expected, [en|dis]abled, running, restarting, down' >&2
-
-  exit 111
 }
 
 main "$@"

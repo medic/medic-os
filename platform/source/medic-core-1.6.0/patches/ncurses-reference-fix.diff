@@ -1,0 +1,42 @@
+diff -urN ncurses-5.9-prev/c++/cursesf.h ncurses-5.9/c++/cursesf.h
+--- ncurses-5.9-prev/c++/cursesf.h	2014-12-01 20:59:17.000000000 -0800
++++ ncurses-5.9/c++/cursesf.h	2014-12-01 20:57:48.000000000 -0800
+@@ -681,7 +681,7 @@
+ 		   const T* p_UserData = STATIC_CAST(T*)(0),
+ 		   bool with_frame=FALSE,
+ 		   bool autoDelete_Fields=FALSE)
+-    : NCursesForm (Fields, with_frame, autoDelete_Fields) {
++    : NCursesForm (&Fields, with_frame, autoDelete_Fields) {
+       if (form)
+ 	set_user (const_cast<void *>(p_UserData));
+   };
+@@ -694,7 +694,7 @@
+ 		   const T* p_UserData = STATIC_CAST(T*)(0),
+ 		   bool with_frame=FALSE,
+ 		   bool autoDelete_Fields=FALSE)
+-    : NCursesForm (Fields, nlines, ncols, begin_y, begin_x,
++    : NCursesForm (&Fields, nlines, ncols, begin_y, begin_x,
+ 		   with_frame, autoDelete_Fields) {
+       if (form)
+ 	set_user (const_cast<void *>(p_UserData));
+diff -urN ncurses-5.9-prev/c++/cursesm.h ncurses-5.9/c++/cursesm.h
+--- ncurses-5.9-prev/c++/cursesm.h	2014-12-01 20:59:25.000000000 -0800
++++ ncurses-5.9/c++/cursesm.h	2014-12-01 20:58:17.000000000 -0800
+@@ -639,7 +639,7 @@
+ 		   const T* p_UserData = STATIC_CAST(T*)(0),
+ 		   bool with_frame=FALSE,
+ 		   bool autoDelete_Items=FALSE)
+-    : NCursesMenu (Items, with_frame, autoDelete_Items) {
++    : NCursesMenu (&Items, with_frame, autoDelete_Items) {
+       if (menu)
+ 	set_user (const_cast<void *>(p_UserData));
+   };
+@@ -651,7 +651,7 @@
+ 		   int begin_x = 0,
+ 		   const T* p_UserData = STATIC_CAST(T*)(0),
+ 		   bool with_frame=FALSE)
+-    : NCursesMenu (Items, nlines, ncols, begin_y, begin_x, with_frame) {
++    : NCursesMenu (&Items, nlines, ncols, begin_y, begin_x, with_frame) {
+       if (menu)
+ 	set_user (const_cast<void *>(p_UserData));
+   };

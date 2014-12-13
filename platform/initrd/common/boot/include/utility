@@ -1,20 +1,31 @@
 #!/bin/sh
 
-if [ -z "$log" ]; then
-  log() {
-    [ -z "$verbose" ] || echo "$*" >&2
-  }
-fi
+srv_dir='/srv'
 
-warn()
+is_integer()
 {
-  echo "Warning: $*" >&2
+  for n in "$@"; do
+    [ "$n" -eq "$n" ] 2>/dev/null || return 1
+  done
+
+  return 0
 }
 
-fatal()
+read_integer_file()
 {
-  echo "Fatal: $*" >&2
-  exit 1
+  local file="$1"
+  local allow_empty="$2"
+
+  local content="`cat "$file" 2>/dev/null`" \
+    || return 1
+
+  if [ "$allow_empty" -a -z "$content" ]; then
+    return 0
+  elif is_integer "$content"; then
+    echo "$content" && return 0
+  fi
+
+  return 255
 }
 
 require_root()
@@ -61,6 +72,59 @@ use_package()
     local command='append_path'
   fi
 
-  $command "/srv/software/$package/current/default"
+  $command "$srv_dir/software/$package/current/default"
 }
+
+# Logging:
+#   Provide a number of different log targets. The `emit`
+#   function is for raw not-necessarily-visual output, and
+#   the `print` function is for raw visual output. The `info`,
+#   `warn`, and `fatal` functions are higher-level exported
+#   logging functions that should be used by client code.
+#   The `log` method is an invisible-by-default debug target.
+#   Any of these functions can be overridden post-inclusion.
+
+emit()
+{
+  echo "$@" >&2
+}
+
+print()
+{
+  emit "$@"
+}
+
+success()
+{
+  emit "Success: $*"
+}
+
+info()
+{
+  emit "Info: $*"
+}
+
+warn()
+{
+  emit "Warning: $*"
+}
+
+fatal()
+{
+  print "Fatal: $*"
+  exit 1
+}
+
+log()
+{
+  if [ "$verbose" ]; then
+    emit "Debug: $*"
+  fi
+}
+
+if [ "$verbose" ]; then
+  log='/dev/stderr'
+else
+  log='/dev/null'
+fi
 

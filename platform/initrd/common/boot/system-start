@@ -5,6 +5,7 @@ source '/boot/include/logger'
 source '/boot/include/cursor'
 source '/boot/include/startup'
 source '/boot/include/package'
+source '/boot/include/template'
 source '/boot/include/supervisor'
 source '/boot/include/hypervisor'
 
@@ -35,7 +36,7 @@ wait_for_ip_address()
 
 main()
 {
-  local version='1001'
+  local version='10100'
   local swap_size='1024'
   local source_device='/dev/sr0'
 
@@ -54,13 +55,14 @@ main()
     source_device='/dev/xvda1'
   fi
 
+  supervisor_init
+
   set_echo 0
   set_bold 1
   set_cursor 0
   set_console_blanking 0
 
   display_centered 'Starting up...'
-
   log "Storage initialization started at `date`"
 
   mount_source_image "$source_device" \
@@ -220,7 +222,7 @@ fatal()
   set_cursor 1
 
   print 'Attempting to start recovery console...'
-  exec /sbin/getty -nl /bin/sh 38400 tty1
+  exec /sbin/getty -nl /boot/recovery-console 38400 tty1
 }
 
 main

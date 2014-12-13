@@ -35,13 +35,13 @@ node-fs-ext, https://github.com/baudehlo/node-fs-ext.git
 node-gammu-json, https://github.com/browndav/node-gammu-json.git
 nodelint, https://github.com/tav/nodelint.git
 openssh, http://ftp3.usa.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.6p1.tar.gz
-openssl, https://www.openssl.org/source/openssl-1.0.1h.tar.gz
+openssl, http://mirrors.ibiblio.org/openssl/source/openssl-1.0.1j.tar.gz
 patch, http://ftp.gnu.org/gnu/patch/patch-2.7.tar.xz
 paxctl, http://pax.grsecurity.net/paxctl-0.9.tar.gz
 pcre, http://iweb.dl.sourceforge.net/project/pcre/pcre/8.33/pcre-8.33.tar.bz2
 popt, http://rpm5.org/files/popt/popt-1.16.tar.gz
 pv, http://sources.buildroot.net/pv-1.4.12.tar.bz2
-readline, http://ftp.gnu.org/gnu/readline/readline-6.2.tar.gz
+readline, http://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz
 rebar, https://github.com/basho/rebar.git
 rsync, http://rsync.samba.org/ftp/rsync/src/rsync-3.1.1.tar.gz
 screen, http://ftp.gnu.org/gnu/screen/screen-4.0.3.tar.gz

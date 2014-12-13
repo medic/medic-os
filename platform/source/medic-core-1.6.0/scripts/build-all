@@ -51,10 +51,15 @@ main()
   #  These are used to vary configuration based upon
   #  the architecture that we're currently compiling for.
 
+  local gammu_extra_options=""
   local erlang_extra_options=""
 
   if [ "$architecture" = 'intel' -a "$bits" ]; then
     erlang_extra_options="--enable-m${bits}-build"
+  fi
+
+  if [ "$uname" = 'Darwin' ]; then
+    gammu_extra_options='-DWITH_Iconv=OFF'
   fi
 
   (disable_stack_protector &&
@@ -74,10 +79,12 @@ main()
   build_autoconf 'libusb-compat' \
     "$stdarg --enable-static=no --enable-shared=yes" &&
   \
-  build_autoconf 'libpcap' "$stdarg --enable-shared --disable-static" &&
-  builder_remove_static_libraries 'pcap' &&
+  build_autoconf 'libpcap' \
+    "$stdarg --enable-shared --disable-static --without-libnl" &&
   \
-  build_autoconf 'tcpdump' "$stdarg --disable-smb" &&
+  builder_remove_static_libraries 'pcap' &&
+  build_autoconf 'tcpdump' "$stdarg --disable-smb --without-libnl" &&
+  \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
   \
   builder_remove_static_libraries 'form' 'form_g' \
@@ -136,11 +143,11 @@ main()
   (disable_parallelism && build_config 'openssl' \
     "shared no-asm zlib-dynamic --openssldir='$prefix/etc/ssl' $stdarg") &&
   \
+  builder_remove_static_libraries 'crypto' 'ssl' &&
+  \
   build_autoconf 'openssh' \
     "$stdarg --sysconfdir=\"$prefix/etc/ssh\" \
      --with-zlib=\"$prefix\" --with-ssl-dir=\"$prefix\"" &&
-  \
-  builder_remove_static_libraries 'crypto' 'ssl' &&
   \
   build_autoconf 'libidn' "$stdarg" &&
   builder_remove_static_libraries 'idn' &&
@@ -173,15 +180,15 @@ main()
      --without-iconv" '' "NO_INSTALL_HARDLINKS='1'" &&
   \
   build_autoconf 'rsync' "$stdarg" &&
-
-  build_autoconf 'nginx' \
+  \
+  (ldflags_in_cflags && build_autoconf 'nginx' \
     "$stdarg --sbin-path='$prefix/bin' \
      --with-http_ssl_module --with-http_spdy_module \
      --conf-path='$prefix/etc/nginx/nginx.conf' \
      --pid-path='$prefix/var/run/nginx/nginx.pid' \
-     --error-log-path='$prefix/var/log/nginx/error.log' \
-     --lock-path='$prefix/var/run/nginx/nginx.lock'" \
-       "LINK='$CC $CFLAGS $LDFLAGS'" &&
+     --lock-path='$prefix/var/run/nginx/nginx.lock' \
+     --error-log-path='$prefix/var/log/nginx/error.log'" \
+       "LINK='$CC $CFLAGS $LDFLAGS'") &&
   \
   (simple_cflags &&
     build_autoconf 'node' \
@@ -214,8 +221,8 @@ main()
   \
   build_cmake 'gammu' "$prefix" \
     "-DBUILD_SHARED_LIBS=ON -DWITH_Glib=OFF \
-     -DINSTALL_GNAPPLET=OFF -DWITH_BACKUP=OFF \
-     -DINSTALL_BASH_COMPLETION=OFF -DENABLE_PROTECTION=ON" &&
+     -DINSTALL_BASH_COMPLETION=OFF -DENABLE_PROTECTION=ON \
+     -DINSTALL_GNAPPLET=OFF -DWITH_BACKUP=OFF $gammu_extra_options" &&
   \
   build_make_install 'gammu-json' "$prefix" "PREFIX=\"$prefix\"" &&
   \
@@ -237,6 +244,7 @@ main()
   build_npm_remote 'lazy' "$prefix" &&
   build_npm_remote 'request' "$prefix" &&
   build_npm_remote 'hbs' "$prefix" &&
+  build_npm_remote 'grunt' "$prefix" &&
   \
   build_npm_local 'medic-transport' "$prefix" &&
   build_npm_local 'node-fs-ext' "$prefix" &&

@@ -1,6 +1,11 @@
 
+# Variables
+
 PARALLEL ?= 16
 PLATFORM := $(shell ../../scripts/detect-platform)
+
+
+# Public targets
 
 all: status
 	@mkdir -p '${ROOT}' && \
@@ -11,18 +16,6 @@ all: status
 	done && \
 	./scripts/build-all '${ROOT}' '${START}' '${START_VERSION}' \
 		'${STOP}' '${STOP_VERSION}' '${PLATFORM}' '${BITS}' '${PARALLEL}'
-
-status:
-	@if [ -z "${SKIP_STATUS}" ]; then \
-		echo && ./scripts/print-status 'start' \
-        	'Building package `medic-core` for `${PLATFORM}`'; \
-	fi
-
-gardenize:
-	@./scripts/gardenize-couchdb '${ROOT}'
-
-clean-logs:
-	rm -f logs/*/*.log
 
 clean: clean-logs
 	./scripts/clean-all; \
@@ -37,4 +30,19 @@ recalculate-stats:
 		`.count" && \
 		wc -l < "$$file" > "$$stats_file"; \
 	done
+
+
+# Private targets
+
+status:
+	@if [ -z "${SKIP_STATUS}" ]; then \
+		echo && ./scripts/print-status 'start' \
+        	'Building package `medic-core` for `${PLATFORM}`'; \
+	fi
+
+gardenize:
+	@./scripts/gardenize-couchdb '${ROOT}'
+
+clean-logs:
+	rm -f logs/*/*.log
 

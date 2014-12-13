@@ -1,14 +1,15 @@
 #!/bin/sh
 
-self="`readlink -f "$0" || realpath "$0"`"
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
 
+shopt -u xpg_echo
 source "$base_dir/../medic-core/scripts/include/rearrange"
 
 rename()
 {
   find . -type d -exec chmod 755 {} \; &&
-    chown -R root:root .
+    chown -R root:wheel .
 }
 
 apply_patches()

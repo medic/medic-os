@@ -2,6 +2,11 @@
 
 set -o pipefail
 
+srv_dir='/srv'
+receipts_dir="$srv_dir/system/storage/receipts"
+settings_dir="$srv_dir/system/settings/packages"
+supervisor_dir="$srv_dir/system/storage/supervisor"
+
 package_extract_metadata()
 {
   local path="$1"
@@ -48,7 +53,7 @@ package_retrieve_installed_version()
 {
   local package="$1"
 
-  cat "/srv/receipts/$package/version" 2>/dev/null
+  cat "$receipts_dir/$package/version" 2>/dev/null
   return "$?"
 }
 
@@ -67,40 +72,42 @@ package_install()
     return 2
   fi
  
-  mkdir -p "/srv/receipts/$package" &&
-    echo -n "$version" > "/srv/receipts/$package/version"
+  log "Installing package '$package'"
+
+  mkdir -p "$receipts_dir/$package" &&
+    echo -n "$version" > "$receipts_dir/$package/version"
 
   if [ "$?" -ne 0 ]; then
-    rm -f "/srv/receipts/$package/version"
+    rm -f "$receipts_dir/$package/version"
     return 3
   fi
 
   log "Extracting files for package '$package'"
 
-  mkdir -p "/srv/receipts/$package" "/srv/scripts/$package" &&
-    (cd /srv && ar -p "$path" package.tar.xz | xz -dc \
-      | tar -xvf - > "/srv/receipts/$package/manifest") && sync
+  mkdir -p "$receipts_dir/$package" "$srv_dir/scripts/$package" &&
+    ar -p "$path" package.tar.xz | xz -dc \
+      | (cd "$srv_dir" && tar -xvf - > "$receipts_dir/$package/manifest")
 
   if [ "$?" -ne 0 ]; then
     warn "Failed to extract files for package '$package' from '$path'"
-    rm -f "/srv/receipts/$package"
+    rm -f "$receipts_dir/$package"
     return 4
   fi
 
-  if [ -x "/srv/scripts/$package/install" ]; then
+  if [ -x "$srv_dir/scripts/$package/install" ]; then
 
     log "Running installation script for package '$package'"
 
-    "/srv/scripts/$package/install" \
+    "$srv_dir/scripts/$package/install" \
       || warn "Installation script for package '$package' failed"
 
     if [ "$?" -ne 0 ]; then
-      rm -rf "/srv/receipts/$package"
+      rm -rf "$receipts_dir/$package"
       return 5
     fi
   else
     log "Skipping installation script for package '$package'"
-    log "File '/srv/scripts/$package/install' is not executable"
+    log "File '$srv_dir/scripts/$package/install' is not executable"
   fi
 
   log "Successfully installed package '$package'"
@@ -113,24 +120,30 @@ package_remove()
 {
   local package="`basename "$1"`"
 
+  log "Removing package '$package'"
   log "Stopping services for package '$package'"
 
-  if ! supervisor_stop "$package"; then
+  supervisor_stop "$package"
+  local rv="$?"
+
+  if [ "$rv" -eq 253 ]; then
+    info "Package '$package' has no services to stop; continuing"
+  elif [ "$rv" -ne 0 ]; then
     warn "Failed to stop services for package '$package'"
     return 1
   fi
-    
+
   log "Removing package '$package'"
 
-  if [ -x "/srv/scripts/$package/remove" ]; then
-    if ! "/srv/scripts/$package/remove"; then
+  if [ -x "$srv_dir/scripts/$package/remove" ]; then
+    if ! "$srv_dir/scripts/$package/remove"; then
       warn "Removal script for '$package' exited with non-zero status"
       return 2
     fi
   fi
 
-  rm -rf "/srv/receipts/$package" \
-    "/srv/storage/system/supervisor/$package"
+  rm -rf "$receipts_dir/$package" \
+    "$supervisor_dir/$package" "$settings_dir/$package"
 
   if [ "$?" -gt 0 ]; then
     warn "Failed to remove installation records for package '$package'"
@@ -152,7 +165,8 @@ package_update()
   local v_new="`package_extract_version "$path"`" &&
   local v_prev="`package_retrieve_installed_version "$package"`"
 
-  log "Examining package '$package'"
+  log "Updating package '$package'"
+  log "Examining version information for package '$package'"
 
   if [ "$?" -ne 0 ]; then
     warn "Failed to read metadata from package file '$file'"
@@ -164,28 +178,32 @@ package_update()
     return 2
   fi
 
-  if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ] 2>/dev/null; then
+  if [ "$v_prev" ]; then
+    if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ]; then
 
-    warn "A newer version of '$package' is already installed"
-    warn "Use the force-install option if you want to install it anyway"
-    return 3
+      warn "A newer version of '$package' is already installed"
+      warn "Use the force-install option if you want to install it anyway"
+      return 3
 
-  elif [ "$v_prev" -a "$v_prev" -ne "$v_new"] 2>/dev/null; then
+    elif [ "$v_prev" -lt "$v_new" ] 2>/dev/null; then
 
-    log "Removing package '$package'"
+      force_install='t'
+      log "Removing package '$package'"
 
-    if ! package_remove "$package"; then
-      warn "Failed to completely remove package '$package'"
-      return 4
+      if ! package_remove "$package"; then
+        warn "Failed to completely remove package '$package'"
+        return 4
+      fi
+    else
+      warn "Version '$v_prev' of package '$package' is already installed"
     fi
-  fi
-
-  if [ -z "$v_prev" -o "$v_prev" -lt "$v_new" ] 2>/dev/null; then
+  else
     force_install='t'
-    log "Update required for package '$package'"
+    log "Package '$package' is not installed yet; installing"
   fi
 
   if [ "$force_install" ]; then
+    log "Installing package '$package'"
     if ! package_install "$path"; then
       warn "Package '$package' encountered an error during installation"
       warn "Software installation from file '$file' was unsuccessful"
@@ -209,11 +227,11 @@ package_merge_environment()
 {
   local package="$1"
 
-  local env_file="/srv/scripts/$package/env"
+  local env_file="$srv_dir/scripts/$package/env"
 
   if [ -f "$env_file" ]; then
     source "$env_file"
-    merge_environment /srv &>/dev/null
+    merge_environment "$srv_dir" &>/dev/null
     unset merge_environment
   fi
 }
@@ -222,11 +240,11 @@ package_setup()
 {
   local package="`basename "$1"`"
 
-  for script in /srv/scripts/$package/setup/*; do
+  for script in "$srv_dir/scripts/$package/setup"/*; do
     if [ -x "$script" ]; then
 
       local task_name="$package/`basename "$script"`"
-      log "Running setup task '$task_name'..."
+      log "Running setup task '$task_name'"
 
       "$script" >> "$log" 2>&1 \
         || warn "Setup task '$task_name' was not successful"
@@ -235,13 +253,37 @@ package_setup()
     fi
   done
 
-  return 0
+  package_regenerate_settings "$package"
+  return "$?"
+}
+
+package_regenerate_settings()
+{
+  local package="`basename "$1"`"
+
+  local src_dir="$srv_dir/settings/$package"
+  local target_dir="$settings_dir/$package"
+
+  log "Regenerating settings for package '$package'"
+
+  if ! [ -d "$src_dir" ]; then
+    log "Package '$package' has no settings directory; skipping"
+    return 0
+  fi
+
+  mkdir -p "$target_dir" &&
+  \
+  template_expand_directories \
+    'mustache' 't' "$src_dir" "$target_dir"
+
+  log "Finished regenerating settings for package '$package'"
+  return "$?"
 }
 
 package_remove_empty_directories()
 {
   local package="`basename "$1"`"
-  local software_dir="/srv/software/$package"
+  local software_dir="$srv_dir/software/$package"
 
   local file_count="`
     find "$software_dir" -type f 2>/dev/null | wc -l
@@ -255,4 +297,3 @@ package_remove_empty_directories()
 
   return 0
 }
-

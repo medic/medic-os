@@ -58,8 +58,14 @@ main()
   # Store the package's base name as metadata
   echo "$package" > "$staging_dir/name" &&
   \
-  # Regenerate version information
+  # Record the package version
   echo "$version" > "$staging_dir/version" &&
+  \
+  # Record the package's target platform
+  echo "$platform" > "$staging_dir/platform" &&
+  \
+  # Record the package's creation timestamp
+  date +'%Y/%m/%d %H:%M:%S'> "$staging_dir/build-timestamp" &&
   \
   # Regenerate cryptographic digests
   for type in md5 sha1 sha256 sha512; do

@@ -10,15 +10,43 @@ main()
   fi
 
   require_root
+  supervisor_init
 
   local package="$1"
   shift 1
-  
+
+  local is_failure=''
+
+  # Strict mode:
+  #  The internal implementation of `supervisor_stop` is tolerant
+  #  of packages that are unwatched or disabled; it issues warnings
+  #  but not errors. Check these ignored conditions when in strict mode.
+
+  if [ "$#" -gt 0 ]; then
+    for service in "$@"; do
+      if supervisor_is_service_disabled "$package" "$service"; then
+        is_failure='t'
+        warn "Service '$package/$service' is disabled"
+      elif ! supervisor_is_service_watched "$package" "$service"; then
+        is_failure='t'
+        warn "Service '$package/$service' is already unsupervised"
+      fi
+    done
+  fi
+
+  if [ "$is_failure" ]; then
+    fatal "One or more services are not currently supervised"
+  fi
+
   supervisor_stop "$package" "$@"
   local rv="$?"
 
-  if [ "$rv" -ne 0 ]; then
+  if [ "$rv" -eq 253 ]; then
+    warn "Package '$package' has no services to stop"
+  elif [ "$rv" -ne 0 ]; then
     warn "Failed to stop one or more specified services"
+  else
+    success "Supervisor stopped for all services in package '$package'"
   fi
   
   return "$rv"

@@ -1,4 +1,6 @@
 
+# Variables
+
 PARALLEL ?= 16
 PLATFORM := $(shell ../scripts/detect-platform)
 
@@ -24,28 +26,24 @@ KERNEL_VERSION := 3.10.54
 KERNEL_MODULE_PATH := ${CURDIR}/../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}
 
 
+# Meta-targets
+
 all: build copy finalize
 
-
 build: build-all
-
 build-all: build-core build-vm-tools build-medic-core
 
-
 copy: copy-all
-
 copy-all: copy-core copy-medic-core copy-vm-tools set-pax-flags
 
-
 finalize: finalize-all
-
 finalize-all: verify-packages finalize-initrd
 
-
 clean: clean-all
-
 clean-all: clean-core clean-vm-tools clean-medic-core clean-java clean-compiler
 
+
+# Public targets
 
 compiler: build-compiler
 
@@ -74,24 +72,6 @@ copy-core:
 clean-core:
 	(cd core && ${MAKE} clean)
 
-
-rebuild-kernel:
-	@(cd core && \
-	  ${QMAKE} clean-kernel &>/dev/null && \
-	  ${QMAKE} kernel \
-	    PLATFORM='${PLATFORM}' \
-	    PATH="${MEDIC_CORE_ROOT}/bin:$$PATH" \
-	    MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}' \
-	    KERNEL_VERSION='${KERNEL_VERSION}' KERNEL_EXTRA='${KERNEL_EXTRA}' \
-	    KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' PARALLEL='${PARALLEL}')
-
-rebuild-vm-tools-modules:
-	@echo -n "Rebuilding 'open-vm-tools' kernel modules... " && \
-	(cd vm-tools/source/open-vm-tools/modules && \
-	  ${QMAKE} clean &>/dev/null && \
-	  ${QMAKE} all install &>/dev/null) || exit "$$?"; \
-	depmod -a -b '../initrd/${PLATFORM}' '${KERNEL_VERSION}' && \
-	echo 'done.'
 
 vm-tools: build-vm-tools copy-vm-tools
 
@@ -138,6 +118,27 @@ copy-medic-core:
 	  cp -R /srv/software/medic-core \
 	    ../../packages/medic-core/software/medic-core)
 	@echo 'done.'
+
+
+# Private targets
+
+rebuild-kernel:
+	@(cd core && \
+	  ${QMAKE} clean-kernel &>/dev/null && \
+	  ${QMAKE} kernel \
+	    PLATFORM='${PLATFORM}' \
+	    PATH="${MEDIC_CORE_ROOT}/bin:$$PATH" \
+	    MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}' \
+	    KERNEL_VERSION='${KERNEL_VERSION}' KERNEL_EXTRA='${KERNEL_EXTRA}' \
+	    KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' PARALLEL='${PARALLEL}')
+
+rebuild-vm-tools-modules:
+	@echo -n "Rebuilding 'open-vm-tools' kernel modules... " && \
+	(cd vm-tools/source/open-vm-tools/modules && \
+	  ${QMAKE} clean &>/dev/null && \
+	  ${QMAKE} all install &>/dev/null) || exit "$$?"; \
+	depmod -a -b '../initrd/${PLATFORM}' '${KERNEL_VERSION}' && \
+	echo 'done.'
 
 copy-java-template: clean-java
 	@echo -n "Copying package template for 'java'... " && \

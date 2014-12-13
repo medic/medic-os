@@ -1,0 +1,80 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/supervisor'
+
+show_package()
+{
+  local package="`basename "$1"`"
+
+  echo "Package '$package':"
+  return 0
+}
+
+show_services()
+{
+  local package="`basename "$1"`"
+  local attributes='watched running restarting down disabled expected'
+
+  local n='0'
+  local services="`supervisor_list_all_services "$package"`"
+
+  if [ "$services" ]; then
+    n="`echo "$services" | wc -l`"
+  fi
+
+  if [ "$?" -eq 0 -a "$n" -gt 0 ]; then
+    echo "$services" | while read service; do
+      supervisor_print_service_status "$package" "$service"
+    done
+  else
+    echo -n '  '
+    echo '<No services found in this package>'
+  fi
+  
+  echo
+  return 0
+}
+
+main()
+{
+  require_root
+  supervisor_init
+
+  for package in "$@"; do
+    local package="`basename "$package"`"
+    supervisor_package_exists "$package" \
+      || fatal "Package '$package' doesn't appear to be installed"
+  done
+
+  if [ "$#" -gt 0 ]; then
+    echo && for package in "$@"; do
+      local package="`basename "$package"`"
+      show_package "$package"
+      show_services "$package"
+    done
+  else
+    local packages="`supervisor_list_all_packages`"
+
+    if [ -z "$packages" ]; then
+      warn 'There are currently no packages installed'
+    else
+      echo && echo "$packages" | while read package; do
+        show_package "$package"
+        show_services "$package"
+      done
+    fi
+  fi
+
+  return 0
+}
+
+usage()
+{
+  echo "Usage: $0 [package-name]..." >&2
+  exit 111
+}
+
+main "$@"
+exit "$?"
+

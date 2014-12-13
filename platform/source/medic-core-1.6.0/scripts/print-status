@@ -1,9 +1,15 @@
 #!/bin/bash
 
-self="`readlink -f "$0"`"
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
 
-source "$base_dir/scripts/include/logger" 2>/dev/null \
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 1
+}
+
+source "$base_dir/scripts/include/logger" \
   || fatal 'Unable to load a required library'
 
 usage()

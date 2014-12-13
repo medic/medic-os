@@ -1,6 +1,5 @@
 #!/bin/sh
 # /etc/init.d/rc.shutdown - used by /etc/inittab to shutdown the system.
-#
 
 alias awk="busybox awk"
 alias grep="busybox grep"
@@ -11,14 +10,18 @@ alias swapoff="busybox swapoff"
 alias umount="busybox umount"
 clear 
 
-sync; sync
+echo 'Shutting down...'
+
+sync && sync
 swapoff -a 2>/dev/null
 
 # Kill all processes except those listed in /var/tmp/k5_skip.
 K5_SKIP="`awk 'BEGIN {RS="[\n ]";ORS=" "}{print "-o "$1}' /var/tmp/k5_skip 2>/dev/null`"
-killall5 $K5_SKIP && sleep 2
+killall5 $K5_SKIP
+
+sleep 5 && sync
 killall5 -9 $K5_SKIP
 
 umount -arf >/dev/null 2>&1
-sync
+sync && sleep 1 && sync
 

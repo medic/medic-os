@@ -1,4 +1,6 @@
 
+# Variables
+
 PARALLEL ?= 16
 PLATFORM := $(shell ../../scripts/detect-platform)
 
@@ -12,27 +14,21 @@ STAGING_PATH := $(shell readlink -f ../../staging/software/${PLATFORM})
 KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}
 
 
+# Meta-targets
+
 all: build
 
 build: build-all
-
 build-all: status build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc remove-unnecessary
 
-
 copy: copy-all
-
 copy-all: copy-syslinux copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
 
-
 clean: clean-all
-
-clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc
-	rm -f logs/*/*
+clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
 
 
-status:
-	@echo && ./scripts/print-status 'start' \
-	  'Building package `core` for `${PLATFORM}`'
+# Public targets
 
 pv: build-pv
 
@@ -258,9 +254,19 @@ recalculate-stats:
 	  wc -l < "$$file" > "$$stats_file"; \
 	done
 
+
+# Private targets
+
 remove-unnecessary:
 	@echo -n "Removing unnecessary initrd files... " && \
 	cd "../../initrd/${PLATFORM}" && \
 	rm -rf include share lib/*.py && \
 	echo 'done.'
+
+clean-logs:
+	rm -f logs/*/*
+
+status:
+	@echo && ./scripts/print-status 'start' \
+	  'Building package `core` for `${PLATFORM}`'
 

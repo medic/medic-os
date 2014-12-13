@@ -1,0 +1,203 @@
+#!/bin/sh
+
+# template_leading_regex:
+#   Output the leading regular expression for the provided template
+#   style. The resulting regex can be used with `template_processor`.
+
+template_leading_regex()
+{
+  local template_style="$1"
+
+  if [ -z "$template_style" ]; then
+    template_style='shell'
+  fi
+
+  case "$template_style" in
+    shell)
+      echo '\\$\\{'
+      break;
+      ;;
+    mustache)
+      echo '\\{\\{\\{'
+      break;
+      ;;
+    at)
+      echo '@@@'
+      break;
+      ;;
+    percent)
+      echo '%%%'
+      break;
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+# template_trailing_regex:
+#   Output the trailing regular expression for the provided template
+#   style. The resulting regex can be used with `template_processor`.
+
+template_trailing_regex()
+{
+  local template_style="$1"
+
+  if [ -z "$template_style" ]; then
+    template_style='shell'
+  fi
+
+  case "$template_style" in
+    shell)
+      echo '\\}'
+      break;
+      ;;
+    mustache)
+      echo '\\}\\}\\}'
+      break;
+      ;;
+    at)
+      echo '@@@'
+      break;
+      ;;
+    percent)
+      echo '%%%'
+      break;
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+# template_processor:
+#   A simple templating engine for Busybox and GNU or BSD Awk.
+#   The first argument is a regular expression that matches the
+#   leading variable-expansion token; the second argument is a
+#   regular expression matching the trailing variable-expansion
+#   token. Values must be stored as environment variables.
+
+template_processor()
+{
+  local regex_leading="$1"
+  local regex_trailing="$2"
+
+  awk '{
+    while (match($0, regex_leading "[[:alnum:]_-]+" regex_trailing)) {
+      str = var = substr($0, RSTART, RLENGTH);
+      gsub("^" regex_leading, "", var);
+      gsub(regex_trailing "$", "", var);
+      gsub(str, ENVIRON[var]);
+    }
+    print;
+  }' regex_leading="$regex_leading" regex_trailing="$regex_trailing"
+
+  return "$?"
+}
+
+# template_expand:
+#   Expand template directives in one or more files, using the
+#   environment as a namespace. The `template_style` argument
+#   controls the expected format of the template directives.
+#   Files must be specified in pairs: one path to a source file,
+#   followed by a single path to an output file. The source file
+#   and output file must not be the same.
+
+template_expand()
+{
+  local template_style="$1"
+  shift 1
+
+  if [ "$(($# % 2))" -ne 0 ]; then
+    return 128
+  fi
+
+  local regex_leading="`template_leading_regex "$template_style"`" &&
+  local regex_trailing="`template_trailing_regex "$template_style"`" \
+    || return 129
+
+  while [ "$#" -ge 2 ]; do
+
+    local src_file="$1"
+    local target_file="$2"
+    shift 2
+
+    if [ "$src_file" = "$target_file" ]; then
+      return 130
+    fi
+
+    template_processor "$regex_leading" "$regex_trailing" \
+      < "$src_file" > "$target_file" 2>/dev/null
+
+    if [ "$?" -ne 0 ]; then
+      return "$?"
+    fi
+  done
+
+  return "$?"
+}
+
+# template_expand_directories:
+#   Recursively copy one directory to another, expanding template
+#   directives along the way for files with the proper extension.
+
+template_expand_directories()
+{
+  local template_style="$1"
+  local extension="$2"
+  shift 2
+
+  if [ "$(($# % 2))" -ne 0 ]; then
+    return 131
+  fi
+
+  while [ "$#" -ge 2 ]; do
+
+    local src_dir="$1"
+    local target_dir="$2"
+    shift 2
+
+    # Copy everything first:
+    #   This is by far the easiest way to preserve ownership
+    #   and permissions for every file we're copying/processing.
+
+    if [ "$src_dir" != "$target_dir" ]; then
+      cp -a "$src_dir"/* "$target_dir/" \
+        || return 132
+    fi
+
+    # Expand templates:
+    #   Now, perform the actual template expansion. The output
+    #   redirection in `template_expand` will truncate and overwrite
+    #   the contents of a file, but preserve ownership/permissions.
+
+    find "$target_dir" -type f -name "*.$extension" | while read src_file; do
+
+      local target_name="`basename "$src_file" ".$extension"`" &&
+      local target_file="`dirname "$src_file"`/$target_name" \
+        || return 133
+
+      # Edge case:
+      #   Don't allow our output file to also have a template file
+      #   extension; doing so risks (i) overwriting a template that
+      #   hasn't yet been processed, or (ii) having `find` pick up
+      #   our own output file, causing us to reinterpret it. Ignore
+      #   any templates with multiple template file extensions.
+
+      if [ -z "${target_name%%*.$extension}" ]; then
+        return 0
+      fi
+
+      template_expand "$template_style" "$src_file" "$target_file" \
+        || return "$?"
+
+      rm -f "$src_file" \
+        || return 135
+
+    done
+
+    [ "$?" -eq 0 ] || return "$?"
+
+  done
+}
+

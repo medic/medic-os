@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 load_timestamp()
 {
@@ -42,11 +42,9 @@ logger()
   local name="$1"
   local platform="$2"
 
-  local path="`readlink -f "$1"`"
-  local directory="`dirname "$name"`" # Defaults to '.'
-
   local line=0
   local lines_denominator=''
+  local directory="`dirname "$name"`" # Defaults to '.'
   local safe_name="`echo "$name" | sed 's/\//-/g;' 2>/dev/null`"
 
   local stats_path="$directory/stats/$platform/$safe_name.count"
@@ -75,7 +73,7 @@ logger()
     done | pv -petlc -i 0.5 -N "$safe_name" -s "$expected_lines" \
       > "$output_path"
 
-    local date="`date +'%I:%M:%S%P'`"
+    local date="`date +'%I:%M:%S%p'`"
 
     print_status "$name" \
       "Build process completed at $date" >&2

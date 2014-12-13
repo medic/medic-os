@@ -2,6 +2,10 @@
 
 set -o pipefail
 
+srv_dir='/srv'
+receipts_dir="$srv_dir/system/storage/receipts"
+system_settings_dir="$srv_dir/system/settings/packages"
+
 is_storage_valid()
 {
   local device="$1"
@@ -21,11 +25,36 @@ is_storage_empty()
   return "$?"
 }
 
+mount_special_filesystems()
+{
+  local rv='0'
+
+  while [ "$#" -gt 0 ]; do
+
+    local type="$1"
+    local dir="$2"
+    shift 2
+
+    local original_type="`stat -fc %T "$dir"`"
+
+    if [ "$original_type" != "$type" ]; then
+      if ! mount -t "$type" "$type" "$dir"; then
+        warn "Failed to mount a '$type' filesystem at '$dir'"
+        rv="$(($rv + 1))"
+      fi
+    else
+      log "Volume of type '$type' is already mounted at '$dir'"
+    fi
+  done
+
+  return "$?"
+}
+
 disconnect_storage()
 {
   local device="$1"
   
-  umount -f /srv 2>/dev/null
+  umount -f "$srv_dir" 2>/dev/null
   swapoff "${device}1" 2>/dev/null
 
   return 0
@@ -38,14 +67,16 @@ find_storage()
   disconnect_storage "$device"
   
   swapon -p16 "${device}1" 2>/dev/null &&
-    mkdir -p /srv && mount "${device}2" /srv 2>/dev/null
+    mkdir -p "$srv_dir" && mount "${device}2" "$srv_dir" 2>/dev/null
 
   if [ "$?" -ne 0 ]; then
     disconnect_storage "$device"
     return 1
   fi
  
-  local version="`cat /srv/receipts/system/version 2>/dev/null`"
+  local version="`
+    cat "$receipts_dir/system/version" 2>/dev/null
+  `"
 
   if [ "$?" -ne 0 -o "$version" -le 0 ] &>/dev/null; then
     disconnect_storage "$device"
@@ -71,12 +102,14 @@ initialize_storage()
   sync && sleep 1 && sync &&
   mkswap "${device}1" && swapon -p 16 "${device}1" &&
   mkfs.ext4 -b 2048 -i 4096 "${device}2" &&
-  mkdir -p /srv && mount "${device}2" /srv &&
+  mkdir -p "$srv_dir" && mount "${device}2" "$srv_dir" &&
   \
-  mkdir -p /srv/software /srv/storage /srv/scripts \
-    /srv/settings/system /srv/receipts/system &&
+  mkdir -p "$srv_dir/software" \
+    "$srv_dir/storage" "$srv_dir/scripts" \
+    "$system_settings_dir" "$receipts_dir/system" &&
   \
-  echo "$version" > /srv/receipts/system/version &&
+  mkdir -p "$receipts_dir/system"
+  echo "$version" > "$receipts_dir/system/version" &&
   sync && sleep 1 && sync
 
   return "$?"
@@ -102,7 +135,7 @@ update_system()
 {
   local version="$1"
 
-  echo "$version" > /srv/receipts/system/version
+  echo "$version" > "$receipts_dir/system/version"
   return "$?"
 }
 
@@ -119,7 +152,7 @@ discover_ip_address()
 
 persist_authentication_database()
 {
-  local sys_settings_dir='/srv/settings/system/core'
+  local sys_settings_dir="$srv_dir/system/settings/system"
 
   mkdir -p "$sys_settings_dir"
 
@@ -138,8 +171,8 @@ persist_authentication_database()
 
 attempt_manual_network_configuration()
 {
-  if [ -f /srv/settings/system/network/static ]; then
-    envdir /srv/settings/system/network \
+  if [ -f "$srv_dir/system/settings/network/static" ]; then
+    envdir "$srv_dir/system/settings/network" \
       /boot/include/scripts/static-ip apply
   fi
 

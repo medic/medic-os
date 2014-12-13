@@ -11,6 +11,7 @@ reload()
   supervisor_service_reload "$package" "$service" \
     || fatal "Failed to reload configuration for '$package/$service'"
 
+  info "Service '$package/$service' reloaded successfully"
   return 0
 }
 
@@ -25,17 +26,26 @@ main()
   fi
 
   require_root
+  supervisor_init
 
   if [ "$#" -le 0 ]; then
     supervisor_list_expected_services "$package" | while read service; do
       reload "$package" "$service"
     done
+    local rv="$?"
+    [ "$rv" -ne 0 ] && return "$rv"
   else
     for service in "$@"; do
       reload "$package" "$service"
     done
   fi
  
+  if [ $# -le 0 ]; then
+    success "All services in package '$package' have reloaded"
+  else
+    success "Selected services in package '$package' have reloaded"
+  fi
+
   return 0
 }
 
