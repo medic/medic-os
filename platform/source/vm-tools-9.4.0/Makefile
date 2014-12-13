@@ -1,20 +1,17 @@
 
+# Variables
+
 PARALLEL ?= 16
 PLATFORM := $(shell ../../scripts/detect-platform)
 
+
+# Public targets
 
 all: status
 	@mkdir -p '${ROOT}' && \
 	./scripts/build-all '${ROOT}' '${START}' '${START_VERSION}' \
 	  '${STOP}' '${STOP_VERSION}' '${PLATFORM}' '${BITS}' \
 	  '${PARALLEL}' '${KERNEL_VERSION}' '${KERNEL_MODULE_PATH}'
-
-status:
-	@echo && ./scripts/print-status 'start' \
-        'Building package `vm-tools` for `${PLATFORM}`'
-
-clean-logs:
-	rm -f logs/*/*.log
 
 clean: clean-logs
 	./scripts/clean-all
@@ -28,4 +25,14 @@ recalculate-stats:
 	  `.count" && \
 	  wc -l < "$$file" > "$$stats_file"; \
 	done
+
+
+# Private targets
+
+status:
+	@echo && ./scripts/print-status 'start' \
+        'Building package `vm-tools` for `${PLATFORM}`'
+
+clean-logs:
+	rm -f logs/*/*.log
 

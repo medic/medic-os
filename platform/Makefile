@@ -1,7 +1,12 @@
 
+# Variables
+
 MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 PLATFORM := $(shell ./scripts/detect-platform)
+
+DATE := $(shell date +'%Y%m%d')
+TIMESTAMP := $(shell date +'%Y-%m-%d %H:%M:%S')
 
 SYSTEM_ID ?= medic-os
 SYSTEM_NAME ?= Medic OS
@@ -12,11 +17,19 @@ COMPILER_VERSION ?= 4.8.2
 COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 
 
-all: packages build-iso build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae 
+# Meta-targets
 
 iso: build-iso
-
 xen: build-xen-image
+native: build-native-tarball
+
+all: packages images timestamp-output
+images: build-iso build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae
+
+packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg medic-transport-pkg
+
+
+# Public targets
 
 compile:
 	@if [ -z '${SKIP_COMPILER}' ]; then \
@@ -33,19 +46,11 @@ compiler:
 	@(cd source && ${QMAKE} compiler \
 	  PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
 
-
-packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg medic-transport-pkg
-
 clean:
 	rm -rf output/* && \
-	rm -rf staging/tarball && \
-	rm -rf staging/packages && \
-	rm -rf packages/vm-tools/software && \
-	rm -rf packages/medic-core/software && \
-	rm -rf 'staging/software/${PLATFORM}'/*
+	rm -rf staging/tarball
 
-distclean: clean
-	(cd source && ${MAKE} clean) && \
+distclean: clean clean-source clean-staging
 	for platform in x86 x64 armv6; do \
 	  rm -rf "images/$$platform/iso/packages"/* && \
 	  rm -rf "initrd/$$platform/lib/modules"/* && \
@@ -60,12 +65,23 @@ clean-compiler:
 	(cd source && ${MAKE} clean-compiler)
 
 
+# Private targets
+
+clean-source:
+	(cd source && ${MAKE} clean)
+
+clean-staging:
+	rm -rf staging/packages && \
+	rm -rf packages/vm-tools/software && \
+	rm -rf packages/medic-core/software && \
+	rm -rf 'staging/software/${PLATFORM}'/*
+
 build-iso: build-initrd
 	@echo -n 'Creating ISO image... ' && \
 	\
 	cd 'images/${PLATFORM}/iso' && mkisofs -J -R \
 	  -V '${SYSTEM_NAME} v${SYSTEM_VERSION_STRING}' \
-	  -o '../../../output/${SYSTEM_IMAGE_ID}${ISO_EXTRA}-vm.iso' \
+	  -o '../../../output/${SYSTEM_IMAGE_ID}${ISO_EXTRA}-virtual.iso' \
 	  -boot-load-size 4 -boot-info-table \
 	  -no-emul-boot -b boot/isolinux/isolinux.bin \
 	  -c boot/isolinux/boot.cat . &>/dev/null && \
@@ -181,7 +197,7 @@ build-initrd: copy-compiler-libraries
 	chmod 0440 initrd/common/etc/sudoers && \
 	cp -a initrd/common/* 'initrd/${PLATFORM}/' && \
 	\
-	date +'%Y/%m/%d %H:%M:%S' \
+	echo '${TIMESTAMP}' \
 	  > 'initrd/${PLATFORM}/etc/build-timestamp' && \
 	\
 	(cd 'initrd/${PLATFORM}' && \
@@ -285,5 +301,11 @@ delete-downloaded:
 	  for pkg in core compiler vm-tools medic-core; do \
 	    (cd source && rm -rf "$$pkg/$$type"/*); \
 	  done; \
+	done
+
+timestamp-output:
+	@for path in output/medic-os-*; do \
+	  target="`echo "$$path" | sed 's/\(\.[a-z\.]\+\)$$/-${DATE}\1/;'`" && \
+	  mv "$$path" "$$target"; \
 	done
 

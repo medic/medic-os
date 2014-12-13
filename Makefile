@@ -1,5 +1,11 @@
 
+# Variables
+
+MAKE := make
 QMAKE := ${MAKE} --no-print-directory
+
+
+# Public targets
 
 all: download build
 
@@ -10,15 +16,6 @@ build: reset-time prepare-tree
 	  export HOME="`readlink -f ../..`" && \
 	  source ./.profile && ${QMAKE} compile all)
 
-reset-time:
-	@echo -n 'Synchronizing system time... ' && \
-	ntpdate pool.ntp.org >/dev/null && \
-	echo 'done.'
-
-prepare-tree:
-	@echo -n 'Preparing source tree... ' && \
-	./scripts/prepare-tree && \
-	echo 'done.'
 
 clean:
 	@echo -n 'Cleaning source tree... ' && \
@@ -44,6 +41,19 @@ download: reset-time prepare-tree
 	if ! [ -f status/move.finished ]; then \
 	  ${QMAKE} force-move-downloaded; \
 	fi
+
+
+# Private targets
+
+reset-time:
+	@echo -n 'Synchronizing system time... ' && \
+	ntpdate pool.ntp.org >/dev/null && \
+	echo 'done.'
+
+prepare-tree:
+	@echo -n 'Preparing source tree... ' && \
+	./scripts/prepare-tree && \
+	echo 'done.'
 
 force-download:
 	@echo >&2

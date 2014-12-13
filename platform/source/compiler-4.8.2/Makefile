@@ -1,6 +1,11 @@
 
+# Variables
+
 PARALLEL ?= 16
 PLATFORM := $(shell ../../scripts/detect-platform)
+
+
+# Public targets
 
 all: pv status
 	@mkdir -p '${ROOT}' && \
