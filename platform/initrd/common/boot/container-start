@@ -1,0 +1,80 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/startup'
+source '/boot/include/package'
+source '/boot/include/template'
+source '/boot/include/supervisor'
+
+main()
+{
+  # Mount all filesystems:
+  #   Do this before initializing the supervisor library,
+  #   because it checks for the presence of /proc at startup.
+
+  info 'Mounting filesystems...'
+
+  mount_special_filesystems proc /proc sysfs /sys \
+    devpts /dev/pts tmpfs /dev/shm cgroup /sys/fs/cgroup
+
+  if [ "$?" -ne 0 ]; then
+    fatal 'Failed to mount one or more required filesystems'
+  fi
+
+  supervisor_init
+
+  # Update packages:
+  #   Update each package necessary for proper startup; the `package_update`
+  #   function will avoid overwriting existing binaries if it's able to.
+
+  log 'Starting software update process'
+  info 'Setting up software...'
+
+  local total_packages='0'
+  local finished_packages='0'
+
+  for package_path in /mnt/startup/packages/*.vpkg; do
+    total_packages="$(($total_packages + 1))"
+  done
+
+  for package_path in /mnt/startup/packages/*.vpkg; do
+    package_update "$package_path" "$is_newly_initialized" \
+      || fatal 'Failed to extract required software from disk/image'
+
+    finished_packages="$(($finished_packages + 1))"
+    local percent_packages="$((100 * $finished_packages / $total_packages))"
+
+    info "Setting up software ($percent_packages% complete)..."
+  done
+
+  log 'Software setup process complete'
+  info 'Checking authentication database...'
+
+  persist_authentication_database >> "$log" 2>&1 \
+    || fatal 'Failed to initialize authentication database'
+
+  info 'Starting services...'
+
+  supervisor_reset \
+    || fatal "Failed to reset supervisor status information"
+
+  for dir in /srv/scripts/*; do
+    if [ -f "$dir/start" ]; then
+      local pkg="`basename "$dir"`"
+      supervisor_start "$pkg" \
+        || fatal "Failed to start required network service '$pkg'"
+    fi
+  done
+
+  info 'Synchronizing disks...'
+  synchronize_disks
+
+  info 'System started successfully'
+  /boot/recovery-console
+
+  return 0
+}
+
+main
+exit "$?"
+

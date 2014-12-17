@@ -5,6 +5,12 @@ log()
   logger "$1" "$platform"
 }
 
+ldflags_in_cflags()
+{
+  export CFLAGS="$CFLAGS $LDFLAGS"
+  export CXXFLAGS="$CXXFLAGS $LDFLAGS"
+}
+
 disable_parallelism()
 {
   export MAKE="`echo "$MAKE" | sed 's/--\?j\(obs\)\? *[0-9]\+//g;'`"
@@ -15,7 +21,7 @@ disable_stack_protector()
   local regex='s/ *-fstack-protector[A-Za-z0-9-]*//g;'
 
   export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
-  export CXXFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+  export CXXFLAGS="`echo "$CXXFLAGS" | sed "$regex"`"
 }
 
 disable_stack_protector_strong()
@@ -23,7 +29,7 @@ disable_stack_protector_strong()
   local regex='s/ *-fstack-protector-strong[A-Za-z0-9-]*//g;'
 
   export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
-  export CXXFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+  export CXXFLAGS="`echo "$CXXFLAGS" | sed "$regex"`"
 }
 
 weaken_fortify_source()
@@ -31,7 +37,7 @@ weaken_fortify_source()
   local regex='s/ *-D_FORTIFY_SOURCE=2/ -D_FORTIFY_SOURCE=1/g;'
 
   export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
-  export CXXFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+  export CXXFLAGS="`echo "$CXXFLAGS" | sed "$regex"`"
 }
 
 disable_fortify_source()
@@ -39,13 +45,13 @@ disable_fortify_source()
   local regex='s/ *-D_FORTIFY_SOURCE=[0-2]*//g;'
 
   export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
-  export CXXFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+  export CXXFLAGS="`echo "$CXXFLAGS" | sed "$regex"`"
 }
 
 simple_cflags()
 {
   export CFLAGS="$CFLAGS_SIMPLE"
-  export CXXFLAGS="$CFLAGS_SIMPLE"
+  export CXXFLAGS="$CXXFLAGS_SIMPLE"
 }
 
 simple_ldflags()
@@ -70,7 +76,7 @@ disable_library_path()
 remove_cppflags_from_cflags()
 {
   export CFLAGS="$CFLAGS_SIMPLE $CFLAGS_INCLUDE"
-  export CXXFLAGS="$CFLAGS"
+  export CXXFLAGS="$CXXFLAGS"
 }
 
 prepend_path()
@@ -463,9 +469,9 @@ fix_libtool()
 
 builder_initialize()
 {
-  last_pkg_file="`mktemp`"
-  run_status_file="`mktemp`"
-  last_version_file="`mktemp`"
+  last_pkg_file="`mktemp /tmp/builder-XXXXXXXX`"
+  run_status_file="`mktemp /tmp/builder-XXXXXXXX`"
+  last_version_file="`mktemp /tmp/builder-XXXXXXXX`"
 
   trap builder_cleanup EXIT
 }
@@ -601,9 +607,9 @@ builder_setup_environment()
     export LDFLAGS_SIMPLE="-arch i386"
   fi
 
+  export CFLAGS_INCLUDE="-I$prefix/include"
   export CPPFLAGS_SIMPLE="-D_FORTIFY_SOURCE=2"
   export CFLAGS_SIMPLE="-Os -fstack-protector-strong"
-  export CFLAGS_INCLUDE="-I$prefix/include -L$prefix/lib"
 
   if [ "$architecture" = 'intel' ]; then
     export CFLAGS_SIMPLE="$CFLAGS_SIMPLE -m$bits -mtune=i686"
@@ -615,7 +621,11 @@ builder_setup_environment()
   export CPPFLAGS="$CPPFLAGS_SIMPLE"
   export LDFLAGS="$LDFLAGS_SIMPLE -L$prefix/lib"
   export CFLAGS="$CFLAGS_SIMPLE $CFLAGS_INCLUDE $CPPFLAGS"
+
   export CXXFLAGS="$CFLAGS"
+  export CXXFLAGSSIMPLE="$CFLAGS_SIMPLE"
+
+  return 0
 }
 
 builder_detect_system()

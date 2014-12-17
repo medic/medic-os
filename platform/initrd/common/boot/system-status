@@ -16,7 +16,9 @@ main()
   move_cursor 'y' -1
   set_console_blanking 0
 
-  hypervisor_init  
+  hypervisor_init
+  supervisor_init
+
   trap '' INT STOP HUP QUIT
   local ip_address="`discover_ip_address`"
 

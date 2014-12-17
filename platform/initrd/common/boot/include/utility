@@ -1,25 +1,6 @@
 #!/bin/sh
 
-success()
-{
-  echo "Success: $*" >&2
-}
-
-info()
-{
-  echo "Info: $*" >&2
-}
-
-warn()
-{
-  echo "Warning: $*" >&2
-}
-
-fatal()
-{
-  echo "Fatal: $*" >&2
-  exit 1
-}
+srv_dir='/srv'
 
 is_integer()
 {
@@ -91,25 +72,59 @@ use_package()
     local command='append_path'
   fi
 
-  $command "/srv/software/$package/current/default"
+  $command "$srv_dir/software/$package/current/default"
 }
 
-# Fallback logging:
-#   If a logger isn't present, provide a very basic logging
-#   implementation. Use stderr if we're running in verbose
-#   mode, and no-op stubs if verbose mode isn't enabled.
+# Logging:
+#   Provide a number of different log targets. The `emit`
+#   function is for raw not-necessarily-visual output, and
+#   the `print` function is for raw visual output. The `info`,
+#   `warn`, and `fatal` functions are higher-level exported
+#   logging functions that should be used by client code.
+#   The `log` method is an invisible-by-default debug target.
+#   Any of these functions can be overridden post-inclusion.
 
-if [ -z "$log" ]; then
+emit()
+{
+  echo "$@" >&2
+}
+
+print()
+{
+  emit "$@"
+}
+
+success()
+{
+  emit "Success: $*"
+}
+
+info()
+{
+  emit "Info: $*"
+}
+
+warn()
+{
+  emit "Warning: $*"
+}
+
+fatal()
+{
+  print "Fatal: $*"
+  exit 1
+}
+
+log()
+{
   if [ "$verbose" ]; then
-    log='/dev/stderr'
-    log() {
-      echo "Debug: $*" >&2
-    }
-  else
-    log='/dev/null'
-    log() {
-      true;
-    }
+    emit "Debug: $*"
   fi
+}
+
+if [ "$verbose" ]; then
+  log='/dev/stderr'
+else
+  log='/dev/null'
 fi
 

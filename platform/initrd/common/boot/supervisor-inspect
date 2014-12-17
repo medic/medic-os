@@ -39,9 +39,17 @@ show_services()
 main()
 {
   require_root
+  supervisor_init
+
+  for package in "$@"; do
+    local package="`basename "$package"`"
+    supervisor_package_exists "$package" \
+      || fatal "Package '$package' doesn't appear to be installed"
+  done
 
   if [ "$#" -gt 0 ]; then
-    for package in "$@"; do
+    echo && for package in "$@"; do
+      local package="`basename "$package"`"
       show_package "$package"
       show_services "$package"
     done

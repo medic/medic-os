@@ -1,25 +1,27 @@
 #!/bin/sh
 
-self="`readlink -f "$0" || realpath "$0"`"
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
 
+shopt -u xpg_echo
+source "$base_dir/../medic-core/scripts/include/rearrange"
 
 rename()
 {
   find . -type d -exec chmod 755 {} \; &&
-    chown -R root:root . &&
+    chown -R root:wheel . &&
    \
   for file in apache-*; do
     if [ -d "$file" ]; then
       mv "$file" "`echo "$file" | sed 's/^apache-//;'`";
     fi
   done &&
-   \
+  \
   for file in otp_src*; do
     if [ -d "$file" ]; then
       mv "$file" "erlang-`
         echo "$file" | \
-          sed 's/^otp_src_\([^-\.]\+\).*$/\1/;' | tr '[A-Z]' '[a-z]'
+          sed 's/^otp_src_\([^-]\+\).*$/\1/;' | tr '[A-Z]' '[a-z]'
       `";
     fi
   done &&
@@ -54,12 +56,6 @@ rename()
   mv "$source" "node-$version"
 }
 
-remove()
-{
-  rm -f *.downloaded *.finished &&
-  rm -f *.tar.xz *.tar.lzma *.tar.bz2 *.tar.gz *.tgz
-}
-
 symlink()
 {
   find * -prune -type d | while read dir; do
@@ -83,10 +79,8 @@ apply_patches()
     < ../../patches/ant-disable-junit.diff) &&
   (cd erlang && patch -s -p1 \
     < ../../patches/erlang-r17-pcre-fix.diff) &&
-  (cd maven && patch -s -p1 \
-    < ../../patches/maven-preserve-destination.diff) &&
   (cd gammu && patch -s -p1 \
-    < ../../patches/gammu-disable-glib.diff) &&
+    < ../../patches/gammu-add-configure-options.diff) &&
   (cd gammu && patch -s -p1 \
     < ../../patches/gammu-fix-files-backend.diff) &&
   (cd gammu && patch -s -p1 \
@@ -95,16 +89,20 @@ apply_patches()
     < ../../patches/garden-maker-medic.diff) &&
   (cd icu && patch -s -p2 \
     < ../../../patches/icu-libicudata-linkage.diff) &&
+  (cd js && patch -s -p1 \
+    < ../../../../patches/js-fix-makefile-loop.diff) &&
+  (cd maven && patch -s -p1 \
+    < ../../patches/maven-preserve-destination.diff) &&
   (cd nodelint && patch -s -p1 \
     < ../../patches/nodelint-install-script.diff) &&
+  (cd ncurses && patch -s -p1 \
+    < ../../patches/ncurses-reference-fix.diff) &&
   (cd inotify-tools && patch -s -p1 \
     < ../../patches/inotify-tools-include.diff) &&
   (cd libutempter && patch -s -p1 \
     < ../../patches/libutempter-fix-makefile-links.diff) &&
   (cd screen && patch -s -p1 \
     < ../../patches/screen-fix-stropts-include.diff) &&
-  (cd js && patch -s -p1 \
-    < ../../../../patches/js-fix-makefile-loop.diff) &&
   (cd xdelta && patch -s -p1 \
     < ../../patches/xdelta-fix-compilation-error.diff)
 }
@@ -136,16 +134,6 @@ update_garden_maker()
 
   echo 'Too many failures while updating garden-maker; aborting' >&2
   return 1
-}
-
-find_version()
-{
-  echo "$@" | sed 's/^[A-Za-z0-9-]\+-v\?\([0-9\._]\+\).*$/\1/; s/\.$//;'
-}
-
-fix_version()
-{
-  echo "$@" | sed 's/^\([0-9]\)\([0-9]\)_\?\([0-9]\+\)/\1.\2.\3/;'
 }
 
 

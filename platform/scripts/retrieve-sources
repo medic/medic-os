@@ -3,6 +3,8 @@
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
 
+shopt -u xpg_echo
+
 trim()
 {
   local str="$1"
@@ -104,7 +106,7 @@ main()
 
   local manifest_path="../../manifests/$manifest_name"
 
-  local lines="`wc -l "$manifest_path" | cut -d' ' -f1`" \
+  local lines="`wc -l < "$manifest_path" | sed 's/ //g;'`" \
     || fatal "Unable to read manifest file 'manifests/$manifest_name'"
 
   if [ -f "$base_dir/status/$manifest_name.retrieved" ]; then
@@ -118,7 +120,7 @@ main()
 
   while read line; do
 
-    local n="$[$n + 1]"
+    local n="$(($n + 1))"
 
     local name="`echo "$line" | cut -d, -f1`"
     name="`basename "$name"`"

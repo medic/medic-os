@@ -1,0 +1,40 @@
+--- gammu-1.33.0/configure	2014-12-02 14:02:46.000000000 -0800
++++ gammu-1.33.0/configure	2014-12-02 14:01:10.000000000 -0800
+@@ -34,6 +34,8 @@
+ --with-python=<path> path to Python interpreter
+ --without-gnapplet  disable installation of gnapplet
+ --without-completion disable installation of bash completion script
++--without-glib      disable support for glib
++--without-iconv     disable linking against iconv
+ 
+ All enable params have their disable counterparts.
+ 
+@@ -57,6 +59,8 @@
+ CMAKE_PYTHON=
+ CMAKE_GNAP=
+ CMAKE_COMPLETE=
++CMAKE_GLIB=
++CMAKE_ICONV=
+ 
+ # process command line
+ while [ "$#" -gt 0 ] ; do
+@@ -106,6 +110,12 @@
+         --without-completion)
+             CMAKE_COMPLETE="-DINSTALL_BASH_COMPLETION=OFF"
+             ;;
++        --without-glib)
++            CMAKE_GLIB="-DWITH_Glib=OFF"
++            ;;
++        --without-iconv)
++            CMAKE_ICONV="-DWITH_Iconv=OFF"
++            ;;
+         --build=*)
+             ;;
+         --disable-dependency-tracking)
+@@ -142,4 +152,5 @@
+ cd "$BUILD_DIR"
+ 
+ # invoke cmake to do configuration
+-cmake $SOURCE_DIR $CMAKE_PREFIX $CMAKE_SHARED $CMAKE_DEBUG $CMAKE_BACKUP $CMAKE_CROSS $CMAKE_PROTECTION $CMAKE_PYTHON $CMAKE_GNAP $CMAKE_COMPLETE
++cmake $SOURCE_DIR $CMAKE_PREFIX $CMAKE_SHARED $CMAKE_DEBUG $CMAKE_BACKUP $CMAKE_CROSS $CMAKE_PROTECTION $CMAKE_PYTHON $CMAKE_GNAP $CMAKE_COMPLETE $CMAKE_GLIB $CMAKE_ICONV
++

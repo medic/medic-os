@@ -1,22 +1,35 @@
 
+# Variables
+
 MAKE ?= make
 QMAKE := ${MAKE} --no-print-directory
 PLATFORM := $(shell ./scripts/detect-platform)
 
+DATE := $(shell date +'%Y%m%d')
+TIMESTAMP := $(shell date +'%Y-%m-%d %H:%M:%S')
+
 SYSTEM_ID ?= medic-os
 SYSTEM_NAME ?= Medic OS
-SYSTEM_VERSION_STRING ?= 1.6.0
+SYSTEM_VERSION_STRING ?= 1.1.0
 SYSTEM_IMAGE_ID := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}-${PLATFORM}
 
 COMPILER_VERSION ?= 4.8.2
 COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 
 
-all: packages build-iso build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae 
+# Meta-targets
 
-iso: build-iso
+all: packages images timestamp-output
 
+iso: build-iso-image
 xen: build-xen-image
+native: build-native-tarball
+
+images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae
+packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg medic-transport-pkg
+
+
+# Public targets
 
 compile:
 	@if [ -z '${SKIP_COMPILER}' ]; then \
@@ -33,19 +46,11 @@ compiler:
 	@(cd source && ${QMAKE} compiler \
 	  PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
 
-
-packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg medic-transport-pkg
-
 clean:
 	rm -rf output/* && \
-	rm -rf staging/tarball && \
-	rm -rf staging/packages && \
-	rm -rf packages/vm-tools/software && \
-	rm -rf packages/medic-core/software && \
-	rm -rf 'staging/software/${PLATFORM}'/*
+	rm -rf staging/tarball
 
-distclean: clean
-	(cd source && ${MAKE} clean) && \
+distclean: clean clean-source clean-staging
 	for platform in x86 x64 armv6; do \
 	  rm -rf "images/$$platform/iso/packages"/* && \
 	  rm -rf "initrd/$$platform/lib/modules"/* && \
@@ -60,12 +65,23 @@ clean-compiler:
 	(cd source && ${MAKE} clean-compiler)
 
 
-build-iso: build-initrd
+# Private targets
+
+clean-source:
+	(cd source && ${MAKE} clean)
+
+clean-staging:
+	rm -rf staging/packages && \
+	rm -rf packages/vm-tools/software && \
+	rm -rf packages/medic-core/software && \
+	rm -rf 'staging/software/${PLATFORM}'/*
+
+build-iso-image: build-initrd
 	@echo -n 'Creating ISO image... ' && \
 	\
 	cd 'images/${PLATFORM}/iso' && mkisofs -J -R \
 	  -V '${SYSTEM_NAME} v${SYSTEM_VERSION_STRING}' \
-	  -o '../../../output/${SYSTEM_IMAGE_ID}${ISO_EXTRA}-vm.iso' \
+	  -o '../../../output/${SYSTEM_IMAGE_ID}${ISO_EXTRA}-virtual.iso' \
 	  -boot-load-size 4 -boot-info-table \
 	  -no-emul-boot -b boot/isolinux/isolinux.bin \
 	  -c boot/isolinux/boot.cat . &>/dev/null && \
@@ -181,6 +197,9 @@ build-initrd: copy-compiler-libraries
 	chmod 0440 initrd/common/etc/sudoers && \
 	cp -a initrd/common/* 'initrd/${PLATFORM}/' && \
 	\
+	echo '${TIMESTAMP}' \
+	  > 'initrd/${PLATFORM}/etc/build-timestamp' && \
+	\
 	(cd 'initrd/${PLATFORM}' && \
 	  find * | cpio -o -H newc 2>/dev/null \
 	    | sh ../../source/core/source/linux/scripts/xz_wrap.sh \
@@ -198,7 +217,7 @@ build-x86-image-nopae:
 	    ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
 	    ${QMAKE} rebuild-vm-tools-modules) && \
 	  \
-	  ${QMAKE} build-iso ISO_EXTRA='-nopae'; \
+	  ${QMAKE} build-iso-image ISO_EXTRA='-nopae'; \
 	fi
 
 strip-binaries:
@@ -208,27 +227,27 @@ strip-binaries:
 
 concierge-pkg:
 	@echo -n 'Compressing package 'concierge'... ' && \
-	scripts/build-package 'concierge' 1010 '${PLATFORM}' && \
+	scripts/build-package 'concierge' 10100 '${PLATFORM}' && \
 	echo 'done.'
 
 java-pkg:
 	@echo -n 'Compressing package 'java'... ' && \
-	scripts/build-package 'java' 1765 '${PLATFORM}' && \
+	scripts/build-package 'java' 17650 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 1600 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 16000 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
 	@echo -n 'Compressing package 'system-services'... ' && \
-	scripts/build-package 'system-services' 1010 '${PLATFORM}' && \
+	scripts/build-package 'system-services' 10100 '${PLATFORM}' && \
 	echo 'done.'
 
 vm-tools-pkg:
 	@echo -n 'Compressing package 'vm-tools'... ' && \
-	scripts/build-package 'vm-tools' 9401 '${PLATFORM}' && \
+	scripts/build-package 'vm-tools' 94010 '${PLATFORM}' && \
 	echo 'done.'
 
 shrink-gardener:
@@ -236,12 +255,12 @@ shrink-gardener:
 
 gardener-pkg: shrink-gardener
 	@echo -n 'Compressing package 'gardener'... ' && \
-	scripts/build-package 'gardener' 1100 '${PLATFORM}' && \
+	scripts/build-package 'gardener' 11000 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-transport-pkg:
 	@echo -n 'Compressing package 'medic-transport'... ' && \
-	scripts/build-package 'medic-transport' 1010 '${PLATFORM}' && \
+	scripts/build-package 'medic-transport' 10100 '${PLATFORM}' && \
 	echo 'done.'
 
 convert-boot-logo:
@@ -280,7 +299,13 @@ delete-downloaded:
 	@rm -f status/* && \
 	for type in incoming source; do \
 	  for pkg in core compiler vm-tools medic-core; do \
-	    (cd source && rm -rf '$$pkg/$$type"/*); \
+	    (cd source && rm -rf "$$pkg/$$type"/*); \
 	  done; \
+	done
+
+timestamp-output:
+	@for path in output/medic-os-*; do \
+	  target="`echo "$$path" | sed 's/\(\.[a-z\.]\+\)$$/-${DATE}\1/;'`" && \
+	  mv "$$path" "$$target"; \
 	done
 

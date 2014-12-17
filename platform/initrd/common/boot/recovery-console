@@ -1,0 +1,48 @@
+#!/bin/sh
+
+main()
+{
+  # Recovery console:
+  #  Try to set sane environment variables. This is all self-contained,
+  #  just in case files from the base system are missing or damaged.
+
+  for pkg_path in /srv/software/*; do
+    if [ -d "$pkg_path" ]; then
+      local pkg="`basename "$pkg_path"`"
+      for dir in bin sbin; do
+        export PATH="$PATH:/srv/software/$pkg/current/default/$dir"
+      done
+    fi
+  done
+
+  # Set prompt:
+  #  Again, include this verbatim rather than depend on /etc/profile.
+
+  local color='36'
+  local dir_color='34'
+
+  if [ "`id -u`" -eq 0 ]; then
+    color='31'
+  fi
+
+  local user="\\[\\e[1;${color}m\]\\u\\[\\e[0m\\]"
+  local host="\\[\\e[1;${color}m\]\\h\\[\\e[0m\\]"
+  local directory="\\[\\e[1;${dir_color}m\]\\w\\[\\e[0m\\]"
+
+  export PS1="$user@$host:$directory \\$ "
+
+  # Set path:
+  #  Include the service and package management scripts.
+
+  export PATH="/boot:$PATH"
+
+  # Finish:
+  #  Execute the interactive shell.
+
+  exec /bin/sh
+  return "$?"
+}
+
+main "$@"
+exit "$?"
+

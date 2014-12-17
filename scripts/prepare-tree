@@ -77,7 +77,6 @@ create_empty_directories()
       packages/medic-core/storage/medic-core/couchdb/data \
       packages/medic-core/storage/medic-core/couchdb/logs \
       packages/medic-core/settings/medic-core/couchdb-lucene \
-      packages/medic-core/settings/medic-core/logrotate/logrotate.d \
       packages/medic-core/settings/medic-core/couchdb/default.d \
       packages/medic-core/settings/medic-core/couchdb/local.d \
       packages/concierge/storage \

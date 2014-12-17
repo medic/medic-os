@@ -1,0 +1,56 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/package'
+source '/boot/include/template'
+source '/boot/include/supervisor'
+
+update()
+{
+  if [ "$#" -le 0 ]; then
+    supervisor_list_all_packages | while read package; do
+      package_regenerate_settings "$package" \
+        || fatal "Failed to update configuration for package '$package'"
+    done
+    local rv="$?"
+    [ "$rv" -ne 0 ] && return "$rv"
+  else
+    for package in "$@"; do
+      package_regenerate_settings "$package" \
+        || fatal "Failed to update configuration for package '$package'"
+    done
+  fi
+}
+
+main()
+{
+  if [ $# -le 0 ]; then
+    usage
+  fi
+
+  local verb="$1"
+  shift 1
+
+  require_root
+
+  case "$verb" in
+    update)
+      update "$@"
+      ;;
+    *)
+      fatal "Unknown configuration verb '$verb'"
+  esac
+
+  success 'All specified packages have been updated'
+  return 0
+}
+
+usage()
+{
+  echo "Usage: $0 verb [package]..." >&2
+  exit 111
+}
+
+main "$@"
+exit "$?"
+

@@ -3,11 +3,7 @@
 ::sysinit:/etc/init.d/rc.startup
 
 tty1::respawn:/sbin/getty -nl /boot/system-status 38400 tty1
-#tty2::askfirst:/sbin/getty 38400 tty2
-#tty3::askfirst:/sbin/getty 38400 tty3
-#tty4::askfirst:/sbin/getty 38400 tty4
-#tty5::askfirst:/sbin/getty 38400 tty5
-tty6::askfirst:/sbin/getty -nl /bin/sh 38400 tty6
+tty6::askfirst:/sbin/getty -nl /boot/recovery-console 38400 tty6
 
 ::restart:/etc/init.d/rc.shutdown
 ::restart:/sbin/init

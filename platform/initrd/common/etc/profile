@@ -1,30 +1,42 @@
-# /etc/profile: system-wide .profile file for the Bourne shells
+# /etc/profile:
+# System-wide .profile file for the Bourne shell
 
-PATH="/usr/local/sbin:/usr/local/bin:/apps/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-# Prompt format for Ash (Bash use /etc/bashrc).
-#
-if [ "`id -u`" -eq 0 ]; then
-	# Light green and blue colored prompt.
-	#PS1='\e[1;31m\u@\h\e[0m:\e[1;34m\w\e[0m\# '
- 	PS1='\u@\h:\w\# '
-else
-	# Light green and blue colored prompt.
- 	PS1='\e[1;32m\u@\h\e[0m:\e[1;34m\w\e[0m\$ '
-	#PS1='\u@\h:\w\$ '
-fi
+# set_prompt:
+#   Set up a reasonable command-line prompt for the Busybox
+#   `ash` shell. Include the magic `\[` and `\]` tokens to mark
+#   non-printable ranges, and ensure that the line editing code
+#   still knows exactly where it needs to wrap a long line.
 
-# Screen display for X and encoding for GTK+ apps.
-#
-G_FILENAME_ENCODING=iso8859-1
+set_prompt()
+{
+  local color='36'
+  local dir_color='34'
 
-# ldd fake
-#
+  if [ "`id -u`" -eq 0 ]; then
+    color='31'
+  fi
+
+  local user="\\[\\e[1;${color}m\]\\u\\[\\e[0m\\]"
+  local host="\\[\\e[1;${color}m\]\\h\\[\\e[0m\\]"
+  local directory="\\[\\e[1;${dir_color}m\]\\w\\[\\e[0m\\]"
+
+  export PS1="$user@$host:$directory \\$ "
+}
+
+# Set prompt for Ash
+set_prompt
+unset set_prompt
+
+# Use colorful directory listings
+alias ls='ls --color=auto'
+
+# Substitute for `ldd` command
 which ldd > /dev/null || alias ldd=LD_TRACE_LOADED_OBJECTS=1
 
 # Export all variables definied above and set mask.
-#
-export PATH LD_LIBRARY_PATH PS1 G_FILENAME_ENCODING ignoreeof
+export PATH PS1
 umask 022
 
 if [ -f /etc/sysconfig/language ]; then
@@ -37,8 +49,10 @@ if [ -f /etc/sysconfig/timezone ]; then
   export TZ
 fi
 
-for i in /etc/profile.d/*.sh ; do
- if [ -r "$i" ]; then
-   . $i
+# Support /etc/profile.d
+for script in /etc/profile.d/*; do
+ if [ -r "$script" -a -x "$script" ]; then
+   source "$script"
  fi
 done
+
