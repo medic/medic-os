@@ -73,7 +73,7 @@ logger()
     done | pv -petlc -i 0.5 -N "$safe_name" -s "$expected_lines" \
       > "$output_path"
 
-    local date="`date +'%I:%M:%S%p'`"
+    local date="`date +'%I:%M:%S%p' | tr '[A-Z]' '[a-z]'`"
 
     print_status "$name" \
       "Build process completed at $date" >&2
