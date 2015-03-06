@@ -31,14 +31,13 @@ delete:
 	echo 'done.'
 
 download: reset-time prepare-tree
-	@if ! [ -f status/download.finished ]; then \
+	@if ! [ -f platform/status/download.finished ]; then \
 	  ${QMAKE} force-download; \
 	fi && \
 	\
-	if ! [ -f status/move.finished ]; then \
+	if ! [ -f platform/status/move.finished ]; then \
 	  ${QMAKE} force-move-downloaded; \
 	fi
-
 
 # Private targets
 
