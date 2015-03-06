@@ -59,6 +59,7 @@ main()
   fi
 
   if [ "$uname" = 'Darwin' ]; then
+    disable_stack_protector_strong
     gammu_extra_options='-DWITH_Iconv=OFF'
   fi
 
