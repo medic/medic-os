@@ -60,8 +60,8 @@ prepare-tree:
 force-download:
 	@echo >&2
 	@echo "`tput bold`Retrieving source code`tput sgr0`" >&2 && echo >&2
-	@(cd platform && make download)
+	@(cd platform && ${QMAKE} download)
 
 force-move-downloaded:
-	@(cd platform && make move-downloaded)
+	@(cd platform && ${QMAKE} move-downloaded)
 
