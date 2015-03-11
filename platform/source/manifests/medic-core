@@ -49,7 +49,7 @@ strace, http://superb-dca2.dl.sourceforge.net/project/strace/strace/4.8/strace-4
 tcpdump, http://www.tcpdump.org/release/tcpdump-4.6.2.tar.gz
 usb-modeswitch, http://www.draisberghof.de/usb_modeswitch/usb-modeswitch-2.1.1.tar.bz2
 usb-modeswitch-data, http://www.draisberghof.de/usb_modeswitch/usb-modeswitch-data-20140327.tar.bz2
-usbutils, https://www.kernel.org/pub/linux/utils/usb/usbutils/usbutils-008.tar.xz
+usbutils, https://www.kernel.org/pub/linux/utils/usb/usbutils/usbutils-007.tar.xz
 xdelta, http://xdelta.googlecode.com/files/xdelta3-3.0.8.tar.xz
 xz, http://tukaani.org/xz/xz-5.2.1.tar.xz
 zlib, http://zlib.net/zlib-1.2.8.tar.xz
