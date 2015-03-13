@@ -5,6 +5,16 @@ log()
   logger "$1" "$platform"
 }
 
+apply_regex_to_cflags()
+{
+  local regex="$1"
+
+  export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
+  export CXXFLAGS="`echo "$CXXFLAGS" | sed "$regex"`"
+  export CFLAGS_SIMPLE="`echo "$CFLAGS_SIMPLE" | sed "$regex"`"
+  export CXXFLAGS_SIMPLE="`echo "$CXXFLAGS_SIMPLE" | sed "$regex"`"
+}
+
 ldflags_in_cflags()
 {
   export CFLAGS="$CFLAGS $LDFLAGS"
@@ -18,34 +28,22 @@ disable_parallelism()
 
 disable_stack_protector()
 {
-  local regex='s/ *-fstack-protector[A-Za-z0-9-]*//g;'
-
-  export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
-  export CXXFLAGS="`echo "$CXXFLAGS" | sed "$regex"`"
+  apply_regex_to_cflags 's/ *-fstack-protector[A-Za-z0-9-]*//g;'
 }
 
 disable_stack_protector_strong()
 {
-  local regex='s/ *-fstack-protector-strong[A-Za-z0-9-]*//g;'
-
-  export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
-  export CXXFLAGS="`echo "$CXXFLAGS" | sed "$regex"`"
+  apply_regex_to_cflags 's/ *-fstack-protector-strong[A-Za-z0-9-]*//g;'
 }
 
 weaken_fortify_source()
 {
-  local regex='s/ *-D_FORTIFY_SOURCE=2/ -D_FORTIFY_SOURCE=1/g;'
-
-  export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
-  export CXXFLAGS="`echo "$CXXFLAGS" | sed "$regex"`"
+  apply_regex_to_cflags 's/ *-D_FORTIFY_SOURCE=2/ -D_FORTIFY_SOURCE=1/g;'
 }
 
 disable_fortify_source()
 {
-  local regex='s/ *-D_FORTIFY_SOURCE=[0-2]*//g;'
-
-  export CFLAGS="`echo "$CFLAGS" | sed "$regex"`"
-  export CXXFLAGS="`echo "$CXXFLAGS" | sed "$regex"`"
+  apply_regex_to_cflags 's/ *-D_FORTIFY_SOURCE=[0-2]*//g;'
 }
 
 simple_cflags()

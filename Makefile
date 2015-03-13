@@ -17,26 +17,27 @@ build: reset-time prepare-tree
 	  source ./.profile && ${QMAKE} compile all)
 
 clean:
-	@echo -n 'Cleaning source tree... ' && \
+	@shopt -u xpg_echo && \
+	echo -n 'Cleaning source tree... ' && \
 	(cd platform && ${QMAKE} distclean) &>/dev/null && \
 	echo 'done.'
 
 distclean: clean clean-target
 
 delete:
-	@echo -n 'Deleting downloaded source code... ' && \
+	@shopt -u xpg_echo && \
+	echo -n 'Deleting downloaded source code... ' && \
 	(cd platform && ${QMAKE} delete-downloaded) && \
 	echo 'done.'
 
 download: reset-time prepare-tree
-	@if ! [ -f status/download.finished ]; then \
+	@if ! [ -f platform/status/download.finished ]; then \
 	  ${QMAKE} force-download; \
 	fi && \
 	\
-	if ! [ -f status/move.finished ]; then \
+	if ! [ -f platform/status/move.finished ]; then \
 	  ${QMAKE} force-move-downloaded; \
 	fi
-
 
 # Private targets
 
@@ -45,12 +46,14 @@ clean-target:
 	rm -rf software settings storage
 
 reset-time:
-	@echo -n 'Synchronizing system time... ' && \
-	ntpdate pool.ntp.org >/dev/null && \
+	@shopt -u xpg_echo && \
+	echo -n 'Synchronizing system time... ' && \
+	ntpdate -u pool.ntp.org >/dev/null && \
 	echo 'done.'
 
 prepare-tree:
-	@echo -n 'Preparing source tree... ' && \
+	@shopt -u xpg_echo && \
+	echo -n 'Preparing source tree... ' && \
 	./scripts/prepare-tree && \
 	echo 'done.'
 
