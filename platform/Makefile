@@ -19,7 +19,7 @@ COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 
 # Meta-targets
 
-all: packages images timestamp-images-if-snapshot
+all: packages images timestamp-output
 
 iso: build-iso-image
 xen: build-xen-image
@@ -47,10 +47,11 @@ compiler:
 	  PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
 
 clean:
-	@rm -rf output/* staging/tarball
+	rm -rf output/* && \
+	rm -rf staging/tarball
 
 distclean: clean clean-source clean-staging
-	@for platform in x86 x64 armv6; do \
+	for platform in x86 x64 armv6; do \
 	  rm -rf "images/$$platform/iso/packages"/* && \
 	  rm -rf "initrd/$$platform/lib/modules"/* && \
 	  for type in iso xen; do \
@@ -61,16 +62,16 @@ distclean: clean clean-source clean-staging
 	done
 
 clean-compiler:
-	@(cd source && ${MAKE} clean-compiler)
+	(cd source && ${MAKE} clean-compiler)
 
 
 # Private targets
 
 clean-source:
-	@(cd source && ${MAKE} clean)
+	(cd source && ${MAKE} clean)
 
 clean-staging:
-	@rm -rf staging/packages && \
+	rm -rf staging/packages && \
 	rm -rf packages/vm-tools/software && \
 	rm -rf packages/medic-core/software && \
 	rm -rf 'staging/software/${PLATFORM}'/*
@@ -302,14 +303,9 @@ delete-downloaded:
 	  done; \
 	done
 
-timestamp-images:
+timestamp-output:
 	@for path in output/medic-os-*; do \
 	  target="`echo "$$path" | sed 's/\(\.[a-z\.]\+\)$$/-${DATE}\1/;'`" && \
 	  mv "$$path" "$$target"; \
 	done
-
-timestamp-images-if-snapshot:
-	@if ! [ -z '${SNAPSHOT}' ]; then \
-	  ${QMAKE} timestamp-images; \
-	fi
 
