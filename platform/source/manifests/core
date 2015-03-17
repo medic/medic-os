@@ -4,6 +4,6 @@ e2fsprogs, https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v1.42.
 eudev, http://dev.gentoo.org/~blueness/eudev/eudev-2.1.1.tar.gz
 glibc, http://mirrors.kernel.org/gnu/glibc/glibc-2.19.tar.xz
 iptables, http://www.netfilter.org/projects/iptables/files/iptables-1.4.21.tar.bz2
-linux, https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.10.54.tar.xz
+linux, https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.14.35.tar.xz
 syslinux, https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.01.tar.xz
 xfsprogs, ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.2.2.tar.gz

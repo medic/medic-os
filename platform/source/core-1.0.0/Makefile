@@ -22,7 +22,7 @@ build: build-all
 build-all: status build-pv build-dhcpcd build-syslinux build-eudev build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc remove-unnecessary
 
 copy: copy-all
-copy-all: copy-syslinux copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
+copy-all: copy-dhcpcd copy-syslinux copy-eudev copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
 
 clean: clean-all
 clean-all: clean-dhcpcd clean-syslinux clean-eudev clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
@@ -53,6 +53,10 @@ build-dhcpcd: build-pv
 	      ${MAKE} install DESTDIR="${INITRD_PATH}" \
 	        SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
 
+copy-dhcpcd:
+	@../../scripts/strip-binaries \
+	  "${INITRD_PATH}/sbin/dhcpcd" "${INITRD_PATH}/lib/dhcpcd"
+
 clean-dhcpcd:
 	@if [ -h source/dhcpcd ]; then \
 	  (cd source/dhcpcd && ${QMAKE} clean); \
@@ -73,6 +77,10 @@ build-eudev: build-pv
 			--disable-introspection --disable-gtk-doc-html && \
 		  make && \
 		  make install DESTDIR="${INITRD_PATH}"'
+
+copy-eudev:
+	@../../scripts/strip-binaries \
+	  "${INITRD_PATH}/lib/udev" "${INITRD_PATH}/sbin/udev"*
 
 clean-eudev:
 	@if [ -h source/eudev ]; then \
