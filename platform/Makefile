@@ -247,7 +247,7 @@ system-services-pkg:
 
 vm-tools-pkg:
 	@echo -n 'Compressing package 'vm-tools'... ' && \
-	scripts/build-package 'vm-tools' 94010 '${PLATFORM}' && \
+	scripts/build-package 'vm-tools' 94610 '${PLATFORM}' && \
 	echo 'done.'
 
 shrink-gardener:

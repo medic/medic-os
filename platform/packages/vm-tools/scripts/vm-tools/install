@@ -8,14 +8,17 @@ install()
   source "$base/env" &&
   merge_environment /srv || return 255
 
+  local version="$PACKAGE_VERSION"
   local platform="`cat /etc/platform`"
+  local major_version="`echo "$version" | sed 's/\.[0-9]\+$//;'`"
 
   (cd "$PACKAGE_ROOT/../" &&
     rm -f default && ln -sf "$platform" default) &&
   \
   (cd "$PACKAGE_ROOT/../../" &&
-    rm -f v9.4 && ln -sf v9.4.0 v9.4 &&
-    rm -f current && ln -sf v9.4.0 current) &&
+    rm -f "v$major_version" &&
+    ln -sf "v$version" "v$major_version" &&
+    rm -f current && ln -sf "v$version" current) &&
   \
   chown -R root:avahi "$PACKAGE_SETTINGS/avahi" &&
   chown -R avahi:staff "$PACKAGE_STORAGE/avahi"

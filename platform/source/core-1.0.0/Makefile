@@ -67,8 +67,7 @@ eudev: build-eudev
 
 build-eudev: build-pv
 	@./scripts/logger 'eudev' '${PLATFORM}' \
-	  'cd source/eudev && \
-	    aclocal && automake --add-missing && autoreconf && \
+	  'cd source/eudev && autoreconf -i && \
 		  ./configure --enable-shared --disable-static \
 		    --prefix=/usr --bindir=/sbin --sbindir=/sbin \
 			--libdir=/usr/lib --sysconfdir=/etc --libexecdir=/lib \

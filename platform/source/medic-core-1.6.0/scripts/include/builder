@@ -46,6 +46,16 @@ disable_fortify_source()
   apply_regex_to_cflags 's/ *-D_FORTIFY_SOURCE=[0-2]*//g;'
 }
 
+disable_deprecation_warnings()
+{
+  apply_regex_to_cflags 's/$/ -Wno-deprecated-declarations/;'
+}
+
+disable_sizeof_warnings()
+{
+  apply_regex_to_cflags 's/$/ -Wno-sizeof-pointer-memaccess/;'
+}
+
 simple_cflags()
 {
   export CFLAGS="$CFLAGS_SIMPLE"

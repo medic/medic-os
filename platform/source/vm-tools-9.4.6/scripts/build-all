@@ -74,7 +74,9 @@ main()
      --disable-python --disable-pygtk --disable-mono --disable-monodoc \
      --disable-doxygen-doc --disable-manpages --disable-silent-rules") &&
   \
-  (disable_parallelism && build_autoconf 'open-vm-tools' \
+  (disable_parallelism &&
+   disable_deprecation_warnings && disable_sizeof_warnings &&
+   build_autoconf 'open-vm-tools' \
     "$stdarg --without-x \
      --with-linuxdir='$kernel_module_path' \
      --with-kernel-release='$kernel_version' \

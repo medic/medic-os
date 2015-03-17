@@ -10,6 +10,7 @@ merge_environment()
 
   export PACKAGE_ROOT="$root"
   export PACKAGE_NAME="$name"
+  export PACKAGE_VERSION="$version"
 
   export PACKAGE_SCRIPTS="$prefix/scripts/$name"
   export PACKAGE_STORAGE="$prefix/storage/$name"
