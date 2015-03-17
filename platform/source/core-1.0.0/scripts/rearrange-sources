@@ -23,7 +23,9 @@ apply_patches()
   (cd linux && patch -s -p1 \
     < ../../patches/linux-grsec-localversion.diff) &&
   (cd busybox && patch -s -p1 \
-    < ../../patches/busybox-depmod.diff)
+    < ../../patches/busybox-depmod.diff) &&
+  (cd eudev && patch -s -p1 \
+    < ../../patches/eudev-2.1.1-allow-missing-btrfs.diff)
 }
 
 finished_path="$base_dir/../../status/core.finished"

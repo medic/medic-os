@@ -95,15 +95,21 @@ main()
   \
   if [ "$build_platform" = 'linux-elf' ]; then
 
+    local initrd_prefix="`readlink -f "../../../initrd/$platform"`" \
+      || fatal 'Unable to locate initrd directory'
+
     build_make_install 'libutempter' "$prefix" \
       "DESTDIR=\"$prefix\" libdir=/lib \
-        libexecdir=/lib includedir=/include mandir=/man" &&
+       libexecdir=/lib includedir=/include mandir=/man" &&
     \
     builder_remove_static_libraries 'utempter' &&
     \
     build_autoconf 'screen' "$stdarg" &&
     build_autoconf 'strace' "$stdarg" &&
-    build_autoconf 'usbutils' "$stdarg" &&
+    \
+    build_autoconf 'usbutils' \
+      "$stdarg UDEV_CFLAGS=\"-I$initrd_prefix/usr/include\" \
+       UDEV_LIBS=\"-L$initrd_prefix/lib -l:libudev.so.1\"" &&
     \
     (disable_parallelism && build_make 'usb-modeswitch' \
      'install-static' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\"" 'y') &&

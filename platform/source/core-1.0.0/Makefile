@@ -19,13 +19,13 @@ KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSI
 all: build
 
 build: build-all
-build-all: status build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc remove-unnecessary
+build-all: status build-pv build-dhcpcd build-syslinux build-eudev build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc remove-unnecessary
 
 copy: copy-all
 copy-all: copy-syslinux copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
 
 clean: clean-all
-clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
+clean-all: clean-dhcpcd clean-syslinux clean-eudev clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
 
 
 # Public targets
@@ -48,14 +48,35 @@ build-dhcpcd: build-pv
 	      --dbdir=/var/run/dhcpcd --sysconfdir=/etc && \
 	    ${MAKE} all CFLAGS="${CFLAGS}" && \
 	    ${MAKE} _proginstall _scriptsinstall _confinstall \
-	      DESTDIR="../../../../initrd/${PLATFORM}" && \
+	      DESTDIR="${INITRD_PATH}" && \
 	    cd dhcpcd-hooks && \
-	      ${MAKE} install DESTDIR="../../../../../initrd/${PLATFORM}" \
+	      ${MAKE} install DESTDIR="${INITRD_PATH}" \
 	        SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
 
 clean-dhcpcd:
 	@if [ -h source/dhcpcd ]; then \
 	  (cd source/dhcpcd && ${QMAKE} clean); \
+	fi
+
+
+eudev: build-eudev
+
+build-eudev: build-pv
+	@./scripts/logger 'eudev' '${PLATFORM}' \
+	  'cd source/eudev && \
+	    aclocal && automake --add-missing && autoreconf && \
+		  ./configure --enable-shared --disable-static \
+		    --prefix=/usr --bindir=/sbin --sbindir=/sbin \
+			--libdir=/usr/lib --sysconfdir=/etc --libexecdir=/lib \
+			--with-rootprefix= --with-rootlibdir=/lib --enable-split-usr \
+			--enable-rule_generator --disable-keymap --disable-gudev \
+			--disable-introspection --disable-gtk-doc-html && \
+		  make && \
+		  make install DESTDIR="${INITRD_PATH}"'
+
+clean-eudev:
+	@if [ -h source/eudev ]; then \
+	  (cd source/eudev && ${QMAKE} clean); \
 	fi
 
 
@@ -84,9 +105,9 @@ copy-kernel:
 	  > "../../images/${PLATFORM}/xen/boot/kernel"
 
 install-kernel-modules:
-	@rm -rf "../../initrd/${PLATFORM}/lib/modules"/* && \
+	@rm -rf "${INITRD_PATH}/lib/modules"/* && \
 	(cd source/linux && ${MAKE} modules_install \
-	  INSTALL_MOD_PATH="../../../../initrd/${PLATFORM}" &>/dev/null)
+	  INSTALL_MOD_PATH="${INITRD_PATH}" &>/dev/null)
 
 
 busybox: build-busybox copy-busybox
@@ -104,9 +125,9 @@ build-busybox: build-pv
 
 copy-busybox:
 	@echo -n "Copying files for 'busybox'... " && \
-	mkdir -p "../../initrd/${PLATFORM}/bin" && \
-	(cd source/busybox && cp busybox \
-	  ../../../../initrd/${PLATFORM}/bin/busybox) && \
+	mkdir -p "${INITRD_PATH}/bin" && \
+	(cd source/busybox && \
+	  cp busybox "${INITRD_PATH}/bin/busybox") && \
 	echo 'done.'
 
 
@@ -259,7 +280,7 @@ recalculate-stats:
 
 remove-unnecessary:
 	@echo -n "Removing unnecessary initrd files... " && \
-	cd "../../initrd/${PLATFORM}" && \
+	cd "${INITRD_PATH}" && \
 	rm -rf include share lib/*.py && \
 	echo 'done.'
 
