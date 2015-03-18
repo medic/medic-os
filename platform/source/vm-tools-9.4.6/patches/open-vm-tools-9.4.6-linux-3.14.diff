@@ -178,8 +178,82 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/dentry.c open-vm
     if (compat_path_lookup(iinfo->name, 0, &actualNd)) {
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/file.c open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/file.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/file.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/file.c	2015-03-17 18:21:50.787105247 -0700
-@@ -237,7 +237,7 @@
++++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/file.c	2015-03-18 07:58:56.492085886 -0700
+@@ -38,46 +38,6 @@
+ typedef ino_t inode_num_t;
+ #endif
+ 
+-/* Specifically for our filldir_t callback */
+-typedef struct FilldirInfo {
+-   filldir_t filldir;
+-   void *dirent;
+-} FilldirInfo;
+-
+-
+-/*
+- *----------------------------------------------------------------------------
+- *
+- * Filldir --
+- *
+- *    Callback function for readdir that we use in place of the one provided.
+- *    This allows us to specify that each dentry is a symlink, but pass through
+- *    everything else to the original filldir function.
+- *
+- * Results:
+- *    Original filldir's return value.
+- *
+- * Side effects:
+- *    Directory information gets copied to user's buffer.
+- *
+- *----------------------------------------------------------------------------
+- */
+-
+-static int
+-Filldir(void *buf,              // IN: Dirent buffer passed from FileOpReaddir
+-        const char *name,       // IN: Dirent name
+-        int namelen,            // IN: len of dirent's name
+-        loff_t offset,          // IN: Offset
+-        inode_num_t ino,        // IN: Inode number of dirent
+-        unsigned int d_type)    // IN: Type of file
+-{
+-   FilldirInfo *info = buf;
+-
+-   /* Specify DT_LNK regardless */
+-   return info->filldir(info->dirent, name, namelen, offset, ino, DT_LNK);
+-}
+-
+-
+ /* File operations */
+ 
+ /*
+@@ -167,10 +127,9 @@
+ static int
+ FileOpReaddir(struct file *file,  // IN
+               void *dirent,       // IN
+-              filldir_t filldir)  // IN
++              struct dir_context *ctx)  // IN
+ {
+    int ret;
+-   FilldirInfo info;
+    struct file *actualFile;
+ 
+    if (!file) {
+@@ -184,13 +143,7 @@
+       return -EINVAL;
+    }
+ 
+-   info.filldir = filldir;
+-   info.dirent = dirent;
+-
+-   actualFile->f_pos = file->f_pos;
+-   ret = vfs_readdir(actualFile, Filldir, &info);
+-   file->f_pos = actualFile->f_pos;
+-
++   ret = iterate_dir(actualFile, ctx);
+    return ret;
+ }
+ 
+@@ -237,7 +190,7 @@
  
  
  struct file_operations RootFileOps = {
@@ -464,7 +538,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/link.c open-vm-tools-9.
 +}
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c open-vm-tools-9.4.6-patched/modules/linux/vmsync/sync.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmsync/sync.c	2015-03-17 18:08:18.441105246 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vmsync/sync.c	2015-03-18 07:55:55.818085843 -0700
 @@ -162,7 +162,7 @@
     cancel_delayed_work(&state->thawTask);
     list_for_each_safe(cur, tmp, &state->devices) {
@@ -483,16 +557,36 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c open-vm-tools-9.
        result = (inode->i_sb->s_bdev == NULL) ? -EINVAL : -EALREADY;
        compat_path_release(&nd);
        goto exit;
-@@ -303,7 +303,7 @@
+@@ -302,8 +302,9 @@
+ VmSyncFreezeDevices(VmSyncState *state,            // IN
                      const char __user *userPaths)  // IN
  {
++   int i;
     int result = 0;
 -   char *paths;
 +   struct filename *paths;
     char *currPath;
     char *nextSep;
     struct list_head *cur, *tmp;
-@@ -328,7 +328,8 @@
+@@ -317,18 +318,25 @@
+     * Although this is not ideal, it shouldn't be a problem. We need an
+     * upper bound anyway.
+     */
+-   paths = getname(userPaths);
++   paths = __getname();
+    if (IS_ERR(paths)) {
+       return PTR_ERR(paths);
+    }
+ 
++   i = strncpy_from_user(paths, userPaths, PATH_MAX);
++   if (i < 0 || i == PATH_MAX) {
++      __putname(paths);
++      return -EINVAL;
++   }
++
+    compat_mutex_lock(&gFreezeLock);
+    compat_mutex_lock(&state->lock);
+ 
     /*
      * First, try to add all paths to the list of paths to be frozen.
      */
@@ -502,7 +596,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c open-vm-tools-9.
     do {
        nextSep = strchr(currPath, ':');
        if (nextSep != NULL) {
-@@ -347,6 +348,7 @@
+@@ -347,6 +355,7 @@
        }
        currPath = nextSep + 1;
     } while (nextSep != NULL);
@@ -510,7 +604,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c open-vm-tools-9.
  
     /*
      * If adding all the requested paths worked, then freeze them.
-@@ -371,6 +373,8 @@
+@@ -371,6 +380,8 @@
     compat_mutex_unlock(&state->lock);
     compat_mutex_unlock(&gFreezeLock);
  
@@ -519,7 +613,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c open-vm-tools-9.
     if (result == 0) {
        compat_schedule_delayed_work(&state->thawTask, VMSYNC_THAW_TASK_DELAY);
     }
-@@ -670,9 +674,10 @@
+@@ -670,9 +681,10 @@
     }
  
     /* Create /proc/driver/vmware-sync */
@@ -533,7 +627,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c open-vm-tools-9.
     if (!controlProcEntry) {
        printk(KERN_ERR "vmsync: could not create /proc/driver/vmware-sync\n");
        kmem_cache_destroy(gSyncStateCache);
-@@ -680,7 +685,6 @@
+@@ -680,7 +692,6 @@
        return -EINVAL;
     }
  
