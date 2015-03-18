@@ -41,12 +41,23 @@ logger()
 {
   local name="$1"
   local platform="$2"
+  local is_silent="$3"
 
-  local line=0
-  local lines_denominator=''
   local directory="`dirname "$name"`" # Defaults to '.'
   local safe_name="`echo "$name" | sed 's/\//-/g;' 2>/dev/null`"
 
+  local output_dir="$directory/logs/$platform"
+  local output_path="$output_dir/$safe_name-$timestamp.log"
+
+  mkdir -p "$output_dir"
+
+  if [ "$is_silent" ]; then
+    cat >> "$output_path"
+    return "$?"
+  fi
+
+  local line=0
+  local lines_denominator=''
   local stats_path="$directory/stats/$platform/$safe_name.count"
   local expected_lines="`cat "$stats_path" 2>/dev/null`"
 
@@ -56,10 +67,6 @@ logger()
     lines_denominator=" of $expected_lines"
   fi
 
-  local output_dir="$directory/logs/$platform"
-  local output_path="$output_dir/$safe_name-$timestamp.log"
-
-  mkdir -p "$output_dir"
   pv -h &>/dev/null
 
   if [ $? -eq 0 ]; then
@@ -71,7 +78,7 @@ logger()
         echo "$x" >> "$output_path"
       fi
     done | pv -petlc -i 0.5 -N "$safe_name" -s "$expected_lines" \
-      > "$output_path"
+      >> "$output_path"
 
     local date="`date +'%I:%M:%S%p' | tr '[A-Z]' '[a-z]'`"
 
@@ -87,5 +94,7 @@ logger()
     done
     echo 'done.' >&2
   fi
+
+  return "$?"
 }
 

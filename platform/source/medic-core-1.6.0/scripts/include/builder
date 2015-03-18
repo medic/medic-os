@@ -2,7 +2,10 @@
 
 log()
 {
-  logger "$1" "$platform"
+  local name="$1"
+  local is_silent="$2"
+
+  logger "$name" "$platform" "$is_silent"
 }
 
 apply_regex_to_cflags()
@@ -124,6 +127,18 @@ build_version()
 
   readlink "$name" | cut -d- -f2- \
     | sed 's/^v//;' | cut -d. -f"$cut_fields"
+}
+
+build_autoreconf()
+{
+  local name="$1"
+
+  builder_should_run "$name" || return 0
+
+  (cd "$name" \
+    && sh -c 'autoreconf -i') 2>&1 | log "$name" 't'
+
+  builder_check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_autoconf()
