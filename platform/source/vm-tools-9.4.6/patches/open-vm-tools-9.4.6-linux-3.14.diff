@@ -1,6 +1,22 @@
+diff -urN open-vm-tools-9.4.6-stock/lib/include/vmware/tools/log.h open-vm-tools-9.4.6-patched/lib/include/vmware/tools/log.h
+--- open-vm-tools-9.4.6-stock/lib/include/vmware/tools/log.h	2014-07-01 15:21:14.000000000 -0700
++++ open-vm-tools-9.4.6-patched/lib/include/vmware/tools/log.h	2015-03-17 18:44:02.474105801 -0700
+@@ -133,9 +133,9 @@
+  *
+  *******************************************************************************
+  */
+-
+-#define g_info(fmt, ...) g_log(G_LOG_DOMAIN, G_LOG_LEVEL_INFO, fmt, ## __VA_ARGS__)
+-
++#if !defined(g_info)
++#  define g_info(fmt, ...) g_log(G_LOG_DOMAIN, G_LOG_LEVEL_INFO, fmt, ## __VA_ARGS__)
++#endif /* !defined(g_info) */
+ 
+ /*
+  *******************************************************************************
 diff -urN open-vm-tools-9.4.6-stock/modules/Makefile.am open-vm-tools-9.4.6-patched/modules/Makefile.am
 --- open-vm-tools-9.4.6-stock/modules/Makefile.am	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/Makefile.am	2015-03-17 16:32:08.262099751 -0700
++++ open-vm-tools-9.4.6-patched/modules/Makefile.am	2015-03-17 18:08:18.420105246 -0700
 @@ -25,7 +25,7 @@
  export vmxnetdir := $(MODULES_DIR)/drivers/net
  export vsockdir := $(MODULES_DIR)/net/vsock
@@ -12,7 +28,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/Makefile.am open-vm-tools-9.4.6-patc
  include_HEADERS = $(top_srcdir)/lib/include/vmci_sockets.h
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/dkms.conf open-vm-tools-9.4.6-patched/modules/linux/dkms.conf
 --- open-vm-tools-9.4.6-stock/modules/linux/dkms.conf	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/dkms.conf	2015-03-17 16:31:59.821103971 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/dkms.conf	2015-03-17 18:08:18.421105246 -0700
 @@ -1,39 +1,35 @@
  PACKAGE_NAME=open-vm-tools
  PACKAGE_VERSION=9.4.6
@@ -69,35 +85,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/dkms.conf open-vm-tools-9.4.6-
 +DEST_MODULE_LOCATION[3]="/kernel/drivers/net"
 +DEST_MODULE_LOCATION[4]="/kernel/net/vsock"
  AUTOINSTALL="YES"
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/shared/compat_cred.h open-vm-tools-9.4.6-patched/modules/linux/shared/compat_cred.h
---- open-vm-tools-9.4.6-stock/modules/linux/shared/compat_cred.h	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/shared/compat_cred.h	2015-03-17 16:32:37.271100326 -0700
-@@ -35,6 +35,22 @@
- #define current_fsgid() (current->fsgid)
- #endif
- 
-+#if defined(CONFIG_UIDGID_STRICT_TYPE_CHECKS) || LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
-+#define CURRENT_FSUID() (__kuid_val(current_fsuid()))
-+#define CURRENT_FSGID() (__kgid_val(current_fsgid()))
-+#define CURRENT_UID() (__kuid_val(current_uid()))
-+#define CURRENT_GID() (__kgid_val(current_gid()))
-+#define KUID2UID(kuid) (kuid.val)
-+#define KGID2GID(kgid) (kgid.val)
-+#else
-+#define CURRENT_FSUID() (current_fsuid())
-+#define CURRENT_FSGID() (current_fsgid())
-+#define CURRENT_UID() (current_uid())
-+#define CURRENT_GID() (current_gid())
-+#define KUID2UID(kuid) (kuid)
-+#define KGID2GID(kgid) (kgid)
-+#endif
-+
- #if !defined(cap_set_full)
- /* cap_set_full was removed in kernel version 3.0-rc4. */
- #define cap_set_full(_c) do { (_c) = CAP_FULL_SET; } while (0)
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/control.c open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/control.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/control.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/control.c	2015-03-17 16:31:59.823103745 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/control.c	2015-03-17 18:08:18.421105246 -0700
 @@ -208,9 +208,10 @@
     VMBlockSetProcEntryOwner(controlProcMountpoint);
  
@@ -157,7 +147,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/control.c open-v
  }
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/dentry.c open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/dentry.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/dentry.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/dentry.c	2015-03-17 16:31:59.823103745 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/dentry.c	2015-03-17 18:08:18.422105246 -0700
 @@ -31,8 +31,7 @@
  #include "filesystem.h"
  #include "block.h"
@@ -188,7 +178,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/dentry.c open-vm
     if (compat_path_lookup(iinfo->name, 0, &actualNd)) {
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/file.c open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/file.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/file.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/file.c	2015-03-17 16:31:40.727098226 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/file.c	2015-03-17 18:21:50.787105247 -0700
 @@ -237,7 +237,7 @@
  
  
@@ -200,7 +190,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/file.c open-vm-t
  };
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/inode.c open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/inode.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/inode.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/inode.c	2015-03-17 16:31:59.823103745 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/inode.c	2015-03-17 18:08:18.422105246 -0700
 @@ -36,7 +36,7 @@
  
  /* Inode operations */
@@ -240,7 +230,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/inode.c open-vm-
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 13)
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmci/linux/driver.c open-vm-tools-9.4.6-patched/modules/linux/vmci/linux/driver.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmci/linux/driver.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmci/linux/driver.c	2015-03-17 16:31:40.725098078 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vmci/linux/driver.c	2015-03-17 18:08:18.427105246 -0700
 @@ -737,7 +737,7 @@
           goto init_release;
        }
@@ -252,7 +242,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmci/linux/driver.c open-vm-to
                                         &user, &vmciLinux->context);
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/file.c open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/file.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/file.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/file.c	2015-03-17 16:32:37.270100309 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/file.c	2015-03-17 18:13:24.491105247 -0700
 @@ -25,6 +25,7 @@
  /* Must come before any kernel header file. */
  #include "driver-config.h"
@@ -261,37 +251,38 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/file.c open-vm-tools-9.
  #include <linux/errno.h>
  #include <linux/module.h>
  #include <linux/signal.h>
-@@ -656,7 +657,7 @@
+@@ -656,7 +657,8 @@
              iparent = dparent->d_inode;
  
              HgfsSetUidGid(iparent, file->f_dentry,
 -                          current_fsuid(), current_fsgid());
-+                          CURRENT_FSUID(), CURRENT_FSGID());
++                          from_kuid(&init_user_ns, current_fsuid()),
++                          from_kgid(&init_user_ns,current_fsgid()));
  
              dput(dparent);
           }
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/filesystem.c open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/filesystem.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/filesystem.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/filesystem.c	2015-03-17 16:32:37.271100325 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/filesystem.c	2015-03-17 18:13:59.779105247 -0700
 @@ -231,13 +231,13 @@
     if (si->uidSet) {
        si->uid = mountInfo->uid;
     } else {
 -      si->uid = current_uid();
-+      si->uid = CURRENT_UID();
++      si->uid = from_kuid(&init_user_ns, current_uid());
     }
     si->gidSet = mountInfo->gidSet;
     if (si->gidSet) {
        si->gid = mountInfo->gid;
     } else {
 -      si->gid = current_gid();
-+      si->gid = CURRENT_GID();
++      si->gid = from_kgid(&init_user_ns, current_gid());
     }
     si->fmask = mountInfo->fmask;
     si->dmask = mountInfo->dmask;
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/fsutil.c open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/fsutil.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/fsutil.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/fsutil.c	2015-03-17 16:32:37.271100325 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/fsutil.c	2015-03-17 18:19:29.427105248 -0700
 @@ -31,6 +31,7 @@
  /* Must come before compat_dcache. */
  #include "compat_fs.h"
@@ -305,17 +296,17 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/fsutil.c open-vm-tools-
      */
     if (si->uidSet || (attr->mask & HGFS_ATTR_VALID_USERID) == 0) {
 -      inode->i_uid = si->uid;
-+      KUID2UID(inode->i_uid) = si->uid;
++      inode->i_uid = make_kuid(&init_user_ns, si->uid);
     } else {
 -      inode->i_uid = attr->userId;
-+      KUID2UID(inode->i_uid) = attr->userId;
++      inode->i_uid = make_kuid(&init_user_ns, attr->userId);
     }
     if (si->gidSet || (attr->mask & HGFS_ATTR_VALID_GROUPID) == 0) {
 -      inode->i_gid = si->gid;
-+      KGID2GID(inode->i_gid) = si->gid;
++      inode->i_gid = make_kgid(&init_user_ns, si->gid);
     } else {
 -      inode->i_gid = attr->groupId;
-+      KGID2GID(inode->i_gid) = attr->groupId;
++      inode->i_gid = make_kgid(&init_user_ns, attr->groupId);
     }
  
     inode->i_rdev = 0;  /* Device nodes are not supported */
@@ -324,7 +315,7 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/fsutil.c open-vm-tools-
  
     setUidGid.ia_valid = ATTR_UID;
 -   setUidGid.ia_uid = uid;
-+   KUID2UID(setUidGid.ia_uid) = uid;
++   setUidGid.ia_uid = make_kuid(&init_user_ns, uid);
  
     /*
      * Only set the gid if the host file system wouldn't have for us.  See the
@@ -333,26 +324,26 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/fsutil.c open-vm-tools-
     if (!parent || !(parent->i_mode & S_ISGID)) {
        setUidGid.ia_valid |= ATTR_GID;
 -      setUidGid.ia_gid = gid;
-+      KGID2GID(setUidGid.ia_gid) = gid;
++      setUidGid.ia_gid = make_kgid(&init_user_ns, gid);
     }
  
     /*
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/inode.c open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/inode.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/inode.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/inode.c	2015-03-17 16:32:37.271100326 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/inode.c	2015-03-17 18:17:15.818105246 -0700
 @@ -488,13 +488,13 @@
  
        if (valid & ATTR_UID) {
           attrV2->mask |= HGFS_ATTR_VALID_USERID;
 -         attrV2->userId = iattr->ia_uid;
-+         attrV2->userId = KUID2UID(iattr->ia_uid);
++         attrV2->userId = from_kuid(&init_user_ns, iattr->ia_uid);
           *changed = TRUE;
        }
  
        if (valid & ATTR_GID) {
           attrV2->mask |= HGFS_ATTR_VALID_GROUPID;
 -         attrV2->groupId = iattr->ia_gid;
-+         attrV2->groupId = KGID2GID(iattr->ia_gid);
++         attrV2->groupId = from_kgid(&init_user_ns, iattr->ia_gid);
           *changed = TRUE;
        }
  
@@ -361,43 +352,119 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/inode.c open-vm-tools-9
        if (valid & ATTR_UID) {
           attrV2->mask |= HGFS_ATTR_VALID_USERID;
 -         attrV2->userId = iattr->ia_uid;
-+         attrV2->userId = KUID2UID(iattr->ia_uid);
++         attrV2->userId = from_kuid(&init_user_ns, iattr->ia_uid);
           *changed = TRUE;
        }
  
        if (valid & ATTR_GID) {
           attrV2->mask |= HGFS_ATTR_VALID_GROUPID;
 -         attrV2->groupId = iattr->ia_gid;
-+         attrV2->groupId = KGID2GID(iattr->ia_gid);
++         attrV2->groupId = from_kgid(&init_user_ns, iattr->ia_gid);
           *changed = TRUE;
        }
  
-@@ -1190,7 +1190,7 @@
+@@ -1190,7 +1190,9 @@
               * a Linux machine and as root, but we might as well give it
               * a go.
               */
 -            HgfsSetUidGid(dir, dentry, current_fsuid(), current_fsgid());
-+            HgfsSetUidGid(dir, dentry, CURRENT_FSUID(), CURRENT_FSGID());
++            HgfsSetUidGid(dir, dentry,
++                          from_kuid(&init_user_ns, current_fsuid()),
++                          from_kgid(&init_user_ns, current_fsgid()));
           }
  
           /*
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/link.c open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/link.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/link.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/link.c	2015-03-17 16:33:16.602100699 -0700
-@@ -111,8 +111,8 @@
++++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/link.c	2015-03-17 18:33:33.523105247 -0700
+@@ -45,11 +45,20 @@
+ static int HgfsReadlink(struct dentry *dentry,
+                         char __user *buffer,
+                         int buflen);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 13)
++static void HgfsPutlink(struct dentry *dentry,
++                        struct nameidata *nd,
++                        void *cookie);
++#else
++static void HgfsPutlink(struct dentry *dentry,
++                        struct nameidata *nd);
++#endif
+ 
+ /* HGFS inode operations structure for symlinks. */
+ struct inode_operations HgfsLinkInodeOperations = {
+    .follow_link   = HgfsFollowlink,
+    .readlink      = HgfsReadlink,
++   .put_link      = HgfsPutlink,
+ };
+ 
+ /*
+@@ -109,12 +118,12 @@
+          LOG(6, (KERN_DEBUG "VMware hgfs: HgfsFollowlink: got called "
+                  "on something that wasn't a symlink\n"));
           error = -EINVAL;
++         kfree(fileName);
        } else {
-          LOG(6, (KERN_DEBUG "VMware hgfs: HgfsFollowlink: calling "
+-         LOG(6, (KERN_DEBUG "VMware hgfs: HgfsFollowlink: calling "
 -                 "vfs_follow_link\n"));
 -         error = vfs_follow_link(nd, fileName);
-+                 "nd_set_link\n"));
++         LOG(6, (KERN_DEBUG "VMware hgfs: %s: calling nd_set_link %s\n",
++                 __func__, fileName));
 +         nd_set_link(nd, fileName);
        }
-       kfree(fileName);
+-      kfree(fileName);
     }
+   out:
+ 
+@@ -180,3 +189,46 @@
+    }
+    return error;
+ }
++
++
++/*
++ *----------------------------------------------------------------------
++ *
++ * HgfsPutlink --
++ *
++ *    Modeled after page_put_link from a 2.6.9 kernel so it'll work
++ *    across all kernel revisions we care about.
++ *
++ * Results:
++ *    None
++ *
++ * Side effects:
++ *    None
++ *
++ *----------------------------------------------------------------------
++ */
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 13)
++static void
++HgfsPutlink(struct dentry *dentry, // dentry
++            struct nameidata *nd,  // lookup name information
++            void *cookie)          // cookie
++#else
++static void
++HgfsPutlink(struct dentry *dentry, // dentry
++            struct nameidata *nd)  // lookup name information
++#endif
++{
++   char *fileName = NULL;
++
++   LOG(6, (KERN_DEBUG "VMware hgfs: %s: put for %s\n",
++           __func__, dentry->d_name.name));
++
++   fileName = nd_get_link(nd);
++   if (!IS_ERR(fileName)) {
++      LOG(6, (KERN_DEBUG "VMware hgfs: %s: putting %s\n",
++              __func__, fileName));
++      kfree(fileName);
++      nd_set_link(nd, NULL);
++   }
++}
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c open-vm-tools-9.4.6-patched/modules/linux/vmsync/sync.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmsync/sync.c	2015-03-17 16:31:59.824103641 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vmsync/sync.c	2015-03-17 18:08:18.441105246 -0700
 @@ -162,7 +162,7 @@
     cancel_delayed_work(&state->thawTask);
     list_for_each_safe(cur, tmp, &state->devices) {
@@ -476,13 +543,23 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c open-vm-tools-9.
  
 diff -urN open-vm-tools-9.4.6-stock/modules/linux/vsock/linux/af_vsock.c open-vm-tools-9.4.6-patched/modules/linux/vsock/linux/af_vsock.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vsock/linux/af_vsock.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vsock/linux/af_vsock.c	2015-03-17 16:31:40.727098226 -0700
++++ open-vm-tools-9.4.6-patched/modules/linux/vsock/linux/af_vsock.c	2015-03-17 18:12:39.780105246 -0700
 @@ -3147,7 +3147,7 @@
        vsk->connectTimeout = psk->connectTimeout;
     } else {
        vsk->trusted = capable(CAP_NET_ADMIN);
 -      vsk->owner = current_uid();
-+      vsk->owner = from_kuid(current_user_ns(), current_uid());
++      vsk->owner = from_kuid(&init_user_ns, current_uid());
        vsk->queuePairSize = VSOCK_DEFAULT_QP_SIZE;
        vsk->queuePairMinSize = VSOCK_DEFAULT_QP_SIZE_MIN;
        vsk->queuePairMaxSize = VSOCK_DEFAULT_QP_SIZE_MAX;
+@@ -5455,6 +5455,9 @@
+    vsk = vsock_sk(sk);
+    err = 0;
+ 
++   /* Fix CVE-2013-3237 */
++   msg->msg_namelen = 0;
++
+    lock_sock(sk);
+ 
+    if (sk->sk_state != SS_CONNECTED) {
