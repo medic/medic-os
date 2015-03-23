@@ -90,7 +90,7 @@ remove_cppflags_from_cflags()
   export CXXFLAGS="$CXXFLAGS"
 }
 
-prepend_path()
+prepend_paths()
 {
   for dir in "$@"; do
     local bin="$dir/bin"
@@ -612,7 +612,7 @@ builder_setup_environment()
   export INITIAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
   export INITIAL_DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH"
 
-  prepend_path "$prefix"
+  prepend_paths "$prefix"
 
   builder_detect_system \
     || fatal 'Unsupported system; please edit Makefile'

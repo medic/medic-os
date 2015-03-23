@@ -19,13 +19,13 @@ KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSI
 all: build
 
 build: build-all
-build-all: status build-pv build-dhcpcd build-syslinux build-eudev build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc remove-unnecessary
+build-all: status build-pv build-dhcpcd build-syslinux build-eudev build-sudo build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc remove-unnecessary
 
 copy: copy-all
-copy-all: copy-dhcpcd copy-syslinux copy-eudev copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
+copy-all: copy-dhcpcd copy-syslinux copy-eudev copy-sudo copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
 
 clean: clean-all
-clean-all: clean-dhcpcd clean-syslinux clean-eudev clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
+clean-all: clean-dhcpcd clean-syslinux clean-eudev clean-sudo clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
 
 
 # Public targets
@@ -79,11 +79,34 @@ build-eudev: build-pv
 
 copy-eudev:
 	@../../scripts/strip-binaries \
-	  "${INITRD_PATH}/lib/udev" "${INITRD_PATH}/sbin/udev"*
+	  "${INITRD_PATH}/lib/udev" "${INITRD_PATH}/sbin/udev"
 
 clean-eudev:
 	@if [ -h source/eudev ]; then \
 	  (cd source/eudev && ${QMAKE} clean); \
+	fi
+
+
+sudo: build-sudo
+
+build-sudo: build-pv
+	@./scripts/logger 'sudo' '${PLATFORM}' \
+	  'cd source/sudo && \
+	    ./configure --prefix=/usr --libexecdir=/usr/lib \
+		  --disable-static --enable-shared --without-insults \
+		  --with-secure-path --with-env-editor --without-sendmail \
+		  --disable-nls --with-passprompt='[sudo] Password for %p' && \
+		make && \
+		make install DESTDIR="${INITRD_PATH}"'
+
+copy-sudo:
+	@../../scripts/strip-binaries \
+	  "${INITRD_PATH}/usr/bin" "${INITRD_PATH}/usr/sbin" \
+	  "${INITRD_PATH}/usr/lib/sudo"
+
+clean-sudo:
+	@if [ -h source/sudo ]; then \
+	  (cd source/sudo && ${QMAKE} clean); \
 	fi
 
 
