@@ -8,6 +8,8 @@ MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
+CFLAGS += -Os -fstack-protector-all
+
 KERNEL_SOURCE_PATH := $(shell readlink -f source/linux)
 INITRD_PATH := $(shell readlink -f ../../initrd/${PLATFORM})
 STAGING_PATH := $(shell readlink -f ../../staging/software/${PLATFORM})

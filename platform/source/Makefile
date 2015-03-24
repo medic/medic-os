@@ -20,8 +20,6 @@ MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
-CFLAGS += -Os -fstack-protector-all
-
 KERNEL_VERSION := 3.14.35
 KERNEL_MODULE_PATH := ${CURDIR}/../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}
 
