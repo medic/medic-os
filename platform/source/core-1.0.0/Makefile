@@ -95,7 +95,7 @@ build-sudo: build-pv
 	    ./configure --prefix=/usr --libexecdir=/usr/lib \
 		  --disable-static --enable-shared --without-insults \
 		  --with-secure-path --with-env-editor --without-sendmail \
-		  --disable-nls --with-passprompt='[sudo] Password for %p' && \
+		  --disable-nls --with-passprompt="[sudo] Password for %p" && \
 		make && \
 		make install DESTDIR="${INITRD_PATH}"'
 
