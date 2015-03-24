@@ -12,7 +12,7 @@ erlang, http://www.erlang.org/download/otp_src_17.4.tar.gz
 gammu, https://s3-us-west-2.amazonaws.com/medicmobile.org/medic-os/source/gammu-1.33.0.tar.xz
 gammu-json, https://github.com/browndav/gammu-json.git
 garden-maker, https://github.com/garden20/garden_maker.git
-git, https://www.kernel.org/pub/software/scm/git/git-2.2.1.tar.xz
+git, https://www.kernel.org/pub/software/scm/git/git-2.3.4.tar.xz
 icu, http://download.icu-project.org/files/icu4c/51.2/icu4c-51_2-src.tgz
 inotify-tools, http://github.com/downloads/rvoicilas/inotify-tools/inotify-tools-3.14.tar.gz
 js, http://ftp.mozilla.org/pub/mozilla.org/js/js185-1.0.0.tar.gz
