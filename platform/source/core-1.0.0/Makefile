@@ -301,7 +301,7 @@ copy-e2fsprogs:
 stats: recalculate-stats
 
 recalculate-stats:
-	for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
+	@for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
 	  stats_file="stats/${PLATFORM}/` \
 	    basename "$$file" .log | sed 's/-${TS}//g;' \
 	  `.count" && \
@@ -311,10 +311,27 @@ recalculate-stats:
 
 # Private targets
 
+check-compiler-root:
+	@if [ -z '${COMPILER_ROOT}' ]; then
+	  echo 'Warning: Compiler root not specified' >&2; \
+	  echo 'Warning: Resulting image may not boot properly' >&2; \
+	fi
+
+copy-compiler-libraries: check-compiler-root
+	@echo -n "Copying required compiler libraries... " && \
+	for lib in ssp gcc_s; do \
+	  cp "${COMPILER_ROOT}/lib/lib$$lib.so"* "${INITRD_PATH}/lib" \
+	    || exit "$$?"
+	done && \
+	for lib in stdc++; do \
+	  cp "${COMPILER_ROOT}/lib/lib$$lib.so"* "${INITRD_PATH}/usr/lib" \
+	    || exit "$$?"
+	done && \
+	echo 'done.'
+
 remove-unnecessary:
 	@echo -n "Removing unnecessary initrd files... " && \
-	cd "${INITRD_PATH}" && \
-	rm -rf include share lib/*.py && \
+	cd "${INITRD_PATH}" && rm -rf include share lib/*.py && \
 	echo 'done.'
 
 clean-logs:

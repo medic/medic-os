@@ -58,6 +58,7 @@ core: build-core copy-core
 
 build-core:
 	@(cd core && ${QMAKE} \
+	  COMPILER_ROOT='${COMPILER_ROOT}' \
 	  PATH="${MEDIC_CORE_ROOT}/bin:$$PATH" \
 	  BITS='${BITS}' KERNEL_VERSION='${KERNEL_VERSION}' \
 	  MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}' PLATFORM='${PLATFORM}' \

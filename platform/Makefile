@@ -35,8 +35,8 @@ compile:
 	@if [ -z '${SKIP_COMPILER}' ]; then \
 	  ${QMAKE} compiler || exit 1; \
 	fi
-	@(cd source && ../scripts/prepend-path \
-	  '${COMPILER_ROOT}' ${QMAKE} PLATFORM='${PLATFORM}')
+	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
+	    ${QMAKE} PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
 
 copy:
 	@(cd source && \
