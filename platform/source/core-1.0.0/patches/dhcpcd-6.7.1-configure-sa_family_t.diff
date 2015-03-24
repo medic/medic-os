@@ -1,0 +1,11 @@
+diff -ur dhcpcd-6.7.1-stock/configure dhcpcd-6.7.1/configure
+--- dhcpcd-6.7.1-stock/configure	2015-01-30 02:05:47.000000000 -0800
++++ dhcpcd-6.7.1/configure	2015-03-23 18:02:30.298039310 -0700
+@@ -372,6 +372,7 @@
+ 	echo "DHCPCD_SRCS+=	if-linux.c" >>$CONFIG_MK
+ 	# for RTM_NEWADDR and friends
+ 	echo "#include <asm/types.h> /* fix broken headers */" >>$CONFIG_H
++	echo "#include <sys/socket.h> /* for sa_family_t */" >>$CONFIG_H
+ 	echo "#include <linux/rtnetlink.h>" >>$CONFIG_H
+ 	;;
+ qnx*)
