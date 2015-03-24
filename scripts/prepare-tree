@@ -19,11 +19,6 @@ set_permissions()
 {
   chmod 1777 \
     platform/initrd/common/tmp &&
-  \
-  chmod u+s \
-    platform/initrd/x86/usr/bin/sudo \
-    platform/initrd/x64/usr/bin/sudo \
-    platform/initrd/armv6/usr/bin/sudo
 
   return "$?"
 }
