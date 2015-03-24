@@ -93,9 +93,10 @@ build-sudo: build-pv
 	@./scripts/logger 'sudo' '${PLATFORM}' \
 	  'cd source/sudo && \
 	    ./configure --prefix=/usr --libexecdir=/usr/lib \
-		  --disable-static --enable-shared --without-insults \
-		  --with-secure-path --with-env-editor --without-sendmail \
-		  --disable-nls --with-passprompt="[sudo] Password for %p" && \
+		  --disable-static --enable-shared --disable-zlib \
+		  --without-insults --with-secure-path --with-env-editor \
+		  --without-sendmail --disable-nls --with-password-timeout=1 \
+		  --with-passprompt="[sudo] Password for %p" && \
 		make && \
 		make install DESTDIR="${INITRD_PATH}"'
 
