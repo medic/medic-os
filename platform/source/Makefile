@@ -6,7 +6,7 @@ PLATFORM := $(shell ../scripts/detect-platform)
 
 JAVA_VERSION ?= 1.7.65
 VM_TOOLS_VERSION ?= 9.4.6
-MEDIC_CORE_VERSION ?= 1.6.0
+MEDIC_CORE_VERSION ?= 1.6.1
 
 VM_TOOLS_ROOT ?= /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
 MEDIC_CORE_ROOT ?= /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}

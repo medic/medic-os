@@ -4,7 +4,7 @@ merge_environment()
 {
   local name='medic-core'
 
-  local version='1.6.0'
+  local version='1.6.1'
   local java_version='1.7.65'
   local platform="`cat /etc/platform`"
 
