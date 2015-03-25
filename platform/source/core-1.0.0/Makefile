@@ -321,11 +321,11 @@ copy-compiler-libraries: check-compiler-root
 	@echo -n "Copying required compiler libraries... " && \
 	for lib in ssp gcc_s; do \
 	  cp "${COMPILER_ROOT}/lib/lib$$lib.so"* "${INITRD_PATH}/lib" \
-	    || exit "$$?"
+	    || exit "$$?" \
 	done && \
 	for lib in stdc++; do \
 	  cp "${COMPILER_ROOT}/lib/lib$$lib.so"* "${INITRD_PATH}/usr/lib" \
-	    || exit "$$?"
+	    || exit "$$?" \
 	done && \
 	echo 'done.'
 
