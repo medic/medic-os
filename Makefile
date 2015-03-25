@@ -22,7 +22,7 @@ clean:
 	(cd platform && ${QMAKE} distclean) &>/dev/null && \
 	echo 'done.'
 
-distclean: clean clean-initrd clean-target
+distclean: clean-initrd clean-target clean
 
 delete:
 	@shopt -u xpg_echo && \
