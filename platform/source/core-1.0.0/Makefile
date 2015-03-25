@@ -81,7 +81,7 @@ build-eudev: build-pv
 
 copy-eudev:
 	@../../scripts/strip-binaries \
-	  "${INITRD_PATH}/lib/udev" "${INITRD_PATH}/sbin/udev"
+	  "${INITRD_PATH}/lib/udev"* "${INITRD_PATH}/sbin/udev"*
 
 clean-eudev:
 	@if [ -h source/eudev ]; then \
@@ -104,8 +104,8 @@ build-sudo: build-pv
 
 copy-sudo:
 	@../../scripts/strip-binaries \
-	  "${INITRD_PATH}/usr/bin" "${INITRD_PATH}/usr/sbin" \
-	  "${INITRD_PATH}/usr/lib/sudo"
+	  "${INITRD_PATH}/usr/lib/sudo" "${INITRD_PATH}/usr/bin/sudo"* \
+	  "${INITRD_PATH}/usr/sbin/visudo"
 
 clean-sudo:
 	@if [ -h source/sudo ]; then \
