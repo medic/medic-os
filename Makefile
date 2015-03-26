@@ -7,7 +7,7 @@ QMAKE := ${MAKE} --no-print-directory
 
 # Public targets
 
-all: download build
+all: require-root download build
 
 build: reset-time prepare-tree
 	@echo >&2
@@ -40,6 +40,12 @@ download: reset-time prepare-tree
 	fi
 
 # Private targets
+
+require-root:
+	@if [ "`id -u`" -ne 0 ]; then \
+	  echo 'Fatal: You must run this build process as root' >&2; \
+	  exit 1; \
+	fi
 
 clean-target:
 	@shopt -u xpg_echo && \
