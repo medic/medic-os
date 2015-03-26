@@ -69,7 +69,7 @@ extract()
     esac
 
     if [ "$?" -ne 0 ]; then
-      fatal "Failed to extract source code from '$archive'"
+      warn "Failed to extract source code from '$archive'"
     fi
 
   done
@@ -178,6 +178,11 @@ main()
 
   echo -n 'Waiting for decompression processes to complete... ' >&2
   wait
+
+  if [ "$?" -ne 0 ]; then
+    echo -n 'failed.' >&2
+    fatal 'Failed to decompress one or more source code archives'
+  fi
 
   touch "$base_dir/status/$manifest_name.retrieved"
   echo 'done.' >&2
