@@ -214,8 +214,10 @@ build-x86-image-nopae:
 	@if [ '${PLATFORM}' = 'x86' ]; then \
 	  echo 'Building x86 image with PAE disabled...' && \
 	  (cd source && \
-	    ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
-	    ${QMAKE} rebuild-vm-tools-modules) && \
+	    ../scripts/prepend-path '${COMPILER_ROOT}' \
+	      ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
+	    ../scripts/prepend-path '${COMPILER_ROOT}' \
+	      ${QMAKE} rebuild-vm-tools-modules) && \
 	  \
 	  ${QMAKE} build-iso-image ISO_EXTRA='-nopae'; \
 	fi
