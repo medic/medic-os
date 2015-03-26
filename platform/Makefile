@@ -35,8 +35,8 @@ compile:
 	@if [ -z '${SKIP_COMPILER}' ]; then \
 	  ${QMAKE} compiler || exit 1; \
 	fi
-	@(cd source && ../scripts/prepend-path \
-	  '${COMPILER_ROOT}' ${QMAKE} PLATFORM='${PLATFORM}')
+	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
+	    ${QMAKE} PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
 
 copy:
 	@(cd source && \
@@ -214,8 +214,10 @@ build-x86-image-nopae:
 	@if [ '${PLATFORM}' = 'x86' ]; then \
 	  echo 'Building x86 image with PAE disabled...' && \
 	  (cd source && \
-	    ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
-	    ${QMAKE} rebuild-vm-tools-modules) && \
+	    ../scripts/prepend-path '${COMPILER_ROOT}' \
+	      ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
+	    ../scripts/prepend-path '${COMPILER_ROOT}' \
+	      ${QMAKE} rebuild-vm-tools-modules) && \
 	  \
 	  ${QMAKE} build-iso-image ISO_EXTRA='-nopae'; \
 	fi
@@ -237,7 +239,7 @@ java-pkg:
 
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 16000 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 16110 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
@@ -247,7 +249,7 @@ system-services-pkg:
 
 vm-tools-pkg:
 	@echo -n 'Compressing package 'vm-tools'... ' && \
-	scripts/build-package 'vm-tools' 94010 '${PLATFORM}' && \
+	scripts/build-package 'vm-tools' 94610 '${PLATFORM}' && \
 	echo 'done.'
 
 shrink-gardener:

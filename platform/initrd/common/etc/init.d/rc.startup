@@ -5,8 +5,8 @@
 /bin/mount -o remount,rw /
 /bin/mount -a 
 
-/sbin/udevd --daemon 2>&1 >/dev/null
-/sbin/udevadm trigger --action=add 2>&1 >/dev/null &
+/sbin/udevd --daemon &>/dev/null
+/sbin/udevadm trigger --action=add &>/dev/null &
 
 modprobe loop 2>/dev/null
 

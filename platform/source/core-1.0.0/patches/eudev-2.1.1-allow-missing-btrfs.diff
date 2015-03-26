@@ -1,0 +1,22 @@
+--- eudev-2.1.1-stock/configure.ac	2014-10-29 13:19:58.000000000 -0700
++++ eudev-2.1.1/configure.ac	2015-03-11 04:31:25.181555736 -0700
+@@ -49,11 +49,18 @@
+ )
+ 
+ AC_CHECK_HEADERS(
+-	[linux/btrfs.h mtd/mtd-user.h],
++	[mtd/mtd-user.h],
+ 	[],
+ 	[AC_MSG_ERROR([*** KERNEL header not found])]
+ )
+ 
++AC_CHECK_HEADERS(
++   [linux/btrfs.h],
++   [],
++   [AC_MSG_WARN([*** KERNEL header not found])]
++)
++
++
+ # Checks for typedefs, structures, and compiler characteristics.
+ AC_TYPE_UID_T
+ AC_C_INLINE

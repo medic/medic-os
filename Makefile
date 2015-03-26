@@ -17,48 +17,59 @@ build: reset-time prepare-tree
 	  source ./.profile && ${QMAKE} compile all)
 
 clean:
-	@echo -n 'Cleaning source tree... ' && \
+	@shopt -u xpg_echo && \
+	echo -n 'Cleaning source tree... ' && \
 	(cd platform && ${QMAKE} distclean) &>/dev/null && \
 	echo 'done.'
 
-distclean: clean clean-target
+distclean: clean-initrd clean-target clean
 
 delete:
-	@echo -n 'Deleting downloaded source code... ' && \
+	@shopt -u xpg_echo && \
+	echo -n 'Deleting downloaded source code... ' && \
 	(cd platform && ${QMAKE} delete-downloaded) && \
 	echo 'done.'
 
 download: reset-time prepare-tree
-	@if ! [ -f status/download.finished ]; then \
+	@if ! [ -f platform/status/download.finished ]; then \
 	  ${QMAKE} force-download; \
 	fi && \
 	\
-	if ! [ -f status/move.finished ]; then \
+	if ! [ -f platform/status/move.finished ]; then \
 	  ${QMAKE} force-move-downloaded; \
 	fi
-
 
 # Private targets
 
 clean-target:
-	@cd /srv && \
-	rm -rf software settings storage
+	@shopt -u xpg_echo && \
+	echo -n 'Cleaning target directory... ' && \
+	cd /srv && rm -rf software settings storage && \
+	echo 'done.'
+
+clean-initrd:
+	@shopt -u xpg_echo && \
+	echo -n 'Cleaning initrd... ' && \
+	git clean -qf platform/initrd >/dev/null && \
+	echo 'done.'
 
 reset-time:
-	@echo -n 'Synchronizing system time... ' && \
-	ntpdate pool.ntp.org >/dev/null && \
+	@shopt -u xpg_echo && \
+	echo -n 'Synchronizing system time... ' && \
+	ntpdate -u pool.ntp.org >/dev/null && \
 	echo 'done.'
 
 prepare-tree:
-	@echo -n 'Preparing source tree... ' && \
+	@shopt -u xpg_echo && \
+	echo -n 'Preparing source tree... ' && \
 	./scripts/prepare-tree && \
 	echo 'done.'
 
 force-download:
 	@echo >&2
 	@echo "`tput bold`Retrieving source code`tput sgr0`" >&2 && echo >&2
-	@(cd platform && make download)
+	@(cd platform && ${QMAKE} download)
 
 force-move-downloaded:
-	@(cd platform && make move-downloaded)
+	@(cd platform && ${QMAKE} move-downloaded)
 

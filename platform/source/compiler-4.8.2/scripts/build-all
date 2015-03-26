@@ -66,6 +66,7 @@ main()
       --with-isl='$prefix' --with-cloog='$prefix' --with-mpc='$prefix' \
       --enable-languages=c,c++ --enable-threads=posix") &&
   \
+  create_compiler_symlinks "$prefix" &&
   remove_library_executable_bits "$prefix"
 
   if [ "$?" -ne 0 ]; then
@@ -81,6 +82,16 @@ remove_library_executable_bits()
 
   find "$prefix" -mindepth 1 -maxdepth 1 \
     \( -name '*.so.*' -o -name '*.la' \) -type f -exec chmod +x {} \;
+}
+
+create_compiler_symlinks()
+{
+  local prefix="$1"
+
+  (cd "$prefix/bin" && ln -sf gcc cc &&
+   for name in ar nm ranlib; do
+     ln -sf "gcc-$name" "cc-$name" || exit 1
+   done)
 }
 
 fatal()

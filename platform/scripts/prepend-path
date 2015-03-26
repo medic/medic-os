@@ -21,7 +21,7 @@ main()
     usage
   fi
 
-  prepend_path "$path" && exec "$@"
+  prepend_paths "$path" && exec "$@"
 }
 
 main "$@"

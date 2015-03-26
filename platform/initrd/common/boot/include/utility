@@ -33,7 +33,7 @@ require_root()
   if [ "`id -u`" -ne 0 ]; then
     fatal 'You must be root to use this command'
   fi
-}                                 
+}
 
 prepend_path()
 {

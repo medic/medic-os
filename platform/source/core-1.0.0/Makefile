@@ -8,6 +8,8 @@ MAKE ?= make
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
+CFLAGS += -Os -fstack-protector-all
+
 KERNEL_SOURCE_PATH := $(shell readlink -f source/linux)
 INITRD_PATH := $(shell readlink -f ../../initrd/${PLATFORM})
 STAGING_PATH := $(shell readlink -f ../../staging/software/${PLATFORM})
@@ -19,13 +21,13 @@ KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSI
 all: build
 
 build: build-all
-build-all: status build-pv build-dhcpcd build-syslinux build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc remove-unnecessary
+build-all: status build-pv build-dhcpcd build-syslinux build-eudev build-sudo build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc remove-unnecessary
 
 copy: copy-all
-copy-all: copy-syslinux copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
+copy-all: copy-dhcpcd copy-syslinux copy-eudev copy-sudo copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
 
 clean: clean-all
-clean-all: clean-dhcpcd clean-syslinux clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
+clean-all: clean-dhcpcd clean-syslinux clean-eudev clean-sudo clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
 
 
 # Public targets
@@ -48,14 +50,66 @@ build-dhcpcd: build-pv
 	      --dbdir=/var/run/dhcpcd --sysconfdir=/etc && \
 	    ${MAKE} all CFLAGS="${CFLAGS}" && \
 	    ${MAKE} _proginstall _scriptsinstall _confinstall \
-	      DESTDIR="../../../../initrd/${PLATFORM}" && \
+	      DESTDIR="${INITRD_PATH}" && \
 	    cd dhcpcd-hooks && \
-	      ${MAKE} install DESTDIR="../../../../../initrd/${PLATFORM}" \
+	      ${MAKE} install DESTDIR="${INITRD_PATH}" \
 	        SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
+
+copy-dhcpcd:
+	@../../scripts/strip-binaries \
+	  "${INITRD_PATH}/sbin/dhcpcd" "${INITRD_PATH}/lib/dhcpcd"
 
 clean-dhcpcd:
 	@if [ -h source/dhcpcd ]; then \
 	  (cd source/dhcpcd && ${QMAKE} clean); \
+	fi
+
+
+eudev: build-eudev
+
+build-eudev: build-pv
+	@./scripts/logger 'eudev' '${PLATFORM}' \
+	  'cd source/eudev && autoreconf -i && \
+		  ./configure --enable-shared --disable-static \
+		    --prefix=/usr --bindir=/sbin --sbindir=/sbin \
+			--libdir=/usr/lib --sysconfdir=/etc --libexecdir=/lib \
+			--with-rootprefix= --with-rootlibdir=/lib --enable-split-usr \
+			--enable-rule_generator --disable-keymap --disable-gudev \
+			--disable-introspection --disable-gtk-doc-html && \
+		  make && \
+		  make install DESTDIR="${INITRD_PATH}"'
+
+copy-eudev:
+	@../../scripts/strip-binaries \
+	  "${INITRD_PATH}/lib/udev"* "${INITRD_PATH}/sbin/udev"*
+
+clean-eudev:
+	@if [ -h source/eudev ]; then \
+	  (cd source/eudev && ${QMAKE} clean); \
+	fi
+
+
+sudo: build-sudo
+
+build-sudo: build-pv
+	@./scripts/logger 'sudo' '${PLATFORM}' \
+	  'cd source/sudo && \
+	    ./configure --prefix=/usr --libexecdir=/usr/lib \
+		  --disable-static --enable-shared --disable-zlib \
+		  --without-insults --with-secure-path --with-env-editor \
+		  --without-sendmail --disable-nls --with-password-timeout=1 \
+		  --with-passprompt="[sudo] Password for %p" && \
+		make && \
+		make install DESTDIR="${INITRD_PATH}"'
+
+copy-sudo:
+	@../../scripts/strip-binaries \
+	  "${INITRD_PATH}/usr/lib/sudo" "${INITRD_PATH}/usr/bin/sudo"* \
+	  "${INITRD_PATH}/usr/sbin/visudo"
+
+clean-sudo:
+	@if [ -h source/sudo ]; then \
+	  (cd source/sudo && ${QMAKE} clean); \
 	fi
 
 
@@ -84,9 +138,9 @@ copy-kernel:
 	  > "../../images/${PLATFORM}/xen/boot/kernel"
 
 install-kernel-modules:
-	@rm -rf "../../initrd/${PLATFORM}/lib/modules"/* && \
+	@rm -rf "${INITRD_PATH}/lib/modules"/* && \
 	(cd source/linux && ${MAKE} modules_install \
-	  INSTALL_MOD_PATH="../../../../initrd/${PLATFORM}" &>/dev/null)
+	  INSTALL_MOD_PATH="${INITRD_PATH}" &>/dev/null)
 
 
 busybox: build-busybox copy-busybox
@@ -104,9 +158,9 @@ build-busybox: build-pv
 
 copy-busybox:
 	@echo -n "Copying files for 'busybox'... " && \
-	mkdir -p "../../initrd/${PLATFORM}/bin" && \
-	(cd source/busybox && cp busybox \
-	  ../../../../initrd/${PLATFORM}/bin/busybox) && \
+	mkdir -p "${INITRD_PATH}/bin" && \
+	(cd source/busybox && \
+	  cp busybox "${INITRD_PATH}/bin/busybox") && \
 	echo 'done.'
 
 
@@ -247,7 +301,7 @@ copy-e2fsprogs:
 stats: recalculate-stats
 
 recalculate-stats:
-	for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
+	@for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
 	  stats_file="stats/${PLATFORM}/` \
 	    basename "$$file" .log | sed 's/-${TS}//g;' \
 	  `.count" && \
@@ -257,10 +311,27 @@ recalculate-stats:
 
 # Private targets
 
+check-compiler-root:
+	@if [ -z '${COMPILER_ROOT}' ]; then
+	  echo 'Warning: Compiler root not specified' >&2; \
+	  echo 'Warning: Resulting image may not boot properly' >&2; \
+	fi
+
+copy-compiler-libraries: check-compiler-root
+	@echo -n "Copying required compiler libraries... " && \
+	for lib in ssp gcc_s; do \
+	  cp "${COMPILER_ROOT}/lib/lib$$lib.so"* "${INITRD_PATH}/lib" \
+	    || exit "$$?" \
+	done && \
+	for lib in stdc++; do \
+	  cp "${COMPILER_ROOT}/lib/lib$$lib.so"* "${INITRD_PATH}/usr/lib" \
+	    || exit "$$?" \
+	done && \
+	echo 'done.'
+
 remove-unnecessary:
 	@echo -n "Removing unnecessary initrd files... " && \
-	cd "../../initrd/${PLATFORM}" && \
-	rm -rf include share lib/*.py && \
+	cd "${INITRD_PATH}" && rm -rf include share lib/*.py && \
 	echo 'done.'
 
 clean-logs:
