@@ -591,10 +591,15 @@ builder_setup_environment()
 
   unset PLATFORM
 
+  if which gmake &>/dev/null; then
+    export MAKE='gmake'
+  else
+    export MAKE='make'
+  fi
+
   export CC='gcc'
   export CXX='g++'
-  export MAKE='gmake'
-  export GNUMAKE='gmake'
+  export GNUMAKE="$MAKE"
 
   export INITIAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
   export INITIAL_DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH"
