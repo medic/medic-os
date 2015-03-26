@@ -69,8 +69,7 @@ extract()
     esac
 
     if [ "$?" -ne 0 ]; then
-      warn "Failed to extract source code from '$archive'"
-      return "$?"
+      fatal "Failed to extract source code from '$archive'"
     fi
 
   done
