@@ -211,7 +211,6 @@ main()
     build_autoconf 'js' \
       "$stdarg --host='$build_arch' --with-cpu-arch='$build_cpu'") &&
   \
-  builder_move_libraries 'move-libraries' "$prefix" 'lib64' &&
   builder_remove_static_libraries 'js' &&
   \
   build_autoconf 'erlang' \

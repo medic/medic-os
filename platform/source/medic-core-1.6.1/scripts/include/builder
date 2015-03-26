@@ -569,19 +569,6 @@ builder_should_run()
   return "$?"
 }
 
-builder_move_libraries()
-{
-  local name="$1"
-  local prefix="$2"
-  local dir="$3"
-
-  builder_should_run "$name" || return 0
-
-  (cd "$prefix" &&
-    if [ -d "$dir" ]; then \
-        mv "$dir"/* lib/ && rmdir "$dir"; fi) 2>&1 | log "$name"
-}
-
 builder_setup_environment()
 {
   prefix="$1"
