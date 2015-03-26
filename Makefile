@@ -16,21 +16,21 @@ build: reset-time prepare-tree
 	  export HOME="`readlink -f ../..`" && \
 	  source ./.profile && ${QMAKE} compile all)
 
-clean:
+clean: require-root
 	@shopt -u xpg_echo && \
 	echo -n 'Cleaning source tree... ' && \
 	(cd platform && ${QMAKE} distclean) &>/dev/null && \
 	echo 'done.'
 
-distclean: clean-initrd clean-target clean
+distclean: require-root clean-initrd clean-target clean
 
-delete:
+delete: require-root
 	@shopt -u xpg_echo && \
 	echo -n 'Deleting downloaded source code... ' && \
 	(cd platform && ${QMAKE} delete-downloaded) && \
 	echo 'done.'
 
-download: reset-time prepare-tree
+download: require-root reset-time prepare-tree
 	@if ! [ -f platform/status/download.finished ]; then \
 	  ${QMAKE} force-download; \
 	fi && \
