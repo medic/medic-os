@@ -2,6 +2,12 @@
 Medic OS: Revision History
 ==========================
 
+v1.1.1
+------
+
+* Numerous package updates.
+* Tons of bug fixes in build environment scripts.
+
 v1.1.1-pre
 ----------
 
