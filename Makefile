@@ -2,6 +2,7 @@
 # Variables
 
 MAKE ?= make
+SHELL := /bin/bash
 QMAKE := ${MAKE} --no-print-directory
 
 
