@@ -114,8 +114,8 @@ build-ami-image:
 	export PATH="$$EC2_HOME/bin:$$PATH" && \
 	\
 	case '${PLATFORM}' in \
-	  x64) architecture='x86_64';; \
 	  x86) architecture='i386';; \
+	  x64) architecture='x86_64';; \
 	  *) echo 'Fatal: Unsupported platform' >&2; exit 1 ;; \
 	esac && \
 	\
@@ -187,7 +187,7 @@ copy-compiler-libraries:
 	  'initrd/${PLATFORM}/lib/libgcc_s.so'*; do \
 	  \
 	  chmod +x "$$file" && \
-	  strip --strip-unneeded "$$file" || exit "$$?"; \
+	  strip --strip-unneeded "$$file"; \
 	done && \
 	\
 	echo 'done.'

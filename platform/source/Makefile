@@ -135,7 +135,7 @@ rebuild-vm-tools-modules:
 	@echo -n "Rebuilding 'open-vm-tools' kernel modules... " && \
 	(cd vm-tools/source/open-vm-tools/modules && \
 	  ${QMAKE} clean &>/dev/null && \
-	  ${QMAKE} all install &>/dev/null) || exit "$$?"; \
+	  ${QMAKE} all install &>/dev/null) && \
 	depmod -a -b '../initrd/${PLATFORM}' '${KERNEL_VERSION}' && \
 	echo 'done.'
 
