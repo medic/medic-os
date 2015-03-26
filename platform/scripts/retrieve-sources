@@ -180,7 +180,7 @@ main()
   wait
 
   if [ "$?" -ne 0 ]; then
-    echo -n 'failed.' >&2
+    echo 'failed.' >&2
     fatal 'Failed to decompress one or more source code archives'
   fi
 
