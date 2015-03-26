@@ -7,7 +7,7 @@ couchdb, http://apache.osuosl.org/couchdb/source/1.6.1/apache-couchdb-1.6.1.tar.
 couchdb-lucene, https://s3-us-west-2.amazonaws.com/medicmobile.org/medic-os/source/couchdb-lucene-1.0.2.tar.gz
 curl, http://curl.haxx.se/download/curl-7.35.0.tar.lzma
 diffutils, http://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz
-erica, https://github.com/downloads/benoitc/erica/erica-0.3.0.tar.gz
+erica, https://s3-us-west-2.amazonaws.com/medicmobile.org/medic-os/source/erica-0.5.0.tar.gz
 erlang, http://www.erlang.org/download/otp_src_17.4.tar.gz
 gammu, https://s3-us-west-2.amazonaws.com/medicmobile.org/medic-os/source/gammu-1.33.0.tar.xz
 gammu-json, https://github.com/browndav/gammu-json.git
