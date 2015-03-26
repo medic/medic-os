@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -o pipefail
+
 expand_path()
 {
   local path="$1"

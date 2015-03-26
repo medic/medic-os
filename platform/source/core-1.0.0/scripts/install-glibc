@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -o pipefail
+
 warn()
 {
   echo "Warning: $*" >&2

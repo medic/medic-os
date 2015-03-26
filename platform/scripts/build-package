@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -o pipefail
+
 create_package_digest()
 {
   local staging_dir="$1"
