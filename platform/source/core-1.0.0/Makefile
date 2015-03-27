@@ -5,6 +5,7 @@ PARALLEL ?= 16
 PLATFORM := $(shell ../../scripts/detect-platform)
 
 MAKE ?= make
+SHELL := /bin/bash
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 

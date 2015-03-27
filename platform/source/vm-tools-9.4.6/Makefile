@@ -2,6 +2,7 @@
 # Variables
 
 PARALLEL ?= 16
+SHELL := /bin/bash
 PLATFORM := $(shell ../../scripts/detect-platform)
 
 

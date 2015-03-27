@@ -17,6 +17,7 @@ VM_TOOLS_PKG_ROOT ?= ${PKG_DIR}/vm-tools/software/vm-tools/v${VM_TOOLS_VERSION}/
 MEDIC_CORE_PKG_ROOT ?= ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
 MAKE ?= make
+SHELL := /bin/bash
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
