@@ -25,6 +25,8 @@ rename()
 apply_patches()
 {
   (cd procps && patch -s -p1 \
+    < ../../patches/procps-3.2.8-glibc-p_pid.diff) &&
+  (cd procps && patch -s -p1 \
     < ../../patches/procps-3.2.8-makefile-include.diff) &&
   (cd open-vm-tools && patch -s -p1 \
     < ../../patches/open-vm-tools-9.4.6-linux-3.14.diff)
