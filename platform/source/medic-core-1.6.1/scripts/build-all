@@ -119,6 +119,7 @@ main()
     (disable_parallelism && build_make 'usb-modeswitch-data' \
      'install' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\"") &&
     \
+    # In libacl, libattr: make reinstall safe
     rm -f "$prefix/lib/libattr.so".* "$prefix/lib/libacl.so".* &&
     \
     (disable_parallelism && build_autoconf 'attr' \
@@ -257,6 +258,9 @@ main()
   build_npm_local 'medic-transport' "$prefix" &&
   build_npm_local 'node-fs-ext' "$prefix" &&
   build_npm_local 'node-gammu-json' "$prefix" &&
+  \
+  # Maven: make reinstall safe
+  rm -rf "$prefix/java" &&
   \
   build_ant 'ant' "$prefix" &&
   build_maven 'maven' "$prefix" &&

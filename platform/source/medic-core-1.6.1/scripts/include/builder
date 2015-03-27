@@ -368,7 +368,7 @@ build_maven()
     yes 'yes' | M2_HOME="$prefix/java" \
         "$prefix/java/bin/ant") 2>&1 | log "$name"
   
-  builder_check_status "$name" "${PIPESTATUS[0]}"
+  builder_check_status "$name" "${PIPESTATUS[1]}"
 }
 
 build_lucene()
