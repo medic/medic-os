@@ -119,7 +119,7 @@ main()
     (disable_parallelism && build_make 'usb-modeswitch-data' \
      'install' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\"") &&
     \
-    rm -f "$prefix/lib/libattr.*" "$prefix/lib/libacl.*" &&
+    rm -f "$prefix/lib/libattr.so".* "$prefix/lib/libacl.so".* &&
     \
     (disable_parallelism && build_autoconf 'attr' \
       "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib') &&
