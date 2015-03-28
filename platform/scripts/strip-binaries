@@ -22,6 +22,8 @@ main()
             || fatal "Failure while stripping '$file'"
         done
   done
+
+  return 0
 }
 
 usage()
