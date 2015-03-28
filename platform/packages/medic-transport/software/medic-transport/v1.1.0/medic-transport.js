@@ -11,8 +11,6 @@ var read_stdin_password = function (_callback) {
   new lazy(process.stdin).lines.head(function (_line) {
     return _callback(null, _line.toString());
   });
-
-  process.stdin.resume();
 };
 
 
