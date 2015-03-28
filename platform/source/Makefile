@@ -105,9 +105,11 @@ clean-medic-core:
 	@rm -rf /srv/software/medic-core && (cd medic-core && ${MAKE} clean)
 
 build-medic-core:
-	@(cd medic-core && ${QMAKE} all gardenize \
-	  BITS='${BITS}' PLATFORM='${PLATFORM}' \
-	  ROOT='${MEDIC_CORE_ROOT}' PARALLEL='${PARALLEL}')
+	@(cd medic-core && \
+	  ./scripts/unprepare-dist '${MEDIC_CORE_ROOT}' && \
+	  ${QMAKE} all gardenize \
+	    BITS='${BITS}' PLATFORM='${PLATFORM}' \
+	    ROOT='${MEDIC_CORE_ROOT}' PARALLEL='${PARALLEL}')
 
 copy-medic-core:
 	@echo -n "Copying files for 'medic-core'... "
