@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -o pipefail
+
+prefix="$1"
+
+if ! [ -d "$prefix" ]; then
+  echo "Usage: $0 <prefix>" >&2
+  exit 111
+fi
+
+(cd "$prefix" &&
+ rm -rf etc/ssh etc/nginx var/log/nginx \
+   var/run/nginx etc/couchdb var/log/couchdb \
+   var/lib/couchdb var/run/couchdb java/logs java/conf java/indexes)
+
+(cd "$prefix/bin" &&
+  rm -f git-receive-pack git-upload-archive \
+    git git-cvsserver git-shell git-upload-pack)
+
