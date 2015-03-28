@@ -118,8 +118,14 @@ _supervisor_process()
     rm -f "$pid_file" \
       || log "Failed to remove '$pid_file'"
 
+    # Process exit status:
+    #   Log status information, and wait to respawn if needed.
+
+    local wait_required=''
+
     if [ "$status" -eq 0 ]; then
       log "Service '$package/$service' (pid '$pid') exited normally"
+      wait_required='t'
     else
       log "Service '$package/$service'" \
         "(pid '$pid') terminated with exit status '$status'"
@@ -130,9 +136,16 @@ _supervisor_process()
         _supervisor_accounting_write "$package" "$service" 'exit' \
           || log "Accounting write failure during '$package/$service' exit"
 
-        sleep 5
+        wait_required='t'
       fi
     fi
+
+    if [ "$wait_required" ]; then
+      sleep 2
+    fi
+
+    # Restart:
+    #   Go around and restart the service.
 
     rm -f "$svc_status_fifo"
     log "Restarting service '$package/$service'"
