@@ -142,7 +142,7 @@ build-native-tarball:
 	@echo -n 'Creating native tarball... ' && \
 	\
 	base_dir='staging/tarball/${PLATFORM}' && \
-	staging_dir='$$base_dir/${SYSTEM_IMAGE_ID}-native' && \
+	staging_dir="$$base_dir/${SYSTEM_IMAGE_ID}-native" && \
 	\
 	mkdir -p "$$staging_dir" && \
 	cp -a '${INITRD_PATH}'/* "$$staging_dir/" && \
