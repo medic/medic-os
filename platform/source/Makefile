@@ -102,7 +102,8 @@ copy-vm-tools:
 medic-core: build-medic-core copy-medic-core
 
 clean-medic-core:
-	@rm -rf /srv/software/medic-core && (cd medic-core && ${MAKE} clean)
+	@rm -rf /srv/software/medic-core && \
+	(cd medic-core && ${MAKE} clean)
 
 build-medic-core:
 	@(cd medic-core && \
@@ -165,7 +166,8 @@ set-pax-flags: copy-java-template
 
 finalize-initrd:
 	@for symlink in source build; do \
-	  rm -f "../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}/$$symlink"; \
+	  rm -f "../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}/$$symlink" \
+	    || exit "$$?"; \
 	done
 
 verify-packages:

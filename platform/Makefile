@@ -4,7 +4,9 @@
 MAKE ?= make
 SHELL := /bin/bash
 QMAKE := ${MAKE} --no-print-directory
+
 PLATFORM := $(shell ./scripts/detect-platform)
+INITRD_PATH := $(shell readlink -f initrd/${PLATFORM})
 
 DATE := $(shell date +'%Y%m%d')
 TIMESTAMP := $(shell date +'%Y-%m-%d %H:%M:%S')
@@ -24,6 +26,8 @@ all: packages images timestamp-output
 
 iso: build-iso-image
 xen: build-xen-image
+
+initrd: build-initrd
 native: build-native-tarball
 
 images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae
@@ -34,7 +38,7 @@ packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-p
 
 compile:
 	@if [ -z '${SKIP_COMPILER}' ]; then \
-	  ${QMAKE} compiler || exit 1; \
+	  ${QMAKE} compiler || exit "$$?"; \
 	fi
 	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
 	    ${QMAKE} PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
@@ -58,8 +62,8 @@ distclean: clean clean-source clean-staging
 	  for type in iso xen; do \
 	    rm -f "images/$$platform/$$type/boot/kernel" \
 	      "images/$$platform/$$type/boot/image.xz" \
-	        "images/$$platform/$$type/packages"/*; \
-	  done; \
+	        "images/$$platform/$$type/packages"/* || exit "$$?"; \
+	  done || exit "$$?"; \
 	done
 
 clean-compiler:
@@ -91,6 +95,7 @@ build-iso-image: build-initrd
 
 build-xen-image:
 	@echo -n 'Creating Xen image... ' && \
+	\
 	loop_path="staging/loopback" && \
 	image_path='output/${SYSTEM_IMAGE_ID}-xen' && \
 	ext4_options='none,extent,large_file,has_journal' && \
@@ -111,6 +116,7 @@ build-xen-image:
 
 build-ami-image:
 	@echo -n 'Building AMI instance-store image... ' && \
+	\
 	source 'config/aws/settings' && \
 	export PATH="$$EC2_HOME/bin:$$PATH" && \
 	\
@@ -134,10 +140,12 @@ build-ami-image:
 
 build-native-tarball:
 	@echo -n 'Creating native tarball... ' && \
-	staging_dir='staging/tarball/${PLATFORM}/${SYSTEM_IMAGE_ID}-native' && \
+	\
+	base_dir='staging/tarball/${PLATFORM}' && \
+	staging_dir='$$base_dir/${SYSTEM_IMAGE_ID}-native' && \
 	\
 	mkdir -p "$$staging_dir" && \
-	cp -a 'initrd/${PLATFORM}'/* "$$staging_dir/" && \
+	cp -a '${INITRD_PATH}'/* "$$staging_dir/" && \
 	(cd "$$staging_dir" && mkdir -p srv mnt/startup) && \
 	\
 	cp -a 'images/${PLATFORM}/iso/packages' \
@@ -161,6 +169,7 @@ upload: upload-ami-image
 
 upload-ami-image: build-ami-image
 	@echo -n 'Uploading AMI instance-store image... ' && \
+	\
 	source 'config/aws/settings' && \
 	export PATH="$$EC2_HOME/bin:$$PATH" && \
 	\
@@ -172,42 +181,59 @@ upload-ami-image: build-ami-image
 	\
 	echo 'done.'
 
-copy-compiler-libraries:
+check-compiler-root:
+	@if [ -z '${COMPILER_ROOT}' ]; then \
+	  echo 'Warning: Compiler root not specified' >&2; \
+	  echo 'Warning: Resulting image may be incomplete' >&2; \
+	fi
+
+copy-compiler-libraries: check-compiler-root
 	@echo -n 'Copying compiler libraries...' && \
+	\
+	mkdir -p '${INITRD_PATH}/lib' && \
 	export PATH="${COMPILER_ROOT}/bin:$$PATH" && \
-	active_compiler_root="$$(dirname "$$(which gcc)")/../" && \
+	compiler_root="$$(dirname "$$(which gcc)")/../" && \
 	\
-	find "$$active_compiler_root"/lib* \
-	  \( -type f -o -type l \) -a \( \
-	     -name 'libstdc++.so*' -o \
-		 -name 'libssp.so*' -o -name 'libgcc_s.so*' \
-	  \) -exec cp -a {} 'initrd/${PLATFORM}/lib/' \; && \
+	cd "$$compiler_root/lib" && \
 	\
-	for file in \
-	  'initrd/${PLATFORM}/lib/libssp.so'* \
-	  'initrd/${PLATFORM}/lib/libgcc_s.so'*; do \
-	  \
-	  chmod +x "$$file" && \
-	  strip --strip-unneeded "$$file"; \
+	for lib in ssp gcc_s stdc++; do \
+	  cp -a "lib$$lib.so" "lib$$lib.so."* \
+	    '${INITRD_PATH}/lib' || exit "$$?"; \
 	done && \
 	\
 	echo 'done.'
 
-build-initrd: copy-compiler-libraries
+prepare-initrd:
+	@echo -n 'Preparing initrd files... ' && \
+	\
+	./scripts/strip-binaries '${INITRD_PATH}' && \
+	cd "${INITRD_PATH}" && \
+	\
+	find . -name '*.la' \
+	  -type f -exec rm -f {} \; && \
+	\
+	find . \( -name '*.so' -o -name '*.so.*' \) \
+	  -type f -exec chmod +x {} \; && \
+	\
+	rm -rf include share lib/*.py && \
+	echo 'done.'
+
+build-initrd: copy-compiler-libraries prepare-initrd
 	@echo -n 'Creating initrd image... ' && \
+	\
 	chmod 0440 initrd/common/etc/sudoers && \
-	cp -a initrd/common/* 'initrd/${PLATFORM}/' && \
+	cp -a initrd/common/* '${INITRD_PATH}/' && \
 	\
 	echo '${TIMESTAMP}' \
-	  > 'initrd/${PLATFORM}/etc/build-timestamp' && \
+	  > '${INITRD_PATH}/etc/build-timestamp' && \
 	\
-	(cd 'initrd/${PLATFORM}' && \
+	(cd '${INITRD_PATH}' && \
 	  find * | cpio -o -H newc 2>/dev/null \
 	    | sh ../../source/core/source/linux/scripts/xz_wrap.sh \
 	      > '../../images/${PLATFORM}/iso/boot/image.xz') && \
 	\
 	(cd 'images/${PLATFORM}' && \
-	  [ -d xen ] && cp -a 'iso/boot/image.xz' 'xen/boot/') && \
+	  if [ -d xen ]; then cp -a iso/boot/image.xz xen/boot/; fi) && \
 	\
 	echo 'done.'
 
@@ -270,7 +296,7 @@ convert-boot-logo:
 	for file in logo-medic logo-medic-gray; do \
 	  pngtopnm "config/kernel/common/boot-logo/$$file.png" \
 	    | ppmquant 224 2>/dev/null | pnmtoplainpnm \
-	      > "config/kernel/common/boot-logo/$$file.ppm"; \
+	      > "config/kernel/common/boot-logo/$$file.ppm" || exit "$$?" \
 	done
 
 download:
@@ -302,13 +328,13 @@ delete-downloaded:
 	@rm -f status/* && \
 	for type in incoming source; do \
 	  for pkg in core compiler vm-tools medic-core; do \
-	    (cd source && rm -rf "$$pkg/$$type"/*); \
+	    (cd source && rm -rf "$$pkg/$$type"/*) || exit "$$?"; \
 	  done; \
 	done
 
 timestamp-output:
 	@for path in output/medic-os-*; do \
 	  target="`echo "$$path" | sed 's/\(\.[a-z\.]\+\)$$/-${DATE}\1/;'`" && \
-	  mv "$$path" "$$target"; \
+	  mv "$$path" "$$target" || exit "$$?"; \
 	done
 

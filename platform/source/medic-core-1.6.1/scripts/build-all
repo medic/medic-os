@@ -89,6 +89,7 @@ main()
   build_autoconf 'tcpdump' "$stdarg --disable-smb --without-libnl" &&
   \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
+  builder_create_library_aliases "$prefix" 'ncurses' 'tinfo' &&
   \
   builder_remove_static_libraries 'form' 'form_g' \
     'menu' 'menu_g' 'ncurses' 'ncurses_g' 'ncurses++' 'panel' 'panel_g' &&
@@ -266,22 +267,14 @@ main()
   build_maven 'maven' "$prefix" &&
   build_couchdb_lucene 'couchdb-lucene' "$prefix" &&
   \
-  remove_library_executable_bits "$prefix" &&
-  builder_clean_target 'clean-target' "$prefix"
+  builder_set_library_executable_bits "$prefix" &&
+  builder_remove_library_metadata "$prefix"
 
   if [ "$?" -ne 0 ]; then
     fatal 'One or more build steps failed; aborting'
   fi
 
   return 0
-}
-
-remove_library_executable_bits()
-{
-  local prefix="$1"
-
-  find "$prefix" -mindepth 1 -maxdepth 1 \
-    \( -name '*.so.*' -o -name '*.la' \) -type f -exec chmod +x {} \;
 }
 
 check_args()
