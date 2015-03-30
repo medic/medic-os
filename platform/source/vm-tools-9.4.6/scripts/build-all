@@ -28,7 +28,7 @@ main()
   `"
 
   local uname="`uname -s`"
-  local stdarg="--prefix=\"$prefix\""
+  local stdarg="--prefix='$prefix'"
 
   builder_initialize &&
   builder_setup_environment "$prefix" \

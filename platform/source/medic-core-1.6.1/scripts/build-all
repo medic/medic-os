@@ -39,7 +39,7 @@ main()
   check_args "$@" || usage
 
   local uname="`uname -s`"
-  local stdarg="--prefix=\"$prefix\""
+  local stdarg="--prefix='$prefix'"
 
   builder_initialize &&
   builder_setup_environment "$prefix" \
@@ -102,7 +102,7 @@ main()
       || fatal 'Unable to locate initrd directory'
 
     build_make_install 'libutempter' "$prefix" \
-      "DESTDIR=\"$prefix\" libdir=/lib \
+      "DESTDIR='$prefix' libdir=/lib \
        libexecdir=/lib includedir=/include mandir=/man" &&
     \
     builder_remove_static_libraries 'utempter' &&
@@ -111,14 +111,14 @@ main()
     build_autoconf 'strace' "$stdarg" &&
     \
     build_autoconf 'usbutils' \
-      "$stdarg UDEV_CFLAGS=\"-I$initrd_prefix/usr/include\" \
-       UDEV_LIBS=\"-L$initrd_prefix/lib -l:libudev.so.1\"" &&
+      "$stdarg UDEV_CFLAGS='-I$initrd_prefix/usr/include' \
+       UDEV_LIBS='-L$initrd_prefix/lib -l:libudev.so.1'" &&
     \
     (disable_parallelism && build_make 'usb-modeswitch' \
-     'install-static' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\"" 'y') &&
+     'install-static' "DESTDIR='$prefix' PREFIX='$prefix'" 'y') &&
     \
     (disable_parallelism && build_make 'usb-modeswitch-data' \
-     'install' "DESTDIR=\"$prefix\" PREFIX=\"$prefix\"") &&
+     'install' "DESTDIR='$prefix' PREFIX='$prefix'") &&
     \
     # In libacl, libattr: make reinstall safe
     rm -f "$prefix/lib/libattr.so".* "$prefix/lib/libacl.so".* &&
@@ -132,12 +132,12 @@ main()
     build_autoconf 'inotify-tools' \
       "$stdarg --enable-shared=yes --enable-static=no" &&
     \
-    build_make_install 'paxctl' "$prefix" "DESTDIR=\"$prefix\""
+    build_make_install 'paxctl' "$prefix" "DESTDIR='$prefix'"
 
   fi &&
   \
   if [ "$bits" -eq 32 ]; then
-    build_make_install 'bladox-tools' "$prefix" "PREFIX=\"$prefix\""
+    build_make_install 'bladox-tools' "$prefix" "PREFIX='$prefix'"
   fi &&
   \
   (disable_parallelism && build_make 'logrotate' 'all install' \
@@ -157,20 +157,20 @@ main()
   builder_remove_static_libraries 'crypto' 'ssl' &&
   \
   build_autoconf 'openssh' \
-    "$stdarg --sysconfdir=\"$prefix/etc/ssh\" \
-     --with-zlib=\"$prefix\" --with-ssl-dir=\"$prefix\"" &&
+    "$stdarg --sysconfdir='$prefix/etc/ssh' \
+     --with-zlib='$prefix' --with-ssl-dir='$prefix'" &&
   \
   build_autoconf 'libidn' "$stdarg" &&
   builder_remove_static_libraries 'idn' &&
   \
   (disable_library_path && build_autoconf 'readline' \
-    "$stdarg --build=\"$build_arch\" --enable-static=no --enable-shared=yes") &&
+    "$stdarg --build='$build_arch' --enable-static=no --enable-shared=yes") &&
   \
   (remove_cppflags_from_cflags &&
    simple_cflags && build_autoconf 'curl' \
-    "$stdarg --with-ssl-dir=\"$prefix\" \
-     --with-zlib=\"$prefix\" --with-libidn=\"$prefix\" \
-     --with-ca-bundle=\"$prefix/share/curl/ca-bundle.crt\"") && \
+    "$stdarg --with-ssl-dir='$prefix' \
+     --with-zlib='$prefix' --with-libidn='$prefix' \
+     --with-ca-bundle='$prefix/share/curl/ca-bundle.crt'") && \
   \
   builder_remove_static_libraries 'curl' &&
   \
@@ -234,7 +234,7 @@ main()
      -DINSTALL_BASH_COMPLETION=OFF -DENABLE_PROTECTION=ON \
      -DINSTALL_GNAPPLET=OFF -DWITH_BACKUP=OFF $gammu_extra_options" &&
   \
-  build_make_install 'gammu-json' "$prefix" "PREFIX=\"$prefix\"" &&
+  build_make_install 'gammu-json' "$prefix" "PREFIX='$prefix'" &&
   \
   build_autoconf 'couchdb' \
     "$stdarg --with-js-lib-name=mozjs185 \
