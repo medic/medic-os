@@ -203,12 +203,6 @@ main() {
          sudo tar xJf medic-os-core-src-latest.tar.xz &&
          echo 'done.' >&2 &&
          \
-         echo -n 'Extracting Medic OS JDK/JRE module... ' >&2 &&
-         sudo tar xJf 'medic-os-java-$platform-latest.tar.xz' &&
-         echo 'done.' >&2 &&
-         cd medic-os &&
-         sudo ln -nsf '$platform' java-current/selected &&
-         \
          echo -n 'Installing build-time dependencies... ' >&2 &&
          sudo ./platform/config/redhat/scripts/prepare-system \
            -q -y &>/dev/null &&
@@ -219,6 +213,13 @@ main() {
            sudo git remote set-url origin "$vm_url" &&
            sudo git stash -q && sudo git pull -q) &&
          echo 'done.' >&2 &&
+         \
+         echo -n 'Extracting Medic OS JDK/JRE module... ' >&2 &&
+         sudo tar xJf 'medic-os-java-$platform-latest.tar.xz' &&
+         echo 'done.' >&2 &&
+         \
+         cd medic-os &&
+         sudo ln -nsf '$platform' java-current/selected &&
          \
          echo 'Starting Medic OS build process:' >&2 &&
          sudo make all \
