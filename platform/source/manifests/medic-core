@@ -29,7 +29,7 @@ lrzip, https://medic-mobile.s3.amazonaws.com/medic-os/mirror/source/lrzip-0.615.
 lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
 maven, http://mirrors.ibiblio.org/apache/maven/maven-3/3.3.1/source/apache-maven-3.3.1-src.tar.gz
 ncurses, http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
-nginx, http://nginx.org/download/nginx-1.7.9.tar.gz
+nginx, http://nginx.org/download/nginx-1.7.11.tar.gz
 node, http://nodejs.org/dist/v0.12.1/node-v0.12.1.tar.gz
 node-fs-ext, https://github.com/baudehlo/node-fs-ext.git
 node-gammu-json, https://github.com/browndav/node-gammu-json.git
