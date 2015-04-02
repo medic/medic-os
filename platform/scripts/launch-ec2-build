@@ -204,12 +204,12 @@ main() {
          echo 'done.' >&2 &&
          \
          echo -n 'Installing build-time dependencies... ' >&2 &&
-         sudo ./platform/config/redhat/scripts/prepare-system \
+         sudo ./medic-os/platform/config/redhat/scripts/prepare-system \
            -q -y &>/dev/null &&
          echo 'done.' >&2 &&
          \
          echo -n 'Applying latest Medic OS updates... ' >&2 &&
-         (cd platform &&
+         (cd medic-os/platform &&
            sudo git remote set-url origin "$vm_url" &&
            sudo git stash -q && sudo git pull -q) &&
          echo 'done.' >&2 &&
