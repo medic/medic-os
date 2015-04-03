@@ -14,15 +14,20 @@ TIMESTAMP := $(shell date +'%Y-%m-%d %H:%M:%S')
 SYSTEM_ID ?= medic-os
 SYSTEM_NAME ?= Medic OS
 SYSTEM_VERSION_STRING ?= 1.1.0
-SYSTEM_IMAGE_ID := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}-${PLATFORM}
 
 COMPILER_VERSION ?= 4.8.2
 COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 
+ifeq (${RELEASE},)
+  SYSTEM_IMAGE_ID := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}-${DATE}-${PLATFORM}
+else
+  SYSTEM_IMAGE_ID := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}-${PLATFORM}
+endif
+
 
 # Meta-targets
 
-all: packages images timestamp-output
+all: packages images
 
 iso: build-iso-image
 xen: build-xen-image
@@ -162,7 +167,6 @@ compress-xen-image:
 	xz -0qcf 'output/${SYSTEM_IMAGE_ID}-xen' \
 	  > 'output/${SYSTEM_IMAGE_ID}-xen.xz' && \
 	\
-	rm -f 'output/${SYSTEM_IMAGE_ID}-xen' && \
 	echo 'done.'
 
 upload: upload-ami-image
@@ -330,11 +334,5 @@ delete-downloaded:
 	  for pkg in core compiler vm-tools medic-core; do \
 	    (cd source && rm -rf "$$pkg/$$type"/*) || exit "$$?"; \
 	  done; \
-	done
-
-timestamp-output:
-	@for path in output/medic-os-*; do \
-	  target="`echo "$$path" | sed 's/\(\.[a-z\.]\+\)$$/-${DATE}\1/;'`" && \
-	  mv "$$path" "$$target" || exit "$$?"; \
 	done
 
