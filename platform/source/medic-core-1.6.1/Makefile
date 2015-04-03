@@ -25,7 +25,7 @@ clean: clean-logs
 stats: recalculate-stats
 
 recalculate-stats:
-	for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
+	@for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
 		stats_file="stats/${PLATFORM}/` \
 			basename "$$file" .log | sed 's/-${TS}//g;' \
 		`.count" && \
