@@ -53,7 +53,7 @@ main() {
   local vm_url='https://github.com/browndav/medic-os'
   local s3_base_url='https://medic-mobile.s3.amazonaws.com'
 
-  local source_url="$s3_base_url/medic-os/downloads"
+  local source_url="$s3_base_url/medic-os/build/source"
   local mirror_url="$s3_base_url/medic-os/mirror/source"
 
   if [ -z "$settings" -o $# -gt 4 ]; then
