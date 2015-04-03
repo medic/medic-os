@@ -199,6 +199,8 @@ main() {
          curl -O# '$source_url/medic-os-core-src-latest.tar.xz' &&
          echo 'Downloading Medic OS JDK/JRE module:' >&2 &&
          curl -O# '$source_url/medic-os-java-$platform-latest.tar.xz' &&
+         echo 'Downloading Medic OS EC2 API tools module:' >&2 &&
+         curl -O# '$source_url/medic-os-ec2-api-tools-latest.tar.xz' &&
          \
          echo -n 'Extracting Medic OS core image... ' >&2 &&
          sudo tar xJf medic-os-core-src-latest.tar.xz &&
@@ -217,6 +219,10 @@ main() {
          \
          echo -n 'Extracting Medic OS JDK/JRE module... ' >&2 &&
          sudo tar xJf 'medic-os-java-$platform-latest.tar.xz' &&
+         echo 'done.' >&2 &&
+         \
+         echo -n 'Extracting Medic OS EC2 API tools... ' >&2 &&
+         sudo tar xJf medic-os-ec2-api-tools-latest.tar.xz &&
          echo 'done.' >&2 &&
          \
          cd medic-os &&
