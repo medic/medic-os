@@ -108,7 +108,7 @@ clean-medic-core:
 build-medic-core:
 	@(cd medic-core && \
 	  ./scripts/unprepare-dist '${MEDIC_CORE_ROOT}' && \
-	  ${QMAKE} all gardenize \
+	  ${QMAKE} all \
 	    BITS='${BITS}' PLATFORM='${PLATFORM}' \
 	    ROOT='${MEDIC_CORE_ROOT}' PARALLEL='${PARALLEL}')
 

@@ -8,7 +8,9 @@ PLATFORM := $(shell ../../scripts/detect-platform)
 
 # Public targets
 
-all: status
+all: status build gardenize preload
+
+build:
 	@mkdir -p '${ROOT}' && \
 	for file in templates/common/* templates/'${PLATFORM}'/*; do \
 		if [ -e "$$file" ]; then \
@@ -43,6 +45,10 @@ status:
 
 gardenize:
 	@./scripts/gardenize-couchdb '${ROOT}'
+
+preload:
+	@./scripts/preload-couchdb \
+	  '${ROOT}' '${CHANNEL}' '${DISTRIBUTION}'
 
 clean-logs:
 	rm -f logs/*/*.log
