@@ -231,7 +231,7 @@ main() {
          echo -n 'Building EBS images:' >&2 &&
          ./platform/scripts/build-ebs-image \
            '$platform' 'output/image-$platform-xen' \
-           'Medic OS $platform - `date +%Y%m%d`' /dev/sdb \
+             'Medic OS $platform - `date +%Y%m%d`' /dev/sdb && \
          \
          echo 'EBS images built successfully.' >&2 &&
          \
