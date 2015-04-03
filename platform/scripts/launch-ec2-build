@@ -45,6 +45,7 @@ main() {
 
   local fs_size='20'
   local security_group='ssh-only'
+  local iam_role='nightly-build-server'
   local time_zone='America/Los_Angeles'
   local default_availability_zone='us-west-2b'
   local ssh_key_name='nightly-builds@medicmobile.org'
@@ -111,7 +112,7 @@ main() {
 
   local instance_data="`
     ec2-run-instances "$ami" \
-      -t "$instance_type" -b "/dev/sda1=:$fs_size" \
+      -t "$instance_type" -p "$iam_role" -b "/dev/sda1=:$fs_size" \
       -k "$ssh_key_name" -z "$EC2_AVAILABILITY_ZONE" -g "$security_group"
   `" &&
   \
