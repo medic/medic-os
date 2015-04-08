@@ -8,7 +8,7 @@ PLATFORM := $(shell ../../scripts/detect-platform)
 
 # Public targets
 
-all: status build gardenize preload
+all: status build
 
 build:
 	@mkdir -p '${ROOT}' && \
@@ -46,7 +46,7 @@ status:
 gardenize:
 	@./scripts/gardenize-couchdb '${ROOT}'
 
-preload:
+preload: gardenize
 	@./scripts/preload-couchdb \
 	  '${ROOT}' '${CHANNEL}' '${DISTRIBUTION}'
 
