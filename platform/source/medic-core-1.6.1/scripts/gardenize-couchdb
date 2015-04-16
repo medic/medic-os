@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -o pipefail
+
+expand_path()
+{
+  local path="$1"
+
+  readlink -f "$path" 2>/dev/null || realpath "$path"
+  return "$?"
+}
+
+self="`expand_path "$0"`"
+base_dir="`dirname "$self"`/.."
+
+main()
+{
+  local prefix="$1"
+
+  if ! [ -d "$prefix" ]; then
+    echo "Usage: $0 <prefix>" >&2
+    exit 111
+  fi
+
+  local assets_dir="`expand_path ./garden-maker/assets`" \
+    || return 126
+
+  local images_dir="`expand_path ./images`" \
+    || return 125
+
+  local unzip_dir='garden-futon-master'
+  local logo_file='futon-logo-medic.png'
+
+  (cd "$prefix/share/couchdb" &&
+    mkdir -p garden && cp "$assets_dir/dashboard.couch" garden &&
+    cp "$images_dir/$logo_file" www/image/logo.png)
+
+  return "$?"
+}
+
+cd "$base_dir/source" && main "$@"
+exit "$?"
+

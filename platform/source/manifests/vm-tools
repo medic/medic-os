@@ -1,8 +1,8 @@
-avahi, https://s3-us-west-2.amazonaws.com/medicmobile.org/medic-os/source/avahi-0.6.31.tar.gz
+avahi, https://medic-mobile.s3.amazonaws.com/medic-os/mirror/source/avahi-0.6.31.tar.gz
 expat, http://superb-dca2.dl.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz
-glib, http://ftp.rpmfind.net/linux/gnome.org/sources/glib/2.39/glib-2.39.0.tar.xz
 libdaemon, http://0pointer.de/lennart/projects/libdaemon/libdaemon-0.14.tar.gz
+glib, http://ftp.gnome.org/pub/GNOME/sources/glib/2.43/glib-2.43.92.tar.xz
 libdnet, http://hivelocity.dl.sourceforge.net/project/libdnet/libdnet/libdnet-1.11/libdnet-1.11.tar.gz
 libffi, ftp://sourceware.org/pub/libffi/libffi-3.0.13.tar.gz
 procps, http://procps.sourceforge.net/procps-3.2.8.tar.gz
-open-vm-tools, http://hivelocity.dl.sourceforge.net/project/open-vm-tools/open-vm-tools/stable-9.4.x/open-vm-tools-9.4.0-1280544.tar.gz
+open-vm-tools, http://softlayer-dal.dl.sourceforge.net/project/open-vm-tools/open-vm-tools/stable-9.4.x/open-vm-tools-9.4.6-1770165.tar.gz

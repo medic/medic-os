@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
@@ -19,11 +19,6 @@ set_permissions()
 {
   chmod 1777 \
     platform/initrd/common/tmp &&
-  \
-  chmod u+s \
-    platform/initrd/x86/usr/bin/sudo \
-    platform/initrd/x64/usr/bin/sudo \
-    platform/initrd/armv6/usr/bin/sudo
 
   return "$?"
 }
@@ -31,7 +26,13 @@ set_permissions()
 create_empty_directories()
 {
   (
-    cd platform && mkdir -p \
+    cd platform &&
+    \
+    for platform in x64 x86 armv6; do
+      mkdir -p "images/$platform" "initrd/$platform/lib"
+    done &&
+    \
+    mkdir -p \
       initrd/common/etc/sysconfig \
       initrd/common/mnt \
       initrd/common/home/vm/.ssh \
@@ -89,9 +90,8 @@ create_empty_directories()
       packages/gardener/storage/gardener/private \
       packages/gardener/storage/gardener/logs \
       packages/gardener/scripts/gardener/private \
-      images/armv6 \
       images/x86/iso/packages \
-      images/x64/iso/packages
+      images/x64/iso/packages 
   )
 
   return "$?"

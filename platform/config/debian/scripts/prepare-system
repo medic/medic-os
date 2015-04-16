@@ -4,10 +4,10 @@ install()
 {
   apt-get "$@" install \
     linux-headers-generic linux-libc-dev g++ gcc-4.8-plugin-dev \
-    autoconf automake bison flex nasm ruby patch git ntpdate \
-    intltool libncurses5-dev uuid-dev tcl libtool gettext \
-    libgettextpo-dev expect genisoimage libattr1-dev zlib1g-dev \
-    libbz2-dev libperl-dev cmake libdb5.3-dev iptables-dev
+    autoconf automake bison flex nasm ruby patch git ntpdate intltool \
+    pkg-config libncurses5-dev uuid-dev expect tcl libtool gettext \
+    libgettextpo-dev genisoimage libattr1-dev zlib1g-dev libbz2-dev \
+    libperl-dev cmake libdb5.3-dev iptables-dev zip
 
   return "$?"
 }

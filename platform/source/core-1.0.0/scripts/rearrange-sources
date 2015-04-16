@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+set -o pipefail
 
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
@@ -9,21 +11,25 @@ source "$base_dir/../medic-core/scripts/include/rearrange"
 rename()
 {
   find . -type d -exec chmod 755 {} \; &&
-    chown -R root:wheel .
+    chown -R root:root .
 }
 
 apply_patches()
 {
+  (cd busybox && patch -s -p1 \
+    < ../../patches/busybox-depmod.diff) &&
   (cd linux && patch -s -p1 \
-    < ../../patches/grsecurity-2.9.1-linux.diff) &&
+    < ../../patches/grsecurity-linux.diff) &&
   (cd linux && patch -s -p1 \
-    < ../../patches/linux-export-final_putname.diff) &&
+    < ../../patches/linux-final_putname.diff) &&
   (cd linux && patch -s -p1 \
     < ../../patches/linux-grsec-do_const.diff) &&
   (cd linux && patch -s -p1 \
     < ../../patches/linux-grsec-localversion.diff) &&
-  (cd busybox && patch -s -p1 \
-    < ../../patches/busybox-depmod.diff)
+  (cd eudev && patch -s -p1 \
+    < ../../patches/eudev-allow-missing-btrfs.diff) &&
+  (cd dhcpcd && patch -s -p1 \
+    < ../../patches/dhcpcd-configure-sa_family_t.diff)
 }
 
 finished_path="$base_dir/../../status/core.finished"

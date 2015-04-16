@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+set -o pipefail
 
 fatal() {
 
@@ -42,15 +44,17 @@ main() {
   local build_options="$4"
 
   local fs_size='20'
-  local security_group='basic'
+  local security_group='ssh-only'
+  local iam_role='nightly-build-server'
   local time_zone='America/Los_Angeles'
-  local ssh_key_name="Nightly Build Key"
-  local default_availability_zone='us-west-2a'
-  local s3_base_url='https://s3-us-west-2.amazonaws.com'
+  local default_availability_zone='us-west-2b'
+  local ssh_key_name='nightly-builds@medicmobile.org'
 
   local vm_url='https://github.com/browndav/medic-os'
-  local source_url="$s3_base_url/medicmobile.org/medic-os/source"
-  local mirror_url="$s3_base_url/medicmobile.org/medic-os/mirror"
+  local s3_base_url='https://medic-mobile.s3.amazonaws.com'
+
+  local source_url="$s3_base_url/medic-os/build/source"
+  local mirror_url="$s3_base_url/medic-os/mirror/source"
 
   if [ -z "$settings" -o $# -gt 4 ]; then
     usage
@@ -64,7 +68,7 @@ main() {
     if [ "$platform" = 'x86' ]; then
       instance_type='c1.medium'
     else
-      instance_type='c3.xlarge'
+      instance_type='c3.2xlarge'
     fi
   fi
 
@@ -74,9 +78,9 @@ main() {
 
   case "$platform" in
     x64)
-      ami='ami-be1c848e' ;;
+      ami='ami-ff527ecf' ;;
     x86)
-      ami='ami-4c1c847c' ;;
+      ami='ami-cffea7ff' ;;
   esac
 
   if [ "$time_zone" ]; then
@@ -108,7 +112,7 @@ main() {
 
   local instance_data="`
     ec2-run-instances "$ami" \
-      -t "$instance_type" -b "/dev/sda1=:$fs_size" \
+      -t "$instance_type" -p "$iam_role" -b "/dev/sda1=:$fs_size" \
       -k "$ssh_key_name" -z "$EC2_AVAILABILITY_ZONE" -g "$security_group"
   `" &&
   \
@@ -123,8 +127,8 @@ main() {
 
   ec2-create-tags "$instance_id" \
     --tag Name="Nightly Build: Medic OS on `date +'%Y-%m-%d at %l:%M%P'`" \
-    --tag Platform="Amazon Linux" --tag Environment="$platform" \
-    --tag User="browndav" &>/dev/null && \
+    --tag Platform='Amazon Linux' --tag Environment="$platform" \
+    --tag Backup='false' --tag User="browndav" &>/dev/null && \
   \
   echo "done." >&2
   echo "Instance identifier: $instance_id"
@@ -192,30 +196,37 @@ main() {
          echo 'done.' >&2 &&
          \
          echo 'Downloading Medic OS core:' >&2 &&
-         curl -O# '$source_url/medic-os-src-current.tar.xz' &&
+         curl -O# '$source_url/medic-os-core-src-latest.tar.xz' &&
          echo 'Downloading Medic OS JDK/JRE module:' >&2 &&
-         curl -O# '$source_url/medic-os-java-$platform-current.tar.xz' &&
+         curl -O# '$source_url/medic-os-java-$platform-latest.tar.xz' &&
+         echo 'Downloading Medic OS EC2 API tools module:' >&2 &&
+         curl -O# '$source_url/medic-os-ec2-api-tools-latest.tar.xz' &&
          \
          echo -n 'Extracting Medic OS core image... ' >&2 &&
-         sudo tar xJf medic-os-src-current.tar.xz &&
+         sudo tar xJf medic-os-core-src-latest.tar.xz &&
          echo 'done.' >&2 &&
-         \
-         echo -n 'Extracting Medic OS JDK/JRE module... ' >&2 &&
-         sudo tar xJf 'medic-os-java-$platform-current.tar.xz' &&
-         echo 'done.' >&2 &&
-         cd medic-os &&
-         sudo ln -nsf '$platform' java-current/selected &&
          \
          echo -n 'Installing build-time dependencies... ' >&2 &&
-         sudo ./platform/config/redhat/scripts/prepare-system \
+         sudo ./medic-os/platform/config/redhat/scripts/prepare-system \
            -q -y &>/dev/null &&
          echo 'done.' >&2 &&
          \
          echo -n 'Applying latest Medic OS updates... ' >&2 &&
-         (cd platform &&
+         (cd medic-os/platform &&
            sudo git remote set-url origin "$vm_url" &&
            sudo git stash -q && sudo git pull -q) &&
          echo 'done.' >&2 &&
+         \
+         echo -n 'Extracting Medic OS JDK/JRE module... ' >&2 &&
+         sudo tar xJf 'medic-os-java-$platform-latest.tar.xz' &&
+         echo 'done.' >&2 &&
+         \
+         echo -n 'Extracting Medic OS EC2 API tools... ' >&2 &&
+         sudo tar xJf medic-os-ec2-api-tools-latest.tar.xz &&
+         echo 'done.' >&2 &&
+         \
+         cd medic-os &&
+         sudo ln -nsf '$platform' java-current/selected &&
          \
          echo 'Starting Medic OS build process:' >&2 &&
          sudo make all \
@@ -225,8 +236,8 @@ main() {
          \
          echo -n 'Building EBS images:' >&2 &&
          ./platform/scripts/build-ebs-image \
-           '$platform' 'output/image-$platform-xen' \
-           'Medic OS $platform - `date +%Y%m%d`' /dev/sdb \
+           '$platform' output/*'-$platform-xen' \
+             'Medic OS $platform - `date +%Y%m%d`' /dev/sdb && \
          \
          echo 'EBS images built successfully.' >&2 &&
          \

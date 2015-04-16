@@ -1,8 +1,10 @@
-busybox, http://www.busybox.net/downloads/busybox-1.22.0.tar.bz2
-dhcpcd, http://roy.marples.name/downloads/dhcpcd/dhcpcd-6.3.2.tar.bz2
-e2fsprogs, https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v1.42.11/e2fsprogs-1.42.11.tar.xz
+busybox, http://www.busybox.net/downloads/busybox-1.23.1.tar.bz2
+dhcpcd, http://roy.marples.name/downloads/dhcpcd/dhcpcd-6.7.1.tar.bz2
+e2fsprogs, https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v1.42.12/e2fsprogs-1.42.12.tar.xz
+eudev, http://dev.gentoo.org/~blueness/eudev/eudev-2.1.1.tar.gz
 glibc, http://mirrors.kernel.org/gnu/glibc/glibc-2.19.tar.xz
 iptables, http://www.netfilter.org/projects/iptables/files/iptables-1.4.21.tar.bz2
-linux, https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.10.54.tar.xz
-syslinux, https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.01.tar.xz
+linux, https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.14.35.tar.xz
+sudo, http://www.sudo.ws/sudo/dist/sudo-1.8.12.tar.gz
+syslinux, https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.xz
 xfsprogs, ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.2.2.tar.gz

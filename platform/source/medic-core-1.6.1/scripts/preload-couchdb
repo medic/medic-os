@@ -1,0 +1,42 @@
+#!/bin/bash
+
+set -o pipefail
+
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
+
+main()
+{
+  local prefix="$1"
+  local channel="$2"
+  local distribution="$3"
+
+  if ! [ -d "$prefix" ]; then
+    echo "Usage: $0 prefix [channel] [distribution]" >&2
+    exit 111
+  fi
+
+  if [ -z "$channel" ]; then
+    channel='alpha'
+  fi
+  
+  if [ -z "$distribution" ]; then
+    distribution='diy'
+  fi
+
+  local base_url='http://staging.dev.medicmobile.org/downloads/demos'
+  local url="$base_url/medic-demos-$distribution-$channel.tar.xz"
+
+  cd "$prefix/share/couchdb" &&
+  mkdir -p garden && cd garden &&
+  \
+  echo 'Installing preloaded CouchDB databases:' >&2 &&
+  curl -L# "$url" | tar --strip=1 -xJf - &&
+  chown root:root *.couch && chmod 0640 *.couch
+
+  return "$?"
+}
+
+cd "$base_dir/source" && main "$@"
+exit "$?"
+

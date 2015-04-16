@@ -4,7 +4,7 @@ merge_environment()
 {
   local name='medic-core'
 
-  local version='1.6.0'
+  local version='1.6.1'
   local java_version='1.7.65'
   local platform="`cat /etc/platform`"
 
@@ -15,6 +15,7 @@ merge_environment()
   export PACKAGE_ROOT="$root"
   export PACKAGE_NAME="$name"
   export PACKAGE_VERSION="$version"
+
   export PACKAGE_SCRIPTS="$prefix/scripts/$name"
   export PACKAGE_STORAGE="$prefix/storage/$name"
   export PACKAGE_SOFTWARE="$prefix/software/$name"

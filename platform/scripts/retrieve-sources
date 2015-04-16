@@ -1,9 +1,10 @@
-#!/bin/sh
+#!/bin/bash
+
+set -o pipefail
+shopt -u xpg_echo
 
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
-
-shopt -u xpg_echo
 
 trim()
 {
@@ -69,7 +70,6 @@ extract()
 
     if [ "$?" -ne 0 ]; then
       warn "Failed to extract source code from '$archive'"
-      return "$?"
     fi
 
   done
@@ -178,6 +178,11 @@ main()
 
   echo -n 'Waiting for decompression processes to complete... ' >&2
   wait
+
+  if [ "$?" -ne 0 ]; then
+    echo 'failed.' >&2
+    fatal 'Failed to decompress one or more source code archives'
+  fi
 
   touch "$base_dir/status/$manifest_name.retrieved"
   echo 'done.' >&2

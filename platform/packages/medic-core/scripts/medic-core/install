@@ -18,6 +18,7 @@ install()
     rm -f default && ln -sf "$platform" default) &&
   \
   (cd "$PACKAGE_ROOT/../../" &&
+    rm -f "v$major_version" &&
     ln -sf "v$version" "v$major_version" &&
     rm -f current && ln -sf v"$version" current) &&
   \

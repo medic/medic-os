@@ -1,8 +1,9 @@
 #!/bin/bash
 
-self="`readlink -f "$0"`"
-base_dir="`dirname "$self"`/.."
+set -o pipefail
 
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
 
 check_args()
 {

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o pipefail
+
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/../source/medic-core/"
 
@@ -21,7 +23,7 @@ main()
     usage
   fi
 
-  prepend_path "$path" && exec "$@"
+  prepend_paths "$path" && exec "$@"
 }
 
 main "$@"

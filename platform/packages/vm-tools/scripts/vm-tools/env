@@ -4,7 +4,7 @@ merge_environment()
 {
   local name='vm-tools'
 
-  local version='9.4.0'
+  local version='9.4.6'
   local platform="`cat /etc/platform`"
 
   local prefix="$1"
@@ -12,6 +12,7 @@ merge_environment()
 
   export PACKAGE_ROOT="$root"
   export PACKAGE_NAME="$name"
+  export PACKAGE_VERSION="$version"
   export PACKAGE_SCRIPTS="$prefix/scripts/$name"
   export PACKAGE_STORAGE="$prefix/storage/$name"
   export PACKAGE_SOFTWARE="$prefix/software/$name"
