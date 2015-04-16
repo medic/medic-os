@@ -1,0 +1,102 @@
+diff -ur procps-3.2.8-stock/top.c procps-3.2.8/top.c
+--- procps-3.2.8-stock/top.c	2007-05-28 16:04:00.000000000 +0000
++++ procps-3.2.8/top.c	2015-03-27 01:31:56.786527296 +0000
+@@ -184,7 +184,7 @@
+          * 2 columns each.
+          */
+ 
+-SCB_NUMx(P_PID, XXXID)
++SCB_NUMx(P_TPID, XXXID)
+ SCB_NUMx(P_PPD, ppid)
+ SCB_STRx(P_URR, ruser)
+ SCB_NUMx(P_UID, euid)
+@@ -1228,7 +1228,7 @@
+       L_EITHER       - must L_status, else 64-bit math, __udivdi3 on 32-bit !
+       keys   head           fmts     width   scale  sort   desc                     lflg
+      ------  -----------    -------  ------  -----  -----  ----------------------   -------- */
+-   { "AaAa", "   PID",      " %5u",     -1,    -1, SF(PID), "Process Id",           L_NONE   },
++   { "AaAa", "   PID",      " %5u",     -1,    -1, SF(TPID),"Process Id",           L_NONE   },
+    { "BbBb", "  PPID",      " %5u",     -1,    -1, SF(PPD), "Parent Process Pid",   L_EITHER },
+    { "CcQq", " RUSER   ",   " %-8.8s",  -1,    -1, SF(URR), "Real user name",       L_RUSER  },
+    { "DdCc", "  UID",       " %4u",     -1,    -1, SF(UID), "User Id",              L_NONE   },
+@@ -1258,9 +1258,9 @@
+    // next entry's special: the 0's will be replaced with '.'!
+    { "ZzZz", " Flags   ",   " %08lx",   -1,    -1, SF(FLG), "Task Flags <sched.h>", L_stat   },
+ #if 0
+-   { "..Qq", "   A",        " %4.4s",    4, SK_no, SF(PID), "Accessed Page count",  L_stat   },
+-   { "..Nn", "  TRS",       " %4.4s",    4, SK_Kb, SF(PID), "Code in memory (kb)",  L_stat   },
+-   { "..Rr", "  WP",        " %4.4s",    4, SK_no, SF(PID), "Unwritable Pages",     L_stat   },
++   { "..Qq", "   A",        " %4.4s",    4, SK_no, SF(TPID),"Accessed Page count",  L_stat   },
++   { "..Nn", "  TRS",       " %4.4s",    4, SK_Kb, SF(TPID),"Code in memory (kb)",  L_stat   },
++   { "..Rr", "  WP",        " %4.4s",    4, SK_no, SF(TPID),"Unwritable Pages",     L_stat   },
+    { "Jj[{", " #C",         " %2u",     -1,    -1, SF(CPN), "Last used cpu (SMP)",  L_stat   },
+    { "..\\|"," Bad",        " %2u",     -1,    -1, SF(CPN), "-- must ignore | --",  0        },
+    { "..]}", " Bad",        " %2u",     -1,    -1, SF(CPN), "-- not used --",       0        },
+@@ -1522,7 +1522,7 @@
+             break;
+          case 'A':                      // supposed to be start_time
+             c = 0; // for scoreboard
+-            rc->win[0].sortindx = P_PID;
++            rc->win[0].sortindx = P_TPID;
+             break;
+          case 'T':
+             c = 0; // for scoreboard
+@@ -1530,7 +1530,7 @@
+             break;
+          case 'N':
+             c = 0; // for scoreboard
+-            rc->win[0].sortindx = P_PID;
++            rc->win[0].sortindx = P_TPID;
+             break;
+ 
+          default:
+@@ -1646,8 +1646,8 @@
+       unsigned pid_digits = get_pid_digits();
+       if(pid_digits<4) pid_digits=4;
+       snprintf(pid_fmt, sizeof pid_fmt, " %%%uu", pid_digits);
+-      Fieldstab[P_PID].fmts = pid_fmt;
+-      Fieldstab[P_PID].head = "        PID" + 10 - pid_digits;
++      Fieldstab[P_TPID].fmts = pid_fmt;
++      Fieldstab[P_TPID].head = "        PID" + 10 - pid_digits;
+       Fieldstab[P_PPD].fmts = pid_fmt;
+       Fieldstab[P_PPD].head = "       PPID" + 10 - pid_digits;
+    }
+@@ -2836,7 +2836,7 @@
+             const unsigned  xkey;
+             const FLG_t     sort;
+          } xtab[] = {
+-            { "Memory", 'M', P_MEM, }, { "Numerical", 'N', P_PID, },
++            { "Memory", 'M', P_MEM, }, { "Numerical", 'N', P_TPID, },
+             { "CPU",    'P', P_CPU, }, { "Time",      'T', P_TM2  }, };
+          int i;
+          for (i = 0; i < MAXTBL(xtab); ++i)
+@@ -3111,7 +3111,7 @@
+          case P_NCE:
+             MKCOL((int)p->nice);
+             break;
+-         case P_PID:
++         case P_TPID:
+             MKCOL((unsigned)p->XXXID);
+             break;
+          case P_PPD:
+diff -ur procps-3.2.8-stock/top.h procps-3.2.8/top.h
+--- procps-3.2.8-stock/top.h	2006-06-25 06:41:48.000000000 +0000
++++ procps-3.2.8/top.h	2015-03-27 01:31:06.574527296 +0000
+@@ -245,7 +245,7 @@
+ 
+ // Flags for each possible field
+ enum pflag {
+-   P_PID, P_PPD, P_URR, P_UID, P_URE, P_GRP, P_TTY,
++   P_TPID, P_PPD, P_URR, P_UID, P_URE, P_GRP, P_TTY,
+    P_PRI, P_NCE,
+    P_CPN, P_CPU, P_TME, P_TM2,
+    P_MEM, P_VRT, P_SWP, P_RES, P_COD, P_DAT, P_SHR,
+@@ -365,7 +365,7 @@
+    { P_CPU, DEF_WINFLGS, 0, \
+       COLOR_RED, COLOR_RED, COLOR_YELLOW, COLOR_RED, \
+       "Def", DEF_FIELDS }, \
+-   { P_PID, DEF_WINFLGS, 0, \
++   { P_TPID, DEF_WINFLGS, 0, \
+       COLOR_CYAN, COLOR_CYAN, COLOR_WHITE, COLOR_CYAN, \
+       "Job", JOB_FIELDS }, \
+    { P_MEM, DEF_WINFLGS, 0, \

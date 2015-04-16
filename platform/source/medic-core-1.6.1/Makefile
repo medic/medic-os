@@ -2,12 +2,15 @@
 # Variables
 
 PARALLEL ?= 16
+SHELL := /bin/bash
 PLATFORM := $(shell ../../scripts/detect-platform)
 
 
 # Public targets
 
-all: status
+all: status build
+
+build:
 	@mkdir -p '${ROOT}' && \
 	for file in templates/common/* templates/'${PLATFORM}'/*; do \
 		if [ -e "$$file" ]; then \
@@ -24,7 +27,7 @@ clean: clean-logs
 stats: recalculate-stats
 
 recalculate-stats:
-	for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
+	@for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
 		stats_file="stats/${PLATFORM}/` \
 			basename "$$file" .log | sed 's/-${TS}//g;' \
 		`.count" && \
@@ -42,6 +45,10 @@ status:
 
 gardenize:
 	@./scripts/gardenize-couchdb '${ROOT}'
+
+preload: gardenize
+	@./scripts/preload-couchdb \
+	  '${ROOT}' '${CHANNEL}' '${DISTRIBUTION}'
 
 clean-logs:
 	rm -f logs/*/*.log

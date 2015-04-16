@@ -4,7 +4,7 @@
 PARALLEL ?= 16
 PLATFORM := $(shell ../scripts/detect-platform)
 
-JAVA_VERSION ?= 1.7.65
+JAVA_VERSION ?= 1.7.76
 VM_TOOLS_VERSION ?= 9.4.6
 MEDIC_CORE_VERSION ?= 1.6.1
 
@@ -17,6 +17,7 @@ VM_TOOLS_PKG_ROOT ?= ${PKG_DIR}/vm-tools/software/vm-tools/v${VM_TOOLS_VERSION}/
 MEDIC_CORE_PKG_ROOT ?= ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
 MAKE ?= make
+SHELL := /bin/bash
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
@@ -101,12 +102,15 @@ copy-vm-tools:
 medic-core: build-medic-core copy-medic-core
 
 clean-medic-core:
-	@rm -rf /srv/software/medic-core && (cd medic-core && ${MAKE} clean)
+	@rm -rf /srv/software/medic-core && \
+	(cd medic-core && ${MAKE} clean)
 
 build-medic-core:
-	@(cd medic-core && ${QMAKE} all gardenize \
-	  BITS='${BITS}' PLATFORM='${PLATFORM}' \
-	  ROOT='${MEDIC_CORE_ROOT}' PARALLEL='${PARALLEL}')
+	@(cd medic-core && \
+	  ./scripts/unprepare-dist '${MEDIC_CORE_ROOT}' && \
+	  ${QMAKE} all preload \
+	    BITS='${BITS}' PLATFORM='${PLATFORM}' \
+	    ROOT='${MEDIC_CORE_ROOT}' PARALLEL='${PARALLEL}')
 
 copy-medic-core:
 	@echo -n "Copying files for 'medic-core'... "
@@ -135,7 +139,7 @@ rebuild-vm-tools-modules:
 	@echo -n "Rebuilding 'open-vm-tools' kernel modules... " && \
 	(cd vm-tools/source/open-vm-tools/modules && \
 	  ${QMAKE} clean &>/dev/null && \
-	  ${QMAKE} all install &>/dev/null) || exit "$$?"; \
+	  ${QMAKE} all install &>/dev/null) && \
 	depmod -a -b '../initrd/${PLATFORM}' '${KERNEL_VERSION}' && \
 	echo 'done.'
 
@@ -162,7 +166,8 @@ set-pax-flags: copy-java-template
 
 finalize-initrd:
 	@for symlink in source build; do \
-	  rm -f "../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}/$$symlink"; \
+	  rm -f "../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}/$$symlink" \
+	    || exit "$$?"; \
 	done
 
 verify-packages:

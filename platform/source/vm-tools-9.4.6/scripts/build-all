@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o pipefail
+
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/../../medic-core"
 
@@ -26,7 +28,7 @@ main()
   `"
 
   local uname="`uname -s`"
-  local stdarg="--prefix=\"$prefix\""
+  local stdarg="--prefix='$prefix'"
 
   builder_initialize &&
   builder_setup_environment "$prefix" \

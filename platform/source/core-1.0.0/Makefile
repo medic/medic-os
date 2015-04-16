@@ -5,6 +5,7 @@ PARALLEL ?= 16
 PLATFORM := $(shell ../../scripts/detect-platform)
 
 MAKE ?= make
+SHELL := /bin/bash
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
@@ -21,7 +22,7 @@ KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSI
 all: build
 
 build: build-all
-build-all: status build-pv build-dhcpcd build-syslinux build-eudev build-sudo build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc remove-unnecessary
+build-all: status build-pv build-dhcpcd build-syslinux build-eudev build-sudo build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc
 
 copy: copy-all
 copy-all: copy-dhcpcd copy-syslinux copy-eudev copy-sudo copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
@@ -48,7 +49,7 @@ build-dhcpcd: build-pv
 	  'cd source/dhcpcd && \
 	    ./configure --libexecdir=/lib/dhcpcd \
 	      --dbdir=/var/run/dhcpcd --sysconfdir=/etc && \
-	    ${MAKE} all CFLAGS="${CFLAGS}" && \
+	    ${PMAKE} all CFLAGS="${CFLAGS}" && \
 	    ${MAKE} _proginstall _scriptsinstall _confinstall \
 	      DESTDIR="${INITRD_PATH}" && \
 	    cd dhcpcd-hooks && \
@@ -56,8 +57,7 @@ build-dhcpcd: build-pv
 	        SCRIPTS="01-test 02-dump 10-mtu 20-resolv.conf"'
 
 copy-dhcpcd:
-	@../../scripts/strip-binaries \
-	  "${INITRD_PATH}/sbin/dhcpcd" "${INITRD_PATH}/lib/dhcpcd"
+	@true
 
 clean-dhcpcd:
 	@if [ -h source/dhcpcd ]; then \
@@ -76,12 +76,11 @@ build-eudev: build-pv
 			--with-rootprefix= --with-rootlibdir=/lib --enable-split-usr \
 			--enable-rule_generator --disable-keymap --disable-gudev \
 			--disable-introspection --disable-gtk-doc-html && \
-		  make && \
-		  make install DESTDIR="${INITRD_PATH}"'
+		  ${PMAKE} && \
+		  ${MAKE} install DESTDIR="${INITRD_PATH}"'
 
 copy-eudev:
-	@../../scripts/strip-binaries \
-	  "${INITRD_PATH}/lib/udev"* "${INITRD_PATH}/sbin/udev"*
+	@true
 
 clean-eudev:
 	@if [ -h source/eudev ]; then \
@@ -99,13 +98,11 @@ build-sudo: build-pv
 		  --without-insults --with-secure-path --with-env-editor \
 		  --without-sendmail --disable-nls --with-password-timeout=1 \
 		  --with-passprompt="[sudo] Password for %p" && \
-		make && \
-		make install DESTDIR="${INITRD_PATH}"'
+		${PMAKE} && \
+		${MAKE} install DESTDIR="${INITRD_PATH}"'
 
 copy-sudo:
-	@../../scripts/strip-binaries \
-	  "${INITRD_PATH}/usr/lib/sudo" "${INITRD_PATH}/usr/bin/sudo"* \
-	  "${INITRD_PATH}/usr/sbin/visudo"
+	@true
 
 clean-sudo:
 	@if [ -h source/sudo ]; then \
@@ -194,7 +191,7 @@ clean-iptables:
 	rm -rf "${INITRD_PATH}/lib/xtables" \
 	  "${INITRD_PATH}/bin/iptables-"* && \
 	for type in ip4tc ip6tc ipq iptc xtables; do \
-	  rm -f "${INITRD_PATH}/lib/lib$$type".so*; \
+	  rm -f "${INITRD_PATH}/lib/lib$$type".so* || exit "$$?"; \
 	done && \
 	for type in xtables iptables ip6tables; do \
 	  rm -rf "${INITRD_PATH}/sbin/$$type"*; \
@@ -209,18 +206,11 @@ build-iptables:
 	      --with-pkgconfigdir=/usr/lib/pkgconfig \
 	      --enable-libipq --with-xtlibdir=/lib/xtables \
 	      --bindir=/bin --sbindir=/sbin --libdir=/lib && \
-	   ${MAKE} && \
+	   ${PMAKE} && \
 	   ${MAKE} install DESTDIR='${INITRD_PATH}'"
 
 copy-iptables:
 	@echo -n "Copying files for 'iptables'... " && \
-	for type in ip4tc ip6tc ipq iptc xtables; do \
-	  ../../scripts/strip-binaries \
-	    "${INITRD_PATH}/lib/lib$$type".so*; \
-	done && \
-	../../scripts/strip-binaries \
-	  '${INITRD_PATH}/lib/xtables' \
-	  '${INITRD_PATH}/sbin/xtables-multi' && \
 	cd source/iptables && \
 	rm -rf '${INITRD_PATH}/share' \
 	  '${INITRD_PATH}/include' \
@@ -240,12 +230,11 @@ build-xfsprogs:
 	    ./configure --prefix='${INITRD_PATH}' \
 	      --exec-prefix='${INITRD_PATH}' \
 	      --enable-shared=yes --enable-static=no \
-	      --enable-readline=no --enable-gettext=no && ${MAKE}"
+	      --enable-readline=no --enable-gettext=no && ${PMAKE}"
 
 copy-xfsprogs:
 	@echo -n "Copying files for 'xfsprogs'... " && \
 	(cd source/xfsprogs && ${MAKE} install &>/dev/null) && \
-	./scripts/strip-binaries '${INITRD_PATH}/sbin'/xfs_* && \
 	echo 'done.'
 
 
@@ -253,15 +242,14 @@ glibc: build-glibc copy-glibc
 
 build-glibc:
 	@./scripts/logger 'glibc' '${PLATFORM}' \
-	  "(cd source/glibc && unset MAKEFLAGS && \
+	  "cd source/glibc && unset MAKEFLAGS && \
 	    mkdir -p '${STAGING_PATH}/glibc' && \
 	    mkdir -p build-directory && cd build-directory && \
 	    CFLAGS='-Os' ../configure --prefix='' \
 	      --enable-shared --disable-static \
 	      --disable-multi-arch --disable-nscd && \
-	    make && \
-	    make install DESTDIR='${STAGING_PATH}/glibc') && \
-	    ../../scripts/strip-binaries '${STAGING_PATH}/glibc'"
+	    ${PMAKE} && \
+	    ${MAKE} install DESTDIR='${STAGING_PATH}/glibc'"
 
 copy-glibc:
 	@echo -n "Copying files for 'glibc'... " && \
@@ -277,14 +265,13 @@ e2fsprogs: build-e2fsprogs copy-e2fsprogs
 
 build-e2fsprogs:
 	@./scripts/logger 'e2fsprogs' '${PLATFORM}' \
-	  "(cd source/e2fsprogs && \
+	  "cd source/e2fsprogs && \
 	    ./configure --prefix='' --enable-shared \
 	      --disable-static --enable-fsck --enable-quota \
 	      --enable-elf-shlibs --enable-tls --disable-uuidd \
 	      --disable-e2initrd-helper --disable-debugfs && \
-	    make && \
-	    make install DESTDIR='${STAGING_PATH}/e2fsprogs' && \
-	    ../../scripts/strip-binaries '${STAGING_PATH}/e2fsprogs')"
+	    ${PMAKE} && \
+	    ${MAKE} install DESTDIR='${STAGING_PATH}/e2fsprogs'"
 
 copy-e2fsprogs:
 	@echo -n "Copying files for 'e2fsprogs'... " && \
@@ -305,34 +292,11 @@ recalculate-stats:
 	  stats_file="stats/${PLATFORM}/` \
 	    basename "$$file" .log | sed 's/-${TS}//g;' \
 	  `.count" && \
-	  wc -l < "$$file" > "$$stats_file"; \
+	  wc -l < "$$file" > "$$stats_file" || exit "$$?"; \
 	done
 
 
 # Private targets
-
-check-compiler-root:
-	@if [ -z '${COMPILER_ROOT}' ]; then
-	  echo 'Warning: Compiler root not specified' >&2; \
-	  echo 'Warning: Resulting image may not boot properly' >&2; \
-	fi
-
-copy-compiler-libraries: check-compiler-root
-	@echo -n "Copying required compiler libraries... " && \
-	for lib in ssp gcc_s; do \
-	  cp "${COMPILER_ROOT}/lib/lib$$lib.so"* "${INITRD_PATH}/lib" \
-	    || exit "$$?" \
-	done && \
-	for lib in stdc++; do \
-	  cp "${COMPILER_ROOT}/lib/lib$$lib.so"* "${INITRD_PATH}/usr/lib" \
-	    || exit "$$?" \
-	done && \
-	echo 'done.'
-
-remove-unnecessary:
-	@echo -n "Removing unnecessary initrd files... " && \
-	cd "${INITRD_PATH}" && rm -rf include share lib/*.py && \
-	echo 'done.'
 
 clean-logs:
 	rm -f logs/*/*

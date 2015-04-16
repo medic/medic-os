@@ -286,6 +286,34 @@ builder_install_file()
   builder_check_status "$name" "$?"
 }
 
+builder_create_library_aliases()
+{
+  local prefix="$1"
+  local from="$2"
+  local to="$3"
+
+  (cd "$prefix/lib" && for lib in "lib$from.so" "lib$from.so".*; do
+    local symlink="`echo "$lib" | sed "s/$from/$to/;"`" &&
+    ln -sf "$lib" "$symlink" || return "$?"
+  done)
+}
+
+builder_set_library_executable_bits()
+{
+  local prefix="$1"
+
+  find "$prefix" \( -name '*.so' -o -name '*.so.*' \) \
+    -type f -exec chmod +x {} \;
+}
+
+builder_remove_library_metadata()
+{
+  local prefix="$1"
+
+  find "$prefix" \
+    -name '*.la' -type f -exec rm -f {} \;
+}
+
 build_make()
 {
   local name="$1"
@@ -368,7 +396,7 @@ build_maven()
     yes 'yes' | M2_HOME="$prefix/java" \
         "$prefix/java/bin/ant") 2>&1 | log "$name"
   
-  builder_check_status "$name" "${PIPESTATUS[0]}"
+  builder_check_status "$name" "${PIPESTATUS[1]}"
 }
 
 build_lucene()
@@ -454,27 +482,6 @@ build_rebar()
   (cd "$name" && "$command" &&
     chmod +x "$final_binary" &&
     mv "$final_binary" "$prefix/bin") 2>&1 | log "$name"
-}
-
-builder_clean_target()
-{
-  local name="$1"
-  local prefix="$2"
-
-  builder_should_run "$name" || return 0
-
-  ( (cd "$prefix" &&
-     rm -rf Library) &&
-    \
-    (cd "$prefix/java" &&
-      rm -f LICENSE* NOTICE* README* \
-        INSTALL* KEYS* WHATSNEW* *.xml) &&
-    \
-    (cd "$prefix/java/bin" &&
-      rm -f runant.p? *.bat *.cmd m2.conf) &&
-    \
-    (cd "$prefix/lib/erlang/lib" &&
-      rm -rf megaco-* wx-* hipe-*) ) 2>&1 | log "$name"
 }
 
 fix_libtool()
@@ -569,19 +576,6 @@ builder_should_run()
   return "$?"
 }
 
-builder_move_libraries()
-{
-  local name="$1"
-  local prefix="$2"
-  local dir="$3"
-
-  builder_should_run "$name" || return 0
-
-  (cd "$prefix" &&
-    if [ -d "$dir" ]; then \
-        mv "$dir"/* lib/ && rmdir "$dir"; fi) 2>&1 | log "$name"
-}
-
 builder_setup_environment()
 {
   prefix="$1"
@@ -604,10 +598,15 @@ builder_setup_environment()
 
   unset PLATFORM
 
+  if which gmake &>/dev/null; then
+    export MAKE='gmake'
+  else
+    export MAKE='make'
+  fi
+
   export CC='gcc'
   export CXX='g++'
-  export MAKE='gmake'
-  export GNUMAKE='gmake'
+  export GNUMAKE="$MAKE"
 
   export INITIAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
   export INITIAL_DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH"

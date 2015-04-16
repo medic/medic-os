@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+set -o pipefail
 
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
@@ -9,7 +11,7 @@ source "$base_dir/../medic-core/scripts/include/rearrange"
 rename()
 {
   find . -type d -exec chmod 755 {} \; &&
-    chown -R root:wheel .
+    chown -R root:root .
 }
 
 apply_patches()
