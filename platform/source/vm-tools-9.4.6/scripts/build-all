@@ -3,7 +3,7 @@
 set -o pipefail
 
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
-base_dir="`dirname "$self"`/../../medic-core"
+base_dir="`dirname "$self"`/.."
 
 source "$base_dir/scripts/include/logger" 2>/dev/null &&
 source "$base_dir/scripts/include/builder" 2>/dev/null \
@@ -127,6 +127,6 @@ usage()
   exit 111
 }
 
-cd "$base_dir/../vm-tools/source" && main "$@"
+cd "$base_dir/source" && main "$@"
 exit $?
 
