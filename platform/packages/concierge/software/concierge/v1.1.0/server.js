@@ -332,7 +332,7 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
     }
 
     /* For each view name... */
-    async.each(
+    async.eachSeries(
       _.keys(ddoc.views),
 
       /* Iterator */
@@ -625,8 +625,13 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
  */
 var is_builtin_user_name = function (_user_name) {
 
+  /* Just in case */
+  var user_name = (
+    (_user_name || '').replace(/^org\.couchdb\.user:/, '')
+  );
+
   return (
-    (_user_name == 'admin' || _user_name == 'service')
+    (user_name == 'admin' || user_name == 'service')
   );
 };
 
@@ -745,7 +750,7 @@ var delete_couchdb_unknown_users = function (_use_admins,
     }
 
     /* For each user name... */
-    async.each(
+    async.eachSeries(
       _.keys(doc),
 
       /* Iterator */
