@@ -300,39 +300,34 @@ convert-boot-logo:
 	for file in logo-medic logo-medic-gray; do \
 	  pngtopnm "config/kernel/common/boot-logo/$$file.png" \
 	    | ppmquant 224 2>/dev/null | pnmtoplainpnm \
-	      > "config/kernel/common/boot-logo/$$file.ppm" || exit "$$?" \
+	      > "config/kernel/common/boot-logo/$$file.ppm" || exit "$$?"; \
 	done
 
 download:
 	@rm -f status/download.finished && \
-	./scripts/retrieve-sources \
-	  core source/core/incoming '${URL}' && \
-	    (cd source/core && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources \
-	  compiler source/compiler/incoming '${URL}' && \
-	    (cd source/compiler && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources \
-	  medic-core source/medic-core/incoming '${URL}' && \
-	    (cd source/medic-core && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources \
-	  vm-tools source/vm-tools/incoming '${URL}' && \
-	    (cd source/vm-tools && ./scripts/rearrange-sources) && \
-	touch status/download.finished
+	for manifest in source/manifests/*; do \
+	  pkg="`basename "$$manifest"`" && \
+	  ./scripts/retrieve-sources \
+	    "$$pkg" "source/$$pkg/incoming" '${URL}' && \
+	  (cd "source/$$pkg" && ./scripts/rearrange-sources) || exit "$$?"; \
+	done && \
+	touch status/download.finished;
 
 move-downloaded:
 	@if ! [ -f status/move.finished ]; then \
-	  (cd source/core && mv incoming/* source/) && \
-	  (cd source/compiler && mv incoming/* source/) && \
-	  (cd source/vm-tools && mv incoming/* source/) && \
-	  (cd source/medic-core && mv incoming/* source/) && \
+	  for manifest in source/manifests/*; do \
+	    pkg="`basename "$$manifest"`" && \
+	    (cd "source/$$pkg" && mv incoming/* source/) || exit "$$?"; \
+	  done && \
 	  touch status/move.finished; \
-  fi
+	fi
 
 delete-downloaded:
 	@rm -f status/* && \
 	for type in incoming source; do \
-	  for pkg in core compiler vm-tools medic-core; do \
-	    (cd source && rm -rf "$$pkg/$$type"/*) || exit "$$?"; \
+	  for manifest in source/manifests/*; do \
+	    pkg="`basename "$$manifest"`" && \
+	    (cd "source/$$pkg" && rm -rf "$$type"/*) || exit "$$?"; \
 	  done; \
 	done
 

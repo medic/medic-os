@@ -35,7 +35,7 @@ require_root()
   fi
 }
 
-prepend_path()
+prepend_paths()
 {
   for dir in "$@"; do
     local bin="$dir/bin"
@@ -48,7 +48,7 @@ prepend_path()
   done
 }
 
-append_path()
+append_paths()
 {
   for dir in "$@"; do
     local bin="$dir/bin"
@@ -67,9 +67,9 @@ use_package()
   local prepend="$2"
 
   if [ "$prepend" ]; then
-    local command='prepend_path'
+    local command='prepend_paths'
   else
-    local command='append_path'
+    local command='append_paths'
   fi
 
   $command "$srv_dir/software/$package/current/default"
