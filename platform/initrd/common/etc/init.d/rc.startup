@@ -5,6 +5,9 @@
 /bin/mount -o remount,rw /
 /bin/mount -a 
 
+source /etc/init.d/rc.font
+source /etc/init.d/rc.ulimit
+
 /sbin/udevd --daemon &>/dev/null
 /sbin/udevadm trigger --action=add &>/dev/null &
 

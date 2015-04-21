@@ -1,0 +1,7 @@
+#!/bin/sh
+
+for n in 1 6; do
+  setfont -C "/dev/tty$n" \
+    /usr/share/fonts/default &>/dev/null
+done
+
