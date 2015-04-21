@@ -260,27 +260,27 @@ strip-binaries:
 
 concierge-pkg:
 	@echo -n 'Compressing package 'concierge'... ' && \
-	scripts/build-package 'concierge' 10100 '${PLATFORM}' && \
+	scripts/build-package 'concierge' 10110 '${PLATFORM}' && \
 	echo 'done.'
 
 java-pkg:
 	@echo -n 'Compressing package 'java'... ' && \
-	scripts/build-package 'java' 17650 '${PLATFORM}' && \
+	scripts/build-package 'java' 17760 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 16110 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 16120 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
 	@echo -n 'Compressing package 'system-services'... ' && \
-	scripts/build-package 'system-services' 10100 '${PLATFORM}' && \
+	scripts/build-package 'system-services' 10200 '${PLATFORM}' && \
 	echo 'done.'
 
 vm-tools-pkg:
 	@echo -n 'Compressing package 'vm-tools'... ' && \
-	scripts/build-package 'vm-tools' 94610 '${PLATFORM}' && \
+	scripts/build-package 'vm-tools' 94611 '${PLATFORM}' && \
 	echo 'done.'
 
 shrink-gardener:
@@ -288,12 +288,12 @@ shrink-gardener:
 
 gardener-pkg: shrink-gardener
 	@echo -n 'Compressing package 'gardener'... ' && \
-	scripts/build-package 'gardener' 11000 '${PLATFORM}' && \
+	scripts/build-package 'gardener' 11001 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-transport-pkg:
 	@echo -n 'Compressing package 'medic-transport'... ' && \
-	scripts/build-package 'medic-transport' 10100 '${PLATFORM}' && \
+	scripts/build-package 'medic-transport' 10101 '${PLATFORM}' && \
 	echo 'done.'
 
 convert-boot-logo:
