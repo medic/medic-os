@@ -1,7 +1,9 @@
 #!/bin/sh
 
-for n in 1 6; do
-  setfont -C "/dev/tty$n" \
-    /usr/share/fonts/default &>/dev/null
-done
+if [ -f /etc/sysconfig/console-font ]; then
+  for n in 1 6; do
+    setfont -C "/dev/tty$n" \
+      /usr/share/fonts/default &>/dev/null
+  done
+fi
 
