@@ -123,7 +123,7 @@ app.all('/setup/finish', function (_req, _res) {
  */
 app.all('/setup/password', function (_req, _res) {
 
-  if (_req.param('action') === 'back') {
+  if (_req.params.action === 'back') {
     _req.session.step = 1;
     return _res.redirect('/setup');
   }
@@ -133,16 +133,16 @@ app.all('/setup/password', function (_req, _res) {
   }
 
   var user = {
-    name: _req.param('name'),
-    fullname: _req.param('fullname')
+    name: _req.params.name,
+    fullname: _req.params.fullname
   };
 
   _req.flash('error', null);
   _req.flash('success', null);
 
-  var key = trim(_req.param('key'));
-  var password = _req.param('password');
-  var confirmation = _req.param('confirmation');
+  var key = trim(_req.params.key);
+  var password = _req.params.password;
+  var confirmation = _req.params.confirmation;
 
   _req.flash('password', password);
   _req.flash('confirmation', confirmation);
@@ -382,7 +382,7 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
  */
 var send_password_response = function (_err, _req, _res, _success_text) {
 
-  if (_req.param('api')) {
+  if (_req.params.api) {
     if (_err) {
       return _res.status(500).send(_err.message);
     } else {
