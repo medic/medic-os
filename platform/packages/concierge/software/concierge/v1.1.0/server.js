@@ -1108,8 +1108,8 @@ var setup_accounts = function (_req, _user,
        *   regenerated, causing requests to pile up and ultimately
        *   overwhelm CouchDB's maximum-concurrent-processes limit. */
 
+      var req = {};
       var url = protocol + server + '/medic';
-      var req = { auth: { user: 'service', pass: system_passwd } };
 
       regenerate_couchdb_views(url, 'medic', req, function (_rv) {
         view_regeneration_results = _rv;
