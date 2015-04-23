@@ -216,10 +216,22 @@ var poll_required_services = function (_req, _res, _callback) {
   var rv = { ready: false, handler: 'concierge' };
   var get = { url: protocol + api_server + '/api/info' };
 
+  if (!view_regeneration_results) {
+    return _callback(_.extend(rv, {
+      phase: 'views',
+      detail: 'Map/reduce views are being regenerated'
+    }));
+  }
+
+  if (view_regeneration_results.failure) {
+    return _callback(view_regeneration_results);
+  }
+
   request.get(get, function (_err, _resp, _body) {
 
     if (_err) {
       return _callback(_.extend(rv, {
+        phase: 'api',
         detail: 'Unable to contact the medic-api service'
       }));
     }
@@ -238,20 +250,10 @@ var poll_required_services = function (_req, _res, _callback) {
       }));
     }
 
-    if (!view_regeneration_results) {
-      return _callback(_.extend(rv, {
-        detail: 'Map/reduce views are still regenerating'
-      }));
-    }
-
-    rv = view_regeneration_results;
-
-    if (rv.ready) {
-      rv.version = info.version;
-      rv.detail = 'All required services are currently running';
-    }
-
-    return _callback(rv);
+    return _callback(_.extend(rv, {
+      ready: true, version: info.version,
+      detail: 'All required services are currently running'
+    }));
   });  
 };
 
@@ -331,8 +333,10 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
       }));
     }
 
-    /* For each view name... */
-    async.eachSeries(
+    /* In parallel */
+    async.each(
+
+      /* For each view... */
       _.keys(ddoc.views),
 
       /* Iterator */
@@ -749,8 +753,10 @@ var delete_couchdb_unknown_users = function (_use_admins,
       ));
     }
 
-    /* For each user name... */
-    async.eachSeries(
+    /* In parallel */
+    async.each(
+
+      /* For each user... */
       _.keys(doc),
 
       /* Iterator */
@@ -1085,12 +1091,35 @@ var setup_accounts = function (_req, _user,
   async.waterfall([
 
     function (_next_fn) {
+
+      /* Secure system account */
       set_unix_password(
         _req, _passwd, _confirm, _next_fn
       );
     },
 
     function (_next_fn) {
+
+      /* View regeneration:
+       *   Regenerate each view in parallel by requesting its contents.
+       *   We don't do this in parallel with the `gardener` startup
+       *   process, because the modules it launches may rapidly make
+       *   requests. These operations may block while views are being
+       *   regenerated, causing requests to pile up and ultimately
+       *   overwhelm CouchDB's maximum-concurrent-processes limit. */
+
+      var url = protocol + server + '/medic';
+      var req = { auth: { user: 'service', pass: system_passwd } };
+
+      regenerate_couchdb_views(url, 'medic', req, function (_rv) {
+        view_regeneration_results = _rv;
+        return _next_fn();
+      });
+    },
+
+    function (_next_fn) {
+
+      /* Exit "admin party" mode */
       setup_couchdb_accounts(
         _req, _user, _passwd, _confirm, _next_fn
       );
@@ -1100,29 +1129,12 @@ var setup_accounts = function (_req, _user,
 
       /* Save return value */
       system_passwd = _system_passwd;
-
-      /* Background view regeneration:
-       *   View regeneration takes place in the background and
-       *   potentially spans several requests. Results are reported
-       *   in `view_regeneration_results`. Don't wait for completion. */
-
-      if (!view_regeneration_results) {
-
-        var url = protocol + server + '/medic';
-        var req = { auth: { user: 'service', pass: system_passwd } };
-
-        regenerate_couchdb_views(
-          url, 'medic', req, function (_rv) {
-            view_regeneration_results = _rv;
-          }
-        );
-      }
-
-      /* Intentional */
       return _next_fn();
     }
 
   ], function (_err) {
+
+    /* Success */
     return _callback(_err, system_passwd);
   });
 };
@@ -1157,6 +1169,8 @@ var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
       });
     }
   ], 
+
+  /* Completion */
   function (_err) {
     return _callback(_err);
   });
@@ -1169,7 +1183,7 @@ var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
 var main = function (_argv) {
 
   if (process.getuid() !== 0) {
-    fatal("This application must be started in privileged mode; use sudo");
+    fatal("This application must be started by root; use sudo");
   }
 
   try {
