@@ -245,7 +245,7 @@ var poll_required_services = function (_req, _res, _callback) {
   /* Wait for background tasks */
   if (!_.isObject(background_task_status)) {
     return _callback(_.extend(rv, {
-      detail: 'Databases and views are still being initialized'
+      detail: 'Databases and views are being initialized'
     }));
   }
 
@@ -261,7 +261,7 @@ var poll_required_services = function (_req, _res, _callback) {
 
     if (_err) {
       return _callback(_.extend(rv, {
-        detail: 'Unable to contact the medic-api service'
+        detail: 'The medic-api service has not started yet'
       }));
     }
 
@@ -655,9 +655,7 @@ var is_builtin_user_name = function (_user_name) {
     (_user_name || '').replace(/^org\.couchdb\.user:/, '')
   );
 
-  return (
-    (user_name == 'admin' || user_name == 'service')
-  );
+  return _.contains([ 'admin', 'service', 'concierge' ], user_name);
 };
 
 /**
@@ -741,11 +739,11 @@ var _delete_couchdb_user = function (_user_name, _is_admin,
 /**
  * delete_couchdb_unknown_users:
  */
-var delete_couchdb_unknown_users = function (_use_admins,
+var delete_couchdb_unknown_users = function (_query_admins_list,
                                              _request_params, _callback) {
   var url = (
     protocol + server + '/_config/' +
-      (_use_admins ? 'admins' : 'users')
+      (_query_admins_list ? 'admins' : 'users')
   );
 
   var get = _.extend(
@@ -818,8 +816,8 @@ var setup_minimal_couchdb_accounts = function (_req,
                                                _user, _passwd,
                                                _confirm, _callback) {
 
-  var is_first_run = true;
   var system_passwd = false;
+  var system_user = 'concierge';
 
   var request_template = {
     headers: { 'Content-type': 'application/json' }
@@ -836,15 +834,19 @@ var setup_minimal_couchdb_accounts = function (_req,
 
     function (_cb) {
 
-      read_system_password('service', function (_err, _system_passwd) {
+      read_system_password(system_user, function (_err, _system_passwd) {
 
         if (!_err) {
-          is_first_run = false;
+
+          /* We have a system password */
           system_passwd = _system_passwd;
-          request_template.auth = { user: 'service', pass: _system_passwd };
+
+          /* Authentication required */
+          request_template.auth = {
+            user: system_user, pass: system_passwd
+          };
         }
 
-        /* Error is normal on first run */
         return _cb();
       });
     },
@@ -859,7 +861,9 @@ var setup_minimal_couchdb_accounts = function (_req,
       );
 
       request.put(put, function (_err, _resp, _body) {
-        return check_response(_err, _resp, _req, 'Password setup', _cb);
+        return check_response(
+          _err, _resp, _req, 'Password setup', _cb
+        );
       });
     },
 
@@ -881,21 +885,24 @@ var setup_minimal_couchdb_accounts = function (_req,
 
     function (_cb) {
 
-      if (!is_first_run) {
-        return _cb(); /* Skip this step */
-      }
-
       var put = make_couchdb_user_creation_request(
         'admin', _passwd, request_template
       );
 
       request.put(put, function (_err, _resp, _body) {
+
+        /* Detect and ignore conflicts:
+         *  A conflict means the document has already been created. */
+
+        if (_resp.statusCode == 409) {
+          return _cb();
+        }
+
         return check_response(
-          _err, _resp, _req, 'Administrator user creation', _cb
+          _err, _resp, _req, 'Administrative user creation', _cb
         );
       });
     },
-
 
     /* Step 5:
      *   Set up an administrative password for the named user. */
@@ -937,7 +944,6 @@ var setup_minimal_couchdb_accounts = function (_req,
       });
     }
 
-
   ], function (_err) {
 
     /* Finished:
@@ -975,7 +981,7 @@ var setup_couchdb_service_account = function (_req, _account_name,
 
     function (_cb) {
 
-      read_system_password('service', function (_err, _system_passwd) {
+      read_system_password(_account_name, function (_err, _system_passwd) {
 
         if (_err) {
           return _cb(); /* First run */
@@ -1032,8 +1038,8 @@ var setup_couchdb_service_account = function (_req, _account_name,
 
     function (_cb) {
 
-      /* Authentication required */
-      if (!request_template.auth) {
+      /* Authenticate if password is provided */
+      if (_admin_passwd && !request_template.auth) {
         request_template.auth = { user: 'admin', pass: _admin_passwd };
       }
 
@@ -1042,7 +1048,6 @@ var setup_couchdb_service_account = function (_req, _account_name,
       );
 
       request.put(put, function (_err, _resp, _body) {
-
         return check_response(
           _err, _resp, _req, 'System password setup', _cb
         );
@@ -1109,12 +1114,21 @@ make_couchdb_password_change_request = function (_name, _password,
 
 /**
  * setup_minimal_accounts:
+ *   Create any accounts that can be safely created within the
+ *   scope of the browser's initial HTTP submission.
  */
 var setup_minimal_accounts = function (_req, _user,
                                        _passwd, _confirm, _callback) {
 
   /* Start of account setup:
       Validate the supplied user name and password. */
+
+  if (!_.isString(_user.fullname) || _user.fullname.length <= 0) {
+    return request_error(
+      'Your full name cannot be left empty',
+        _req, _callback
+    );
+  }
 
   if (!_.isString(_user.name) || _user.name.length < 4) {
     return request_error(
@@ -1137,7 +1151,7 @@ var setup_minimal_accounts = function (_req, _user,
     );
   }
 
-  if (_user.name == 'service') {
+  if (is_builtin_user_name(_user.name)) {
     return request_error(
       'User name already taken; please choose another',
         _req, _callback
@@ -1165,13 +1179,19 @@ var setup_minimal_accounts = function (_req, _user,
 
     function (_next_fn) {
 
-      /* Secure system account */
+      /* Secure system-level account */
       set_unix_password(_req, _passwd, _confirm, _next_fn);
     },
 
     function (_next_fn) {
 
-      /* Exit "admin party" mode */
+      /* Set up early-access administrative account */
+      setup_couchdb_service_account(_req, 'concierge', false, _next_fn);
+    },
+
+    function (_system_passwd, _next_fn) {
+
+      /* Set up user-accessible administrative account */
       setup_minimal_couchdb_accounts(
         _req, _user, _passwd, _confirm, _next_fn
       );
