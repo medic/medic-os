@@ -27,7 +27,7 @@ var wait_for_required_services = function (_url, _options, _callback) {
   poll_required_services(_url, function (_err, _result) {
 
     if (_err) {
-      return _cb(_err);   /* Network error */
+      return _callback(_err); /* Network error */
     }
 
     if (_result.ready) {
@@ -51,7 +51,7 @@ var wait_for_required_services = function (_url, _options, _callback) {
 
       /* Optional callback */
       if (options.onIteration) {
-        options.onIteration.call(null, options);
+        options.onIteration.call(null, _result, options);
       }
       
       /* Reschedule */
@@ -61,6 +61,28 @@ var wait_for_required_services = function (_url, _options, _callback) {
     }
   });
 };
+
+/**
+ * update_status_text:
+ */
+var update_status_text = function (_elt, _result, _options) {
+
+  switch (_result.phase) {
+    case 'database':
+      _elt.html('Initializing databases...');
+      break;
+    case 'api':
+      _elt.html('Starting required services...');
+      break;
+    default:
+      break;
+  }
+
+  if (_options.attempts >= 20) {
+    _elt.html('Waiting for services to start...');
+  }
+};
+
 
 /**
  * show_services_startup:
@@ -84,17 +106,22 @@ var show_services_startup = function () {
 
   /* Options */
   var o = {
-    onIteration: function (_options) {
-      if (_options.attempts >= 10) {
-        elt.html('Waiting for services to start...');
-      }
+    onIteration: function (_result, _options) {
+      update_status_text(elt, _result, _options);
     }
   };
+
+  /* Before first poll */
+  setTimeout(function () {
+ 
+    /* Provide some early feedback */
+    elt.html('Starting the platform...');
+
+  }, 2500);
 
   /* Start progress */
   setTimeout(function () {
 
-    elt.html('Starting the platform...');
     wait_for_required_services('/setup/poll', o, function (_err, _data) {
 
       /* Done working */
