@@ -11,6 +11,32 @@ is_integer()
   return 0
 }
 
+underline()
+{
+  local string="$1"
+  local fill_character="$2"
+
+  if [ -z "$fill_character" ]; then
+    fill_character='-'
+  fi
+
+  echo "$string" | sed "s/./$fill_character/g;"
+}
+
+indent()
+{
+  local indent_string="$1"
+  shift 1
+
+  if [ -z "$indent_string" ]; then
+    indent_string='    '
+  fi
+
+  while read line; do
+    echo "$indent_string$line"
+  done
+}
+
 read_integer_file()
 {
   local file="$1"

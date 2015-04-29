@@ -33,6 +33,8 @@ create_empty_directories()
     done &&
     \
     mkdir -p \
+      initrd/common/etc/ashrc.d \
+      initrd/common/etc/profile.d \
       initrd/common/etc/sysconfig \
       initrd/common/mnt \
       initrd/common/home/vm/.ssh \

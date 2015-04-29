@@ -22,7 +22,7 @@ start()
   source "$base/../env" &&
   merge_environment /srv &&
   \
-  local passwd_file="$PACKAGE_STORAGE/../concierge/passwd/system" &&
+  local passwd_file="$PACKAGE_STORAGE/../concierge/passwd/service" &&
   wait_for_passwd_file "$passwd_file" &&
   \
   local logs="$PACKAGE_STORAGE/logs" &&
