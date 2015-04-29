@@ -288,9 +288,12 @@ builder_install_file()
 
 builder_create_library_aliases()
 {
-  local prefix="$1"
-  local from="$2"
-  local to="$3"
+  local name="$1"
+  local prefix="$2"
+  local from="$3"
+  local to="$4"
+  
+  builder_should_run "$name" || return 0
 
   (cd "$prefix/lib" && for lib in "lib$from.so" "lib$from.so".*; do
     local symlink="`echo "$lib" | sed "s/$from/$to/;"`" &&

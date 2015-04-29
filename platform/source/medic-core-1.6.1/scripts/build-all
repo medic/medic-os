@@ -89,7 +89,7 @@ main()
   build_autoconf 'tcpdump' "$stdarg --disable-smb --without-libnl" &&
   \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
-  builder_create_library_aliases "$prefix" 'ncurses' 'tinfo' &&
+  builder_create_library_aliases 'ncurses' "$prefix" 'ncurses' 'tinfo' &&
   \
   builder_remove_static_libraries 'form' 'form_g' \
     'menu' 'menu_g' 'ncurses' 'ncurses_g' 'ncurses++' 'panel' 'panel_g' &&
