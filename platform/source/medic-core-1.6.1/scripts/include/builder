@@ -317,6 +317,17 @@ builder_remove_library_metadata()
     -name '*.la' -type f -exec rm -f {} \;
 }
 
+builder_clear_java_directory()
+{
+  local name="$1"
+  local prefix="$2"
+
+  builder_should_run "$name" || return 0
+
+  rm -rf "$prefix/java"
+  return "$?"
+}
+
 build_make()
 {
   local name="$1"
@@ -395,14 +406,11 @@ build_maven()
 
   builder_should_run "$name" || return 0
 
-  # Make reinstall safe
-  rm -rf "$prefix/java" &&
-  \
   (cd "$name" &&
-    yes 'yes' | M2_HOME="$prefix/java" \
-        "$prefix/java/bin/ant") 2>&1 | log "$name"
-  
-  builder_check_status "$name" "${PIPESTATUS[1]}"
+    yes 'yes' | M2_HOME="$prefix/java" "$prefix/java/bin/ant";
+     rv="${PIPESTATUS[1]}"; exit "$rv") 2>&1 | log "$name"
+
+  builder_check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_lucene()
@@ -431,10 +439,10 @@ build_couchdb_lucene()
 
   (cd "$name" &&
     "$prefix/java/bin/mvn" && mkdir -p 'target/output' && (
-	cd 'target/output' && for i in ../couchdb-lucene-*.tar.gz; do
-            tar xvzf "$i" && cp -Rv couchdb-lucene-*/* "$prefix/java";
-        done
-    ); rm -rf 'target/output') 2>&1 | log "$name"
+      cd 'target/output' && for i in ../couchdb-lucene-*.tar.gz; do
+        tar xvzf "$i" && cp -Rv couchdb-lucene-*/* "$prefix/java";
+      done
+    ); rv="$?"; rm -rf 'target/output'; exit "$rv") 2>&1 | log "$name"
   
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
@@ -497,7 +505,7 @@ fix_libtool()
       libtoolize --automake --copy &&
       aclocal -I config && autoheader &&
       automake --add-missing --copy && autoconf) 2>/dev/null \
-	|| fatal "Unable to regenerate libtool files for '$dir'"
+        || fatal "Unable to regenerate libtool files for '$dir'"
   done
 
   return 0
