@@ -122,6 +122,10 @@ copy-medic-core:
 	    ../../packages/medic-core/software/medic-core)
 	@echo 'done.'
 
+preload-medic-core:
+	@(cd medic-core && \
+	  ${QMAKE} preload ROOT='${MEDIC_CORE_ROOT}')
+
 
 # Private targets
 

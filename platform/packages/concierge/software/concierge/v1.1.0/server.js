@@ -11,6 +11,7 @@ var child = require('child_process'),
     _ = require('underscore'),
     async = require('async'),
     clone = require('clone'),
+    path = require('path'),
     fs = require('fs'),
     app = express();
 
@@ -23,16 +24,19 @@ var protocol = 'http://';
 var server = 'localhost:5984';
 var api_server = 'localhost:5988';
 var private_path = '/srv/scripts/concierge/private';
-var system_passwd_path = '/srv/storage/concierge/passwd/system';
+var system_passwd_dir = '/srv/storage/concierge/passwd';
 
 /**
- * Background view regeneration:
- *   We start rebuilding views as soon as the account setup is
- *   finished. This process spans requests; results are reported
- *   via the `poll` interface as a final step. If this variable is
- *   an object, view regeneration has completed.
- */
-var view_regeneration_results = false;
+ * Background task status:
+ *   Some setup tasks, including view regeneration, need to happen in
+ *   ithe background so that we can display status/progress information
+ *   in the browser. From an HTTP perspective, only the initial `admin`
+ *   password change is performed synchronously; the remainder of the
+ *   setup process spans requests. If this variable is a boolean `true`,
+ *   the background setup process has started. If it's an object, the
+ *   background process has completed and the object is the result. */
+
+var background_task_status = false;
 
 /**
  * Start express:
@@ -61,6 +65,11 @@ helpers.register();
  *   HTTP API method. Redirect to `/setup`.
  */
 app.get('/', function (_req, _res) {
+
+  /* Reset to first step */
+  _req.session.step = 1;
+  
+  /* Start setup process */
   _res.redirect('/setup');
 });
 
@@ -74,27 +83,22 @@ app.get('/setup', function (_req, _res) {
     _req.session.step = 1;
   }
 
-  read_system_password(function (_err, _sys_passwd) {
-    _res.render('setup/index.hbs', {
-      title: (
-        'Setup - Medic Mobile'
-      ),
-      data: {
-        key: _req.session.key,
-        step: _req.session.step,
-        name: _req.session.name,
-        fullname: _req.session.fullname,
-        password: _req.flash('password'),
-        confirmation: _req.flash('confirmation')
-      },
-      messages: {
-        error: _req.flash('error'),
-        success: _req.flash('success')
-      },
-      options: {
-        lock: !_err
-      }
-    });
+  _res.render('setup/index.hbs', {
+    title: (
+      'Setup - Medic Mobile'
+    ),
+    data: {
+      key: _req.session.key,
+      step: _req.session.step,
+      name: _req.session.name,
+      fullname: _req.session.fullname,
+      password: _req.flash('password'),
+      confirmation: _req.flash('confirmation')
+    },
+    messages: {
+      error: _req.flash('error'),
+      success: _req.flash('success')
+    }
   });
 });
 
@@ -121,28 +125,24 @@ app.all('/setup/finish', function (_req, _res) {
  *   `password` and `confirmation` parameters are required,
  *   and the `key` parameter is optional.
  */
-app.all('/setup/password', function (_req, _res) {
+app.post('/setup/password', function (_req, _res) {
 
-  if (_req.param('action') === 'back') {
+  if (_req.body.action === 'back') {
     _req.session.step = 1;
     return _res.redirect('/setup');
   }
 
-  if (_req.method != 'POST' && _req.method != 'GET') {
-    _res.status(500).send('Invalid HTTP method');
-  }
-
   var user = {
-    name: _req.param('name'),
-    fullname: _req.param('fullname')
+    name: _req.body.name,
+    fullname: _req.body.fullname
   };
 
   _req.flash('error', null);
   _req.flash('success', null);
 
-  var key = trim(_req.param('key'));
-  var password = _req.param('password');
-  var confirmation = _req.param('confirmation');
+  var key = trim(_req.body.key);
+  var password = _req.body.password;
+  var confirmation = _req.body.confirmation;
 
   _req.flash('password', password);
   _req.flash('confirmation', confirmation);
@@ -151,17 +151,44 @@ app.all('/setup/password', function (_req, _res) {
   _req.session.name = user.name;
   _req.session.fullname = user.fullname;
 
+  /* Start setup */
   async.waterfall([
 
+    /* Step 1:
+     *   Secure system and CouchDB. */
+
     function (_next_fn) {
-      setup_accounts(_req, user, password, confirmation, _next_fn);
+      setup_minimal_accounts(_req, user, password, confirmation, _next_fn);
     },
 
-    function (_sys_passwd, _next_fn) {
-      add_couchdb_defaults(_req, _sys_passwd, _next_fn);
+    /* Step 2:
+     *   Perform any required database modifications as `admin`. */
+
+    function (_next_fn) {
+      add_couchdb_defaults(_req, password, _next_fn);
+    },
+
+    /* Step 3:
+     *   Start the background portion of the setup process. */
+
+    function (_next_fn) {
+
+      /* Block reentrance */
+      background_task_status = true;
+
+      /* Start background processing */
+      run_background_setup_tasks(_req, user, password, function (_rv) {
+        background_task_status = _rv;
+      });
+
+      /* Intentional */
+      return _next_fn();
     }
 
   ], function (_err) {
+
+    /* Finished:
+     *   Send a result page, start browser-based polling. */
 
     if (_err) {
       return send_password_response(_err, _req, _res);
@@ -190,10 +217,6 @@ app.all('/setup/password', function (_req, _res) {
  */
 app.get('/setup/poll', function (_req, _res) {
 
-  if (_req.method != 'POST' && _req.method != 'GET') {
-    _res.status(500).send('Invalid HTTP method');
-  }
-
   poll_required_services(_req, _res, function (_rv) {
     _res.set('Content-Type', 'application/json');
     return _res.status(200).send(JSON.stringify(_rv));
@@ -202,30 +225,49 @@ app.get('/setup/poll', function (_req, _res) {
 
 /**
  * poll_required_services:
- *   Helper function for the `/setup/poll` REST API method.
- *   Figure out if the required background services are
- *   running, then call `_callback(_err, _data)`. The `_err`
- *   parameter is an object describing a connection error
- *   (or null if there was no connection error); `_data` is
- *   an object describing the state of the background services,
- *   including a boolean `ready` property, and a human-readable
- *   `detail` property (a string).
+ *   Helper function for the `/setup/poll` REST API method.  Figure
+ *   out if the required background services are running, then call
+ *   `_callback(_err, _data)`. The `_err` parameter is an object
+ *   describing a connection error (or null if there was no connection
+ *   error); `_data` is an object describing the state of the background
+ *   services, including a boolean `ready` property, and a supplementary
+ *   human-readable `detail` property (a string).
  */
+
 var poll_required_services = function (_req, _res, _callback) {
 
   var rv = { ready: false, handler: 'concierge' };
   var get = { url: protocol + api_server + '/api/info' };
 
+  /* Database setup phase */
+  rv.phase = 'database';
+
+  /* Wait for background tasks */
+  if (!_.isObject(background_task_status)) {
+    return _callback(_.extend(rv, {
+      detail: 'Databases and views are being initialized'
+    }));
+  }
+
+  if (background_task_status.failure) {
+    return _callback(background_task_status);
+  }
+
+  /* API startup phase */
+  rv.phase = 'api';
+
+  /* Wait for medic-api to start */
   request.get(get, function (_err, _resp, _body) {
 
     if (_err) {
       return _callback(_.extend(rv, {
-        detail: 'Unable to contact the medic-api service'
+        detail: 'The medic-api service has not started yet'
       }));
     }
 
     if (!http_status_successful(_resp.statusCode)) {
       return _callback(_.extend(rv, {
+        failure: true,
         detail: 'Error requesting medic-api version information'
       }));
     }
@@ -234,24 +276,15 @@ var poll_required_services = function (_req, _res, _callback) {
       var info = JSON.parse(_body);
     } catch (_e) {
       return _callback(_.extend(rv, {
+        failure: true,
         detail: 'Invalid JSON response returned by medic-api'
       }));
     }
 
-    if (!view_regeneration_results) {
-      return _callback(_.extend(rv, {
-        detail: 'Map/reduce views are still regenerating'
-      }));
-    }
-
-    rv = view_regeneration_results;
-
-    if (rv.ready) {
-      rv.version = info.version;
-      rv.detail = 'All required services are currently running';
-    }
-
-    return _callback(rv);
+    return _callback(_.extend(rv, {
+      ready: true, version: info.version,
+      detail: 'All required services are currently running'
+    }));
   });  
 };
 
@@ -275,9 +308,9 @@ var _regenerate_couchdb_view = function (_view_url,
   request.get(get, function (_err, _resp, _body) {
 
     if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(new Error(
-        "Failed to request view from '" + _view_url + "'"
-      ));
+      return _callback(
+        new Error("Failed to request view from '" + _view_url + "'")
+      );
     }
 
     /* Don't parse result:
@@ -299,9 +332,6 @@ var _regenerate_couchdb_view = function (_view_url,
  */
 var regenerate_couchdb_views = function (_database_url, _ddoc_name,
                                          _request_params, _callback) {
-  var rv = {
-    handler: 'concierge', failure: true, ready: false
-  };
 
   var url = [ _database_url, '_design', _ddoc_name ].join('/');
 
@@ -312,27 +342,29 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
   request.get(get, function (_err, _resp, _body) {
 
     if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(_.extend(rv, {
-        detail: 'Failed to retrieve design document'
-      }));
+      return _callback(
+        new Error('Failed to retrieve design document')
+      );
     }
 
     try {
       var ddoc = JSON.parse(_body);
     } catch (_e) {
-      return _callback(_.extend(rv, {
-        detail: 'Invalid JSON response returned by database server'
-      }));
+      return _callback(
+        new Error('Invalid JSON response returned by database server')
+      );
     }
 
     if (!_.isObject(ddoc) || !_.isObject(ddoc.views)) {
-      return _callback(_.extend(rv, {
-        detail: 'Database server returned an improperly-structured document'
-      }));
+      return _callback(
+        new Error('Database server returned a malformed document')
+      );
     }
 
-    /* For each view name... */
-    async.eachSeries(
+    /* In parallel */
+    async.each(
+
+      /* For each view... */
       _.keys(ddoc.views),
 
       /* Iterator */
@@ -352,20 +384,11 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
         _regenerate_couchdb_view(view_url, _request_params, _fn);
       },
 
-      /* Completion */
+      /* Completion handler */
       function (_err) {
 
-        if (_err) {
-          return _callback(_.extend(rv, {
-            message: _err.message,
-            detail: 'Failed to regenerate map/reduce views'
-          }));
-        }
-
-        return _callback(_.extend(rv, {
-          ready: true, failure: false,
-          detail: 'All map/reduce views regenerated successfully'
-        }));
+        /* Finished */
+        return _callback(_err);
       }
     );
   });
@@ -378,7 +401,7 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
  */
 var send_password_response = function (_err, _req, _res, _success_text) {
 
-  if (_req.param('api')) {
+  if (_req.body.api) {
     if (_err) {
       return _res.status(500).send(_err.message);
     } else {
@@ -530,16 +553,17 @@ var add_openssh_public_key = function (_req, _key, _callback) {
 /**
  * save_system_password:
  *   Save the CouchDB `service` account password to the filesystem,
- *   in the globally-configured `system_passwd_path`. This password
- *   allows local services to connect to CouchDB with administrative
- *   privileges.
+ *   in the globally-configured `system_passwd_dr` directory. This
+ *   password allows local services to connect to CouchDB with
+ *   administrative privileges.
  */
-var save_system_password = function (_req, _passwd, _callback) {
+var save_system_password = function (_name, _passwd, _callback) {
+
+  var system_passwd_path = path.join(system_passwd_dir, _name);
 
   fs.open(system_passwd_path, 'w', 0640, function (_err, _fd) {
 
     if (_err) {
-      _req.flash('error', "Internal error: file open failed");
       return _callback(_err);
     }
 
@@ -547,7 +571,6 @@ var save_system_password = function (_req, _passwd, _callback) {
 
     fs.write(_fd, buffer, 0, 'utf-8', function (_err, _len, _buf) {
       if (_err) {
-        _req.flash('error', "Internal error: file write failed");
         return _callback(_err);
       }
 
@@ -564,7 +587,9 @@ var save_system_password = function (_req, _passwd, _callback) {
  *   the globally-configured `system_passwd_path`. This password allows
  *   local services to connect to CouchDB with administrative privileges.
  */
-var read_system_password = function (_callback) {
+var read_system_password = function (_name, _callback) {
+
+  var system_passwd_path = path.join(system_passwd_dir, _name);
 
   try {
     fs.readFile(system_passwd_path, function (_err, _data) {
@@ -630,9 +655,7 @@ var is_builtin_user_name = function (_user_name) {
     (_user_name || '').replace(/^org\.couchdb\.user:/, '')
   );
 
-  return (
-    (user_name == 'admin' || user_name == 'service')
-  );
+  return _.contains([ 'admin', 'service', 'concierge' ], user_name);
 };
 
 /**
@@ -716,11 +739,11 @@ var _delete_couchdb_user = function (_user_name, _is_admin,
 /**
  * delete_couchdb_unknown_users:
  */
-var delete_couchdb_unknown_users = function (_use_admins,
+var delete_couchdb_unknown_users = function (_query_admins_list,
                                              _request_params, _callback) {
   var url = (
     protocol + server + '/_config/' +
-      (_use_admins ? 'admins' : 'users')
+      (_query_admins_list ? 'admins' : 'users')
   );
 
   var get = _.extend(
@@ -749,8 +772,10 @@ var delete_couchdb_unknown_users = function (_use_admins,
       ));
     }
 
-    /* For each user name... */
-    async.eachSeries(
+    /* In parallel */
+    async.each(
+
+      /* For each user... */
       _.keys(doc),
 
       /* Iterator */
@@ -780,46 +805,54 @@ var delete_couchdb_unknown_users = function (_use_admins,
 };
 
 /**
- * setup_couchdb_accounts:
- *   Set a new administrative password for the local instance of
- *   CouchDB. If this is the first time the function is being used,
- *   the database server will be removed from "admin party" mode, and
- *   start requiring user authentication/authorization for operations.
- *   The `_user` argument is an object containing a `name` property.
+ * setup_minimal_couchdb_accounts:
+ *   Set a new administrative password for the system and the local
+ *   instance of CouchDB. If this is the first time the function is
+ *   being called, the database server will be removed from "admin party"
+ *   mode, and start requiring user authentication/authorization for
+ *   operations. This does not create any other accounts.
  */
-var setup_couchdb_accounts = function (_req, _user,
-                                       _passwd, _confirm, _callback) {
-  var is_first_run = false;
+var setup_minimal_couchdb_accounts = function (_req,
+                                               _user, _passwd,
+                                               _confirm, _callback) {
+
   var system_passwd = false;
+  var system_user = 'concierge';
 
   var request_template = {
     headers: { 'Content-type': 'application/json' }
   };
 
   /* Start talking to CouchDB:
-      This process involves multiple requests; async used for clarity. */
+      This process involves multiple requests; async is used
+      to make this easier to modify/extend at a later date. */
 
   async.waterfall([
 
-    /* Step 0:
+    /* Step 1:
      *   Read system password, if it's already set. */
 
     function (_cb) {
 
-      read_system_password(function (_err, _system_passwd) {
+      read_system_password(system_user, function (_err, _system_passwd) {
 
         if (!_err) {
-          request_template.auth = { user: 'service', pass: _system_passwd };
+
+          /* We have a system password */
+          system_passwd = _system_passwd;
+
+          /* Authentication required */
+          request_template.auth = {
+            user: system_user, pass: system_passwd
+          };
         }
 
-        /* Ignore errors: file might not exist */
-        system_passwd = _system_passwd;
         return _cb();
       });
     },
 
-    /* Step 1:
-     *   Change the administrator password. */
+    /* Step 2:
+     *   Change the password for `admin`. */
 
     function (_cb) {
 
@@ -834,102 +867,45 @@ var setup_couchdb_accounts = function (_req, _user,
       });
     },
 
-    /* Step 2:
-     *   Generate a random system password, if necessary. This
-     *   will allow local processes to connect to the database. */
-
-    function (_cb) {
-
-      if (system_passwd) {
-        return _cb();
-      }
-
-      /* Generate random 2048-bit password */
-      crypto.randomBytes(256, function (_err, _data) {
-
-        if (_err) {
-          return _cb(_err);
-        }
-
-        is_first_run = true;
-        system_passwd = _data.toString('hex');
-
-        return _cb();
-      });
-    },
-
     /* Step 3:
-     *   Change the password for the system service account. */
+     *   Delete any named users created in previous runs. */
 
     function (_cb) {
 
-      if (is_first_run) {
+      /* Authentication required */
+      if (!request_template.auth) {
         request_template.auth = { user: 'admin', pass: _passwd };
-      } else {
-        request_template.auth = { user: 'service', pass: system_passwd };
       }
 
-      var put = make_couchdb_password_change_request(
-        'service', system_passwd, request_template
-      );
-
-      request.put(put, function (_err, _resp, _body) {
-        return check_response(
-          _err, _resp, _req, 'System password setup', _cb
-        );
-      });
+      delete_couchdb_unknown_users(true, request_template, _cb);
     },
 
     /* Step 4:
-     *   Store system password in the local filesystem. */
-
-    function (_cb) {
-
-      /* Store system password in filesystem:
-          This is used by local services connecting to CouchDB. */
-
-      save_system_password(_req, system_passwd, function (_err) {
-        return _cb(_err);
-      });
-    },
-
-    /* Step 5:
      *   Create a user document for the `admin` user. */
 
     function (_cb) {
-
-      if (!is_first_run) {
-        return _cb(); /* Skip this step */
-      }
 
       var put = make_couchdb_user_creation_request(
         'admin', _passwd, request_template
       );
 
       request.put(put, function (_err, _resp, _body) {
+
+        /* Detect and ignore conflicts:
+         *  A conflict means the document has already been created. */
+
+        if (_resp.statusCode == 409) {
+          return _cb();
+        }
+
         return check_response(
-          _err, _resp, _req, 'Administrator user creation', _cb
+          _err, _resp, _req, 'Administrative user creation', _cb
         );
       });
     },
 
-    /* Step 6:
-     *   Delete any named users created in previous runs. */
-
-    function (_cb) {
-
-      delete_couchdb_unknown_users(true, request_template, function (_err) {
-
-        if (_err) {
-          return request_error(_err.message, _req, _cb);
-        } else {
-          return _cb();
-        }
-      });
-    },
-
-    /* Step 7:
-     *   Set up an admin-enabled password for the named user. */
+    /* Step 5:
+     *   Set up an administrative password for the named user. */
 
     function (_cb) {
 
@@ -948,8 +924,8 @@ var setup_couchdb_accounts = function (_req, _user,
       });
     },
 
-    /* Step 8:
-     *   Create a user document for the named administrative user. */
+    /* Step 6:
+     *   Create a user document for the named user. */
 
     function (_cb) {
 
@@ -964,6 +940,116 @@ var setup_couchdb_accounts = function (_req, _user,
       request.put(put, function (_err, _resp, _body) {
         return check_response(
           _err, _resp, _req, 'User creation', _cb
+        );
+      });
+    }
+
+  ], function (_err) {
+
+    /* Finished:
+     *   Report any error status back to our caller. */
+
+    return _callback(_err);
+  });
+};
+
+/**
+ * setup_couchdb_service_account:
+ *   Set up a special-purpose service account with a random password,
+ *   if it hasn't already been done. This service account allows the
+ *   local machine to autonomously initiate connections to CouchDB
+ *   without requiring that the user's administrative password be
+ *   stored anywhere.
+ */
+var setup_couchdb_service_account = function (_req, _account_name,
+                                              _admin_passwd, _callback) {
+
+  var is_first_run = true;
+  var system_passwd = false;
+
+  var request_template = {
+    headers: { 'Content-type': 'application/json' }
+  };
+
+  /* Start talking to CouchDB:
+      This process involves multiple requests; async used for clarity. */
+
+  async.waterfall([
+
+    /* Step 1:
+     *   Read system password, if it's already set. */
+
+    function (_cb) {
+
+      read_system_password(_account_name, function (_err, _system_passwd) {
+
+        if (_err) {
+          return _cb(); /* First run */
+        }
+
+        is_first_run = false;
+        system_passwd = _system_passwd;
+
+        /* Authentication required */
+        request_template.auth = {
+          user: _account_name, pass: _system_passwd
+        };
+
+        /* Success */
+        return _cb();
+      });
+    },
+
+    /* Step 2:
+     *   Generate a new random "system service" password. This
+     *   will allow local processes to connect to the database. */
+
+    function (_cb) {
+
+      if (!is_first_run) {
+        return _cb(); /* Skip this step */
+      }
+
+      /* Generate random 2048-bit password */
+      crypto.randomBytes(256, function (_err, _data) {
+
+        if (_err) {
+          return _cb(_err);
+        }
+
+        system_passwd = _data.toString('hex');
+        return _cb();
+      });
+    },
+
+    /* Step 3:
+     *   Store system service password in the local filesystem. */
+
+    function (_cb) {
+
+      /* Store system password in filesystem:
+          This is used by local services connecting to CouchDB. */
+
+      save_system_password(_account_name, system_passwd, _cb);
+    },
+
+    /* Step 4:
+     *   Set the password for the system service account. */
+
+    function (_cb) {
+
+      /* Authenticate if password is provided */
+      if (_admin_passwd && !request_template.auth) {
+        request_template.auth = { user: 'admin', pass: _admin_passwd };
+      }
+
+      var put = make_couchdb_password_change_request(
+        _account_name, system_passwd, request_template
+      );
+
+      request.put(put, function (_err, _resp, _body) {
+        return check_response(
+          _err, _resp, _req, 'System password setup', _cb
         );
       });
     }
@@ -1027,13 +1113,22 @@ make_couchdb_password_change_request = function (_name, _password,
 };
 
 /**
- * setup_accounts:
+ * setup_minimal_accounts:
+ *   Create any accounts that can be safely created within the
+ *   scope of the browser's initial HTTP submission.
  */
-var setup_accounts = function (_req, _user,
-                               _passwd, _confirm, _callback) {
+var setup_minimal_accounts = function (_req, _user,
+                                       _passwd, _confirm, _callback) {
 
   /* Start of account setup:
       Validate the supplied user name and password. */
+
+  if (!_.isString(_user.fullname) || _user.fullname.length <= 0) {
+    return request_error(
+      'Your full name cannot be left empty',
+        _req, _callback
+    );
+  }
 
   if (!_.isString(_user.name) || _user.name.length < 4) {
     return request_error(
@@ -1056,7 +1151,7 @@ var setup_accounts = function (_req, _user,
     );
   }
 
-  if (_user.name == 'service') {
+  if (is_builtin_user_name(_user.name)) {
     return request_error(
       'User name already taken; please choose another',
         _req, _callback
@@ -1080,50 +1175,89 @@ var setup_accounts = function (_req, _user,
   /* Change passwords:
    *   The system and CouchDB passwords are modified here. */
 
-  var system_passwd = false;
-
   async.waterfall([
 
     function (_next_fn) {
-      set_unix_password(
-        _req, _passwd, _confirm, _next_fn
-      );
+
+      /* Secure system-level account */
+      set_unix_password(_req, _passwd, _confirm, _next_fn);
     },
 
     function (_next_fn) {
-      setup_couchdb_accounts(
-        _req, _user, _passwd, _confirm, _next_fn
-      );
+
+      /* Set up early-access administrative account */
+      setup_couchdb_service_account(_req, 'concierge', false, _next_fn);
     },
 
     function (_system_passwd, _next_fn) {
 
-      /* Save return value */
-      system_passwd = _system_passwd;
-
-      /* Background view regeneration:
-       *   View regeneration takes place in the background and
-       *   potentially spans several requests. Results are reported
-       *   in `view_regeneration_results`. Don't wait for completion. */
-
-      if (!view_regeneration_results) {
-
-        var url = protocol + server + '/medic';
-        var req = { auth: { user: 'service', pass: system_passwd } };
-
-        regenerate_couchdb_views(
-          url, 'medic', req, function (_rv) {
-            view_regeneration_results = _rv;
-          }
-        );
-      }
-
-      /* Intentional */
-      return _next_fn();
+      /* Set up user-accessible administrative account */
+      setup_minimal_couchdb_accounts(
+        _req, _user, _passwd, _confirm, _next_fn
+      );
     }
 
   ], function (_err) {
-    return _callback(_err, system_passwd);
+
+    /* Finished */
+    return _callback(_err);
+  });
+};
+
+/**
+ * run_background_setup_tasks:
+ */
+var run_background_setup_tasks = function (_req, _user, _passwd, _callback) {
+
+  var rv = {
+    failure: true, ready: false,
+    handler: 'concierge', phase: 'database'
+  };
+
+  /* Change passwords:
+   *   The system and CouchDB passwords are modified here. */
+
+  async.waterfall([
+
+    function (_next_fn) {
+
+      /* View regeneration:
+       *   Regenerate each view in parallel by requesting its contents.
+       *   We don't do this in parallel with the `gardener` startup
+       *   process, because the modules it launches may rapidly make
+       *   requests. These operations may block while views are being
+       *   regenerated, causing requests to pile up and ultimately
+       *   overwhelm CouchDB's maximum-concurrent-processes limit. */
+
+      var url = protocol + server + '/medic';
+      var req = { auth: { user: 'admin', pass: _passwd } };
+
+      regenerate_couchdb_views(url, 'medic', req, _next_fn);
+    },
+
+    function (_next_fn) {
+
+      /* Create CouchDB service account:
+       *   This will allow gardener to authenticate to CouchDB, which
+       *   will effectively launch the remainder of the setup process. */
+
+      setup_couchdb_service_account(_req, 'service', _passwd, _next_fn);
+    }
+
+  ], function (_err, _system_passwd) {
+
+    if (_err) {
+      return _callback(_.extend(rv, {
+        message: _err.message,
+        detail: 'Failed to set up database server'
+      }));
+    }
+
+    /* Success */
+    return _callback(_.extend(rv, {
+      ready: true, failure: false,
+      detail: 'Database server initialized successfully'
+    }));
   });
 };
 
@@ -1134,16 +1268,18 @@ var setup_accounts = function (_req, _user,
  *   is complete, `_callback` will be invoked with a Node-style
  *   error parameter.
  */
-var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
+var add_couchdb_defaults = function (_req, _admin_passwd, _callback) {
 
   var put = {
-    auth: { user: 'service', pass: _system_passwd },
+    auth: { user: 'admin', pass: _admin_passwd },
     headers: { 'Content-Type': 'application/json' }
   };
 
   async.waterfall([
 
-    /* Step 1: Restrict CouchDB to valid users */
+    /* Step 1:
+     *   Restrict CouchDB to valid users only. */
+
     function (_cb) {
       var config_url = server + '/_config/couch_httpd_auth'
 
@@ -1157,6 +1293,8 @@ var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
       });
     }
   ], 
+
+  /* Completion */
   function (_err) {
     return _callback(_err);
   });
@@ -1169,7 +1307,7 @@ var add_couchdb_defaults = function (_req, _system_passwd, _callback) {
 var main = function (_argv) {
 
   if (process.getuid() !== 0) {
-    fatal("This application must be started in privileged mode; use sudo");
+    fatal("This application must be started by root; use sudo");
   }
 
   try {
