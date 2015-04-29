@@ -57,7 +57,9 @@ require-root:
 clean-target:
 	@shopt -u xpg_echo && \
 	echo -n 'Cleaning target directory... ' && \
-	cd /srv && rm -rf software settings storage && \
+	if [ -d /srv ]; then \
+	  cd /srv && rm -rf software settings storage; \
+	fi && \
 	echo 'done.'
 
 clean-initrd:
