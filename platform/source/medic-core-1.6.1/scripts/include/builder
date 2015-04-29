@@ -395,6 +395,9 @@ build_maven()
 
   builder_should_run "$name" || return 0
 
+  # Make reinstall safe
+  rm -rf "$prefix/java" &&
+  \
   (cd "$name" &&
     yes 'yes' | M2_HOME="$prefix/java" \
         "$prefix/java/bin/ant") 2>&1 | log "$name"

@@ -260,9 +260,6 @@ main()
   build_npm_local 'node-fs-ext' "$prefix" &&
   build_npm_local 'node-gammu-json' "$prefix" &&
   \
-  # Maven: make reinstall safe
-  rm -rf "$prefix/java" &&
-  \
   build_ant 'ant' "$prefix" &&
   build_maven 'maven' "$prefix" &&
   build_couchdb_lucene 'couchdb-lucene' "$prefix" &&
