@@ -406,8 +406,11 @@ build_maven()
 
   builder_should_run "$name" || return 0
 
+  # Required for build
+  export M2_HOME="$prefix/java"
+
   (cd "$name" &&
-    yes 'yes' | M2_HOME="$prefix/java" "$prefix/java/bin/ant";
+    yes 'yes' | "$prefix/java/bin/ant";
      rv="${PIPESTATUS[1]}"; exit "$rv") 2>&1 | log "$name"
 
   builder_check_status "$name" "${PIPESTATUS[0]}"
@@ -436,6 +439,9 @@ build_couchdb_lucene()
   local prefix="$2"
 
   builder_should_run "$name" || return 0
+
+  # Use Maven
+  export M2_HOME="$prefix/java"
 
   (cd "$name" &&
     "$prefix/java/bin/mvn" && mkdir -p 'target/output' && (
