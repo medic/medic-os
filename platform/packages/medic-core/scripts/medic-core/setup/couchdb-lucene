@@ -5,16 +5,17 @@ start()
   local self="`realpath "$0"`"
   local base="`dirname "$self"`"
 
-  source "$base/../include/template" || return 255
+  source "/boot/include/template" || return 255
 
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  local password="`cat "$CONCIERGE_PASSWD_PATH/service" 2>/dev/null`" \
+  local password="`cat "$CONCIERGE_PASSWD_PATH/service"`" \
     || return 0
 
-  template "$PACKAGE_STORAGE/couchdb-lucene/templates/couchdb-lucene.ini" \
-    "$PACKAGE_SETTINGS/couchdb-lucene/couchdb-lucene.ini" password "$password"
+  export PASSWORD="$password" && template_expand 'mustache' \
+    "$PACKAGE_STORAGE/couchdb-lucene/templates/couchdb-lucene.ini.tmpl" \
+    "$PACKAGE_SETTINGS/couchdb-lucene/couchdb-lucene.ini"
   
   return "$?"
 }
