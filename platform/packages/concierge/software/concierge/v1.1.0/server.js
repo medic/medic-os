@@ -476,7 +476,7 @@ var check_response = function (_err, _resp, _req, _text, _cb) {
 
   if (!http_status_successful(_resp.statusCode)) {
     return request_error(
-      _text + ' failed: ' + 'problem with database server',
+      _text + ' failed: ' + 'problem with server',
         _req, _cb
     );
   }
@@ -650,12 +650,17 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
  */
 var is_builtin_user_name = function (_user_name) {
 
-  /* Just in case */
+  /* Reserved */
+  var builtin_users = [
+    'admin', 'lucene', 'gardener', 'transport', 'concierge' 
+  ];
+
+  /* Normalize */
   var user_name = (
     (_user_name || '').replace(/^org\.couchdb\.user:/, '')
   );
 
-  return _.contains([ 'admin', 'service', 'concierge' ], user_name);
+  return _.contains(builtin_users, user_name);
 };
 
 /**
@@ -1023,17 +1028,6 @@ var setup_couchdb_service_account = function (_req, _account_name,
     },
 
     /* Step 3:
-     *   Store system service password in the local filesystem. */
-
-    function (_cb) {
-
-      /* Store system password in filesystem:
-          This is used by local services connecting to CouchDB. */
-
-      save_system_password(_account_name, system_passwd, _cb);
-    },
-
-    /* Step 4:
      *   Set the password for the system service account. */
 
     function (_cb) {
@@ -1052,6 +1046,17 @@ var setup_couchdb_service_account = function (_req, _account_name,
           _err, _resp, _req, 'System password setup', _cb
         );
       });
+    },
+
+    /* Step 4:
+     *   Store system service password in the local filesystem. */
+
+    function (_cb) {
+
+      /* Store system password in filesystem:
+          This is used by local services connecting to CouchDB. */
+
+      save_system_password(_account_name, system_passwd, _cb);
     }
 
   ], function (_err) {
@@ -1195,9 +1200,15 @@ var setup_minimal_accounts = function (_req, _user,
       setup_minimal_couchdb_accounts(
         _req, _user, _passwd, _confirm, _next_fn
       );
-    }
+    },
 
-  ], function (_err) {
+    function (_next_fn) {
+
+      /* Set up administrative account for full-text search */
+      setup_couchdb_service_account(_req, 'lucene', _passwd, _next_fn);
+    },
+
+  ], function (_err, _system_passwd) {
 
     /* Finished */
     return _callback(_err);
@@ -1237,11 +1248,20 @@ var run_background_setup_tasks = function (_req, _user, _passwd, _callback) {
 
     function (_next_fn) {
 
-      /* Create CouchDB service account:
+      /* Create gardener service account:
        *   This will allow gardener to authenticate to CouchDB, which
        *   will effectively launch the remainder of the setup process. */
 
-      setup_couchdb_service_account(_req, 'service', _passwd, _next_fn);
+      setup_couchdb_service_account(_req, 'gardener', _passwd, _next_fn);
+    },
+
+    function (_system_passwd, _next_fn) {
+
+      /* Create medic-transport service account:
+       *   This will allow medic-transport to authenticate to CouchDB,
+       *   which will start the message transmission/delivery pipeline. */
+
+      setup_couchdb_service_account(_req, 'transport', _passwd, _next_fn);
     }
 
   ], function (_err, _system_passwd) {

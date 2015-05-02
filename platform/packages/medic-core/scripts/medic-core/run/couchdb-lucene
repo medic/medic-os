@@ -19,10 +19,10 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  # Wait for CouchDB password to be set:
-  #  This happens via concierge; a service password is generated.
+  # Wait for account password to be set:
+  #  Concierge will create an account for us to use.
 
-  wait_for_passwd_file "$CONCIERGE_PASSWD_PATH/service"
+  wait_for_passwd_file "$CONCIERGE_PASSWD_PATH/lucene"
 
   # Update password:
   #  This rewrites the CouchDB URI in couchdb-lucene.ini.

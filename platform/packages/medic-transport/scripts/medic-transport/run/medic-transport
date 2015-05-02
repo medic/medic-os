@@ -22,8 +22,7 @@ start()
   source "$base/../env" &&
   merge_environment /srv &&
   \
-  local passwd_file="$PACKAGE_STORAGE/../concierge/passwd/service" &&
-  wait_for_passwd_file "$passwd_file" &&
+  wait_for_passwd_file "$PACKAGE_STORAGE/../concierge/passwd/transport" &&
   \
   local logs="$PACKAGE_STORAGE/logs" &&
   local medic_transport_cmd="node '$PACKAGE_ROOT/medic-transport.js'" &&

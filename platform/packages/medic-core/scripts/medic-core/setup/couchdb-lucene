@@ -10,7 +10,7 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  local password="`cat "$CONCIERGE_PASSWD_PATH/service"`" \
+  local password="`cat "$CONCIERGE_PASSWD_PATH/lucene"`" \
     || return 0
 
   export PASSWORD="$password" && template_expand 'mustache' \
