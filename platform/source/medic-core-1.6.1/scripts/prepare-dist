@@ -41,17 +41,18 @@ up='../../../../..'
 \
 (cd "$prefix/java/lib" &&
   rm -rf ext && rm -f README *.pom *.license *.properties &&
-  rm -f aether-*.jar ant*.jar aopalliance-*.jar apache-mime4j-*.jar \
-    asm-debug-all-*.jar aspectjrt-*.jar bcmail-*.jar bcprov-*.jar \
-    bcprov-*.jar boilerpipe-*.jar cdi-api-*.jar commons-beanutils-*.jar \
-    commons-cli-*.jar commons-compress-*.jar commons-digester-*.jar \
-    commons-io-2.2.jar commons-lang-2.6.jar dom4j-*.jar fontbox-*.jar \
-    geronimo-stax-api-*.jar guava-*.jar isoparser-*.jar javaassist-*.jar \
-    jdom-*.jar jempbox-*.jar jetty-client-*.jar jhighlight-*.jar \
-    jsoup-*.jar jsr250-*.jar maven*.jar netcdf-*.jar ooxml-schemas-*.jar \
-    org.eclipse.*.jar pdfbox-*.jar pdfbox-*.jar plexus-*.jar poi-*.jar \
-    rome-*.jar scannotation-*.jar sisu-*.jar stax-api-*.jar tagsoup-*.jar \
-    tika-*.jar vorbis-java-*.jar wagon-*.jar xmlbeans-*.jar xmpcore-*.jar) &&
+  rm -f aether-*.jar ant*.jar aopalliance-*.jar \
+    apache-mime4j-*.jar asm-debug-all-*.jar aspectjrt-*.jar \
+    bcmail-*.jar bcprov-*.jar bcprov-*.jar boilerpipe-*.jar \
+    cdi-api-*.jar commons-beanutils-*.jar commons-cli-*.jar \
+    commons-compress-*.jar commons-digester-*.jar commons-io-2.2.jar \
+    commons-lang-2.6.jar dom4j-*.jar fontbox-*.jar geronimo-stax-api-*.jar \
+    guava-*.jar isoparser-*.jar javaassist-*.jar jdom-*.jar jempbox-*.jar \
+    jetty-client-*.jar jhighlight-*.jar jsoup-*.jar jsr250-api-*.jar \
+    maven*.jar netcdf-*.jar ooxml-schemas-*.jar org.eclipse.sisu.*.jar \
+    pdfbox-*.jar plexus-*.jar poi-*.jar rome-*.jar scannotation-*.jar \
+    sisu-*.jar slf4j-simple-*.jar stax-api-*.jar tagsoup-*.jar tika-*.jar \
+    vorbis-java-*.jar wagon-*.jar xmlbeans-*.jar xmpcore-*.jar) &&
 \
 (cd "$prefix" &&
   rm -rf etc/ssh &&
