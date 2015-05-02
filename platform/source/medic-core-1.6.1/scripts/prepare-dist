@@ -29,7 +29,7 @@ up='../../../../..'
     README.md README.txt WHATSNEW fetch.xml get-m2.xml) &&
 \
 (cd "$prefix/java/bin" && 
-  rm -f ant* mvn* m2.conf *.pl *.bat *.cmd) &&
+  rm -f ant* mvn* m2.conf *.pl *.py *.bat *.cmd) &&
 \
 # Dependency size optimization:
 #   This is aggressive. Remove any JARs that aren't needed during
@@ -78,7 +78,8 @@ up='../../../../..'
     ln -sf "$up/storage/medic-core/couchdb-lucene/indexes" java/indexes) &&
 \
 (cd "$prefix/bin" &&
-  rm -f gitk libusb.py jadmaker *-config node-gyp &&
+  chmod u-s,g-s screen screen-* &&
+  rm -f gitk libusb.py jadmaker node-gyp *-config *.old &&
   for binary in git-receive-pack git-upload-archive; do
     rm -f "$binary" && ln -sf git "$binary";
   done &&
