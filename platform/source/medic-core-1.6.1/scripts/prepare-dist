@@ -12,8 +12,7 @@ fi
 up='../../../../..'
 
 (cd "$prefix" &&
-  rm -rf \
-    Library usr lib/perl5 lib/engines lib/*.la \
+  rm -rf Library usr lib/perl5 lib/engines lib/*.la \
     lib/*.a lib/*.py bin/*.py lib/python?.? lib/erlang/usr \
     lib/erlang/Install info include man java/manual share/man \
     share/gtk-doc share/doc doc logs html share/info share/emacs \
@@ -24,16 +23,35 @@ up='../../../../..'
     sasl-* ssl-* stdlib-* tools-* syntax_tools-* xmerl-* .save &&
       rm -rf * && mv .save/* . && rmdir .save) &&
 \
-(cd "$prefix/java/bin" && 
-  rm -f runant.p? *.bat *.cmd m2.conf) &&
+(cd "$prefix/java" &&
+  rm -rf boot etc tools &&
+  rm -f INSTALL KEYS LICENSE NOTICE README \
+    README.md README.txt WHATSNEW fetch.xml get-m2.xml) &&
 \
-(cd "$prefix/java/lib" && 
-  rm -f ooxml-schemas-*.jar \
-    vorbis-java-*.jar poi-*.jar xmlbeans-*.jar dom4j-*.jar \
-    rome-*.jar pdfbox-*.jar jdom-*.jar pdfbox-*.jar fontbox-*.jar \
-    jempbox-*.jar tagsoup-*.jar javaassist-*.jar isoparser-*.jar \
-    scannotation-*.jar ant*.jar ant*.pom maven*.jar aether-*.jar \
-    tika-*.jar bcprov-*.jar bcmail-*.jar netcdf-*.jar bcprov-*.jar) &&
+(cd "$prefix/java/bin" && 
+  rm -f ant* mvn* m2.conf *.pl *.py *.bat *.cmd) &&
+\
+# Dependency size optimization:
+#   This is aggressive. Remove any JARs that aren't needed during
+#   normal execution of our applications. Unnecessary dependencies
+#   are determined by runtime tracing (i.e. `java -verbose:class`),
+#   plus some simple reasoning that's informed by dependency graphs.
+#   When updating couchdb-lucene, take care to review this exclusion
+#   list, update it if necessary, and thoroughly test the build.
+\
+(cd "$prefix/java/lib" &&
+  rm -rf ext && rm -f README *.pom *.license *.properties &&
+  rm -f aether-*.jar ant*.jar aopalliance-*.jar apache-mime4j-*.jar \
+    asm-debug-all-*.jar aspectjrt-*.jar bcmail-*.jar bcprov-*.jar \
+    bcprov-*.jar boilerpipe-*.jar cdi-api-*.jar commons-beanutils-*.jar \
+    commons-cli-*.jar commons-compress-*.jar commons-digester-*.jar \
+    commons-io-2.2.jar commons-lang-2.6.jar dom4j-*.jar fontbox-*.jar \
+    geronimo-stax-api-*.jar guava-*.jar isoparser-*.jar javaassist-*.jar \
+    jdom-*.jar jempbox-*.jar jetty-client-*.jar jhighlight-*.jar \
+    jsoup-*.jar jsr250-*.jar maven*.jar netcdf-*.jar ooxml-schemas-*.jar \
+    org.eclipse.*.jar pdfbox-*.jar pdfbox-*.jar plexus-*.jar poi-*.jar \
+    rome-*.jar scannotation-*.jar sisu-*.jar stax-api-*.jar tagsoup-*.jar \
+    tika-*.jar vorbis-java-*.jar wagon-*.jar xmlbeans-*.jar xmpcore-*.jar) &&
 \
 (cd "$prefix" &&
   rm -rf etc/ssh &&
@@ -60,7 +78,8 @@ up='../../../../..'
     ln -sf "$up/storage/medic-core/couchdb-lucene/indexes" java/indexes) &&
 \
 (cd "$prefix/bin" &&
-  rm -f gitk libusb.py jadmaker *-config node-gyp &&
+  chmod u-s,g-s screen screen-* &&
+  rm -f gitk libusb.py jadmaker node-gyp *-config *.old &&
   for binary in git-receive-pack git-upload-archive; do
     rm -f "$binary" && ln -sf git "$binary";
   done &&
