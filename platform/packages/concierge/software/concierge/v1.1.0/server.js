@@ -298,22 +298,25 @@ var poll_required_services = function (_req, _res, _callback) {
 var _regenerate_couchdb_view = function (_view_url,
                                          _request_params, _callback) {
 
-  var get = _.extend(
-    { url: _view_url }, (_request_params || {})
-  );
+  var url = _view_url;
+  var get = clone(_request_params || {});
+
+  /* Build request options */
+  _.extend(get, { url: url });
 
   /* Just request the view:
    *  It will be regenerated *before* the results are returned. */
 
   request.get(get, function (_err, _resp, _body) {
 
+    /* Error check */
     if (_err || !http_status_successful(_resp.statusCode)) {
       return _callback(
         new Error("Failed to request view from '" + _view_url + "'")
       );
     }
 
-    /* Don't parse result:
+    /* Don't parse response body:
      *   Parsing the JSON would just waste CPU time. Trust the
      *   HTTP status code, and consider the view regenerated. */
 
@@ -333,11 +336,14 @@ var _regenerate_couchdb_view = function (_view_url,
 var regenerate_couchdb_views = function (_database_url, _ddoc_name,
                                          _request_params, _callback) {
 
+  var get = clone(_request_params || {});
   var url = [ _database_url, '_design', _ddoc_name ].join('/');
 
-  var get = _.extend(
-    { url: url }, (_request_params || {})
-  );
+  /* Build request options */
+  _.extend(get, { url: url });
+
+  /* Get view list:
+   *  This request will yield a list of all available views. */
 
   request.get(get, function (_err, _resp, _body) {
 
@@ -361,8 +367,8 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
       );
     }
 
-    /* In parallel */
-    async.each(
+    /* Avoid parallelism */
+    async.eachSeries(
 
       /* For each view... */
       _.keys(ddoc.views),
@@ -391,6 +397,46 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
         return _callback(_err);
       }
     );
+  });
+};
+
+/**
+ * regenerate_couchdb_lucene_index:
+ *   Submit the search query `_query` to the couchdb-lucene search
+ *   index `_index_name` at `_url`, then call `_callback` when the
+ *   process is complete. This will force couchdb-lucene to catch up
+ *   with the CouchDB changes feed, thereby indexing any documents
+ *   that haven't been indexed yet. Additional request options can be
+ *   provided in the `_req` object.
+ */
+var regenerate_couchdb_lucene_index = function (_url, _index_name,
+                                                _query, _req, _callback) {
+
+  var get = clone(_req || {});
+  var url = [ _url, _index_name ].join('/');
+
+  /* Search URL */
+  _.extend(get, { url: url });
+
+  /* Query string */
+  get.qs = (get.qs || {});
+  _.extend(get.qs, { q: _query });
+
+  /* Rebuild indexes */
+  request.get(get, function (_err, _resp, _body) {
+
+    /* Error check */
+    if (_err || !http_status_successful(_resp.statusCode)) {
+      return _callback(
+        new Error("Failed to query index '" + _index_name + "'")
+      );
+    }
+
+    /* Don't parse response body:
+     *   Parsing the JSON would just waste CPU time. Trust the
+     *   HTTP status code, and consider the index regenerated. */
+
+    return _callback();
   });
 };
 
@@ -777,8 +823,8 @@ var delete_couchdb_unknown_users = function (_query_admins_list,
       ));
     }
 
-    /* In parallel */
-    async.each(
+    /* Avoid parallelism */
+    async.eachSeries(
 
       /* For each user... */
       _.keys(doc),
@@ -1225,6 +1271,9 @@ var run_background_setup_tasks = function (_req, _user, _passwd, _callback) {
     handler: 'concierge', phase: 'database'
   };
 
+  var db_path = '/medic';
+  var fti_path = '/_fti/local/medic/_design/medic';
+
   /* Change passwords:
    *   The system and CouchDB passwords are modified here. */
 
@@ -1233,17 +1282,27 @@ var run_background_setup_tasks = function (_req, _user, _passwd, _callback) {
     function (_next_fn) {
 
       /* View regeneration:
-       *   Regenerate each view in parallel by requesting its contents.
-       *   We don't do this in parallel with the `gardener` startup
-       *   process, because the modules it launches may rapidly make
-       *   requests. These operations may block while views are being
-       *   regenerated, causing requests to pile up and ultimately
-       *   overwhelm CouchDB's maximum-concurrent-processes limit. */
+       *   Regenerate each view in parallel by requesting its contents. */
 
-      var url = protocol + server + '/medic';
+      var url = protocol + server + db_path;
       var req = { auth: { user: 'admin', pass: _passwd } };
 
       regenerate_couchdb_views(url, 'medic', req, _next_fn);
+    },
+
+    function (_next_fn) {
+
+      /* Full-text index regeneration:
+       *   Perform a search. This causes couchdb-lucene to catch up
+       *   with the CouchDB changes feed, effectively building any
+       *   indexes that have been deleted or haven't been generated. */
+
+      var url = protocol + server + fti_path;
+      var req = { auth: { user: 'admin', pass: _passwd } };
+
+      regenerate_couchdb_lucene_index(
+        url, 'data_records', 'reindex', req, _next_fn
+      );
     },
 
     function (_next_fn) {
