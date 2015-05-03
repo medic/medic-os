@@ -367,8 +367,8 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
       );
     }
 
-    /* Avoid parallelism */
-    async.eachSeries(
+    /* In parallel */
+    async.each(
 
       /* For each view... */
       _.keys(ddoc.views),
@@ -823,8 +823,8 @@ var delete_couchdb_unknown_users = function (_query_admins_list,
       ));
     }
 
-    /* Avoid parallelism */
-    async.eachSeries(
+    /* In parallel */
+    async.each(
 
       /* For each user... */
       _.keys(doc),
