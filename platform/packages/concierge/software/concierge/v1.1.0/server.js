@@ -1156,7 +1156,7 @@ var setup_minimal_accounts = function (_req, _user,
     );
   }
 
-  if (is_builtin_user_name(_user.name)) {
+  if (is_builtin_user_name(_user.name) && _user.name != 'admin') {
     return request_error(
       'User name already taken; please choose another',
         _req, _callback
