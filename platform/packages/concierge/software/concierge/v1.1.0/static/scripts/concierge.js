@@ -20,7 +20,7 @@ var poll_required_services = function (_url, _callback) {
 var wait_for_required_services = function (_url, _options, _callback) {
 
   var options = (_options || {});
-  var limit = (options.limit || 30);
+  var limit = (options.limit || 40);
   var attempts = (options.attempts || 0);
   var interval = (options.interval || 2000);
 
