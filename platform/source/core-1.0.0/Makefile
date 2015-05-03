@@ -102,7 +102,7 @@ build-sudo: build-pv
 		${MAKE} install DESTDIR="${INITRD_PATH}"'
 
 copy-sudo:
-	@true
+	@find '${INITRD_PATH}' -type f -name '*~' -exec rm -f {} \;
 
 clean-sudo:
 	@if [ -h source/sudo ]; then \

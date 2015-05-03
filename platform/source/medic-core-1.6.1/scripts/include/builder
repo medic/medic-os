@@ -288,9 +288,12 @@ builder_install_file()
 
 builder_create_library_aliases()
 {
-  local prefix="$1"
-  local from="$2"
-  local to="$3"
+  local name="$1"
+  local prefix="$2"
+  local from="$3"
+  local to="$4"
+  
+  builder_should_run "$name" || return 0
 
   (cd "$prefix/lib" && for lib in "lib$from.so" "lib$from.so".*; do
     local symlink="`echo "$lib" | sed "s/$from/$to/;"`" &&
@@ -312,6 +315,17 @@ builder_remove_library_metadata()
 
   find "$prefix" \
     -name '*.la' -type f -exec rm -f {} \;
+}
+
+builder_clear_java_directory()
+{
+  local name="$1"
+  local prefix="$2"
+
+  builder_should_run "$name" || return 0
+
+  rm -rf "$prefix/java"
+  return "$?"
 }
 
 build_make()
@@ -392,11 +406,14 @@ build_maven()
 
   builder_should_run "$name" || return 0
 
+  # Required for build
+  export M2_HOME="$prefix/java"
+
   (cd "$name" &&
-    yes 'yes' | M2_HOME="$prefix/java" \
-        "$prefix/java/bin/ant") 2>&1 | log "$name"
-  
-  builder_check_status "$name" "${PIPESTATUS[1]}"
+    yes 'yes' | "$prefix/java/bin/ant";
+     rv="${PIPESTATUS[1]}"; exit "$rv") 2>&1 | log "$name"
+
+  builder_check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_lucene()
@@ -423,12 +440,15 @@ build_couchdb_lucene()
 
   builder_should_run "$name" || return 0
 
+  # Use Maven
+  export M2_HOME="$prefix/java"
+
   (cd "$name" &&
     "$prefix/java/bin/mvn" && mkdir -p 'target/output' && (
-	cd 'target/output' && for i in ../couchdb-lucene-*.tar.gz; do
-            tar xvzf "$i" && cp -Rv couchdb-lucene-*/* "$prefix/java";
-        done
-    ); rm -rf 'target/output') 2>&1 | log "$name"
+      cd 'target/output' && for i in ../couchdb-lucene-*.tar.gz; do
+        tar xvzf "$i" && cp -Rv couchdb-lucene-*/* "$prefix/java";
+      done
+    ); rv="$?"; rm -rf 'target/output'; exit "$rv") 2>&1 | log "$name"
   
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
@@ -491,7 +511,7 @@ fix_libtool()
       libtoolize --automake --copy &&
       aclocal -I config && autoheader &&
       automake --add-missing --copy && autoconf) 2>/dev/null \
-	|| fatal "Unable to regenerate libtool files for '$dir'"
+        || fatal "Unable to regenerate libtool files for '$dir'"
   done
 
   return 0

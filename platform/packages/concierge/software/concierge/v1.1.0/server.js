@@ -298,22 +298,25 @@ var poll_required_services = function (_req, _res, _callback) {
 var _regenerate_couchdb_view = function (_view_url,
                                          _request_params, _callback) {
 
-  var get = _.extend(
-    { url: _view_url }, (_request_params || {})
-  );
+  var url = _view_url;
+  var get = clone(_request_params || {});
+
+  /* Build request options */
+  _.extend(get, { url: url });
 
   /* Just request the view:
    *  It will be regenerated *before* the results are returned. */
 
   request.get(get, function (_err, _resp, _body) {
 
+    /* Error check */
     if (_err || !http_status_successful(_resp.statusCode)) {
       return _callback(
         new Error("Failed to request view from '" + _view_url + "'")
       );
     }
 
-    /* Don't parse result:
+    /* Don't parse response body:
      *   Parsing the JSON would just waste CPU time. Trust the
      *   HTTP status code, and consider the view regenerated. */
 
@@ -333,11 +336,14 @@ var _regenerate_couchdb_view = function (_view_url,
 var regenerate_couchdb_views = function (_database_url, _ddoc_name,
                                          _request_params, _callback) {
 
+  var get = clone(_request_params || {});
   var url = [ _database_url, '_design', _ddoc_name ].join('/');
 
-  var get = _.extend(
-    { url: url }, (_request_params || {})
-  );
+  /* Build request options */
+  _.extend(get, { url: url });
+
+  /* Get view list:
+   *  This request will yield a list of all available views. */
 
   request.get(get, function (_err, _resp, _body) {
 
@@ -391,6 +397,46 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
         return _callback(_err);
       }
     );
+  });
+};
+
+/**
+ * regenerate_couchdb_lucene_index:
+ *   Submit the search query `_query` to the couchdb-lucene search
+ *   index `_index_name` at `_url`, then call `_callback` when the
+ *   process is complete. This will force couchdb-lucene to catch up
+ *   with the CouchDB changes feed, thereby indexing any documents
+ *   that haven't been indexed yet. Additional request options can be
+ *   provided in the `_req` object.
+ */
+var regenerate_couchdb_lucene_index = function (_url, _index_name,
+                                                _query, _req, _callback) {
+
+  var get = clone(_req || {});
+  var url = [ _url, _index_name ].join('/');
+
+  /* Search URL */
+  _.extend(get, { url: url });
+
+  /* Query string */
+  get.qs = (get.qs || {});
+  _.extend(get.qs, { q: _query });
+
+  /* Rebuild indexes */
+  request.get(get, function (_err, _resp, _body) {
+
+    /* Error check */
+    if (_err || !http_status_successful(_resp.statusCode)) {
+      return _callback(
+        new Error("Failed to query index '" + _index_name + "'")
+      );
+    }
+
+    /* Don't parse response body:
+     *   Parsing the JSON would just waste CPU time. Trust the
+     *   HTTP status code, and consider the index regenerated. */
+
+    return _callback();
   });
 };
 
@@ -476,7 +522,7 @@ var check_response = function (_err, _resp, _req, _text, _cb) {
 
   if (!http_status_successful(_resp.statusCode)) {
     return request_error(
-      _text + ' failed: ' + 'problem with database server',
+      _text + ' failed: ' + 'problem with server',
         _req, _cb
     );
   }
@@ -650,12 +696,17 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
  */
 var is_builtin_user_name = function (_user_name) {
 
-  /* Just in case */
+  /* Reserved */
+  var builtin_users = [
+    'admin', 'lucene', 'gardener', 'transport', 'concierge' 
+  ];
+
+  /* Normalize */
   var user_name = (
     (_user_name || '').replace(/^org\.couchdb\.user:/, '')
   );
 
-  return _.contains([ 'admin', 'service', 'concierge' ], user_name);
+  return _.contains(builtin_users, user_name);
 };
 
 /**
@@ -1023,17 +1074,6 @@ var setup_couchdb_service_account = function (_req, _account_name,
     },
 
     /* Step 3:
-     *   Store system service password in the local filesystem. */
-
-    function (_cb) {
-
-      /* Store system password in filesystem:
-          This is used by local services connecting to CouchDB. */
-
-      save_system_password(_account_name, system_passwd, _cb);
-    },
-
-    /* Step 4:
      *   Set the password for the system service account. */
 
     function (_cb) {
@@ -1052,6 +1092,17 @@ var setup_couchdb_service_account = function (_req, _account_name,
           _err, _resp, _req, 'System password setup', _cb
         );
       });
+    },
+
+    /* Step 4:
+     *   Store system service password in the local filesystem. */
+
+    function (_cb) {
+
+      /* Store system password in filesystem:
+          This is used by local services connecting to CouchDB. */
+
+      save_system_password(_account_name, system_passwd, _cb);
     }
 
   ], function (_err) {
@@ -1151,7 +1202,7 @@ var setup_minimal_accounts = function (_req, _user,
     );
   }
 
-  if (is_builtin_user_name(_user.name)) {
+  if (is_builtin_user_name(_user.name) && _user.name != 'admin') {
     return request_error(
       'User name already taken; please choose another',
         _req, _callback
@@ -1195,9 +1246,15 @@ var setup_minimal_accounts = function (_req, _user,
       setup_minimal_couchdb_accounts(
         _req, _user, _passwd, _confirm, _next_fn
       );
-    }
+    },
 
-  ], function (_err) {
+    function (_next_fn) {
+
+      /* Set up administrative account for full-text search */
+      setup_couchdb_service_account(_req, 'lucene', _passwd, _next_fn);
+    },
+
+  ], function (_err, _system_passwd) {
 
     /* Finished */
     return _callback(_err);
@@ -1214,6 +1271,9 @@ var run_background_setup_tasks = function (_req, _user, _passwd, _callback) {
     handler: 'concierge', phase: 'database'
   };
 
+  var db_path = '/medic';
+  var fti_path = '/_fti/local/medic/_design/medic';
+
   /* Change passwords:
    *   The system and CouchDB passwords are modified here. */
 
@@ -1222,14 +1282,9 @@ var run_background_setup_tasks = function (_req, _user, _passwd, _callback) {
     function (_next_fn) {
 
       /* View regeneration:
-       *   Regenerate each view in parallel by requesting its contents.
-       *   We don't do this in parallel with the `gardener` startup
-       *   process, because the modules it launches may rapidly make
-       *   requests. These operations may block while views are being
-       *   regenerated, causing requests to pile up and ultimately
-       *   overwhelm CouchDB's maximum-concurrent-processes limit. */
+       *   Regenerate each view in parallel by requesting its contents. */
 
-      var url = protocol + server + '/medic';
+      var url = protocol + server + db_path;
       var req = { auth: { user: 'admin', pass: _passwd } };
 
       regenerate_couchdb_views(url, 'medic', req, _next_fn);
@@ -1237,11 +1292,35 @@ var run_background_setup_tasks = function (_req, _user, _passwd, _callback) {
 
     function (_next_fn) {
 
-      /* Create CouchDB service account:
+      /* Full-text index regeneration:
+       *   Perform a search. This causes couchdb-lucene to catch up
+       *   with the CouchDB changes feed, effectively building any
+       *   indexes that have been deleted or haven't been generated. */
+
+      var url = protocol + server + fti_path;
+      var req = { auth: { user: 'admin', pass: _passwd } };
+
+      regenerate_couchdb_lucene_index(
+        url, 'data_records', 'reindex', req, _next_fn
+      );
+    },
+
+    function (_next_fn) {
+
+      /* Create gardener service account:
        *   This will allow gardener to authenticate to CouchDB, which
        *   will effectively launch the remainder of the setup process. */
 
-      setup_couchdb_service_account(_req, 'service', _passwd, _next_fn);
+      setup_couchdb_service_account(_req, 'gardener', _passwd, _next_fn);
+    },
+
+    function (_system_passwd, _next_fn) {
+
+      /* Create medic-transport service account:
+       *   This will allow medic-transport to authenticate to CouchDB,
+       *   which will start the message transmission/delivery pipeline. */
+
+      setup_couchdb_service_account(_req, 'transport', _passwd, _next_fn);
     }
 
   ], function (_err, _system_passwd) {

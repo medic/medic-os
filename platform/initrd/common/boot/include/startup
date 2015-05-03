@@ -100,9 +100,13 @@ initialize_storage()
       | fdisk "$device" &&
   \
   sync && sleep 1 && sync &&
-  mkswap "${device}1" && swapon -p 16 "${device}1" &&
+  \
+  mkswap "${device}1" &&
+  swapon -p 16 "${device}1" &&
+  \
+  mkdir -p "$srv_dir" &&
   mkfs.ext4 -b 2048 -i 4096 "${device}2" &&
-  mkdir -p "$srv_dir" && mount "${device}2" "$srv_dir" &&
+  mount -o rw,nodev,nosuid "${device}2" "$srv_dir" &&
   \
   mkdir -p "$srv_dir/software" \
     "$srv_dir/storage" "$srv_dir/scripts" \

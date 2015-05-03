@@ -1,5 +1,16 @@
 #!/bin/sh
 
+wait_for_passwd_file()
+{
+  local passwd_file="$1"
+
+  while ! [ -f "$passwd_file" ]; do
+    sleep 5
+  done
+
+  return 0
+}
+
 start()
 {
   local self="`realpath "$0"`"
@@ -8,21 +19,18 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  # Wait for CouchDB password to be set:
-  #   This happens via concierge; a service password is generated.
+  # Wait for account password to be set:
+  #  Concierge will create an account for us to use.
 
-  while true; do
-    [ -f "$CONCIERGE_PASSWD_PATH/system" ] && break
-    sleep 1
-  done
+  wait_for_passwd_file "$CONCIERGE_PASSWD_PATH/lucene"
 
   # Update password:
-  #   This rewrites the CouchDB URI in couchdb-lucene.ini.
+  #  This rewrites the CouchDB URI in couchdb-lucene.ini.
 
   "$base/../setup/couchdb-lucene" &&
   \
   # Start couchdb-lucene:
-  #   This actually executes the long-running java process.
+  #  This actually executes the long-running java process.
   \
   exec su -c "exec '$PACKAGE_ROOT/java/bin/run'" couchdb-lucene \
     >> "$PACKAGE_STORAGE/couchdb-lucene/logs/startup.log" 2>&1
