@@ -32,11 +32,14 @@ var system_passwd_dir = '/srv/storage/concierge/passwd';
  *   ithe background so that we can display status/progress information
  *   in the browser. From an HTTP perspective, only the initial `admin`
  *   password change is performed synchronously; the remainder of the
- *   setup process spans requests. If this variable is a boolean `true`,
- *   the background setup process has started. If it's an object, the
- *   background process has completed and the object is the result. */
+ *   setup process spans requests. If `background_task_is_running` is
+ *   true-like, then the background phase of the setup process is
+ *   running. If `background_task_result` is an object, then the
+ *   background setup process has finished, the object is the result,
+ *   and `background_task_is_running` is guaranteed to be false. */
 
-var background_task_status = false;
+var background_task_result = false;
+var background_task_is_running = false;
 
 /**
  * Start express:
@@ -174,11 +177,13 @@ app.post('/setup/password', function (_req, _res) {
     function (_next_fn) {
 
       /* Block reentrance */
-      background_task_status = true;
+      background_task_result = false;
+      background_task_is_running = true;
 
       /* Start background processing */
       run_background_setup_tasks(_req, user, password, function (_rv) {
-        background_task_status = _rv;
+        background_task_result = _rv;
+        background_task_is_running = false;
       });
 
       /* Intentional */
@@ -242,15 +247,23 @@ var poll_required_services = function (_req, _res, _callback) {
   /* Database setup phase */
   rv.phase = 'database';
 
-  /* Wait for background tasks */
-  if (!_.isObject(background_task_status)) {
-    return _callback(_.extend(rv, {
-      detail: 'Databases and views are being initialized'
-    }));
+  /* Poll background tasks first */
+  if (!_.isObject(background_task_result)) {
+    if (background_task_is_running) {
+      return _callback(_.extend(rv, {
+        detail: 'Databases and views are being initialized'
+      }));
+    } else {
+      return _callback(_.extend(rv, {
+        failure: true,
+        detail: 'Setup form was not properly submitted'
+      }));
+    }
   }
 
-  if (background_task_status.failure) {
-    return _callback(background_task_status);
+  /* Handle background task failure */
+  if (background_task_result.failure) {
+    return _callback(background_task_result);
   }
 
   /* API startup phase */
