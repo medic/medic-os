@@ -68,7 +68,7 @@ app.get('/', function (_req, _res) {
 
   /* Reset to first step */
   _req.session.step = 1;
-  
+
   /* Start setup process */
   _res.redirect('/setup');
 });
@@ -146,7 +146,7 @@ app.post('/setup/password', function (_req, _res) {
 
   _req.flash('password', password);
   _req.flash('confirmation', confirmation);
-  
+
   _req.session.key = key;
   _req.session.name = user.name;
   _req.session.fullname = user.fullname;
@@ -422,22 +422,76 @@ var regenerate_couchdb_lucene_index = function (_url, _index_name,
   get.qs = (get.qs || {});
   _.extend(get.qs, { q: _query });
 
-  /* Rebuild indexes */
-  request.get(get, function (_err, _resp, _body) {
+  /* Perform a free-text search:
+   *  This will cause couchdb-lucene to catch up with the CouchDB
+   *  changes feed before a result is returned. We tolerate a few
+   *  HTTP 500s here, as couchdb-lucene may still be starting up. */
 
-    /* Error check */
-    if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(
-        new Error("Failed to query index '" + _index_name + "'")
-      );
+  var retries = 0;
+  var success = false;
+
+  var max_retries = 10;
+  var retry_delay = 2000 /* ms */;
+
+  async.whilst(
+
+    /* Test */
+    function () {
+      return (!success && retries <= max_retries);
+    },
+
+    /* Function */
+    function (_cb) {
+
+      /* Send a search query */
+      request.get(get, function (_err, _resp, _body) {
+
+        if (_err) {
+          return _cb(new Error(
+            "Failed to query full-text index at '" + url + "'"
+          ));
+        }
+
+        /* Support retries */
+        var code = _resp.statusCode;
+
+        if (code >= 500 && code <= 599) {
+          retries++;
+          return _.delay(_cb, retry_delay);
+        }
+
+        /* All other errors */
+        if (!http_status_successful(code)) {
+          return _cb(new Error(
+            "HTTP " + code + " while fetching from '" + url + "'"
+          ));
+        }
+
+        /* No error */
+        success = true;
+        return _cb();
+      });
+    },
+
+    /* Final */
+    function (_err) {
+
+      /* Hard error */
+      if (_err) {
+        return _callback(_err);
+      }
+
+      /* Below retry threshold */
+      if (success) {
+        return _callback();
+      }
+
+      /* Above retry threshold */
+      return _callback(new Error(
+        "Too many HTTP 500 errors while requesting '" + url + "'"
+      ));
     }
-
-    /* Don't parse response body:
-     *   Parsing the JSON would just waste CPU time. Trust the
-     *   HTTP status code, and consider the index regenerated. */
-
-    return _callback();
-  });
+  );
 };
 
 /**
@@ -725,12 +779,12 @@ var _delete_couchdb_user = function (_user_name, _is_admin,
     config_url + '/' +
       (_is_admin ? 'admins' : 'users') + '/' + _user_name
   );
-  
+
   /* Secondary URL:
    *   If we're deleting an administrative user, we'll also try
    *   to delete the ordinary user document for that user, if
    *   it's present. If it's not or deletion fails, ignore it. */
-  
+
   var secondary_url = false;
 
   if (_is_admin) {
@@ -1149,6 +1203,9 @@ var make_couchdb_user_creation_request = function (_user, _passwd,
 
 /**
  * make_couchdb_password_change_request:
+ *   Create a request object that changes the password of a
+ *   CouchDB administrator, using `_request_template` as an
+ *   initial template. Returns the request object directly.
  */
 make_couchdb_password_change_request = function (_name, _password,
                                                  _request_template) {
