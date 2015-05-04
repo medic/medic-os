@@ -309,11 +309,12 @@ var _regenerate_couchdb_view = function (_view_url,
 
   request.get(get, function (_err, _resp, _body) {
 
-    /* Error check */
     if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(
-        new Error("Failed to request view from '" + _view_url + "'")
-      );
+      return _callback({
+        error: true, url: _view_url,
+        detail: _err, code: _resp.statusCode,
+        message: 'Failure while requesting view'
+      });
     }
 
     /* Don't parse response body:
@@ -348,23 +349,26 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
   request.get(get, function (_err, _resp, _body) {
 
     if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(
-        new Error('Failed to retrieve design document')
-      );
+      return _callback({
+        error: true, detail: _err,
+        message: 'Failed to retrieve design document'
+      });
     }
 
     try {
       var ddoc = JSON.parse(_body);
     } catch (_e) {
-      return _callback(
-        new Error('Invalid JSON response returned by database server')
-      );
+      return _callback({
+        error: true, detail: _e,
+        message: 'Invalid JSON response returned by database server'
+      });
     }
 
     if (!_.isObject(ddoc) || !_.isObject(ddoc.views)) {
-      return _callback(
-        new Error('Database server returned a malformed document')
-      );
+      return _callback({
+        error: true,
+        message: 'Database server returned a malformed document'
+      });
     }
 
     /* In parallel */
@@ -447,9 +451,10 @@ var regenerate_couchdb_lucene_index = function (_url, _index_name,
       request.get(get, function (_err, _resp, _body) {
 
         if (_err) {
-          return _cb(new Error(
-            "Failed to query full-text index at '" + url + "'"
-          ));
+          return _cb({
+            error: true, url: url, detail: _err,
+            message: 'Failed to query full-text index'
+          });
         }
 
         /* Support retries */
@@ -462,9 +467,10 @@ var regenerate_couchdb_lucene_index = function (_url, _index_name,
 
         /* All other errors */
         if (!http_status_successful(code)) {
-          return _cb(new Error(
-            "HTTP " + code + " while fetching from '" + url + "'"
-          ));
+          return _cb({
+            error: true, url: url, code: code,
+            message: 'HTTP search request was unsuccessful'
+          });
         }
 
         /* No error */
@@ -478,7 +484,10 @@ var regenerate_couchdb_lucene_index = function (_url, _index_name,
 
       /* Hard error */
       if (_err) {
-        return _callback(_err);
+        return _callback({
+          error: true, url: url, detail: _err,
+          message: 'Internal error while rebuilding full-text indexes'
+        });
       }
 
       /* Below retry threshold */
@@ -487,9 +496,10 @@ var regenerate_couchdb_lucene_index = function (_url, _index_name,
       }
 
       /* Above retry threshold */
-      return _callback(new Error(
-        "Too many HTTP 500 errors while requesting '" + url + "'"
-      ));
+      return _callback({
+        error: true, url: url,
+        message: 'Too many HTTP 500s while rebuilding full-text indexes'
+      });
     }
   );
 };
@@ -548,9 +558,10 @@ var request_error = function (_message, _req, _callback) {
 
   _req.flash('error', _message);
 
-  return _callback(
-    new Error(_message)
-  );
+  return _callback({
+    error: true,
+    message: _message
+  });
 };
 
 /**
@@ -670,6 +681,7 @@ var save_system_password = function (_name, _passwd, _callback) {
     var buffer = _passwd + '\n';
 
     fs.write(_fd, buffer, 0, 'utf-8', function (_err, _len, _buf) {
+
       if (_err) {
         return _callback(_err);
       }
@@ -799,7 +811,12 @@ var _delete_couchdb_user = function (_user_name, _is_admin,
   request.del(req, function (_err, _resp, _body) {
 
     if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(new Error('Failed to delete user'));
+      return _callback({
+        error: true,
+        code: _resp.statusCode,
+        user: _user_name, detail: _err,
+        message: 'Failed to delete unneeded administrative user'
+      });
     }
 
     /* Early exit:
@@ -858,23 +875,27 @@ var delete_couchdb_unknown_users = function (_query_admins_list,
   request.get(get, function (_err, _resp, _body) {
 
     if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(new Error(
-        'Failed to retrieve list of users'
-      ));
+      return _callback({
+        error: true,
+        code: _resp.statusCode, detail: _err,
+        message: 'Failed to retrieve list of users'
+      });
     }
 
     try {
       var doc = JSON.parse(_body);
     } catch (_e) {
-      return _callback(new Error(
-        'Invalid JSON response returned by database server'
-      ));
+      return _callback({
+        error: true,
+        message: 'Invalid JSON response returned by database server'
+      });
     }
 
     if (!_.isObject(doc)) {
-      return _callback(new Error(
-        'Database server returned an improperly-structured document'
-      ));
+      return _callback({
+        error: true,
+        message: 'Database server sent an improperly-structured document'
+      });
     }
 
     /* In parallel */
@@ -899,10 +920,12 @@ var delete_couchdb_unknown_users = function (_query_admins_list,
       function (_err) {
 
         if (_err) {
-          return _callback(new Error(
-            'Failure while retrieving list of users'
-          ));
+          return _callback({
+            error: true, detail: _err,
+            message: 'Failure while retrieving list of users'
+          });
         }
+
         return _callback();
       }
     );
