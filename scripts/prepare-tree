@@ -37,7 +37,6 @@ create_empty_directories()
       initrd/common/etc/profile.d \
       initrd/common/etc/sysconfig \
       initrd/common/mnt \
-      initrd/common/home/vm/.ssh \
       initrd/common/proc \
       initrd/common/sys \
       initrd/common/tmp \
