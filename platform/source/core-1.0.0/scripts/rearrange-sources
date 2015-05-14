@@ -26,8 +26,6 @@ apply_patches()
     < ../../patches/linux-grsec-do_const.diff) &&
   (cd linux && patch -s -p1 \
     < ../../patches/linux-grsec-localversion.diff) &&
-  (cd eudev && patch -s -p1 \
-    < ../../patches/eudev-allow-missing-btrfs.diff) &&
   (cd dhcpcd && patch -s -p1 \
     < ../../patches/dhcpcd-configure-sa_family_t.diff)
 }
