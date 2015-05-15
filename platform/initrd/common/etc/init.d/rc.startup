@@ -1,6 +1,9 @@
 #!/bin/sh
 
+[ -c /dev/urandom ] || /bin/mount /dev &>/dev/null
 [ -f /proc/cmdline ] || /bin/mount /proc &>/dev/null
+
+mkdir -p /dev/pts /dev/shm
 
 /bin/mount -o remount,rw /
 /bin/mount -a 
