@@ -1,6 +1,6 @@
-diff -urN open-vm-tools-9.4.6-stock/lib/include/vmware/tools/log.h open-vm-tools-9.4.6-patched/lib/include/vmware/tools/log.h
+diff -urN open-vm-tools-9.4.6-stock/lib/include/vmware/tools/log.h open-vm-tools-9.4.6/lib/include/vmware/tools/log.h
 --- open-vm-tools-9.4.6-stock/lib/include/vmware/tools/log.h	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/lib/include/vmware/tools/log.h	2015-03-17 18:44:02.474105801 -0700
++++ open-vm-tools-9.4.6/lib/include/vmware/tools/log.h	2015-05-15 14:25:51.519184035 -0700
 @@ -133,9 +133,9 @@
   *
   *******************************************************************************
@@ -14,9 +14,9 @@ diff -urN open-vm-tools-9.4.6-stock/lib/include/vmware/tools/log.h open-vm-tools
  
  /*
   *******************************************************************************
-diff -urN open-vm-tools-9.4.6-stock/modules/Makefile.am open-vm-tools-9.4.6-patched/modules/Makefile.am
+diff -urN open-vm-tools-9.4.6-stock/modules/Makefile.am open-vm-tools-9.4.6/modules/Makefile.am
 --- open-vm-tools-9.4.6-stock/modules/Makefile.am	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/Makefile.am	2015-03-17 18:08:18.420105246 -0700
++++ open-vm-tools-9.4.6/modules/Makefile.am	2015-05-15 14:25:51.519184035 -0700
 @@ -25,7 +25,7 @@
  export vmxnetdir := $(MODULES_DIR)/drivers/net
  export vsockdir := $(MODULES_DIR)/net/vsock
@@ -26,9 +26,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/Makefile.am open-vm-tools-9.4.6-patc
  endif WITH_ROOT_PRIVILEGES
  
  include_HEADERS = $(top_srcdir)/lib/include/vmci_sockets.h
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/dkms.conf open-vm-tools-9.4.6-patched/modules/linux/dkms.conf
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/dkms.conf open-vm-tools-9.4.6/modules/linux/dkms.conf
 --- open-vm-tools-9.4.6-stock/modules/linux/dkms.conf	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/dkms.conf	2015-03-17 18:08:18.421105246 -0700
++++ open-vm-tools-9.4.6/modules/linux/dkms.conf	2015-05-15 14:25:51.520184045 -0700
 @@ -1,39 +1,35 @@
  PACKAGE_NAME=open-vm-tools
  PACKAGE_VERSION=9.4.6
@@ -85,9 +85,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/dkms.conf open-vm-tools-9.4.6-
 +DEST_MODULE_LOCATION[3]="/kernel/drivers/net"
 +DEST_MODULE_LOCATION[4]="/kernel/net/vsock"
  AUTOINSTALL="YES"
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/control.c open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/control.c
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/control.c open-vm-tools-9.4.6/modules/linux/vmblock/linux/control.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/control.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/control.c	2015-03-17 18:08:18.421105246 -0700
++++ open-vm-tools-9.4.6/modules/linux/vmblock/linux/control.c	2015-05-15 14:25:51.520184045 -0700
 @@ -208,9 +208,10 @@
     VMBlockSetProcEntryOwner(controlProcMountpoint);
  
@@ -145,9 +145,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/control.c open-v
  
     return retval;
  }
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/dentry.c open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/dentry.c
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/dentry.c open-vm-tools-9.4.6/modules/linux/vmblock/linux/dentry.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/dentry.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/dentry.c	2015-03-17 18:08:18.422105246 -0700
++++ open-vm-tools-9.4.6/modules/linux/vmblock/linux/dentry.c	2015-05-15 14:25:51.520184045 -0700
 @@ -31,8 +31,7 @@
  #include "filesystem.h"
  #include "block.h"
@@ -176,9 +176,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/dentry.c open-vm
     }
  
     if (compat_path_lookup(iinfo->name, 0, &actualNd)) {
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/file.c open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/file.c
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/file.c open-vm-tools-9.4.6/modules/linux/vmblock/linux/file.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/file.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/file.c	2015-03-18 07:58:56.492085886 -0700
++++ open-vm-tools-9.4.6/modules/linux/vmblock/linux/file.c	2015-05-15 14:25:51.521184065 -0700
 @@ -38,46 +38,6 @@
  typedef ino_t inode_num_t;
  #endif
@@ -262,9 +262,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/file.c open-vm-t
     .open    = FileOpOpen,
     .release = FileOpRelease,
  };
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/inode.c open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/inode.c
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/inode.c open-vm-tools-9.4.6/modules/linux/vmblock/linux/inode.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/inode.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmblock/linux/inode.c	2015-03-17 18:08:18.422105246 -0700
++++ open-vm-tools-9.4.6/modules/linux/vmblock/linux/inode.c	2015-05-15 14:25:51.521184065 -0700
 @@ -36,7 +36,7 @@
  
  /* Inode operations */
@@ -302,9 +302,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmblock/linux/inode.c open-vm-
  
  out:
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 13)
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmci/linux/driver.c open-vm-tools-9.4.6-patched/modules/linux/vmci/linux/driver.c
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmci/linux/driver.c open-vm-tools-9.4.6/modules/linux/vmci/linux/driver.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmci/linux/driver.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmci/linux/driver.c	2015-03-17 18:08:18.427105246 -0700
++++ open-vm-tools-9.4.6/modules/linux/vmci/linux/driver.c	2015-05-15 14:25:51.521184065 -0700
 @@ -737,7 +737,7 @@
           goto init_release;
        }
@@ -314,9 +314,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmci/linux/driver.c open-vm-to
        retval = VMCIContext_InitContext(initBlock.cid, initBlock.flags,
                                         0 /* Unused */, vmciLinux->userVersion,
                                         &user, &vmciLinux->context);
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/file.c open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/file.c
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/file.c open-vm-tools-9.4.6/modules/linux/vmhgfs/file.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/file.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/file.c	2015-03-17 18:13:24.491105247 -0700
++++ open-vm-tools-9.4.6/modules/linux/vmhgfs/file.c	2015-05-15 14:25:51.522184085 -0700
 @@ -25,6 +25,7 @@
  /* Must come before any kernel header file. */
  #include "driver-config.h"
@@ -335,9 +335,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/file.c open-vm-tools-9.
  
              dput(dparent);
           }
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/filesystem.c open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/filesystem.c
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/filesystem.c open-vm-tools-9.4.6/modules/linux/vmhgfs/filesystem.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/filesystem.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/filesystem.c	2015-03-17 18:13:59.779105247 -0700
++++ open-vm-tools-9.4.6/modules/linux/vmhgfs/filesystem.c	2015-05-15 14:25:51.522184085 -0700
 @@ -231,13 +231,13 @@
     if (si->uidSet) {
        si->uid = mountInfo->uid;
@@ -354,9 +354,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/filesystem.c open-vm-to
     }
     si->fmask = mountInfo->fmask;
     si->dmask = mountInfo->dmask;
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/fsutil.c open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/fsutil.c
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/fsutil.c open-vm-tools-9.4.6/modules/linux/vmhgfs/fsutil.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/fsutil.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/fsutil.c	2015-03-17 18:19:29.427105248 -0700
++++ open-vm-tools-9.4.6/modules/linux/vmhgfs/fsutil.c	2015-05-15 14:25:51.523184099 -0700
 @@ -31,6 +31,7 @@
  /* Must come before compat_dcache. */
  #include "compat_fs.h"
@@ -402,9 +402,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/fsutil.c open-vm-tools-
     }
  
     /*
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/inode.c open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/inode.c
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/inode.c open-vm-tools-9.4.6/modules/linux/vmhgfs/inode.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/inode.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/inode.c	2015-03-17 18:17:15.818105246 -0700
++++ open-vm-tools-9.4.6/modules/linux/vmhgfs/inode.c	2015-05-15 14:26:09.615186280 -0700
 @@ -488,13 +488,13 @@
  
        if (valid & ATTR_UID) {
@@ -448,9 +448,27 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/inode.c open-vm-tools-9
           }
  
           /*
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/link.c open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/link.c
+@@ -1838,7 +1840,7 @@
+                            p,
+ #endif
+                            &inode->i_dentry,
+-                           d_alias) {
++                           d_u.d_alias) {
+          int dcount = compat_d_count(dentry);
+          if (dcount) {
+             LOG(4, ("Found %s %d \n", dentry->d_name.name, dcount));
+@@ -1891,7 +1893,7 @@
+       /* Find a dentry with valid d_count. Refer bug 587879. */
+       list_for_each(pos, &inode->i_dentry) {
+          int dcount;
+-         struct dentry *dentry = list_entry(pos, struct dentry, d_alias);
++         struct dentry *dentry = list_entry(pos, struct dentry, d_u.d_alias);
+          dcount = compat_d_count(dentry);
+          if (dcount) {
+             LOG(4, ("Found %s %d \n", (dentry)->d_name.name, dcount));
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/link.c open-vm-tools-9.4.6/modules/linux/vmhgfs/link.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/link.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmhgfs/link.c	2015-03-17 18:33:33.523105247 -0700
++++ open-vm-tools-9.4.6/modules/linux/vmhgfs/link.c	2015-05-15 14:25:51.524184110 -0700
 @@ -45,11 +45,20 @@
  static int HgfsReadlink(struct dentry *dentry,
                          char __user *buffer,
@@ -536,9 +554,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmhgfs/link.c open-vm-tools-9.
 +      nd_set_link(nd, NULL);
 +   }
 +}
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c open-vm-tools-9.4.6-patched/modules/linux/vmsync/sync.c
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c open-vm-tools-9.4.6/modules/linux/vmsync/sync.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vmsync/sync.c	2015-03-18 07:55:55.818085843 -0700
++++ open-vm-tools-9.4.6/modules/linux/vmsync/sync.c	2015-05-15 14:25:51.524184110 -0700
 @@ -162,7 +162,7 @@
     cancel_delayed_work(&state->thawTask);
     list_for_each_safe(cur, tmp, &state->devices) {
@@ -635,9 +653,9 @@ diff -urN open-vm-tools-9.4.6-stock/modules/linux/vmsync/sync.c open-vm-tools-9.
     return 0;
  }
  
-diff -urN open-vm-tools-9.4.6-stock/modules/linux/vsock/linux/af_vsock.c open-vm-tools-9.4.6-patched/modules/linux/vsock/linux/af_vsock.c
+diff -urN open-vm-tools-9.4.6-stock/modules/linux/vsock/linux/af_vsock.c open-vm-tools-9.4.6/modules/linux/vsock/linux/af_vsock.c
 --- open-vm-tools-9.4.6-stock/modules/linux/vsock/linux/af_vsock.c	2014-07-01 15:21:14.000000000 -0700
-+++ open-vm-tools-9.4.6-patched/modules/linux/vsock/linux/af_vsock.c	2015-03-17 18:12:39.780105246 -0700
++++ open-vm-tools-9.4.6/modules/linux/vsock/linux/af_vsock.c	2015-05-15 14:25:51.525184122 -0700
 @@ -3147,7 +3147,7 @@
        vsk->connectTimeout = psk->connectTimeout;
     } else {
