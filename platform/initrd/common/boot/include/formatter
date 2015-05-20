@@ -4,6 +4,9 @@ set -o pipefail
 
 print_logs()
 {
+  local hide_title="$1"
+  shift 1
+
   local title="Medic OS: Server Log Report"
 
   local host="`hostname`" &&
@@ -11,14 +14,15 @@ print_logs()
   local date="`date -u +'%Y-%m-%d at %I:%M%P' | sed 's/ 0/ /g'`" \
     || return 1
 
-  echo &&
-  echo "$title" && underline "$title" '-' \
-    || return 2
+  if [ -z "$hide_title" ]; then
+    echo && echo "$title" && underline "$title" '-' \
+      || return 2
 
-  echo &&
-  echo "- **Server Hostname**: \`$host\`" &&
-  echo "- **Kernel Version**: \`$kernel\`" &&
-  echo "- **Report Created On**: \`$date UTC\`" || return 3
+    echo &&
+    echo "- **Server Hostname**: \`$host\`" &&
+    echo "- **Kernel Version**: \`$kernel\`" &&
+    echo "- **Report Created On**: \`$date UTC\`" || return 3
+  fi
  
   if [ "$#" -le 0 ]; then
     echo && echo 'No filenames were provided.'
