@@ -243,7 +243,7 @@ build-initrd: copy-compiler-libraries prepare-initrd
 
 build-x86-image-nopae:
 	@if [ '${PLATFORM}' = 'x86' ]; then \
-	  echo 'Building x86 image with PAE disabled...' && \
+	  echo 'Building x86 kernel with PAE disabled...' && \
 	  (cd source && \
 	    ../scripts/prepend-path '${COMPILER_ROOT}' \
 	      ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
@@ -252,6 +252,12 @@ build-x86-image-nopae:
 	  \
 	  ${QMAKE} build-iso-image ISO_EXTRA='-nopae'; \
 	fi
+
+rebuild-kernel:
+	@echo 'Rebuilding kernel...' && \
+	(cd source && \
+	  ../scripts/prepend-path '${COMPILER_ROOT}' \
+	    ${QMAKE} rebuild-kernel rebuild-vm-tools-modules)
 
 strip-binaries:
 	@echo -n 'Removing unnecessary symbols... ' && \
