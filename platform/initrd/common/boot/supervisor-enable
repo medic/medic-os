@@ -9,6 +9,14 @@ enable()
   local service="$2"
   local is_wildcard="$3"
 
+  # Sanity check:
+  #   Make sure the service we're trying to enable actually exists.
+
+  if ! supervisor_service_exists "$package" "$service"; then
+    warn "Service '$package/$service' doesn't exist"
+    return 1
+  fi
+
   if [ "$is_wildcard" ]; then
     if supervisor_is_service_enabled "$package" "$service"; then
       warn "Service '$package/$service is already enabled; skipping"
@@ -35,24 +43,26 @@ main()
   require_root
   supervisor_init
 
+  local rv=''
+
   if [ "$#" -le 0 ]; then
     supervisor_list_all_services "$package" | while read service; do
       enable "$package" "$service" 't'
+      local r="$?"; [ "$r" -eq 0 ] || exit "$r"
     done
-    local rv="$?"
-    [ "$rv" -ne 0 ] && return "$rv"
+    rv="$?"
   else
     for service in "$@"; do
       enable "$package" "$service"
+      rv="$?"
     done
   fi
 
-  if [ $# -le 0 ]; then
-    success "Finished enabling services in package '$package'"
-  else
-    success "Selected services in package '$package' are now enabled"
+  if [ "$rv" -ne 0 ]; then
+    fatal "Failed to enable one or more services in package '$package'"
   fi
 
+  success "Finished enabling services in package '$package'"
   return 0
 }
 

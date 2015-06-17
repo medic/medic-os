@@ -8,6 +8,14 @@ reload()
   local package="$1"
   local service="$2"
 
+  # Sanity check:
+  #   Make sure the service we're trying to reload actually exists.
+
+  if ! supervisor_service_exists "$package" "$service"; then
+    warn "Service '$package/$service' doesn't exist"
+    return 1
+  fi
+
   supervisor_service_reload "$package" "$service" \
     || fatal "Failed to reload configuration for '$package/$service'"
 
@@ -28,24 +36,26 @@ main()
   require_root
   supervisor_init
 
+  local rv=''
+
   if [ "$#" -le 0 ]; then
     supervisor_list_expected_services "$package" | while read service; do
       reload "$package" "$service"
+      local r="$?"; [ "$r" -eq 0 ] || exit "$r"
     done
-    local rv="$?"
-    [ "$rv" -ne 0 ] && return "$rv"
+    rv="$?"
   else
     for service in "$@"; do
       reload "$package" "$service"
+      rv="$?"
     done
   fi
  
-  if [ $# -le 0 ]; then
-    success "All services in package '$package' have reloaded"
-  else
-    success "Selected services in package '$package' have reloaded"
+  if [ "$rv" -ne 0 ]; then
+    fatal "Failed to reload one or more services in package '$package'"
   fi
 
+  success "Finished reloading services in package '$package'"
   return 0
 }
 

@@ -849,6 +849,8 @@ supervisor_list_all_services()
 {
   local package="`basename "$1"`"
 
+  supervisor_package_exists "$package" || return 1
+
   for service in "$srv_dir/scripts/$package/run"/*; do
     service="`basename "$service"`"
     if [ "$service" != '*' ]; then

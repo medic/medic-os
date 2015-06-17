@@ -10,11 +10,19 @@ up()
   local is_forced="$3"
   local is_wildcard="$4"
 
-  local is_already_up=''
+  # Sanity check:
+  #   Make sure the service we're trying to start actually exists.
+
+  if ! supervisor_service_exists "$package" "$service"; then
+    warn "Service '$package/$service' doesn't exist"
+    return 1
+  fi
 
   # Automatic service enabling:
   #   If the `-f` or `--force` argument is provided, try to
   #   automatically enable any service that's in the down state.
+
+  local is_already_up=''
 
   if supervisor_is_service_disabled "$package" "$service"; then
     if [ "$is_forced" ]; then
@@ -61,24 +69,26 @@ main()
   require_root
   supervisor_init
 
+  local rv=''
+
   if [ "$#" -le 0 ]; then
     supervisor_list_all_services "$package" | while read service; do
       up "$package" "$service" "$force" 't'
+      local r="$?"; [ "$r" -eq 0 ] || exit "$r"
     done
-    local rv="$?"
-    [ "$rv" -ne 0 ] && return "$rv"
+    rv="$?"
   else
     for service in "$@"; do
       up "$package" "$service" "$force"
+      rv="$?"
     done
   fi
 
-  if [ $# -le 0 ]; then
-    success "Finished starting services in package '$package'"
-  else
-    success "Selected services in package '$package' have started"
+  if [ "$rv" -ne 0 ]; then
+    fatal "Failed to start one or more services in package '$package'"
   fi
 
+  success "Finished starting services in package '$package'"
   return 0
 }
 
