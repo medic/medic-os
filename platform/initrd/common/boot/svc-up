@@ -62,7 +62,7 @@ main()
   local package="$1"
   shift 1
 
-  if [ -z "$package" ]; then
+  if [ -z "$package" -o "$1" = '-h' -o "$1" = '--help' ]; then
     usage
   fi
 
