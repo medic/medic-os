@@ -3,7 +3,7 @@
 detect()
 {
   local self="`realpath "$0"`"
-  local base="`dirname "$self"`"
+  local base="`dirname -- "$self"`"
 
   source "$base/../env" &&
   merge_environment /srv
@@ -25,7 +25,7 @@ detect()
       continue
     fi
     
-    local device_name="`basename "$device_path"`"
+    local device_name="`basename -- "$device_path"`"
 
     # Probe for device:
     #   Re-create configuration file, then attempt to identify device.

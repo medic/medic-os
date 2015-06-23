@@ -5,7 +5,7 @@ source '/boot/include/hypervisor'
 install()
 {
   local self="`realpath "$0"`"
-  local base="`dirname "$self"`"
+  local base="`dirname -- "$self"`"
 
   source "$base/env" &&
   merge_environment /srv || return 255
@@ -63,7 +63,7 @@ install_default_couchdb_databases()
 
   for path in "$src_dir"/*.couch; do
 
-    local dst_path="$dst_dir/`basename "$path"`" \
+    local dst_path="$dst_dir/`basename -- "$path"`" \
       || return "$?"
 
     if ! [ -f "$dst_path" ]; then

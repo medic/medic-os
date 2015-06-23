@@ -47,14 +47,14 @@ print_logs()
     fi
 
     local command='cat'
-    local file="`basename "$path"`" || return 5
+    local file="`basename -- "$path"`" || return 5
 
     # Transparent decompression
-    if [ "`basename "$file" .gz`" != "$file" ]; then
+    if [ "`basename -- "$file" .gz`" != "$file" ]; then
       command='gzip -dc'
-    elif [ "`basename "$file" .bz2`" != "$file" ]; then
+    elif [ "`basename -- "$file" .bz2`" != "$file" ]; then
       command='bzip2 -dc'
-    elif [ "`basename "$file" .xz`" != "$file" ]; then
+    elif [ "`basename -- "$file" .xz`" != "$file" ]; then
       command='xz -dc'
     fi
 

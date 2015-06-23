@@ -118,7 +118,7 @@ package_install()
 
 package_remove()
 {
-  local package="`basename "$1"`"
+  local package="`basename -- "$1"`"
 
   log "Removing package '$package'"
   log "Stopping services for package '$package'"
@@ -238,12 +238,12 @@ package_merge_environment()
 
 package_setup()
 {
-  local package="`basename "$1"`"
+  local package="`basename -- "$1"`"
 
   for script in "$srv_dir/scripts/$package/setup"/*; do
     if [ -x "$script" ]; then
 
-      local task_name="$package/`basename "$script"`"
+      local task_name="$package/`basename -- "$script"`"
       log "Running setup task '$task_name'"
 
       "$script" >> "$log" 2>&1 \
@@ -259,7 +259,7 @@ package_setup()
 
 package_regenerate_settings()
 {
-  local package="`basename "$1"`"
+  local package="`basename -- "$1"`"
 
   local src_dir="$srv_dir/settings/$package"
   local target_dir="$settings_dir/$package"
@@ -282,7 +282,7 @@ package_regenerate_settings()
 
 package_remove_empty_directories()
 {
-  local package="`basename "$1"`"
+  local package="`basename -- "$1"`"
   local software_dir="$srv_dir/software/$package"
 
   local file_count="`

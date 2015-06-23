@@ -6,7 +6,7 @@ detect()
   shift 1
   
   local self="`realpath "$0"`"
-  local base="`dirname "$self"`"
+  local base="`dirname -- "$self"`"
 
   source "$base/../env" &&
   merge_environment /srv
