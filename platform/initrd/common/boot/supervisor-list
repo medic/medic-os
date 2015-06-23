@@ -20,7 +20,7 @@ main()
   local package="`basename -- "$1"`"
   local attribute="$2"
 
-  if [ "$package" = '-h' -o "$package" = '--help' ]; then
+  if [ "$1" = '-h' -o "$1" = '--help' ]; then
     usage
   fi
 

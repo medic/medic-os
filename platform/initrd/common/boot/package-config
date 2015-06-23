@@ -24,7 +24,7 @@ update()
 
 main()
 {
-  if [ $# -le 0 ]; then
+  if [ $# -le 0 -o "$1" = '-h' -o "$1" = '--help' ]; then
     usage
   fi
 
