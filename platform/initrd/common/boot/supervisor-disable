@@ -33,12 +33,12 @@ disable()
 
 main()
 {
-  local package="$1"
-  shift 1
-
-  if [ -z "$package" -o "$1" = '-h' -o "$1" = '--help' ]; then
+  if [ "$#" -le 0 -o "$1" = '-h' -o "$1" = '--help' ]; then
     usage
   fi
+
+  local package="$1"
+  shift 1
 
   require_root
   supervisor_init
