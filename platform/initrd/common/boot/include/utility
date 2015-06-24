@@ -32,9 +32,7 @@ indent()
     indent_string='    '
   fi
 
-  while read line; do
-    echo "$indent_string$line"
-  done
+  sed "s/^/$indent_string/;"
 }
 
 read_integer_file()
