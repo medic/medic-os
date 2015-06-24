@@ -3,10 +3,21 @@
 start()
 {
   local self="`realpath "$0"`"
-  local base="`dirname "$self"`"
+  local base="`dirname -- "$self"`"
 
   source "$base/../env" &&
   merge_environment /srv || return 255
+
+  # Load modules manually:
+  #   These are failing to autoload on device insertion;
+  #   load them manually until we fix the underlying issue.
+
+  for module in hso option sierra zte_ev; do
+    modprobe "$module"
+  done
+
+  # Start gammu-monitor:
+  #  This watches for new device insertions.
 
   local logs_dir="$PACKAGE_STORAGE/gammu/logs" &&
   \

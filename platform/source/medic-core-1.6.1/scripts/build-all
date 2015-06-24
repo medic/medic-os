@@ -254,7 +254,7 @@ main()
   build_npm_remote 'lazy' "$prefix" &&
   build_npm_remote 'request' "$prefix" &&
   build_npm_remote 'hbs' "$prefix" &&
-  build_npm_remote 'grunt' "$prefix" &&
+  build_npm_remote 'grunt-cli' "$prefix" &&
   \
   build_npm_local 'medic-transport' "$prefix" &&
   build_npm_local 'node-fs-ext' "$prefix" &&

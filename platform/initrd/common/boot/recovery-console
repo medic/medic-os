@@ -8,7 +8,7 @@ main()
 
   for pkg_path in /srv/software/*; do
     if [ -d "$pkg_path" ]; then
-      local pkg="`basename "$pkg_path"`"
+      local pkg="`basename -- "$pkg_path"`"
       for dir in bin sbin; do
         export PATH="$PATH:/srv/software/$pkg/current/default/$dir"
       done
@@ -31,6 +31,11 @@ main()
 
   export PS1="$user@$host:$directory \\$ "
 
+  # Force home directory:
+  #  We won't be a login shell, so set this up manually.
+
+  export HOME='/root'
+
   # Set path:
   #  Include the service and package management scripts.
 
@@ -39,7 +44,7 @@ main()
   # Finish:
   #  Execute the interactive shell.
 
-  exec /bin/sh
+  cd && exec /bin/sh
   return "$?"
 }
 

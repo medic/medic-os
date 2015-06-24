@@ -32,11 +32,14 @@ var system_passwd_dir = '/srv/storage/concierge/passwd';
  *   ithe background so that we can display status/progress information
  *   in the browser. From an HTTP perspective, only the initial `admin`
  *   password change is performed synchronously; the remainder of the
- *   setup process spans requests. If this variable is a boolean `true`,
- *   the background setup process has started. If it's an object, the
- *   background process has completed and the object is the result. */
+ *   setup process spans requests. If `background_task_is_running` is
+ *   true-like, then the background phase of the setup process is
+ *   running. If `background_task_result` is an object, then the
+ *   background setup process has finished, the object is the result,
+ *   and `background_task_is_running` is guaranteed to be false. */
 
-var background_task_status = false;
+var background_task_result = false;
+var background_task_is_running = false;
 
 /**
  * Start express:
@@ -68,7 +71,7 @@ app.get('/', function (_req, _res) {
 
   /* Reset to first step */
   _req.session.step = 1;
-  
+
   /* Start setup process */
   _res.redirect('/setup');
 });
@@ -146,7 +149,7 @@ app.post('/setup/password', function (_req, _res) {
 
   _req.flash('password', password);
   _req.flash('confirmation', confirmation);
-  
+
   _req.session.key = key;
   _req.session.name = user.name;
   _req.session.fullname = user.fullname;
@@ -174,11 +177,13 @@ app.post('/setup/password', function (_req, _res) {
     function (_next_fn) {
 
       /* Block reentrance */
-      background_task_status = true;
+      background_task_result = false;
+      background_task_is_running = true;
 
       /* Start background processing */
       run_background_setup_tasks(_req, user, password, function (_rv) {
-        background_task_status = _rv;
+        background_task_result = _rv;
+        background_task_is_running = false;
       });
 
       /* Intentional */
@@ -242,15 +247,23 @@ var poll_required_services = function (_req, _res, _callback) {
   /* Database setup phase */
   rv.phase = 'database';
 
-  /* Wait for background tasks */
-  if (!_.isObject(background_task_status)) {
-    return _callback(_.extend(rv, {
-      detail: 'Databases and views are being initialized'
-    }));
+  /* Poll background tasks first */
+  if (!_.isObject(background_task_result)) {
+    if (background_task_is_running) {
+      return _callback(_.extend(rv, {
+        detail: 'Databases and views are being initialized'
+      }));
+    } else {
+      return _callback(_.extend(rv, {
+        failure: true,
+        detail: 'Setup form was not properly submitted'
+      }));
+    }
   }
 
-  if (background_task_status.failure) {
-    return _callback(background_task_status);
+  /* Handle background task failure */
+  if (background_task_result.failure) {
+    return _callback(background_task_result);
   }
 
   /* API startup phase */
@@ -309,11 +322,12 @@ var _regenerate_couchdb_view = function (_view_url,
 
   request.get(get, function (_err, _resp, _body) {
 
-    /* Error check */
     if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(
-        new Error("Failed to request view from '" + _view_url + "'")
-      );
+      return _callback({
+        error: true, url: _view_url,
+        detail: _err, code: _resp.statusCode,
+        message: 'Failure while requesting view'
+      });
     }
 
     /* Don't parse response body:
@@ -348,23 +362,26 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
   request.get(get, function (_err, _resp, _body) {
 
     if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(
-        new Error('Failed to retrieve design document')
-      );
+      return _callback({
+        error: true, detail: _err,
+        message: 'Failed to retrieve design document'
+      });
     }
 
     try {
       var ddoc = JSON.parse(_body);
     } catch (_e) {
-      return _callback(
-        new Error('Invalid JSON response returned by database server')
-      );
+      return _callback({
+        error: true, detail: _e,
+        message: 'Invalid JSON response returned by database server'
+      });
     }
 
     if (!_.isObject(ddoc) || !_.isObject(ddoc.views)) {
-      return _callback(
-        new Error('Database server returned a malformed document')
-      );
+      return _callback({
+        error: true,
+        message: 'Database server returned a malformed document'
+      });
     }
 
     /* In parallel */
@@ -422,22 +439,82 @@ var regenerate_couchdb_lucene_index = function (_url, _index_name,
   get.qs = (get.qs || {});
   _.extend(get.qs, { q: _query });
 
-  /* Rebuild indexes */
-  request.get(get, function (_err, _resp, _body) {
+  /* Perform a free-text search:
+   *  This will cause couchdb-lucene to catch up with the CouchDB
+   *  changes feed before a result is returned. We tolerate a few
+   *  HTTP 500s here, as couchdb-lucene may still be starting up. */
 
-    /* Error check */
-    if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(
-        new Error("Failed to query index '" + _index_name + "'")
-      );
+  var retries = 0;
+  var success = false;
+
+  var max_retries = 10;
+  var retry_delay = 2000 /* ms */;
+
+  async.whilst(
+
+    /* Test */
+    function () {
+      return (!success && retries <= max_retries);
+    },
+
+    /* Function */
+    function (_cb) {
+
+      /* Send a search query */
+      request.get(get, function (_err, _resp, _body) {
+
+        if (_err) {
+          return _cb({
+            error: true, url: url, detail: _err,
+            message: 'Failed to query full-text index'
+          });
+        }
+
+        /* Support retries */
+        var code = _resp.statusCode;
+
+        if (code >= 500 && code <= 599) {
+          retries++;
+          return _.delay(_cb, retry_delay);
+        }
+
+        /* All other errors */
+        if (!http_status_successful(code)) {
+          return _cb({
+            error: true, url: url, code: code,
+            message: 'HTTP search request was unsuccessful'
+          });
+        }
+
+        /* No error */
+        success = true;
+        return _cb();
+      });
+    },
+
+    /* Final */
+    function (_err) {
+
+      /* Hard error */
+      if (_err) {
+        return _callback({
+          error: true, url: url, detail: _err,
+          message: 'Internal error while rebuilding full-text indexes'
+        });
+      }
+
+      /* Below retry threshold */
+      if (success) {
+        return _callback();
+      }
+
+      /* Above retry threshold */
+      return _callback({
+        error: true, url: url,
+        message: 'Too many HTTP 500s while rebuilding full-text indexes'
+      });
     }
-
-    /* Don't parse response body:
-     *   Parsing the JSON would just waste CPU time. Trust the
-     *   HTTP status code, and consider the index regenerated. */
-
-    return _callback();
-  });
+  );
 };
 
 /**
@@ -494,9 +571,10 @@ var request_error = function (_message, _req, _callback) {
 
   _req.flash('error', _message);
 
-  return _callback(
-    new Error(_message)
-  );
+  return _callback({
+    error: true,
+    message: _message
+  });
 };
 
 /**
@@ -616,6 +694,7 @@ var save_system_password = function (_name, _passwd, _callback) {
     var buffer = _passwd + '\n';
 
     fs.write(_fd, buffer, 0, 'utf-8', function (_err, _len, _buf) {
+
       if (_err) {
         return _callback(_err);
       }
@@ -725,12 +804,12 @@ var _delete_couchdb_user = function (_user_name, _is_admin,
     config_url + '/' +
       (_is_admin ? 'admins' : 'users') + '/' + _user_name
   );
-  
+
   /* Secondary URL:
    *   If we're deleting an administrative user, we'll also try
    *   to delete the ordinary user document for that user, if
    *   it's present. If it's not or deletion fails, ignore it. */
-  
+
   var secondary_url = false;
 
   if (_is_admin) {
@@ -745,7 +824,12 @@ var _delete_couchdb_user = function (_user_name, _is_admin,
   request.del(req, function (_err, _resp, _body) {
 
     if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(new Error('Failed to delete user'));
+      return _callback({
+        error: true,
+        code: _resp.statusCode,
+        user: _user_name, detail: _err,
+        message: 'Failed to delete unneeded administrative user'
+      });
     }
 
     /* Early exit:
@@ -804,23 +888,27 @@ var delete_couchdb_unknown_users = function (_query_admins_list,
   request.get(get, function (_err, _resp, _body) {
 
     if (_err || !http_status_successful(_resp.statusCode)) {
-      return _callback(new Error(
-        'Failed to retrieve list of users'
-      ));
+      return _callback({
+        error: true,
+        code: _resp.statusCode, detail: _err,
+        message: 'Failed to retrieve list of users'
+      });
     }
 
     try {
       var doc = JSON.parse(_body);
     } catch (_e) {
-      return _callback(new Error(
-        'Invalid JSON response returned by database server'
-      ));
+      return _callback({
+        error: true,
+        message: 'Invalid JSON response returned by database server'
+      });
     }
 
     if (!_.isObject(doc)) {
-      return _callback(new Error(
-        'Database server returned an improperly-structured document'
-      ));
+      return _callback({
+        error: true,
+        message: 'Database server sent an improperly-structured document'
+      });
     }
 
     /* In parallel */
@@ -845,10 +933,12 @@ var delete_couchdb_unknown_users = function (_query_admins_list,
       function (_err) {
 
         if (_err) {
-          return _callback(new Error(
-            'Failure while retrieving list of users'
-          ));
+          return _callback({
+            error: true, detail: _err,
+            message: 'Failure while retrieving list of users'
+          });
         }
+
         return _callback();
       }
     );
@@ -1149,6 +1239,9 @@ var make_couchdb_user_creation_request = function (_user, _passwd,
 
 /**
  * make_couchdb_password_change_request:
+ *   Create a request object that changes the password of a
+ *   CouchDB administrator, using `_request_template` as an
+ *   initial template. Returns the request object directly.
  */
 make_couchdb_password_change_request = function (_name, _password,
                                                  _request_template) {

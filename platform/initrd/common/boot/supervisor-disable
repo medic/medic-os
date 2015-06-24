@@ -9,6 +9,13 @@ disable()
   local service="$2"
   local is_wildcard="$3"
 
+  # Sanity check:
+  #   Make sure the service we're trying to disable actually exists.
+
+  if ! supervisor_service_exists "$package" "$service"; then
+    return 1
+  fi
+
   if [ "$is_wildcard" ]; then
     if supervisor_is_service_disabled "$package" "$service"; then
       warn "Service '$package/$service is already disabled; skipping"
@@ -25,34 +32,36 @@ disable()
 
 main()
 {
-  local package="$1"
-  shift 1
-
-  if [ -z "$package" ]; then
+  if [ "$#" -le 0 -o "$1" = '-h' -o "$1" = '--help' ]; then
     usage
   fi
+
+  local package="$1"
+  shift 1
 
   require_root
   supervisor_init
 
+  local rv=''
+
   if [ "$#" -le 0 ]; then
     supervisor_list_all_services "$package" | while read service; do
       disable "$package" "$service" 't'
+      local r="$?"; [ "$r" -eq 0 ] || exit "$r"
     done
-    local rv="$?"
-    [ "$rv" -ne 0 ] && return "$rv"
+    rv="$?"
   else
     for service in "$@"; do
       disable "$package" "$service"
+      rv="$?"
     done
   fi
 
-  if [ $# -le 0 ]; then
-    success "Finished disabling services in package '$package'"
-  else
-    success "Selected services in package '$package' are now disabled"
+  if [ "$rv" -ne 0 ]; then
+    fatal "Failed to disable one or more services in package '$package'"
   fi
 
+  success "Finished disabling services in package '$package'"
   return 0
 }
 
