@@ -13,7 +13,6 @@ down()
   #   Make sure the service we're trying to stop actually exists.
 
   if ! supervisor_service_exists "$package" "$service"; then
-    warn "Service '$package/$service' doesn't exist"
     return 1
   fi
 
