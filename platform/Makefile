@@ -6,7 +6,9 @@ SHELL := /bin/bash
 QMAKE := ${MAKE} --no-print-directory
 
 PLATFORM := $(shell ./scripts/detect-platform)
-INITRD_PATH := $(shell readlink -f initrd/${PLATFORM})
+
+DIR := initrd/${PLATFORM}
+INITRD_PATH := $(shell readlink -f '${DIR}' 2>/dev/null || realpath '${DIR}')
 
 DATE := $(shell date +'%Y%m%d')
 TIMESTAMP := $(shell date +'%Y-%m-%d %H:%M:%S')
