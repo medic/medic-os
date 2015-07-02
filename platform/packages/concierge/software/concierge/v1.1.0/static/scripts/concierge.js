@@ -20,7 +20,7 @@ var poll_required_services = function (_url, _callback) {
 var wait_for_required_services = function (_url, _options, _callback) {
 
   var options = (_options || {});
-  var limit = (options.limit || 60);
+  var limit = (options.limit || 120);
   var attempts = (options.attempts || 0);
   var interval = (options.interval || 2000);
 
@@ -42,6 +42,14 @@ var wait_for_required_services = function (_url, _options, _callback) {
         return _callback(null, {
           ready: false,
           detail: 'Timed out while waiting for required services'
+        });
+      }
+
+      /* Check for explicit failure */
+      if (_result.failure) {
+        return _callback(null, {
+          ready: false,
+          detail: 'One or more services failed to start properly'
         });
       }
 
