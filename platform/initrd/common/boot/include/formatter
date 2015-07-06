@@ -67,7 +67,7 @@ print_logs()
     fi
 
     # Print file contents
-    ( $command "$path" | indent ) \
+    $command "$path" | indent \
       || return 7
   done
 
