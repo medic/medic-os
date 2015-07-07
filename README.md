@@ -118,7 +118,7 @@ Ensure that you have the necessary build-time dependencies. There is
 currently no definitive list for Mac OS X, but dependencies are
 documented for Redhat-like and Debian-like Linux distributions. A
 Homebrew or Fink environment with a working GCC toolchain should get you
-close.
+close. (Issue: https://github.com/medic/medic-os/issues/43)
 
 Check out a copy of the Medic OS source repository:
 
