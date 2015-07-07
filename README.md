@@ -21,6 +21,39 @@ http://dev.medicmobile.org/downloads/medic-os. This section will be updated when
 a supported release is available. For more information, please contact Medic Mobile
 at http://medicmobile.org.
 
+Using Medic OS
+==============
+
+Instance Creation (ISO)
+-----------------------
+
+Once you have an ISO image in hand, you can:
+
+1. Boot the ISO in a virtual machine. VMware Player, Workstation, and Fusion are
+   fully supported; Virtualbox and Hyper-V lack GSM modem features but are otherwise
+   supported.
+
+2. Point your browser the the virtual machine's IP address, which should be displayed
+    on the virtual machine console. If your DNS resolver supports mDNS (Bonjour, Zeroconf),
+    you should be able to visit `http://medic.local` instead of the IP address.
+
+3. Complete the in-browser setup steps, and wait for services to start up.
+
+4. Click _Finish_, then log in to the application using your credentials from step three.
+
+
+Administrative Access
+---------------------
+
+System-level administrative access to a running copy of Medic OS is available via SSH
+on port 33696. In ISO distributions, SSH password authentication is available by default;
+the administrative user name is `vm`, and the password is identical to what was set in
+step three above.
+
+If you are a developer, have physical access to the virtual machine console, and are
+attempting to troubleshoot an issue that has rendered the virtual machine inaccessible,
+switch to virtual terminal six to regain access.
+
 
 Building Medic OS
 =================
