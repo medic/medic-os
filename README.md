@@ -86,7 +86,23 @@ On Debian-like operating systems, use:
 sudo ./medic-os/platform/config/debian/scripts/prepare-system
 ```
 
-Download source code for every component of Medic OS, and then
+Next, install the appropriate Java Runtime Environment (JRE) and
+Java Development Kit (JDK) beneath `medic-os`. To make this easier, we
+provide prepackaged JDK/JRE archives. On 64-bit Intel systems, run:
+
+```shell
+file='medic-os-java-x64-latest.tar.xz'
+curl -LO# "https://medic-mobile.s3.amazonaws.com/medic-os/build/source/$file"
+tar -xvJf "$file"
+```
+
+On 32-bit Intel systems, run the same commands, but replace the first line with:
+
+```shell
+file='medic-os-java-x86-latest.tar.xz'
+```
+
+Finally, download source code for every component of Medic OS, then
 immediately start the build process, all in one shot:
 
 ```shell
