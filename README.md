@@ -141,7 +141,7 @@ developers and/or testers, and is not suitable for production
 environments:
 
 ```shell
-cd platform/source/medic-os &&
+cd platform/source/medic-core &&
   sudo make ROOT=/srv/software/medic-core/v1.6.1/x64
 ```
 
