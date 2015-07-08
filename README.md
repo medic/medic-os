@@ -156,3 +156,14 @@ If you'd rather not do this manually, try running the following:
 source medic-os/platform/initrd/common/boot/include/utility &&
 prepend_paths /srv/software/medic-core/v1.6.1/x64
 ```
+
+To start CouchDB as an unprivileged user, you currently need to modify
+the ownership of a few directories. This will be automated in a future
+release:
+
+```shell
+prefix='/srv/software/medic-core/v1.6.1/x64' &&
+for dir in var/log var/lib var/run etc; do
+  sudo chown -R "`id -un`:`id -gn`" "$prefix/$dir/couchdb";
+done
+```
