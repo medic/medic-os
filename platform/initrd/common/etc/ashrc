@@ -2,7 +2,7 @@
 #   System-wide .ashrc file for the Busybox `ash` shell
 
 # Set a sane default path
-export PATH='/usr/sbin:/usr/bin:/sbin:/bin:/boot'
+export PATH="/boot${PATH:+:}$PATH"
 
 # Support /etc/ashrc.d
 for script in /etc/ashrc.d/*; do

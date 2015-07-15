@@ -92,7 +92,7 @@ body {
   border-radius: 1em;
   height: 2em;
   font-size: 1.35em;
- width: 2em;
+  width: 2em;
   color: #fff;
   text-align: center;
 }
@@ -172,6 +172,10 @@ button.right {
   font-size: 1.25em;
 }
 
+.rows .spacer {
+  height: 1em;
+}
+
 .row {
   position: relative;
   overflow: hidden;
@@ -181,7 +185,7 @@ button.right {
 
 .row input {
   font-size: 1.05em;
-  margin-top: 2px;
+  margin-top: 6px;
 }
 
 .row textarea {
@@ -189,7 +193,7 @@ button.right {
 }
 
 .row label {
-  width: 10em;
+  width: 12em;
   display: block;
   float: left;
   line-height: 1.75em;
@@ -204,7 +208,7 @@ button.right {
 }
 
 .row .field {
-  left: 10em;
+  left: 12em;
   right: 0.5em;
   overflow: visible;
   position: absolute;
