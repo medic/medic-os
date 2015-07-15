@@ -11,5 +11,3 @@ for pkg_path in /srv/software/*; do
   fi
 done
 
-export PATH="/boot:$PATH"
-

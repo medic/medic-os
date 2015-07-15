@@ -2,7 +2,6 @@
 #   System-wide .profile file for the Busybox `ash` shell
 
 export ENV='/etc/ashrc'
-export PATH='/usr/sbin:/usr/bin:/sbin:/bin:/boot'
 
 # set_prompt:
 #   Set up a reasonable command-line prompt for the Busybox
