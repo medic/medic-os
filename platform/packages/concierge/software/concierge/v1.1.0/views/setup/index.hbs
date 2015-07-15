@@ -11,59 +11,74 @@
 <div class="body">
   <div class="content">
     <div class="steps">
-      <div class="step{{#cmp data.step '>' 1}} finished{{/cmp}}">
+      <div class="step{{#cmp data.session.step '>' 1}} finished{{/cmp}}">
         <div class="number">
           <span class="before">1</span>
           <span class="after fa fa-check"></span>
         </div>
-        <label>Set up an account</label>
+        <label>Create Account</label>
       </div>
-      {{#cmp data.step '>' 1}}
-      <div class="step {{#cmp data.step '>' 2}} finished{{/cmp}}">
+      {{#cmp data.session.step '>' 1}}
+      <div class="step {{#cmp data.session.step '>' 2}} finished{{/cmp}}">
         <div class="number">
           <span>2</span>
         </div>
-        <label>Start required services</label>
+        <label>Initializing Account</label>
       </div>
       {{/cmp}}
     </div>
 
-    {{#cmp data.step '<=' 1}}
+    {{#cmp data.session.step '<=' 1}}
     <div class="inner">
       <p>
-        Welcome to Medic Mobile! To get started, we'll need to create
-        an administrator account for you.
+        As a first-time user, you need to create an administrator account.
+        This account will have full access to Medic Mobile's configuration
+        and can be used to create additional accounts at a later stage.
       </p>
       <p>
-        You'll use this account to log in and configure the system
-        once it's up and running. Please choose a password that is
-        eight characters or longer, known only to you, and easy for
-        you to remember without writing it down.
+        Please write down your username and password. You will be asked to
+        enter it whenever you launch Medic Mobile.
       </p>
       <div class="rows">
         <div class="row">
-          <label for="password">Full Name</label>
+          <label for="password">Your Full Name</label>
           <div class="field">
             <input id="fullname" name="fullname"
-              class="full" type="text" value="{{data.fullname}}" />
+              class="full" type="text" value="{{data.session.fullname}}" />
           </div>
         </div>
         <div class="row">
-          <label for="password">User ID</label>
+          <label for="password">Your Phone Number</label>
+          <div class="field">
+            <input id="name" name="phone"
+              class="full" type="text" value="{{data.session.phone}}" />
+          </div>
+        </div>
+        <div class="row">
+          <label for="password">Your E-mail Address</label>
+          <div class="field">
+            <input id="name" name="email"
+              class="full" type="text" value="{{data.session.email}}" />
+          </div>
+        </div>
+        <div class="row spacer">
+        </div>
+        <div class="row">
+          <label for="password">Create a Username</label>
           <div class="field">
             <input id="name" name="name"
-              class="full" type="text" value="{{data.name}}" />
+              class="full" type="text" value="{{data.session.name}}" />
           </div>
         </div>
         <div class="row">
-          <label for="password">Password</label>
+          <label for="password">Create a Password</label>
           <div class="field">
             <input id="password" name="password"
               class="full" type="password" value="{{data.password}}" />
           </div>
         </div>
         <div class="row">
-          <label for="confirmation">Repeat Password</label>
+          <label for="confirmation">Retype Password</label>
           <div class="field">
             <input id="confirmation" name="confirmation"
               class="full" type="password" value="{{data.confirmation}}" />
@@ -74,7 +89,7 @@
         A <em>public key</em> lets you share administrator access
         with someone else. If you have a public key or Medic Mobile
         has provided one to you, please enter it here. Otherwise,
-        leave this blank and only you will have administrative access.
+        leave this space blank.
       </p>
       <div class="rows">
         <div class="row tall">
@@ -83,22 +98,20 @@
           <div class="hint">OpenSSH format only</div>
           <div class="field">
             <textarea id="key" name="key"
-               spellcheck="false">{{data.key}}</textarea>
+               spellcheck="false">{{data.session.key}}</textarea>
           </div>
         </div>
       </div>
     </div>
     {{/cmp}}
 
-    {{#cmp data.step '==' 2}}
+    {{#cmp data.session.step '==' 2}}
     <div class="inner">
       <p>
-        Please wait while Medic Mobile finishes installing,
-        setting up, and starting the platform. This process may
-        take up to a minute, depending upon the speed of your computer.
-      </p>
-      <p>
-        This process will only need to be completed once.
+        Please wait while Medic Mobile creates and sets up your account.
+        This process may take up to a minute, depending upon the speed
+        of your computer. This process will only need to be completed
+        once.
       </p>
       <div class="progress">
         <div id="success" class="success" style="display: none;">
@@ -181,19 +194,21 @@
         {{/if}}
       {{/if}}
     </div>
-    {{#cmp data.step '>=' 2}}
+    {{#cmp data.session.step '>=' 2}}
       <button id="finish" class="button" disabled="disabled">
         <label for="finish">Finish</label>
       </button>
     {{else}}
-      <button id="next" class="right" {{#cmp data.step '==' 2}} disabled="disabled"{{/cmp}}>
-        <label for="next">Next Step</label>
-        <span class="icon fa fa-chevron-right"></span>
+      <button id="next" class="right"
+        {{#cmp data.session.step '==' 2}} disabled="disabled"{{/cmp}}>
+          <label for="next">Next Step</label>
+          <span class="icon fa fa-chevron-right"></span>
       </button>
     {{/cmp}}
-    <button id="back"{{#cmp data.step '<=' 1}} disabled="disabled"{{/cmp}}>
-      <span class="icon fa fa-chevron-left"></span>
-      <label for="back">Previous Step</label>
+    <button id="back"
+      {{#cmp data.session.step '<=' 1}} disabled="disabled"{{/cmp}}>
+        <span class="icon fa fa-chevron-left"></span>
+        <label for="back">Previous Step</label>
     </button>
     <input type="hidden" id="action" name="action" />
   </div>

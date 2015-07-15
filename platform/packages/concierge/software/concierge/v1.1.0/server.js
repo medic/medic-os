@@ -91,10 +91,7 @@ app.get('/setup', function (_req, _res) {
       'Setup - Medic Mobile'
     ),
     data: {
-      key: _req.session.key,
-      step: _req.session.step,
-      name: _req.session.name,
-      fullname: _req.session.fullname,
+      session: _req.session,
       password: _req.flash('password'),
       confirmation: _req.flash('confirmation')
     },
@@ -137,6 +134,8 @@ app.post('/setup/password', function (_req, _res) {
 
   var user = {
     name: _req.body.name,
+    email: _req.body.email,
+    phone: _req.body.phone,
     fullname: _req.body.fullname
   };
 
@@ -151,8 +150,10 @@ app.post('/setup/password', function (_req, _res) {
   _req.flash('confirmation', confirmation);
 
   _req.session.key = key;
-  _req.session.name = user.name;
-  _req.session.fullname = user.fullname;
+
+  _.each(user, function (_v, _k) {
+    _req.session[_k] = user[_k];
+  });
 
   /* Start setup */
   async.waterfall([
@@ -1225,9 +1226,15 @@ var make_couchdb_user_creation_request = function (_user, _passwd,
     _id: 'org.couchdb.user:' + _user.name,
   };
 
-  if (_user.fullname) {
-    doc.fullname = _user.fullname;
-  }
+  var attributes = {
+    phone: true, email: true, fullname: true
+  };
+
+  _.each(attributes, function (_v, _k) {
+    if (_user[_k]) {
+      doc[_k] = _user[_k];
+    }
+  });
 
   var req = {
     body: JSON.stringify(doc),
