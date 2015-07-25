@@ -369,8 +369,14 @@ build_npm_local()
 
   builder_should_run "$name" || return 0
 
+  local args='-g --verbose'
+
+  if [ "$CACHE_ENABLED" ]; then
+    args="$args --unsafe-perm"
+  fi
+
   (cd "$name" && unset MAKE &&
-    "$prefix/bin/npm" install -g) 2>&1 | log "$name"
+    "$prefix/bin/npm" install $args) 2>&1 | log "$name"
   
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
@@ -381,7 +387,15 @@ build_npm_remote()
   local prefix="$2"
 
   builder_should_run "$name" || return 0
-  ("$prefix/bin/npm" install "$name" -g) 2>&1 | log "$name"
+
+  local args='-g --verbose'
+
+  if [ "$CACHE_ENABLED" ]; then
+    args="$args --unsafe-perm"
+  fi
+
+  (unset MAKE && "$prefix/bin/npm" \
+    install $args "$name") 2>&1 | log "$name"
   
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
@@ -596,6 +610,24 @@ builder_should_run()
   return "$?"
 }
 
+builder_setup_cache()
+{
+  if [ "$DISABLE_CACHE" ]; then
+    return 0
+  fi
+
+  if which ccache &>/dev/null; then
+    export CC="ccache $CC"
+    export CXX="ccache $CXX"
+    export HOSTCC="ccache $HOSTCC"
+    export HOSTCXX="ccache $HOSTCXX"
+    export CACHE_ENABLED='ccache'
+    return 0
+  fi
+
+  return 1
+}
+
 builder_setup_environment()
 {
   prefix="$1"
@@ -626,6 +658,8 @@ builder_setup_environment()
 
   export CC='gcc'
   export CXX='g++'
+  export HOSTCC="$CC"
+  export HOSTCXX="$CXX"
   export GNUMAKE="$MAKE"
 
   export INITIAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"

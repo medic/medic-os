@@ -46,6 +46,9 @@ main()
   \
   disable_stack_protector_strong &&
   \
+  build_autoconf 'ccache' "$stdarg" &&
+  builder_setup_cache &&
+  \
   (ABI="$bits" \
     build_autoconf 'gmp' "$stdarg --enable-cxx") &&
   \

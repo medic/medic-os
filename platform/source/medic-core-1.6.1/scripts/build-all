@@ -65,6 +65,10 @@ main()
     gammu_extra_options='-DWITH_Iconv=OFF'
   fi
 
+  if ! builder_setup_cache; then
+    warn 'Compiler caching could not be enabled'
+  fi
+
   (disable_stack_protector &&
     build_autoconf 'pv' "$stdarg") &&
   \

@@ -38,6 +38,10 @@ main()
   [ $? -eq 0 ] \
     || fatal 'Failed to set up build environment'
 
+  if ! builder_setup_cache; then
+    warn 'Compiler caching could not be enabled'
+  fi
+
   build_autoconf 'pv' "$stdarg" &&
   \
   (disable_parallelism && simple_cflags &&
