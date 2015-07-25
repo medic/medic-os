@@ -138,7 +138,7 @@ main()
 
     if [[ "$url" = *.git ]]; then
 
-      git clone "$url" 2>&1 | indent
+      git clone --recursive "$url" 2>&1 | indent
 
       [ "${PIPESTATUS[0]}" -eq 0 ] \
         || fatal "Error occurred while cloning repository '$name'"

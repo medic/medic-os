@@ -366,12 +366,13 @@ build_npm_local()
 {
   local name="$1"
   local prefix="$2"
+  local is_native="$3"
 
   builder_should_run "$name" || return 0
 
   local args='-g --verbose'
 
-  if [ "$CACHE_ENABLED" ]; then
+  if [ "$CACHE_ENABLED" -a "$is_native" ]; then
     args="$args --unsafe-perm"
   fi
 
@@ -385,12 +386,13 @@ build_npm_remote()
 {
   local name="$1"
   local prefix="$2"
+  local is_native="$3"
 
   builder_should_run "$name" || return 0
 
   local args='-g --verbose'
 
-  if [ "$CACHE_ENABLED" ]; then
+  if [ "$CACHE_ENABLED" -a "$is_native" ]; then
     args="$args --unsafe-perm"
   fi
 

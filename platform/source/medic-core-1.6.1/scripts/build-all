@@ -261,7 +261,7 @@ main()
   build_npm_remote 'grunt-cli' "$prefix" &&
   \
   build_npm_local 'medic-transport' "$prefix" &&
-  build_npm_local 'node-fs-ext' "$prefix" &&
+  build_npm_local 'node-fs-ext' "$prefix" 't' &&
   build_npm_local 'node-gammu-json' "$prefix" &&
   \
   # Maven: make reinstall safe
