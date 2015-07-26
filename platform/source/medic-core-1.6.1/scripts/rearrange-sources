@@ -105,8 +105,6 @@ apply_patches()
     < ../../patches/inotify-tools-include.diff) &&
   (cd libutempter && patch -s -p1 \
     < ../../patches/libutempter-fix-makefile-links.diff) &&
-  (cd screen && patch -s -p1 \
-    < ../../patches/screen-fix-stropts-include.diff) &&
   (cd xdelta && patch -s -p1 \
     < ../../patches/xdelta-fix-compilation-error.diff)
 }
