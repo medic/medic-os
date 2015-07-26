@@ -241,7 +241,6 @@ builder_platform_to_bits()
   echo "$bits"
 }
 
-
 builder_fix_erlang_dso_linkage()
 {
   local bits="$1"
@@ -617,6 +616,11 @@ builder_setup_cache()
   if [ "$DISABLE_CACHE" ]; then
     return 0
   fi
+
+  [ -z "$CC" ] && export CC='gcc'
+  [ -z "$CXX" ] && export CXX='g++'
+  [ -z "$HOSTCC" ] && export HOSTCC='gcc'
+  [ -z "$HOSTCXX" ] && export HOSTCXX='g++'
 
   if which ccache &>/dev/null; then
     export CC="ccache $CC"
