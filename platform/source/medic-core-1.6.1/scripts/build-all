@@ -154,6 +154,7 @@ main()
   \
   build_autoconf 'diffutils' "$stdarg" &&
   build_autoconf 'patch' "$stdarg" &&
+  build_autoconf 'nano' "$stdarg --with-shared --enable-utf8" &&
   \
   (disable_parallelism && build_config 'openssl' \
     "shared no-asm zlib-dynamic --openssldir='$prefix/etc/ssl' $stdarg") &&

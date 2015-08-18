@@ -28,6 +28,7 @@ logrotate, https://fedorahosted.org/releases/l/o/logrotate/logrotate-3.8.5.tar.g
 lrzip, https://medic-mobile.s3.amazonaws.com/medic-os/mirror/source/lrzip-0.615.tar.bz2
 lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
 maven, http://mirrors.ibiblio.org/apache/maven/maven-3/3.3.1/source/apache-maven-3.3.1-src.tar.gz
+nano, http://www.nano-editor.org/dist/v2.4/nano-2.4.2.tar.gz
 ncurses, http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
 nginx, http://nginx.org/download/nginx-1.8.0.tar.gz
 node, http://nodejs.org/dist/v0.12.7/node-v0.12.7.tar.gz
