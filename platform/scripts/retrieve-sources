@@ -9,7 +9,7 @@ base_dir="`dirname "$self"`/.."
 trim()
 {
   local str="$1"
-  echo "$str" | sed 's/^ \+//; s/^ \+//;'
+  echo "$str" | sed 's/^\ *//; s/\ *$//;'
 }
 
 fatal()
