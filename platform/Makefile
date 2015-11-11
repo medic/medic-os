@@ -315,9 +315,11 @@ download:
 	@rm -f status/download.finished && \
 	for manifest in source/manifests/*; do \
 	  pkg="`basename "$$manifest"`" && \
-	  ./scripts/retrieve-sources \
-	    "$$pkg" "source/$$pkg/incoming" '${URL}' && \
-	  (cd "source/$$pkg" && ./scripts/rearrange-sources) || exit "$$?"; \
+	  if [ "$$pkg" != '*' ]; then \
+	    ./scripts/retrieve-sources \
+	      "$$pkg" "source/$$pkg/incoming" '${URL}' && \
+	    (cd "source/$$pkg" && ./scripts/rearrange-sources) || exit "$$?"; \
+	  fi; \
 	done && \
 	touch status/download.finished;
 
@@ -325,7 +327,10 @@ move-downloaded:
 	@if ! [ -f status/move.finished ]; then \
 	  for manifest in source/manifests/*; do \
 	    pkg="`basename "$$manifest"`" && \
-	    (cd "source/$$pkg" && mv incoming/* source/) || exit "$$?"; \
+	    if [ "$$pkg" != '*' ]; then \
+	      (cd "source/$$pkg" && find -d incoming \
+	        -depth 1 -exec mv {} source/ \;) || exit "$$?"; \
+	    fi; \
 	  done && \
 	  touch status/move.finished; \
 	fi
@@ -335,7 +340,9 @@ delete-downloaded:
 	for type in incoming source; do \
 	  for manifest in source/manifests/*; do \
 	    pkg="`basename "$$manifest"`" && \
-	    (cd "source/$$pkg" && rm -rf "$$type"/*) || exit "$$?"; \
+	    if [ "$$pkg" != '*' ]; then \
+	      (cd "source/$$pkg" && rm -rf "$$type"/*) || exit "$$?"; \
+	    fi; \
 	  done; \
 	done
 

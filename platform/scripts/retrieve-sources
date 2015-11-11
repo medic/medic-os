@@ -9,7 +9,7 @@ base_dir="`dirname "$self"`/.."
 trim()
 {
   local str="$1"
-  echo "$str" | sed 's/^\ *//; s/\ *$//;'
+  echo "$str" | sed -E 's/^\ *//; s/\ *$//;'
 }
 
 fatal()
@@ -53,7 +53,7 @@ extract()
 {
   for archive in "$@"; do
 
-    local type="`echo "$archive" | sed 's/.*\.//'`"
+    local type="`echo "$archive" | sed -E 's/.*\.//'`"
 
     case "$type" in
       bz2)
@@ -106,7 +106,7 @@ main()
 
   local manifest_path="../../manifests/$manifest_name"
 
-  local lines="`wc -l < "$manifest_path" | sed 's/ //g;'`" \
+  local lines="`wc -l < "$manifest_path" | sed -E 's/ //g;'`" \
     || fatal "Unable to read manifest file 'manifests/$manifest_name'"
 
   if [ -f "$base_dir/status/$manifest_name.retrieved" ]; then
@@ -158,7 +158,7 @@ main()
 
       if [ "$override_base_url" ]; then
         override_base_url="`
-          echo "$override_base_url" | sed 's/\/\{1,\}$//;'
+          echo "$override_base_url" | sed -E 's/\/{1,}$//;'
         `" || fatal "Error occurred while overriding download URL"
 
         url="$override_base_url/`basename "$url"`" \
