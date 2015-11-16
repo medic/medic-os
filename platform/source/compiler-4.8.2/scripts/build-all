@@ -53,7 +53,7 @@ main()
   build_autoconf 'mpfr' "$stdarg" &&
   build_autoconf 'mpc' "$stdarg" &&
   build_autoconf 'isl' "$stdarg" &&
-  build_autoconf 'cloog' "$stdarg" &&
+  build_autoconf 'cloog' "$stdarg --with-isl-prefix='$prefix'" &&
   build_autoconf 'dejagnu' "$stdarg" &&
   \
   (disable_cppflags &&
