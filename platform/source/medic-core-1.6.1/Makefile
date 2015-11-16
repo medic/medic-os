@@ -8,7 +8,7 @@ PLATFORM := $(shell ../../scripts/detect-platform)
 
 # Public targets
 
-all: status build
+all: check-root status build
 
 build:
 	@mkdir -p '${ROOT}' && \
@@ -52,4 +52,10 @@ preload: gardenize
 
 clean-logs:
 	rm -f logs/*/*.log
+
+check-root:
+	@if [ -z '${ROOT}' ]; then \
+	  echo 'Fatal: Root directory must be provided; stopping' >&2 && \
+		exit 1; \
+	fi
 
