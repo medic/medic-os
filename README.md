@@ -61,6 +61,12 @@ Building Medic OS
 Linux
 -----
 
+To ensure a successful build, check to make sure you have the following software
+available at compilation time:
+
+  * Linux kernel version 3.10 or higher
+  * Version 2.69 or higher of `autoconf`
+
 Check out a copy of the Medic OS source repository:
 
 ```shell

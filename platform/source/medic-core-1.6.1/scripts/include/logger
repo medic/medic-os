@@ -44,7 +44,7 @@ logger()
   local is_silent="$3"
 
   local directory="`dirname "$name"`" # Defaults to '.'
-  local safe_name="`echo "$name" | sed 's/\//-/g;' 2>/dev/null`"
+  local safe_name="`echo "$name" | sed -E 's/\//-/g;' 2>/dev/null`"
 
   local output_dir="$directory/logs/$platform"
   local output_path="$output_dir/$safe_name-$timestamp.log"

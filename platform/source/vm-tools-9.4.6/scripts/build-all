@@ -12,9 +12,9 @@ source "$base_dir/scripts/include/builder" 2>/dev/null \
 main()
 {
   local prefix="$1"
-  local pkg_start="`echo "$2" | sed 's/\//-/g;'`"
+  local pkg_start="`echo "$2" | sed -E 's/\//-/g;'`"
   local pkg_start_version="$3"
-  local pkg_stop="`echo "$4" | sed 's/\//-/g;'`"
+  local pkg_stop="`echo "$4" | sed -E 's/\//-/g;'`"
   local pkg_stop_version="$5"
   local platform="$6"
   local bits="$7"

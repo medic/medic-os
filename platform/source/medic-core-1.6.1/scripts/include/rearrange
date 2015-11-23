@@ -9,7 +9,7 @@ remove()
 symlink()
 {
   find * -prune -type d | while read dir; do
-    ln -sf "$dir" "`echo "$dir" | sed 's/-[0-9\.a-z]\+$//;'`"
+    ln -sf "$dir" "`echo "$dir" | sed -E 's/-[0-9\.a-z]+$//;'`"
   done &&
   \
   for dir in logs stats; do
@@ -19,11 +19,11 @@ symlink()
 
 find_version()
 {
-  echo "$@" | sed 's/^[A-Za-z0-9-]\+-v\?\([0-9\._]\+\).*$/\1/; s/\.$//;'
+  echo "$@" | sed -E 's/^[A-Za-z0-9-]+-v?([0-9\._]+).*$/\1/; s/\.$//;'
 }
 
 fix_version()
 {
-  echo "$@" | sed 's/^\([0-9]\)\([0-9]\)_\?\([0-9]\+\)/\1.\2.\3/;'
+  echo "$@" | sed -E 's/^([0-9])([0-9])_?([0-9]+)/\1.\2.\3/;'
 }
 

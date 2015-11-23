@@ -28,9 +28,9 @@ usage()
 main()
 {
   local prefix="$1"
-  local pkg_start="`echo "$2" | sed 's/\//-/g;'`"
+  local pkg_start="`echo "$2" | sed -E 's/\//-/g;'`"
   local pkg_start_version="$3"
-  local pkg_stop="`echo "$4" | sed 's/\//-/g;'`"
+  local pkg_stop="`echo "$4" | sed -E 's/\//-/g;'`"
   local pkg_stop_version="$5"
   local platform="$6"
   local bits="$7"
@@ -85,12 +85,6 @@ main()
   \
   build_autoconf 'libusb-compat' \
     "$stdarg --enable-static=no --enable-shared=yes" &&
-  \
-  build_autoconf 'libpcap' \
-    "$stdarg --enable-shared --disable-static --without-libnl" &&
-  \
-  builder_remove_static_libraries 'pcap' &&
-  build_autoconf 'tcpdump' "$stdarg --disable-smb --without-libnl" &&
   \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
   builder_create_library_aliases 'ncurses' "$prefix" 'ncurses' 'tinfo' &&
@@ -164,6 +158,12 @@ main()
   build_autoconf 'openssh' \
     "$stdarg --sysconfdir='$prefix/etc/ssh' \
      --with-zlib='$prefix' --with-ssl-dir='$prefix'" &&
+  \
+  build_autoconf 'libpcap' \
+    "$stdarg --enable-shared --disable-static --without-libnl" &&
+  \
+  builder_remove_static_libraries 'pcap' &&
+  build_autoconf 'tcpdump' "$stdarg --disable-smb --without-libnl" &&
   \
   build_autoconf 'libidn' "$stdarg" &&
   builder_remove_static_libraries 'idn' &&

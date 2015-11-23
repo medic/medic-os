@@ -15,7 +15,7 @@ rename()
    \
   for file in apache-*; do
     if [ -d "$file" ]; then
-      mv "$file" "`echo "$file" | sed 's/^apache-//;'`";
+      mv "$file" "`echo "$file" | sed -E 's/^apache-//;'`";
     fi
   done &&
   \
@@ -23,14 +23,14 @@ rename()
     if [ -d "$file" ]; then
       mv "$file" "erlang-`
         echo "$file" | \
-          sed 's/^otp_src_\([^-]\+\).*$/\1/;' | tr '[A-Z]' '[a-z]'
+          sed -E 's/^otp_src_([^-]+).*$/\1/;' | tr '[A-Z]' '[a-z]'
       `";
     fi
   done &&
    \
   for file in xdelta3-*; do
     if [ -d "$file" ]; then
-      mv "$file" "`echo "$file" | sed 's/^xdelta3-/xdelta-/;'`";
+      mv "$file" "`echo "$file" | sed -E 's/^xdelta3-/xdelta-/;'`";
     fi
   done &&
   \
@@ -61,7 +61,7 @@ rename()
 symlink()
 {
   find * -prune -type d | while read dir; do
-    ln -sf "$dir" "`echo "$dir" | sed 's/-[0-9\.a-z]\+$//;'`"
+    ln -sf "$dir" "`echo "$dir" | sed -E 's/-[0-9\.a-z]+$//;'`"
   done &&
   \
   for dir in logs stats images; do

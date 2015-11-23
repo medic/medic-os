@@ -1,6 +1,6 @@
 {
   "name": "gardener",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A node process manager for couchapps that depend on npm modules, or have npm modules bundled with them.",
   "keywords": [
     "garden",
@@ -36,21 +36,39 @@
     "npm": ">=1.1.0",
     "mkdirp": "~0.3.5"
   },
+  "devDependencies": {
+    "mocha": "~1.20"
+  },
   "repository": {
     "type": "git",
     "url": "http://github.com/garden20/gardener.git"
   },
   "maintainers": [
     {
-      "name": "Ryan Ramage",
-      "url": "https://github.com/ryanramage"
+      "name": "eckoit",
+      "email": "ryan.ramage@gmail.com"
+    },
+    {
+      "name": "mandric",
+      "email": "mandric@gmail.com"
     }
   ],
-  "readmeFilename": "README.md",
+  "gitHead": "8896d6154f78285b19a22b738343f896fe255ab2",
   "bugs": {
     "url": "https://github.com/garden20/gardener/issues"
   },
   "homepage": "https://github.com/garden20/gardener",
-  "_id": "gardener@1.1.0",
-  "_from": "gardener@"
+  "_id": "gardener@1.1.1",
+  "_shasum": "ce5e5bbdd4e347c6d48918a55767881ced802b1e",
+  "_from": "gardener@*",
+  "_npmVersion": "1.4.26",
+  "_npmUser": {
+    "name": "mandric",
+    "email": "mandric@gmail.com"
+  },
+  "dist": {
+    "shasum": "ce5e5bbdd4e347c6d48918a55767881ced802b1e",
+    "tarball": "http://registry.npmjs.org/gardener/-/gardener-1.1.1.tgz"
+  },
+  "_resolved": "https://registry.npmjs.org/gardener/-/gardener-1.1.1.tgz"
 }
