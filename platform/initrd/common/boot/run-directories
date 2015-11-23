@@ -17,7 +17,7 @@ main()
         continue
       fi
       if ! "$path"; then
-        local file="`basename "$path"`"
+        local file="`basename -- "$path"`"
         warn "Script '$file' exited with non-zero status"
       fi
     done

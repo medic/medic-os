@@ -9,12 +9,6 @@ fatal()
   exit 255
 }
 
-extract_initrd_device_nodes()
-{
-  tar xJf bootstrap/initrd-devices.tar.xz
-  return "$?"
-}
-
 set_permissions()
 {
   chmod 1777 \
@@ -33,9 +27,11 @@ create_empty_directories()
     done &&
     \
     mkdir -p \
+      initrd/common/etc/ashrc.d \
+      initrd/common/etc/profile.d \
       initrd/common/etc/sysconfig \
+      initrd/common/dev \
       initrd/common/mnt \
-      initrd/common/home/vm/.ssh \
       initrd/common/proc \
       initrd/common/sys \
       initrd/common/tmp \
@@ -108,9 +104,6 @@ main()
   
   set_permissions \
     || fatal 'Failed to set directory permissions'
-  
-  extract_initrd_device_nodes \
-    || fatal 'Failed to extract initrd device nodes'
 }
 
 main "$@"

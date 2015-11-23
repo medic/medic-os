@@ -21,7 +21,7 @@ main()
   fi
   
   if [ -z "$distribution" ]; then
-    distribution='diy'
+    distribution='demos'
   fi
 
   local base_url='http://staging.dev.medicmobile.org/downloads/demos'

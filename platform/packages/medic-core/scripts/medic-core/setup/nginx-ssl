@@ -16,7 +16,7 @@ create_self_signed_ssl_certificate()
     return 0
   fi
 
-  local directory="`dirname "$path"`" &&
+  local directory="`dirname -- "$path"`" &&
 	\
   mkdir -p "$directory" &&
   chmod 600 "$directory" &&
@@ -34,7 +34,7 @@ create_self_signed_ssl_certificate()
 start()
 {
   local self="`realpath "$0"`"
-  local base="`dirname "$self"`"
+  local base="`dirname -- "$self"`"
 
   source "$base/../env" &&
   merge_environment /srv || return 255

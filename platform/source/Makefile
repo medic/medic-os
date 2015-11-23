@@ -21,7 +21,7 @@ SHELL := /bin/bash
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
-KERNEL_VERSION := 3.14.35
+KERNEL_VERSION := 3.14.42
 KERNEL_MODULE_PATH := ${CURDIR}/../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}
 
 
@@ -58,7 +58,9 @@ clean-compiler:
 core: build-core copy-core
 
 build-core:
-	@(cd core && ${QMAKE} \
+	@source medic-core/scripts/include/builder && \
+	builder_setup_cache && \
+	(cd core && ${QMAKE} \
 	  COMPILER_ROOT='${COMPILER_ROOT}' \
 	  PATH="${MEDIC_CORE_ROOT}/bin:$$PATH" \
 	  BITS='${BITS}' KERNEL_VERSION='${KERNEL_VERSION}' \
@@ -108,7 +110,7 @@ clean-medic-core:
 build-medic-core:
 	@(cd medic-core && \
 	  ./scripts/unprepare-dist '${MEDIC_CORE_ROOT}' && \
-	  ${QMAKE} all \
+	  ${QMAKE} all preload \
 	    BITS='${BITS}' PLATFORM='${PLATFORM}' \
 	    ROOT='${MEDIC_CORE_ROOT}' PARALLEL='${PARALLEL}')
 
@@ -121,6 +123,10 @@ copy-medic-core:
 	  cp -R /srv/software/medic-core \
 	    ../../packages/medic-core/software/medic-core)
 	@echo 'done.'
+
+preload-medic-core:
+	@(cd medic-core && \
+	  ${QMAKE} preload ROOT='${MEDIC_CORE_ROOT}')
 
 
 # Private targets

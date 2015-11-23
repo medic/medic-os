@@ -1,7 +1,11 @@
- 
-root    	ALL = (ALL) ALL
+
+Defaults	secure_path = /usr/sbin:/usr/bin:/sbin:/bin:/boot
+
+root		ALL = (ALL) ALL
 
 vm		ALL = NOPASSWD: ALL
+
+gardener        ALL = NOPASSWD: /boot/print-logs
 
 concierge	ALL = NOPASSWD: /usr/bin/passwd, \
 		(vm) /srv/scripts/concierge/private/ssh-addkey, \

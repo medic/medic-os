@@ -241,7 +241,6 @@ builder_platform_to_bits()
   echo "$bits"
 }
 
-
 builder_fix_erlang_dso_linkage()
 {
   local bits="$1"
@@ -288,9 +287,12 @@ builder_install_file()
 
 builder_create_library_aliases()
 {
-  local prefix="$1"
-  local from="$2"
-  local to="$3"
+  local name="$1"
+  local prefix="$2"
+  local from="$3"
+  local to="$4"
+  
+  builder_should_run "$name" || return 0
 
   (cd "$prefix/lib" && for lib in "lib$from.so" "lib$from.so".*; do
     local symlink="`echo "$lib" | sed "s/$from/$to/;"`" &&
@@ -312,6 +314,17 @@ builder_remove_library_metadata()
 
   find "$prefix" \
     -name '*.la' -type f -exec rm -f {} \;
+}
+
+builder_clear_java_directory()
+{
+  local name="$1"
+  local prefix="$2"
+
+  builder_should_run "$name" || return 0
+
+  rm -rf "$prefix/java"
+  return "$?"
 }
 
 build_make()
@@ -352,11 +365,18 @@ build_npm_local()
 {
   local name="$1"
   local prefix="$2"
+  local is_native="$3"
 
   builder_should_run "$name" || return 0
 
+  local args='-g --verbose'
+
+  if [ "$CACHE_ENABLED" -a "$is_native" ]; then
+    args="$args --unsafe-perm"
+  fi
+
   (cd "$name" && unset MAKE &&
-    "$prefix/bin/npm" install -g) 2>&1 | log "$name"
+    "$prefix/bin/npm" install $args) 2>&1 | log "$name"
   
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
@@ -365,9 +385,18 @@ build_npm_remote()
 {
   local name="$1"
   local prefix="$2"
+  local is_native="$3"
 
   builder_should_run "$name" || return 0
-  ("$prefix/bin/npm" install "$name" -g) 2>&1 | log "$name"
+
+  local args='-g --verbose'
+
+  if [ "$CACHE_ENABLED" -a "$is_native" ]; then
+    args="$args --unsafe-perm"
+  fi
+
+  (unset MAKE && "$prefix/bin/npm" \
+    install $args "$name") 2>&1 | log "$name"
   
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
@@ -392,11 +421,14 @@ build_maven()
 
   builder_should_run "$name" || return 0
 
+  # Required for build
+  export M2_HOME="$prefix/java"
+
   (cd "$name" &&
-    yes 'yes' | M2_HOME="$prefix/java" \
-        "$prefix/java/bin/ant") 2>&1 | log "$name"
-  
-  builder_check_status "$name" "${PIPESTATUS[1]}"
+    yes 'yes' | "$prefix/java/bin/ant";
+     rv="${PIPESTATUS[1]}"; exit "$rv") 2>&1 | log "$name"
+
+  builder_check_status "$name" "${PIPESTATUS[0]}"
 }
 
 build_lucene()
@@ -423,12 +455,15 @@ build_couchdb_lucene()
 
   builder_should_run "$name" || return 0
 
+  # Use Maven
+  export M2_HOME="$prefix/java"
+
   (cd "$name" &&
     "$prefix/java/bin/mvn" && mkdir -p 'target/output' && (
-	cd 'target/output' && for i in ../couchdb-lucene-*.tar.gz; do
-            tar xvzf "$i" && cp -Rv couchdb-lucene-*/* "$prefix/java";
-        done
-    ); rm -rf 'target/output') 2>&1 | log "$name"
+      cd 'target/output' && for i in ../couchdb-lucene-*.tar.gz; do
+        tar xvzf "$i" && cp -Rv couchdb-lucene-*/* "$prefix/java";
+      done
+    ); rv="$?"; rm -rf 'target/output'; exit "$rv") 2>&1 | log "$name"
   
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
@@ -491,7 +526,7 @@ fix_libtool()
       libtoolize --automake --copy &&
       aclocal -I config && autoheader &&
       automake --add-missing --copy && autoconf) 2>/dev/null \
-	|| fatal "Unable to regenerate libtool files for '$dir'"
+        || fatal "Unable to regenerate libtool files for '$dir'"
   done
 
   return 0
@@ -576,6 +611,29 @@ builder_should_run()
   return "$?"
 }
 
+builder_setup_cache()
+{
+  if [ "$DISABLE_CACHE" ]; then
+    return 0
+  fi
+
+  [ -z "$CC" ] && export CC='gcc'
+  [ -z "$CXX" ] && export CXX='g++'
+  [ -z "$HOSTCC" ] && export HOSTCC='gcc'
+  [ -z "$HOSTCXX" ] && export HOSTCXX='g++'
+
+  if which ccache &>/dev/null; then
+    export CC="ccache $CC"
+    export CXX="ccache $CXX"
+    export HOSTCC="ccache $HOSTCC"
+    export HOSTCXX="ccache $HOSTCXX"
+    export CACHE_ENABLED='ccache'
+    return 0
+  fi
+
+  return 1
+}
+
 builder_setup_environment()
 {
   prefix="$1"
@@ -606,6 +664,8 @@ builder_setup_environment()
 
   export CC='gcc'
   export CXX='g++'
+  export HOSTCC="$CC"
+  export HOSTCXX="$CXX"
   export GNUMAKE="$MAKE"
 
   export INITIAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"

@@ -11,7 +11,7 @@ source "$base_dir/../medic-core/scripts/include/rearrange"
 rename()
 {
   find . -type d -exec chmod 755 {} \; &&
-    chown -R root:root . &&
+    chown -R 0:0 . &&
    \
   for file in apache-*; do
     if [ -d "$file" ]; then
@@ -79,6 +79,8 @@ apply_patches()
 {
   (cd ant && patch -s -p1 \
     < ../../patches/ant-disable-junit.diff) &&
+  (cd bzip2 && patch -s -p1 \
+    < ../../patches/bzip2-darwin-soname.diff) &&
   (cd erlang && patch -s -p1 \
     < ../../patches/erlang-r17-pcre-fix.diff) &&
   (cd gammu && patch -s -p1 \
@@ -103,8 +105,6 @@ apply_patches()
     < ../../patches/inotify-tools-include.diff) &&
   (cd libutempter && patch -s -p1 \
     < ../../patches/libutempter-fix-makefile-links.diff) &&
-  (cd screen && patch -s -p1 \
-    < ../../patches/screen-fix-stropts-include.diff) &&
   (cd xdelta && patch -s -p1 \
     < ../../patches/xdelta-fix-compilation-error.diff)
 }

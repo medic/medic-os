@@ -65,6 +65,10 @@ main()
     gammu_extra_options='-DWITH_Iconv=OFF'
   fi
 
+  if ! builder_setup_cache; then
+    warn 'Compiler caching could not be enabled'
+  fi
+
   (disable_stack_protector &&
     build_autoconf 'pv' "$stdarg") &&
   \
@@ -89,7 +93,7 @@ main()
   build_autoconf 'tcpdump' "$stdarg --disable-smb --without-libnl" &&
   \
   build_autoconf 'ncurses' "$stdarg --with-shared" &&
-  builder_create_library_aliases "$prefix" 'ncurses' 'tinfo' &&
+  builder_create_library_aliases 'ncurses' "$prefix" 'ncurses' 'tinfo' &&
   \
   builder_remove_static_libraries 'form' 'form_g' \
     'menu' 'menu_g' 'ncurses' 'ncurses_g' 'ncurses++' 'panel' 'panel_g' &&
@@ -150,6 +154,7 @@ main()
   \
   build_autoconf 'diffutils' "$stdarg" &&
   build_autoconf 'patch' "$stdarg" &&
+  build_autoconf 'nano' "$stdarg --with-shared --enable-utf8" &&
   \
   (disable_parallelism && build_config 'openssl' \
     "shared no-asm zlib-dynamic --openssldir='$prefix/etc/ssl' $stdarg") &&
@@ -254,14 +259,14 @@ main()
   build_npm_remote 'lazy' "$prefix" &&
   build_npm_remote 'request' "$prefix" &&
   build_npm_remote 'hbs' "$prefix" &&
-  build_npm_remote 'grunt' "$prefix" &&
+  build_npm_remote 'grunt-cli' "$prefix" &&
   \
   build_npm_local 'medic-transport' "$prefix" &&
-  build_npm_local 'node-fs-ext' "$prefix" &&
+  build_npm_local 'node-fs-ext' "$prefix" 't' &&
   build_npm_local 'node-gammu-json' "$prefix" &&
   \
   # Maven: make reinstall safe
-  rm -rf "$prefix/java" &&
+  builder_clear_java_directory 'java' "$prefix" &&
   \
   build_ant 'ant' "$prefix" &&
   build_maven 'maven' "$prefix" &&

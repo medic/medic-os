@@ -1,0 +1,48 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/formatter'
+
+log_generator_simple()
+{
+  find /srv/storage /srv/system -type d -name logs \
+    -exec find {} -type f -name '*.log' \;
+}
+
+print_logs_using()
+{
+  local generator_fn="$1"
+  shift 1
+
+  local hide_title=''
+
+  $generator_fn | while read file; do
+    print_logs "$hide_title" "$file" || exit "$?"
+    hide_title='t'
+  done
+
+  return "$?"
+}
+
+main()
+{
+  if [ "$1" = '-h' -o "$1" = '--help' ]; then
+    usage
+  fi
+
+  require_root
+  print_logs_using 'log_generator_simple'
+
+  return "$?"
+}
+
+usage()
+{
+  echo "Usage: $0"
+  exit 111
+}
+
+main "$@"
+exit "$?"
+
+

@@ -16,7 +16,6 @@ INITRD_PATH := $(shell readlink -f ../../initrd/${PLATFORM})
 STAGING_PATH := $(shell readlink -f ../../staging/software/${PLATFORM})
 KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSION}
 
-
 # Meta-targets
 
 all: build
@@ -102,7 +101,7 @@ build-sudo: build-pv
 		${MAKE} install DESTDIR="${INITRD_PATH}"'
 
 copy-sudo:
-	@true
+	@find '${INITRD_PATH}' -type f -name '*~' -exec rm -f {} \;
 
 clean-sudo:
 	@if [ -h source/sudo ]; then \
@@ -123,8 +122,8 @@ build-kernel: build-pv
 	    ./drivers/video/logo/logo_linux_clut224.ppm && \
 	  cp -H "${KERNEL_CONFIG}${KERNEL_EXTRA}" .config) && \
 	    ./scripts/logger 'linux' '${PLATFORM}' \
-	      'unset MAKEFLAGS && cd source/linux && \
-	        ${PMAKE} bzImage && ${PMAKE} modules'
+	      "unset MAKEFLAGS && cd source/linux && \
+	        ${PMAKE} bzImage CC='${CC}' && ${PMAKE} modules CC='${CC}'"
 
 copy-kernel:
 	@cp source/linux/arch/x86/boot/bzImage \

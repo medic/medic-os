@@ -17,6 +17,13 @@ build: reset-time prepare-tree
 	  export HOME="`readlink -f ../..`" && \
 	  source ./.profile && ${QMAKE} compile all)
 
+repackage: reset-time prepare-tree
+	@(cd platform/source && \
+	  ${QMAKE} preload-medic-core) && \
+	(cd platform && \
+	  ${QMAKE} clean &>/dev/null && \
+	  ${QMAKE} rebuild-kernel copy all)
+
 clean: require-root
 	@shopt -u xpg_echo && \
 	echo -n 'Cleaning source tree... ' && \
@@ -51,7 +58,9 @@ require-root:
 clean-target:
 	@shopt -u xpg_echo && \
 	echo -n 'Cleaning target directory... ' && \
-	cd /srv && rm -rf software settings storage && \
+	if [ -d /srv ]; then \
+	  cd /srv && rm -rf software settings storage; \
+	fi && \
 	echo 'done.'
 
 clean-initrd:

@@ -1,0 +1,12 @@
+#!/bin/ash
+
+for type in e r; do
+  ulimit "-$type" 0
+done
+
+for type in d f m t v w; do
+  ulimit "-$type" unlimited
+done
+
+ulimit -s 16384 -c 20480 -l 512 -p 8192 -n 32768
+

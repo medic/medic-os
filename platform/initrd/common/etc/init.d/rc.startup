@@ -1,9 +1,15 @@
 #!/bin/sh
 
+[ -c /dev/urandom ] || /bin/mount /dev &>/dev/null
 [ -f /proc/cmdline ] || /bin/mount /proc &>/dev/null
+
+mkdir -p /dev/pts /dev/shm
 
 /bin/mount -o remount,rw /
 /bin/mount -a 
+
+source /etc/init.d/rc.font
+source /etc/init.d/rc.ulimit
 
 /sbin/udevd --daemon &>/dev/null
 /sbin/udevadm trigger --action=add &>/dev/null &
@@ -17,6 +23,8 @@ modprobe loop 2>/dev/null
 /etc/init.d/rc.dhcpcd &
 
 chown -R vm:root /home/vm
+chown root:root / && chmod 0755 /
+
 /usr/bin/sethostname "`cat /etc/hostname`"
 sysctl -w kernel.grsecurity.grsec_lock=1 &>/dev/null
 

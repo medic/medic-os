@@ -1,7 +1,7 @@
 # /etc/profile:
-# System-wide .profile file for the Bourne shell
+#   System-wide .profile file for the Busybox `ash` shell
 
-PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+export ENV='/etc/ashrc'
 
 # set_prompt:
 #   Set up a reasonable command-line prompt for the Busybox
@@ -25,7 +25,6 @@ set_prompt()
   export PS1="$user@$host:$directory \\$ "
 }
 
-# Set prompt for Ash
 set_prompt
 unset set_prompt
 
@@ -35,23 +34,24 @@ alias ls='ls --color=auto'
 # Substitute for `ldd` command
 which ldd > /dev/null || alias ldd=LD_TRACE_LOADED_OBJECTS=1
 
-# Export all variables definied above and set mask.
-export PATH PS1
+# Mask group/world write permission by default
 umask 022
 
+# Merge language settings into environment
 if [ -f /etc/sysconfig/language ]; then
-  . /etc/sysconfig/language
+  source /etc/sysconfig/language
   export LANG LC_ALL
 fi
 
+# Merge time zone settings into environment
 if [ -f /etc/sysconfig/timezone ]; then
-  . /etc/sysconfig/timezone
+  source /etc/sysconfig/timezone
   export TZ
 fi
 
 # Support /etc/profile.d
 for script in /etc/profile.d/*; do
- if [ -r "$script" -a -x "$script" ]; then
+ if [ -r "$script" ]; then
    source "$script"
  fi
 done

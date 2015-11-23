@@ -3,7 +3,7 @@
 set -o pipefail
 
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
-base_dir="`dirname "$self"`/../../medic-core"
+base_dir="`dirname "$self"`/.."
 
 source "$base_dir/scripts/include/logger" 2>/dev/null &&
 source "$base_dir/scripts/include/builder" 2>/dev/null \
@@ -37,6 +37,10 @@ main()
 
   [ $? -eq 0 ] \
     || fatal 'Failed to set up build environment'
+
+  if ! builder_setup_cache; then
+    warn 'Compiler caching could not be enabled'
+  fi
 
   build_autoconf 'pv' "$stdarg" &&
   \
@@ -127,6 +131,6 @@ usage()
   exit 111
 }
 
-cd "$base_dir/../vm-tools/source" && main "$@"
+cd "$base_dir/source" && main "$@"
 exit $?
 

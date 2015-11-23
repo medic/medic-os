@@ -14,7 +14,7 @@ wait_for_passwd_file()
 start()
 {
   local self="`realpath "$0"`"
-  local base="`dirname "$self"`"
+  local base="`dirname -- "$self"`"
 
   source "$base/../../medic-core/env" &&
   merge_environment /srv &&
@@ -22,12 +22,12 @@ start()
   source "$base/../env" &&
   merge_environment /srv &&
   \
-  local passwd_file="$PACKAGE_STORAGE/../concierge/passwd/system" &&
+  local passwd_file="$PACKAGE_STORAGE/../concierge/passwd/gardener" &&
   wait_for_passwd_file "$passwd_file" &&
   \
   local data="$PACKAGE_STORAGE/data" &&
   local logs="$PACKAGE_STORAGE/logs" &&
-  local url="http://service@localhost:5984" &&
+  local url="http://gardener@localhost:5984" &&
   \
   local gardener="$PACKAGE_ROOT/bin/gardener" &&
   local gardener_opts='--stdinpass=true --dashboard=dashboard' &&

@@ -6,7 +6,9 @@ SHELL := /bin/bash
 QMAKE := ${MAKE} --no-print-directory
 
 PLATFORM := $(shell ./scripts/detect-platform)
-INITRD_PATH := $(shell readlink -f initrd/${PLATFORM})
+
+DIR := initrd/${PLATFORM}
+INITRD_PATH := $(shell readlink -f '${DIR}' 2>/dev/null || realpath '${DIR}')
 
 DATE := $(shell date +'%Y%m%d')
 TIMESTAMP := $(shell date +'%Y-%m-%d %H:%M:%S')
@@ -243,7 +245,7 @@ build-initrd: copy-compiler-libraries prepare-initrd
 
 build-x86-image-nopae:
 	@if [ '${PLATFORM}' = 'x86' ]; then \
-	  echo 'Building x86 image with PAE disabled...' && \
+	  echo 'Building x86 kernel with PAE disabled...' && \
 	  (cd source && \
 	    ../scripts/prepend-path '${COMPILER_ROOT}' \
 	      ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
@@ -253,6 +255,12 @@ build-x86-image-nopae:
 	  ${QMAKE} build-iso-image ISO_EXTRA='-nopae'; \
 	fi
 
+rebuild-kernel:
+	@echo 'Rebuilding kernel...' && \
+	(cd source && \
+	  ../scripts/prepend-path '${COMPILER_ROOT}' \
+	    ${QMAKE} rebuild-kernel rebuild-vm-tools-modules)
+
 strip-binaries:
 	@echo -n 'Removing unnecessary symbols... ' && \
 	./scripts/strip-binaries packages && \
@@ -260,27 +268,27 @@ strip-binaries:
 
 concierge-pkg:
 	@echo -n 'Compressing package 'concierge'... ' && \
-	scripts/build-package 'concierge' 10100 '${PLATFORM}' && \
+	scripts/build-package 'concierge' 10110 '${PLATFORM}' && \
 	echo 'done.'
 
 java-pkg:
 	@echo -n 'Compressing package 'java'... ' && \
-	scripts/build-package 'java' 17650 '${PLATFORM}' && \
+	scripts/build-package 'java' 17760 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 16110 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 16120 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
 	@echo -n 'Compressing package 'system-services'... ' && \
-	scripts/build-package 'system-services' 10100 '${PLATFORM}' && \
+	scripts/build-package 'system-services' 10200 '${PLATFORM}' && \
 	echo 'done.'
 
 vm-tools-pkg:
 	@echo -n 'Compressing package 'vm-tools'... ' && \
-	scripts/build-package 'vm-tools' 94610 '${PLATFORM}' && \
+	scripts/build-package 'vm-tools' 94611 '${PLATFORM}' && \
 	echo 'done.'
 
 shrink-gardener:
@@ -288,51 +296,46 @@ shrink-gardener:
 
 gardener-pkg: shrink-gardener
 	@echo -n 'Compressing package 'gardener'... ' && \
-	scripts/build-package 'gardener' 11000 '${PLATFORM}' && \
+	scripts/build-package 'gardener' 11001 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-transport-pkg:
 	@echo -n 'Compressing package 'medic-transport'... ' && \
-	scripts/build-package 'medic-transport' 10100 '${PLATFORM}' && \
+	scripts/build-package 'medic-transport' 10101 '${PLATFORM}' && \
 	echo 'done.'
 
 convert-boot-logo:
 	for file in logo-medic logo-medic-gray; do \
 	  pngtopnm "config/kernel/common/boot-logo/$$file.png" \
 	    | ppmquant 224 2>/dev/null | pnmtoplainpnm \
-	      > "config/kernel/common/boot-logo/$$file.ppm" || exit "$$?" \
+	      > "config/kernel/common/boot-logo/$$file.ppm" || exit "$$?"; \
 	done
 
 download:
 	@rm -f status/download.finished && \
-	./scripts/retrieve-sources \
-	  core source/core/incoming '${URL}' && \
-	    (cd source/core && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources \
-	  compiler source/compiler/incoming '${URL}' && \
-	    (cd source/compiler && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources \
-	  medic-core source/medic-core/incoming '${URL}' && \
-	    (cd source/medic-core && ./scripts/rearrange-sources) && \
-	./scripts/retrieve-sources \
-	  vm-tools source/vm-tools/incoming '${URL}' && \
-	    (cd source/vm-tools && ./scripts/rearrange-sources) && \
-	touch status/download.finished
+	for manifest in source/manifests/*; do \
+	  pkg="`basename "$$manifest"`" && \
+	  ./scripts/retrieve-sources \
+	    "$$pkg" "source/$$pkg/incoming" '${URL}' && \
+	  (cd "source/$$pkg" && ./scripts/rearrange-sources) || exit "$$?"; \
+	done && \
+	touch status/download.finished;
 
 move-downloaded:
 	@if ! [ -f status/move.finished ]; then \
-	  (cd source/core && mv incoming/* source/) && \
-	  (cd source/compiler && mv incoming/* source/) && \
-	  (cd source/vm-tools && mv incoming/* source/) && \
-	  (cd source/medic-core && mv incoming/* source/) && \
+	  for manifest in source/manifests/*; do \
+	    pkg="`basename "$$manifest"`" && \
+	    (cd "source/$$pkg" && mv incoming/* source/) || exit "$$?"; \
+	  done && \
 	  touch status/move.finished; \
-  fi
+	fi
 
 delete-downloaded:
 	@rm -f status/* && \
 	for type in incoming source; do \
-	  for pkg in core compiler vm-tools medic-core; do \
-	    (cd source && rm -rf "$$pkg/$$type"/*) || exit "$$?"; \
+	  for manifest in source/manifests/*; do \
+	    pkg="`basename "$$manifest"`" && \
+	    (cd "source/$$pkg" && rm -rf "$$type"/*) || exit "$$?"; \
 	  done; \
 	done
 

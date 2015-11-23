@@ -3,12 +3,12 @@
 start()
 {
   local self="`realpath "$0"`"
-  local base="`dirname "$self"`"
+  local base="`dirname -- "$self"`"
 
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  for type in rsa dsa ecdsa; do
+  for type in rsa dsa ecdsa ed25519; do
     local key_file="$PACKAGE_ROOT/etc/ssh/ssh_host_${type}_key"
 
     if ! [ -f "$key_file" ]; then

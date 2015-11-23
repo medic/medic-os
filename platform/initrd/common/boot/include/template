@@ -173,8 +173,8 @@ template_expand_directories()
 
     find "$target_dir" -type f -name "*.$extension" | while read src_file; do
 
-      local target_name="`basename "$src_file" ".$extension"`" &&
-      local target_file="`dirname "$src_file"`/$target_name" \
+      local target_name="`basename -- "$src_file" ".$extension"`" &&
+      local target_file="`dirname -- "$src_file"`/$target_name" \
         || return 133
 
       # Edge case:

@@ -11,6 +11,30 @@ is_integer()
   return 0
 }
 
+underline()
+{
+  local string="$1"
+  local fill_character="$2"
+
+  if [ -z "$fill_character" ]; then
+    fill_character='-'
+  fi
+
+  echo "$string" | sed "s/./$fill_character/g;"
+}
+
+indent()
+{
+  local indent_string="$1"
+  shift 1
+
+  if [ -z "$indent_string" ]; then
+    indent_string='    '
+  fi
+
+  sed "s/^/$indent_string/;"
+}
+
 read_integer_file()
 {
   local file="$1"
@@ -35,7 +59,7 @@ require_root()
   fi
 }
 
-prepend_path()
+prepend_paths()
 {
   for dir in "$@"; do
     local bin="$dir/bin"
@@ -48,7 +72,7 @@ prepend_path()
   done
 }
 
-append_path()
+append_paths()
 {
   for dir in "$@"; do
     local bin="$dir/bin"
@@ -67,9 +91,9 @@ use_package()
   local prepend="$2"
 
   if [ "$prepend" ]; then
-    local command='prepend_path'
+    local command='prepend_paths'
   else
-    local command='append_path'
+    local command='append_paths'
   fi
 
   $command "$srv_dir/software/$package/current/default"
