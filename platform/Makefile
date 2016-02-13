@@ -328,7 +328,7 @@ move-downloaded:
 	  for manifest in source/manifests/*; do \
 	    pkg="`basename "$$manifest"`" && \
 	    if [ "$$pkg" != '*' ]; then \
-	      (cd "source/$$pkg" && find -d incoming \
+	      (cd "source/$$pkg" && find incoming \
 	        -depth 1 -exec mv {} source/ \;) || exit "$$?"; \
 	    fi; \
 	  done && \
