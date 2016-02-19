@@ -44,7 +44,7 @@ main()
 
     if [ "$?" -ne 0 ]; then
       echo 'failed.' >&2
-      fatal 'Failed to clean Medic OS source tree'
+      warn 'Failed to clean Medic OS source tree'
     fi
   done
 
