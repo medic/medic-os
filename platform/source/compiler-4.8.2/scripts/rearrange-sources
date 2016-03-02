@@ -16,7 +16,8 @@ rename()
 
 apply_patches()
 {
-  true
+  (cd gcc && patch -s -p1 \
+    < ../../patches/gcc-4.8.2-stack-protector-strong.diff)
 }
 
 finished_path="$base_dir/../../status/compiler.finished"

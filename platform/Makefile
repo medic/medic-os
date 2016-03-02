@@ -328,8 +328,8 @@ move-downloaded:
 	  for manifest in source/manifests/*; do \
 	    pkg="`basename "$$manifest"`" && \
 	    if [ "$$pkg" != '*' ]; then \
-	      (cd "source/$$pkg" && find -d incoming \
-	        -depth 1 -exec mv {} source/ \;) || exit "$$?"; \
+	      (cd "source/$$pkg" && find incoming -mindepth 1 \
+	        -maxdepth 1 -exec mv {} source/ \;) || exit "$$?"; \
 	    fi; \
 	  done && \
 	  touch status/move.finished; \

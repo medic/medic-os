@@ -199,7 +199,7 @@ main()
   \
   (ldflags_in_cflags && build_autoconf 'nginx' \
     "$stdarg --sbin-path='$prefix/bin' \
-     --with-http_ssl_module --with-http_spdy_module \
+     --with-http_ssl_module --with-http_v2_module \
      --conf-path='$prefix/etc/nginx/nginx.conf' \
      --pid-path='$prefix/var/run/nginx/nginx.pid' \
      --lock-path='$prefix/var/run/nginx/nginx.lock' \
