@@ -47,10 +47,10 @@ main() {
   local security_group='ssh-only'
   local iam_role='nightly-build-server'
   local time_zone='America/Los_Angeles'
-  local default_availability_zone='us-west-2b'
+  local default_availability_zone='us-west-2a'
   local ssh_key_name='nightly-builds@medicmobile.org'
 
-  local vm_url='https://github.com/browndav/medic-os'
+  local vm_url='https://github.com/medic/medic-os'
   local s3_base_url='https://medic-mobile.s3.amazonaws.com'
 
   local source_url="$s3_base_url/medic-os/build/source"
