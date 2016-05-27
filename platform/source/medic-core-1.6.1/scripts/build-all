@@ -210,7 +210,7 @@ main()
     build_autoconf 'node' \
       "$stdarg --shared-zlib \
        --shared-zlib-includes='$prefix/include' \
-       --shared-zlib-libpath='$prefix/lib' \
+       --shared-zlib-libpath='$prefix/lib' --with-intl=system-icu \
        --shared-openssl --shared-openssl-includes='$prefix/include' \
        --shared-openssl-libpath='$prefix/lib' --dest-cpu='$build_cpu'") &&
   \
