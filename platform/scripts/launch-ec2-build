@@ -12,11 +12,16 @@ fatal() {
 usage() {
 
   local app="`basename "$0"`"
-  local required_args='settings_path'
-  local optional_args='platform [ instance_type [ build_options ] ]'
+  local args='[ settings_path platform instance_type build_options ]'
 
-  echo "Usage: $app $required_args [ $optional_args ]" >&2
+  echo "Usage: $app $args" >&2
   exit 1
+}
+
+discover_server_role() {
+
+  curl -s 'http://169.254.169.254/latest/meta-data/iam/info' \
+    | jq .InstanceProfileArn | sed -r 's/^".*\/([^"]+)"$/\1/;' 2>/dev/null
 }
 
 ssh_command() {
@@ -44,10 +49,10 @@ main() {
   local build_options="$4"
 
   local fs_size='20'
+  local iam_role='$inherit'
   local security_group='ssh-only'
-  local iam_role='nightly-build-server'
   local time_zone='America/Los_Angeles'
-  local default_availability_zone='us-west-2a'
+  local default_availability_zone='us-west-1a'
   local ssh_key_name='nightly-builds@medicmobile.org'
 
   local vm_url='https://github.com/medic/medic-os'
@@ -56,7 +61,7 @@ main() {
   local source_url="$s3_base_url/medic-os/build/source"
   local mirror_url="$s3_base_url/medic-os/mirror/source"
 
-  if [ -z "$settings" -o $# -gt 4 ]; then
+  if [ "$1" = '-h' -o "$1" = '--help' -o $# -gt 4 ]; then
     usage
   fi
 
@@ -78,7 +83,7 @@ main() {
 
   case "$platform" in
     x64)
-      ami='ami-ff527ecf' ;;
+      ami='ami-eff1028f' ;;
     x86)
       ami='ami-cffea7ff' ;;
   esac
@@ -105,14 +110,23 @@ main() {
     EC2_AVAILABILITY_ZONE="$default_availability_zone"
   fi
 
+  local extra_create_args=''
+
+  if [ "$iam_role" = '$inherit' ]; then
+    extra_create_args="-p '`discover_server_role`'" \
+      || fatal 'Unable to discover server role'
+  else
+    extra_create_args="-p '$iam_role'"
+  fi
+
   local n='16'
   local tab="`printf '\t'`"
 
   echo -n 'Creating instance... ' >&2
 
   local instance_data="`
-    ec2-run-instances "$ami" \
-      -t "$instance_type" -p "$iam_role" -b "/dev/sda1=:$fs_size" \
+    ec2-run-instances "$ami" $extra_create_args \
+      -t "$instance_type" -b "/dev/sda1=:$fs_size" \
       -k "$ssh_key_name" -z "$EC2_AVAILABILITY_ZONE" -g "$security_group"
   `" &&
   \
