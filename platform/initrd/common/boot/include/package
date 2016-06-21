@@ -110,6 +110,16 @@ package_install()
     log "File '$srv_dir/scripts/$package/install' is not executable"
   fi
 
+  supervisor_start "$package"
+  local rv="$?"
+
+  if [ "$rv" -eq 253 ]; then
+    info "Package '$package' has no services to start; continuing"
+  elif [ "$rv" -ne 0 ]; then
+    warn "Failed to start services for package '$package'"
+    return 6
+  fi
+
   log "Successfully installed package '$package'"
   sync
 

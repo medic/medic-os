@@ -2,6 +2,7 @@
 
 source '/boot/include/utility'
 source '/boot/include/package'
+source '/boot/include/template'
 source '/boot/include/supervisor'
 
 main()
