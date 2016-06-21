@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 
 set -o pipefail
 
@@ -9,7 +9,7 @@ manifest_compare_generic()
   local include_added="$3"
   local include_removed="$4"
 
-  local p='[';
+  local p='';
 
   if [ "$include_added" ]; then
     p="${p}+"
@@ -19,12 +19,30 @@ manifest_compare_generic()
     p="${p}-"
   fi
 
-  p="${p}]"
+  if [ -z "$p" ]; then
+    return 1
+  fi
 
-  diff -wdub "$previous_manifest" "$replacement_manifest" \
-    | grep -v "^$p$p$p " | grep "^$p" | sed "s/^$p//;" | sort -r
+  p="[${p}]"
 
-  return "$?"
+  local previous_sorted="`mktemp`" || return 2
+  local replacement_sorted="`mktemp`" || return 3
+
+  sort -r < "$previous_manifest" > "$previous_sorted" &&
+  sort -r < "$replacement_manifest" > "$replacement_sorted"
+
+  if [ "$?" -ne 0 ]; then
+    rm -f "$previous_sorted" "$replacement_sorted"
+    return 4
+  fi
+
+  diff -wdub "$previous_sorted" "$replacement_sorted" \
+    | grep -v "^$p$p$p " | grep "^$p" | sed "s/^$p//;"
+
+  local rv="$?"
+  rm -f "$previous_sorted" "$replacement_sorted"
+
+  return "$rv"
 }
 
 manifest_find_removed()
