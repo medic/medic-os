@@ -14,17 +14,30 @@ main()
   require_root
   supervisor_init
 
+  local force_install=''
+
+  if [ "$1" = '-f' -o "$1" = '--force' ]; then
+    force_install='t'
+    shift 1
+  fi
+
+
   for path in "$@"; do
     local package="`package_extract_name "$path"`" \
       || fatal "Failed to determine name of package '$path'"
 
+    package="`package_sanitize_name "$package"`" \
+      || fatal "Package '$path' contains invalid name '$package'"
+
+    if [ -z "$force_install" ]; then
+      if package_is_installed "$package"; then
+        fatal "Package '$package' is already installed"
+      fi
+    fi
+
     package_install "$path" \
       || fatal "Failed to install package '$path'"
 
-    package_setup "$package" \
-      || fatal "Failed to run setup script for package '$path'"
-
-    supervisor_start "$package"
     local rv="$?"
 
     if [ "$rv" -eq 253 ]; then
@@ -42,7 +55,7 @@ main()
 
 usage()
 {
-  echo "Usage: $0 <package.vpkg>..." >&2
+  echo "Usage: $0 [-f | --force] <package.vpkg>..." >&2
   exit 111
 }
 

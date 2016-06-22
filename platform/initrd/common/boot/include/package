@@ -7,6 +7,22 @@ receipts_dir="$srv_dir/system/storage/receipts"
 settings_dir="$srv_dir/system/settings/packages"
 supervisor_dir="$srv_dir/system/storage/supervisor"
 
+package_sanitize_name()
+{
+  local package="$1"
+
+  basename -- "$package"
+  return "$?"
+}
+
+service_sanitize_name()
+{
+  local service="$1"
+
+  basename -- "$service"
+  return "$?"
+}
+
 package_extract_metadata()
 {
   local path="$1"
@@ -54,6 +70,30 @@ package_retrieve_installed_version()
   local package="$1"
 
   cat "$receipts_dir/$package/version" 2>/dev/null
+  return "$?"
+}
+
+package_is_installed()
+{
+  local package="$1"
+
+  test -f "$receipts_dir/$package/version" 2>/dev/null
+  return "$?"
+}
+
+package_manifest_copy()
+{
+  local package="$1"
+
+  local version="`package_retrieve_installed_version "$package"`" \
+    || return 1
+
+  local manifest_path="$receipts_dir/$package/manifest"
+  local new_manifest_path="$manifest_path.$version"
+
+  cp -af "$manifest_path" "$new_manifest_path" &&
+  echo "$new_manifest_path"
+
   return "$?"
 }
 
@@ -110,6 +150,14 @@ package_install()
     log "File '$srv_dir/scripts/$package/install' is not executable"
   fi
 
+  log "Running setup tasks for package '$package'"
+
+  if ! package_setup "$package"; then
+    warn "At least one setup script in package '$package' failed"
+    warn "Your installation of '$package' may be incomplete"
+    return 6
+  fi
+
   supervisor_start "$package"
   local rv="$?"
 
@@ -117,7 +165,7 @@ package_install()
     info "Package '$package' has no services to start; continuing"
   elif [ "$rv" -ne 0 ]; then
     warn "Failed to start services for package '$package'"
-    return 6
+    return 7
   fi
 
   log "Successfully installed package '$package'"
@@ -152,8 +200,7 @@ package_remove()
     fi
   fi
 
-  rm -rf "$receipts_dir/$package" \
-    "$supervisor_dir/$package" "$settings_dir/$package"
+  package_remove_manifest "$package"
 
   if [ "$?" -gt 0 ]; then
     warn "Failed to remove installation records for package '$package'"
@@ -164,6 +211,16 @@ package_remove()
   sync
 
   return 0
+}
+
+package_remove_manifest()
+{
+  local package="$1"
+
+  rm -rf "$receipts_dir/$package" \
+    "$supervisor_dir/$package" "$settings_dir/$package"
+
+  return "$?"
 }
 
 package_update()
@@ -192,7 +249,7 @@ package_update()
     if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ]; then
 
       warn "A newer version of '$package' is already installed"
-      warn "Use the force-install option if you want to install it anyway"
+      warn "Use the -f/--force option if you want to install it anyway"
       return 3
 
     elif [ "$v_prev" -lt "$v_new" ] 2>/dev/null; then
@@ -206,18 +263,17 @@ package_update()
       fi
     else
       warn "Version '$v_prev' of package '$package' is already installed"
+      return 5
     fi
   else
-    force_install='t'
-    log "Package '$package' is not installed yet; installing"
+    warn "Package '$package' is not installed"
+    return 6
   fi
 
-  if [ "$force_install" ]; then
-    log "Installing package '$package'"
-    if ! package_install "$path"; then
-      warn "Package '$package' encountered an error during installation"
+  if ! package_update_twophase "$package" "$path"; then
+    warn "Error encountered while updating package '$package'"
       warn "Software installation from file '$file' was unsuccessful"
-      return 5
+      return 7
     fi
   fi
 
@@ -226,11 +282,22 @@ package_update()
   if ! package_setup "$package"; then
     warn "At least one setup script in package '$package' failed"
     warn "Your installation of '$package' may be incomplete"
-    return 6
+    return 8
   fi
 
   log "Finished examining package '$package'"
   return 0
+}
+
+package_update_twophase()
+{
+  local package="$1"
+  local path="$2"
+
+  local manifest="`package_manifest_copy "$package"`" \
+    || return 1
+
+  return "$?"
 }
 
 package_merge_environment()

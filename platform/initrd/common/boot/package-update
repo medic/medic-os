@@ -21,6 +21,9 @@ main()
   require_root
 
   for package in "$@"; do
+    package="`package_sanitize_name "$package"`" \
+      || fatal "Invalid package name '$package'"
+
     package_update "$package" "$force_install" \
       || fatal "Failed to update package '$package'"
   done

@@ -17,7 +17,7 @@ usage()
 
 main()
 {
-  local package="`basename -- "$1"`"
+  local package="$1"
   local attribute="$2"
 
   if [ "$1" = '-h' -o "$1" = '--help' ]; then
@@ -30,6 +30,9 @@ main()
   if [ -z "$package" -o "$package" = 'all' ]; then
     supervisor_list_all_packages
   else
+    package="`package_sanitize_name "$package"`" \
+      || fatal "Invalid package name '$package'"
+
     if ! supervisor_package_exists "$package"; then
       fatal "Package '$package' is not currently installed"
     fi

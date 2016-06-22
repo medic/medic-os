@@ -42,14 +42,18 @@ main()
   supervisor_init
 
   for package in "$@"; do
-    local package="`basename -- "$package"`"
+    package="`package_sanitize_name "$package"`" \
+      || fatal "Invalid package name '$package'"
+
     supervisor_package_exists "$package" \
       || fatal "Package '$package' doesn't appear to be installed"
   done
 
   if [ "$#" -gt 0 ]; then
     echo && for package in "$@"; do
-      local package="`basename -- "$package"`"
+      package="`package_sanitize_name "$package"`" \
+        || fatal "Invalid package name '$package'"
+
       show_package "$package"
       show_services "$package"
     done

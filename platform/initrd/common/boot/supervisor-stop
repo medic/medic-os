@@ -15,6 +15,9 @@ main()
   local package="$1"
   shift 1
 
+  package="`package_sanitize_name "$package"`" \
+    || fatal "Invalid package name '$package'"
+
   local is_failure=''
 
   # Strict mode:
@@ -24,6 +27,9 @@ main()
 
   if [ "$#" -gt 0 ]; then
     for service in "$@"; do
+      service="`service_sanitize_name "$service"`" \
+        || fatal "Invalid service name '$service'"
+
       if supervisor_is_service_disabled "$package" "$service"; then
         is_failure='t'
         warn "Service '$package/$service' is disabled"
