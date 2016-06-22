@@ -272,9 +272,8 @@ package_update()
 
   if ! package_update_twophase "$package" "$path"; then
     warn "Error encountered while updating package '$package'"
-      warn "Software installation from file '$file' was unsuccessful"
-      return 7
-    fi
+    warn "Software installation from file '$file' was unsuccessful"
+    return 7
   fi
 
   log "Running setup tasks for package '$package'"
