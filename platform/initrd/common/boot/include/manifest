@@ -2,6 +2,21 @@
 
 set -o pipefail
 
+safe()
+{
+  local command="$1"
+  shift 1
+
+  "$command" "$@"
+  local rv="$?"
+
+  if [ "$rv" -eq 1 ]; then
+    return 0
+  fi
+
+  return "$rv"
+}
+
 manifest_compare_generic()
 {
   local previous_manifest="$1"
@@ -36,8 +51,8 @@ manifest_compare_generic()
     return 4
   fi
 
-  diff -wdub "$previous_sorted" "$replacement_sorted" \
-    | grep -v "^$p$p$p " | grep "^$p" | sed "s/^$p//;"
+  safe diff -wdub "$previous_sorted" "$replacement_sorted" \
+    | safe grep -v "^$p$p$p " | safe grep "^$p" | sed "s/^$p//;"
 
   local rv="$?"
   rm -f "$previous_sorted" "$replacement_sorted"

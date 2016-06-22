@@ -100,6 +100,7 @@ package_manifest_copy()
 package_install()
 {
   local path="$1"
+  local skip_autostart="$2"
 
   if ! [ -r "$path" ]; then
     return 1
@@ -138,10 +139,10 @@ package_install()
 
     log "Running installation script for package '$package'"
 
-    "$srv_dir/scripts/$package/install" \
-      || warn "Installation script for package '$package' failed"
+    "$srv_dir/scripts/$package/install"
 
     if [ "$?" -ne 0 ]; then
+      warn "Installation script for package '$package' failed"
       rm -rf "$receipts_dir/$package"
       return 5
     fi
@@ -158,14 +159,16 @@ package_install()
     return 6
   fi
 
-  supervisor_start "$package"
-  local rv="$?"
+  if [ -z "$skip_autostart" ]; then
+    supervisor_start "$package"
+    local rv="$?"
 
-  if [ "$rv" -eq 253 ]; then
-    info "Package '$package' has no services to start; continuing"
-  elif [ "$rv" -ne 0 ]; then
-    warn "Failed to start services for package '$package'"
-    return 7
+    if [ "$rv" -eq 253 ]; then
+      info "Package '$package' has no services to start; continuing"
+    elif [ "$rv" -ne 0 ]; then
+      warn "Failed to start services for package '$package'"
+      return 7
+    fi
   fi
 
   log "Successfully installed package '$package'"
@@ -176,7 +179,7 @@ package_install()
 
 package_remove()
 {
-  local package="`basename -- "$1"`"
+  local package="$1"
 
   log "Removing package '$package'"
   log "Stopping services for package '$package'"
@@ -200,7 +203,7 @@ package_remove()
     fi
   fi
 
-  package_remove_manifest "$package"
+  package_manifest_remove "$package"
 
   if [ "$?" -gt 0 ]; then
     warn "Failed to remove installation records for package '$package'"
@@ -213,13 +216,11 @@ package_remove()
   return 0
 }
 
-package_remove_manifest()
+package_manifest_remove()
 {
   local package="$1"
 
-  rm -rf "$receipts_dir/$package" \
-    "$supervisor_dir/$package" "$settings_dir/$package"
-
+  true
   return "$?"
 }
 
@@ -232,7 +233,7 @@ package_update()
   local v_new="`package_extract_version "$path"`" &&
   local v_prev="`package_retrieve_installed_version "$package"`"
 
-  log "Updating package '$package'"
+  log "Updating package '$package'..."
   log "Examining version information for package '$package'"
 
   if [ "$?" -ne 0 ]; then
@@ -254,11 +255,10 @@ package_update()
 
     elif [ "$v_prev" -lt "$v_new" ] 2>/dev/null; then
 
-      force_install='t'
-      log "Removing package '$package'"
+      log "Stopping supervisor for package '$package'"
 
-      if ! package_remove "$package"; then
-        warn "Failed to completely remove package '$package'"
+      if ! supervisor_stop "$package"; then
+        warn "Failed to stop supervisor for package '$package'"
         return 4
       fi
     else
@@ -272,7 +272,7 @@ package_update()
 
   if ! package_update_twophase "$package" "$path"; then
     warn "Error encountered while updating package '$package'"
-    warn "Software installation from file '$file' was unsuccessful"
+    warn "Software installation from file '$path' was unsuccessful"
     return 7
   fi
 
@@ -282,6 +282,16 @@ package_update()
     warn "At least one setup script in package '$package' failed"
     warn "Your installation of '$package' may be incomplete"
     return 8
+  fi
+
+  supervisor_start "$package"
+  local rv="$?"
+
+  if [ "$rv" -eq 253 ]; then
+    info "Package '$package' has no services to start; continuing"
+  elif [ "$rv" -ne 0 ]; then
+    warn "Failed to start services for package '$package'"
+    return 9
   fi
 
   log "Finished examining package '$package'"
@@ -295,6 +305,14 @@ package_update_twophase()
 
   local manifest="`package_manifest_copy "$package"`" \
     || return 1
+
+  info "Pre-installing package '$path'..."
+
+  package_install "$path" 't' \
+    || return 2
+
+  manifest_find_removed \
+    "$manifest" "$receipts_dir/$package/manifest" >/dev/null
 
   return "$?"
 }
@@ -356,20 +374,3 @@ package_regenerate_settings()
   return "$?"
 }
 
-package_remove_empty_directories()
-{
-  local package="`basename -- "$1"`"
-  local software_dir="$srv_dir/software/$package"
-
-  local file_count="`
-    find "$software_dir" -type f 2>/dev/null | wc -l
-  `"
-
-  [ "$?" -eq 0 ] || return 1
-    
-  if [ "$file_count" -eq 0 ]; then
-    rm -rf "$software_dir" || return 2
-  fi
-
-  return 0
-}
