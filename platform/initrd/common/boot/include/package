@@ -209,7 +209,6 @@ package_install()
   if [ -x "$srv_dir/scripts/$package/install" ]; then
 
     log "Running installation script for package '$package'"
-
     "$srv_dir/scripts/$package/install"
 
     if [ "$?" -ne 0 ]; then
@@ -217,9 +216,6 @@ package_install()
       rm -rf "$receipts_dir/$package"
       return 5
     fi
-  else
-    log "Skipping installation script for package '$package'"
-    log "File '$srv_dir/scripts/$package/install' is not executable"
   fi
 
   log "Running setup tasks for package '$package'"
@@ -293,6 +289,7 @@ package_update()
 {
   local path="$1"
   local force_install="$2"
+  local use_soft_restart="$3"
 
   local package="`package_extract_name "$path"`" &&
   local v_new="`package_extract_version "$path"`" &&
@@ -311,27 +308,29 @@ package_update()
     return 2
   fi
 
-  if [ "$v_prev" ]; then
-    if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ]; then
+  if [ -z "$v_prev" ]; then
+    warn "Package '$package' is not installed"
+    return 3
+  fi
 
-      warn "A newer version of '$package' is already installed"
-      warn "Use the -f/--force option if you want to install it anyway"
-      return 3
+  if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ]; then
 
-    elif [ "$v_prev" -lt "$v_new" ] 2>/dev/null; then
+    warn "A newer version of '$package' is already installed"
+    warn "Use the -f/--force option if you want to install it anyway"
+    return 4
 
+  elif [ "$v_prev" -lt "$v_new" ] 2>/dev/null; then
+
+    if [ -z "$use_soft_restart" ]; then
       log "Stopping supervisor for package '$package'"
 
       if ! supervisor_stop "$package"; then
         warn "Failed to stop supervisor for package '$package'"
-        return 4
+        return 5
       fi
-    else
-      warn "Version '$v_prev' of package '$package' is already installed"
-      return 5
     fi
   else
-    warn "Package '$package' is not installed"
+    warn "Version '$v_prev' of package '$package' is already installed"
     return 6
   fi
 
@@ -341,22 +340,46 @@ package_update()
     return 7
   fi
 
+  if [ -x "$srv_dir/scripts/$package/install" ]; then
+
+    log "Running installation script for package '$package'"
+    "$srv_dir/scripts/$package/install" 'update'
+
+    if [ "$?" -ne 0 ]; then
+      warn "Installation script for package '$package' failed"
+      rm -rf "$receipts_dir/$package"
+      return 8
+    fi
+  fi
+
   log "Running setup tasks for package '$package'"
 
   if ! package_setup "$package"; then
     warn "At least one setup script in package '$package' failed"
     warn "Your installation of '$package' may be incomplete"
-    return 8
+    return 9
   fi
 
-  supervisor_start "$package"
-  local rv="$?"
+  if [ "$use_soft_restart" ]; then
+    info "Restarting services for package '$package'..."
 
-  if [ "$rv" -eq 253 ]; then
-    info "Package '$package' has no services to start; continuing"
-  elif [ "$rv" -ne 0 ]; then
-    warn "Failed to start services for package '$package'"
-    return 9
+    supervisor_list_all_services "$package" | while read service; do
+      info "Restarting service '$package/$service'"
+      if ! supervisor_service_restart "$package" "$service"; then
+        warn "Failed to restart service '$package/$service'"
+        return 10
+      fi
+    done
+  else
+    supervisor_start "$package"
+    local rv="$?"
+
+    if [ "$rv" -eq 253 ]; then
+      info "Package '$package' has no services to start; continuing"
+    elif [ "$rv" -ne 0 ]; then
+      warn "Failed to start services for package '$package'"
+      return 11
+    fi
   fi
 
   log "Finished examining package '$package'"
