@@ -34,7 +34,7 @@ start()
   local gardener_args="'$url' $gardener_opts --logdir='$logs'" &&
   local gardener_cmd="'`which node`' '$gardener' $gardener_args" &&
   \
-  exec nohup su -c "cd '$data' && exec $gardener_cmd" gardener \
+  exec su -c "cd '$data' && exec $gardener_cmd" gardener \
     < "$passwd_file" >> "$logs/startup.log" 2>&1
 }
 

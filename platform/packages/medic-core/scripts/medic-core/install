@@ -4,6 +4,9 @@ source '/boot/include/hypervisor'
 
 install()
 {
+  local is_update="$1"
+  shift 1
+
   local self="`realpath "$0"`"
   local base="`dirname -- "$self"`"
 
@@ -47,8 +50,10 @@ install()
     chown gammu:gammu-inject "$binary" && chmod 4110 "$binary"
   done &&
   \
-  install_default_couchdb_databases \
-    "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
+  if [ -z "$is_update" ]; then
+    info 'Installing default CouchDB databases'
+    install_default_couchdb_databases "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
+  fi
 
   return "$?"
 }
