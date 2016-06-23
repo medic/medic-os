@@ -22,7 +22,6 @@ main()
     shift 1
   fi
 
-
   for path in "$@"; do
     local package="`package_extract_name "$path"`" \
       || fatal "Failed to determine name of package '$path'"
@@ -35,6 +34,8 @@ main()
         fatal "Package '$package' is already installed"
       fi
     fi
+
+    info "Installing package '$path'..."
 
     package_install "$path" \
       || fatal "Failed to install package '$path'"

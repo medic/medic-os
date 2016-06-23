@@ -10,6 +10,7 @@ update()
 {
   if [ "$#" -le 0 ]; then
     supervisor_list_all_packages | while read package; do
+      info "Updating configuration for package '$package'"
       package_regenerate_settings "$package" \
         || fatal "Failed to update configuration for package '$package'"
     done
@@ -17,6 +18,7 @@ update()
     [ "$rv" -ne 0 ] && return "$rv"
   else
     for package in "$@"; do
+      info "Updating configuration for package '$package'"
       package="`package_sanitize_name "$package"`" \
         || fatal "Invalid package name '$package'"
       package_regenerate_settings "$package" \

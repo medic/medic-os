@@ -16,6 +16,8 @@ main()
   supervisor_init
 
   for package in "$@"; do
+    info "Removing package '$package'..."
+
     package="`package_sanitize_name "$package"`" \
       || fatal "Invalid package name '$package'"
 

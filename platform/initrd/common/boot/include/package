@@ -84,15 +84,86 @@ package_is_installed()
 package_manifest_copy()
 {
   local package="$1"
+  local manifest_path="$2"
+
+  if [ -z "$manifest_path" ]; then
+    manifest_path="$receipts_dir/$package/manifest"
+  fi
 
   local version="`package_retrieve_installed_version "$package"`" \
     || return 1
 
-  local manifest_path="$receipts_dir/$package/manifest"
   local new_manifest_path="$manifest_path.$version"
 
   cp -af "$manifest_path" "$new_manifest_path" &&
   echo "$new_manifest_path"
+
+  return "$?"
+}
+
+package_manifest_remove_all()
+{
+  local package="$1"
+  local manifest_path="$2"
+
+  if [ -z "$manifest_path" ]; then
+    manifest_path="$receipts_dir/$package/manifest"
+  fi
+
+  if ! cd "$srv_dir"; then
+    warn "Unable to change directory to '$srv_dir'"
+    return 1
+  fi
+
+  manifest_find_all "$manifest_path" \
+    | manifest_filter 'file' | while read file; do
+
+    if ! rm -f "$file" &>/dev/null; then
+      warn "Unable to remove file '$srv_dir/$file'"
+    fi
+  done
+
+  manifest_find_all "$manifest_path" \
+    | manifest_filter 'directory' | while read dir; do
+
+    if [ -d "$dir" ]; then
+      if ! rmdir --ignore-fail-on-non-empty "$dir" &>/dev/null; then
+        info "Unable to remove directory '$srv_dir/$dir'"
+      fi
+    fi
+  done
+
+  return "$?"
+}
+
+package_manifest_remove_differential()
+{
+  local package="$1"
+  local manifest_previous="$2"
+  local manifest_current="$3"
+
+  if ! cd "$srv_dir"; then
+    warn "Unable to change directory to '$srv_dir'"
+    return 1
+  fi
+
+  manifest_find_removed "$manifest_previous" "$manifest_current" \
+    | manifest_filter 'file' | while read file; do
+
+    if ! rm -f "$file" &>/dev/null; then
+      warn "Unable to remove file '$srv_dir/$file'"
+    fi
+  done
+
+  manifest_find_removed "$manifest_previous" "$manifest_current" \
+    | manifest_filter 'directory' | while read dir; do
+
+    if [ -d "$dir" ]; then
+      if ! rmdir --ignore-fail-on-non-empty "$dir" &>/dev/null; then
+        info "Unable to remove directory '$srv_dir/$dir'"
+      fi
+    fi
+  done
 
   return "$?"
 }
@@ -203,25 +274,19 @@ package_remove()
     fi
   fi
 
-  package_manifest_remove "$package"
+  package_manifest_remove_all "$package"
 
   if [ "$?" -gt 0 ]; then
     warn "Failed to remove installation records for package '$package'"
     return 3
   fi
 
+  rm -rf "$receipts_dir/$package"
+
   log "Successfully removed package '$package'"
   sync
 
   return 0
-}
-
-package_manifest_remove()
-{
-  local package="$1"
-
-  true
-  return "$?"
 }
 
 package_update()
@@ -311,8 +376,8 @@ package_update_twophase()
   package_install "$path" 't' \
     || return 2
 
-  manifest_find_removed \
-    "$manifest" "$receipts_dir/$package/manifest" >/dev/null
+  package_manifest_remove_differential "$package" \
+    "$manifest" "$receipts_dir/$package/manifest"
 
   return "$?"
 }
@@ -372,5 +437,13 @@ package_regenerate_settings()
 
   log "Finished regenerating settings for package '$package'"
   return "$?"
+}
+
+package_remove_empty_directories()
+{
+  local path="$1"
+
+  echo "Info: Ignoring directory removal request for '$path'" >&2
+  return 0
 }
 

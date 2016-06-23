@@ -60,6 +60,14 @@ manifest_compare_generic()
   return "$rv"
 }
 
+manifest_find_all()
+{
+  local manifest_path="$1"
+
+  sort -r < "$manifest_path"
+  return "$?"
+}
+
 manifest_find_removed()
 {
   manifest_compare_generic "$1" "$2" '' 't'
@@ -80,13 +88,16 @@ manifest_find_differences()
 
 manifest_filter()
 {
-  local directories="$1"
+  local type="$1"
 
-  if [ "$directories" ]; then
-    grep '/$'
-  else
-    grep -v '/$'
-  fi
+  case "$type" in
+    d*)
+      grep '/$'
+      ;;
+    *)
+      grep -v '/$'
+      ;;
+  esac
 
   return "$?"
 }
