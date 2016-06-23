@@ -16,6 +16,7 @@ git, https://www.kernel.org/pub/software/scm/git/git-2.4.6.tar.xz
 icu, http://download.icu-project.org/files/icu4c/51.2/icu4c-51_2-src.tgz
 inotify-tools, http://github.com/downloads/rvoicilas/inotify-tools/inotify-tools-3.14.tar.gz
 js, http://ftp.mozilla.org/pub/mozilla.org/js/js185-1.0.0.tar.gz
+jq, https://github.com/stedolan/jq/releases/download/jq-1.5/jq-1.5.tar.gz
 medic-transport, https://github.com/browndav/medic-transport.git
 libffi, http://mirrors.kernel.org/sources.redhat.com/libffi/libffi-3.0.13.tar.gz
 libidn, http://ftp.gnu.org/gnu/libidn/libidn-1.27.tar.gz
