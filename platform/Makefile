@@ -268,27 +268,27 @@ strip-binaries:
 
 concierge-pkg:
 	@echo -n 'Compressing package 'concierge'... ' && \
-	scripts/build-package 'concierge' 10110 '${PLATFORM}' && \
+	scripts/build-package 'concierge' 10111 '${PLATFORM}' && \
 	echo 'done.'
 
 java-pkg:
 	@echo -n 'Compressing package 'java'... ' && \
-	scripts/build-package 'java' 17760 '${PLATFORM}' && \
+	scripts/build-package 'java' 17800 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 16120 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 16130 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
 	@echo -n 'Compressing package 'system-services'... ' && \
-	scripts/build-package 'system-services' 10200 '${PLATFORM}' && \
+	scripts/build-package 'system-services' 10211 '${PLATFORM}' && \
 	echo 'done.'
 
 vm-tools-pkg:
 	@echo -n 'Compressing package 'vm-tools'... ' && \
-	scripts/build-package 'vm-tools' 94611 '${PLATFORM}' && \
+	scripts/build-package 'vm-tools' 94612 '${PLATFORM}' && \
 	echo 'done.'
 
 shrink-gardener:
