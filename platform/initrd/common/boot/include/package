@@ -118,8 +118,10 @@ package_manifest_remove_all()
   manifest_find_all "$manifest_path" \
     | manifest_filter 'file' | while read file; do
 
-    if ! rm -f "$file" &>/dev/null; then
-      warn "Unable to remove file '$srv_dir/$file'"
+    if ! [ -k "$file" ]; then
+      if ! rm -f "$file" &>/dev/null; then
+        warn "Unable to remove file '$srv_dir/$file'"
+      fi
     fi
   done
 
@@ -150,8 +152,10 @@ package_manifest_remove_differential()
   manifest_find_removed "$manifest_previous" "$manifest_current" \
     | manifest_filter 'file' | while read file; do
 
-    if ! rm -f "$file" &>/dev/null; then
-      warn "Unable to remove file '$srv_dir/$file'"
+    if ! [ -k "$file" ]; then
+      if ! rm -f "$file" &>/dev/null; then
+        warn "Unable to remove file '$srv_dir/$file'"
+      fi
     fi
   done
 
