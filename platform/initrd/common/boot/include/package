@@ -427,15 +427,15 @@ package_setup()
   local package="`basename -- "$1"`"
 
   for script in "$srv_dir/scripts/$package/setup"/*; do
-    if [ -x "$script" ]; then
+    if ! [ -x "$script" ]; then
+      continue
+    fi
 
-      local task_name="$package/`basename -- "$script"`"
-      log "Running setup task '$task_name'"
+    local task_name="$package/`basename -- "$script"`"
+    info "Running setup task '$task_name'"
 
-      "$script" >> "$log" 2>&1 \
-        || warn "Setup task '$task_name' was not successful"
-      
-      log "Finished setup task '$task_name'"
+    if ! "$script"; then
+      warn "Setup task '$task_name' failed to complete"
     fi
   done
 
