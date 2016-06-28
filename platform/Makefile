@@ -16,20 +16,21 @@ TIMESTAMP := $(shell date +'%Y-%m-%d %H:%M:%S')
 SYSTEM_ID ?= medic-os
 SYSTEM_NAME ?= Medic OS
 SYSTEM_VERSION_STRING ?= 1.1.0
+SYSTEM_IMAGE_NAME := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}
 
 COMPILER_VERSION ?= 4.8.2
 COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 
 ifeq (${RELEASE},)
-  SYSTEM_IMAGE_ID := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}-${DATE}-${PLATFORM}
+  SYSTEM_IMAGE_ID := ${SYSTEM_IMAGE_NAME}-${DATE}-${PLATFORM}
 else
-  SYSTEM_IMAGE_ID := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}-${PLATFORM}
+  SYSTEM_IMAGE_ID := ${SYSTEM_IMAGE_NAME}-${PLATFORM}
 endif
 
 
 # Meta-targets
 
-all: packages images
+all: bootinit packages images
 
 iso: build-iso-image
 xen: build-xen-image
@@ -42,6 +43,10 @@ packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-p
 
 
 # Public targets
+
+bootinit:
+	@(cd initrd/common && tar -cf - boot | xz -9ec) \
+	  > ../output/"${SYSTEM_IMAGE_NAME}-${DATE}-all-bootinit.tar.xz"
 
 compile:
 	@if [ -z '${SKIP_COMPILER}' ]; then \

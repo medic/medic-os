@@ -10,6 +10,9 @@ QMAKE := ${MAKE} --no-print-directory
 
 all: require-root download build
 
+bootinit:
+	@cd platform && ${QMAKE} bootinit
+
 build: reset-time prepare-tree
 	@echo >&2
 	@echo "`tput bold`Building packages`tput sgr0`" >&2 && echo >&2
