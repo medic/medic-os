@@ -327,8 +327,12 @@ package_update()
 
     if [ -z "$use_soft_restart" ]; then
       log "Stopping supervisor for package '$package'"
+      supervisor_stop "$package"
+      local rv="$?"
 
-      if ! supervisor_stop "$package"; then
+      if [ "$rv" -eq 253 ]; then
+        info "Package '$package' has no services to stop; continuing"
+      elif [ "$rv" -ne 0 ]; then
         warn "Failed to stop supervisor for package '$package'"
         return 5
       fi
