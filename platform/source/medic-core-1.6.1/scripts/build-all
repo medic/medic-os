@@ -5,6 +5,11 @@ set -o pipefail
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
 
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
 fatal()
 {
   echo "Fatal error: $*" >&2
