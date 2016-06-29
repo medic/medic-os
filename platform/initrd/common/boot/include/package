@@ -176,6 +176,7 @@ package_install()
 {
   local path="$1"
   local skip_autostart="$2"
+  local skip_setup_tasks="$3"
 
   if ! [ -r "$path" ]; then
     return 1
@@ -222,12 +223,14 @@ package_install()
     fi
   fi
 
-  log "Running setup tasks for package '$package'"
+  if [ -z "$skip_setup_tasks" ]; then
+    log "Running setup tasks for package '$package'"
 
-  if ! package_setup "$package"; then
-    warn "At least one setup script in package '$package' failed"
-    warn "Your installation of '$package' may be incomplete"
-    return 6
+    if ! package_setup "$package"; then
+      warn "At least one setup script in package '$package' failed"
+      warn "Your installation of '$package' may be incomplete"
+      return 6
+    fi
   fi
 
   if [ -z "$skip_autostart" ]; then
@@ -404,7 +407,7 @@ package_update_twophase()
 
   info "Pre-installing package '$path'..."
 
-  package_install "$path" 't' \
+  package_install "$path" 't' 't' \
     || return 2
 
   package_manifest_remove_differential "$package" \
