@@ -10,10 +10,9 @@ remove()
   source "$base/env" &&
   merge_environment /srv || return 255
 
-  rm -rf "$PACKAGE_ROOT" \
-    "$PACKAGE_SCRIPTS" "$PACKAGE_STORAGE"/*/logs
+  modprobe -r vmhgfs vsock vmsync vmblock vmxnet3 vmxnet
+  true
 
-  package_remove_empty_directories "$PACKAGE_NAME"
   return "$?"
 }
 
