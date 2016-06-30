@@ -123,11 +123,18 @@ main()
     (disable_parallelism && build_make 'usb-modeswitch-data' \
      'install' "DESTDIR='$prefix' PREFIX='$prefix'") &&
     \
-    # In libacl, libattr: make reinstall safe
-    rm -f "$prefix/lib/libattr.so".* "$prefix/lib/libacl.so".* &&
+    # libattr: Make reinstall safe
+    if builder_should_run 'attr'; then
+      rm -f "$prefix/lib/libattr.so".*
+    fi &&
     \
     (disable_parallelism && build_autoconf 'attr' \
       "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib') &&
+    \
+    # libacl: Make reinstall safe
+    if builder_should_run 'acl'; then
+      rm -f "$prefix/lib/libacl.so".*
+    fi &&
     \
     (disable_parallelism && build_autoconf 'acl' \
       "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib') &&
