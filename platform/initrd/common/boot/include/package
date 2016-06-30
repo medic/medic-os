@@ -274,7 +274,7 @@ package_remove()
     fi
   fi
 
-  # Subshell maintains current working directory
+  # Subshell preserves working directory
   (package_manifest_remove_all "$package")
 
   if [ "$?" -gt 0 ]; then
@@ -404,11 +404,14 @@ package_update_twophase()
   package_install "$path" 't' 't' 't' \
     || return 2
 
-  # Subshell maintains current working directory
+  # Subshell preserves working directory
   (package_manifest_remove_differential \
     "$package" "$manifest" "$receipts_dir/$package/manifest")
 
-  return "$?"
+  local rv="$?"
+  rm -f -- "$manifest"
+
+  return "$rv"
 }
 
 package_merge_environment()

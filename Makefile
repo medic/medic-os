@@ -10,7 +10,7 @@ QMAKE := ${MAKE} --no-print-directory
 
 all: require-root download build
 
-bootinit:
+bootinit: reset-time
 	@cd platform && ${QMAKE} bootinit
 
 build: reset-time prepare-tree
