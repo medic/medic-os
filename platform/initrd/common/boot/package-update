@@ -34,14 +34,11 @@ main()
 
   require_root
 
-  for package in "$@"; do
-    info "Updating package '$package'..."
+  for path in "$@"; do
+    info "Updating package '$path'..."
 
-    package="`package_sanitize_name "$package"`" \
-      || fatal "Invalid package name '$package'"
-
-    package_update "$package" "$force_install" "$use_soft_restart" \
-      || fatal "Failed to update package '$package'"
+    package_update "$path" "$force_install" "$use_soft_restart" \
+      || fatal "Failed to update package '$path'"
   done
 
   success 'All specified packages have been updated'
