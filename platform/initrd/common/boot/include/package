@@ -91,7 +91,7 @@ package_manifest_copy()
 
   local new_manifest_path="$manifest_path.$version"
 
-  cp -af "$manifest_path" "$new_manifest_path" &&
+  cp -af -- "$manifest_path" "$new_manifest_path" &&
   echo "$new_manifest_path"
 
   return "$?"
@@ -115,7 +115,7 @@ package_manifest_remove_all()
     | manifest_filter 'file' | while read file; do
 
     if ! [ -k "$file" ]; then
-      if ! rm -f "$file" &>/dev/null; then
+      if ! rm -f -- "$file" &>/dev/null; then
         warn "Unable to remove file '$srv_dir/$file'"
       fi
     fi
@@ -125,7 +125,7 @@ package_manifest_remove_all()
     | manifest_filter 'directory' | while read dir; do
 
     if [ -d "$dir" ]; then
-      if ! rmdir --ignore-fail-on-non-empty "$dir" &>/dev/null; then
+      if ! rmdir --ignore-fail-on-non-empty -- "$dir" &>/dev/null; then
         info "Unable to remove directory '$srv_dir/$dir'"
       fi
     fi
@@ -149,7 +149,7 @@ package_manifest_remove_differential()
     | manifest_filter 'file' | while read file; do
 
     if ! [ -k "$file" ]; then
-      if ! rm -f "$file" &>/dev/null; then
+      if ! rm -f -- "$file" &>/dev/null; then
         warn "Unable to remove file '$srv_dir/$file'"
       fi
     fi
@@ -173,6 +173,7 @@ package_install()
   local path="$1"
   local skip_autostart="$2"
   local skip_setup_tasks="$3"
+  local is_package_update="$4"
 
   if ! [ -r "$path" ]; then
     return 1
@@ -191,7 +192,7 @@ package_install()
     echo -n "$version" > "$receipts_dir/$package/version"
 
   if [ "$?" -ne 0 ]; then
-    rm -f "$receipts_dir/$package/version"
+    rm -f -- "$receipts_dir/$package/version"
     return 3
   fi
 
@@ -203,18 +204,18 @@ package_install()
 
   if [ "$?" -ne 0 ]; then
     warn "Failed to extract files for package '$package' from '$path'"
-    rm -f "$receipts_dir/$package"
+    rm -f -- "$receipts_dir/$package"
     return 4
   fi
 
   if [ -x "$srv_dir/scripts/$package/install" ]; then
 
     log "Running installation script for package '$package'"
-    "$srv_dir/scripts/$package/install"
+    "$srv_dir/scripts/$package/install" "$is_package_update"
 
     if [ "$?" -ne 0 ]; then
       warn "Installation script for package '$package' failed"
-      rm -rf "$receipts_dir/$package"
+      rm -rf -- "$receipts_dir/$package"
       return 17
     fi
   fi
@@ -281,7 +282,7 @@ package_remove()
     return 3
   fi
 
-  rm -rf "$receipts_dir/$package"
+  rm -rf -- "$receipts_dir/$package"
 
   log "Successfully removed package '$package'"
   sync
@@ -351,7 +352,7 @@ package_update()
 
     if [ "$?" -ne 0 ]; then
       warn "Installation script for package '$package' failed"
-      rm -rf "$receipts_dir/$package"
+      rm -rf -- "$receipts_dir/$package"
       return 17
     fi
   fi
@@ -400,7 +401,7 @@ package_update_twophase()
 
   info "Installing package '$path'..."
 
-  package_install "$path" 't' 't' \
+  package_install "$path" 't' 't' 't' \
     || return 2
 
   # Subshell maintains current working directory
