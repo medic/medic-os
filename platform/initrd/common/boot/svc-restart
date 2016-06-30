@@ -1,6 +1,7 @@
 #!/bin/sh
 
 source '/boot/include/utility'
+source '/boot/include/package'
 source '/boot/include/supervisor'
 
 restart()
