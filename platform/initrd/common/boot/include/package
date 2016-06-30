@@ -28,10 +28,6 @@ package_extract_metadata()
   local path="$1"
   local metadata_key="$2"
 
-  if ! [ -r "$path" ]; then
-    return 1
-  fi
-
   ar -p "$path" "$metadata_key" 2>/dev/null
   return "$?"
 }
@@ -219,7 +215,7 @@ package_install()
     if [ "$?" -ne 0 ]; then
       warn "Installation script for package '$package' failed"
       rm -rf "$receipts_dir/$package"
-      return 5
+      return 17
     fi
   fi
 
@@ -229,7 +225,7 @@ package_install()
     if ! package_setup "$package"; then
       warn "At least one setup script in package '$package' failed"
       warn "Your installation of '$package' may be incomplete"
-      return 6
+      return 18
     fi
   fi
 
@@ -241,7 +237,7 @@ package_install()
       info "Package '$package' has no services to start; continuing"
     elif [ "$rv" -ne 0 ]; then
       warn "Failed to start services for package '$package'"
-      return 7
+      return 19
     fi
   fi
 
@@ -277,7 +273,8 @@ package_remove()
     fi
   fi
 
-  package_manifest_remove_all "$package"
+  # Subshell maintains current working directory
+  (package_manifest_remove_all "$package")
 
   if [ "$?" -gt 0 ]; then
     warn "Failed to remove installation records for package '$package'"
@@ -316,39 +313,35 @@ package_update()
   fi
 
   if [ -z "$v_prev" ]; then
-    warn "Package '$package' is not installed"
+    warn "Package '$package' is not currently installed"
     return 3
   fi
 
-  if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ]; then
-
-    warn "A newer version of '$package' is already installed"
-    warn "Use the -f/--force option if you want to install it anyway"
-    return 4
-
-  elif [ "$v_prev" -lt "$v_new" ] 2>/dev/null; then
-
-    if [ -z "$use_soft_restart" ]; then
-      log "Stopping supervisor for package '$package'"
-      supervisor_stop "$package"
-      local rv="$?"
-
-      if [ "$rv" -eq 253 ]; then
-        info "Package '$package' has no services to stop; continuing"
-      elif [ "$rv" -ne 0 ]; then
-        warn "Failed to stop supervisor for package '$package'"
-        return 5
-      fi
+  if [ "$v_prev" -ge "$v_new" ]; then
+    if [ -z "$force_install" ]; then
+      warn "An equal-or-greater version of '$package' is already installed"
+      warn "Use the -f/--force option if you want to install it anyway"
+      return 4
     fi
-  else
-    warn "Version '$v_prev' of package '$package' is already installed"
-    return 6
+  fi
+
+  if [ -z "$use_soft_restart" ]; then
+    log "Stopping supervisor for package '$package'"
+    supervisor_stop "$package"
+    local rv="$?"
+
+    if [ "$rv" -eq 253 ]; then
+      info "Package '$package' has no services to stop; continuing"
+    elif [ "$rv" -ne 0 ]; then
+      warn "Failed to stop supervisor for package '$package'"
+      return 5
+    fi
   fi
 
   if ! package_update_twophase "$package" "$path"; then
     warn "Error encountered while updating package '$package'"
     warn "Software installation from file '$path' was unsuccessful"
-    return 7
+    return 6
   fi
 
   if [ -x "$srv_dir/scripts/$package/install" ]; then
@@ -359,7 +352,7 @@ package_update()
     if [ "$?" -ne 0 ]; then
       warn "Installation script for package '$package' failed"
       rm -rf "$receipts_dir/$package"
-      return 8
+      return 17
     fi
   fi
 
@@ -368,7 +361,7 @@ package_update()
   if ! package_setup "$package"; then
     warn "At least one setup script in package '$package' failed"
     warn "Your installation of '$package' may be incomplete"
-    return 9
+    return 18
   fi
 
   if [ "$use_soft_restart" ]; then
@@ -378,7 +371,7 @@ package_update()
       info "Restarting service '$package/$service'"
       if ! supervisor_service_restart "$package" "$service"; then
         warn "Failed to restart service '$package/$service'"
-        return 10
+        return 19
       fi
     done
   else
@@ -389,7 +382,7 @@ package_update()
       info "Package '$package' has no services to start; continuing"
     elif [ "$rv" -ne 0 ]; then
       warn "Failed to start services for package '$package'"
-      return 11
+      return 20
     fi
   fi
 
@@ -405,13 +398,14 @@ package_update_twophase()
   local manifest="`package_manifest_copy "$package"`" \
     || return 1
 
-  info "Pre-installing package '$path'..."
+  info "Installing package '$path'..."
 
   package_install "$path" 't' 't' \
     || return 2
 
-  package_manifest_remove_differential "$package" \
-    "$manifest" "$receipts_dir/$package/manifest"
+  # Subshell maintains current working directory
+  (package_manifest_remove_differential \
+    "$package" "$manifest" "$receipts_dir/$package/manifest")
 
   return "$?"
 }

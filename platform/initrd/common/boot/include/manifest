@@ -92,10 +92,10 @@ manifest_filter()
 
   case "$type" in
     d*)
-      grep '/$'
+      safe grep '/$'
       ;;
     *)
-      grep -v '/$'
+      safe grep -v '/$'
       ;;
   esac
 
