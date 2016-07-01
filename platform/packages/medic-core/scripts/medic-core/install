@@ -16,6 +16,7 @@ install()
 
   local version="$PACKAGE_VERSION"
   local platform="`cat /etc/platform`"
+  local couchdb_settings="$PACKAGE_SETTINGS/couchdb"
   local major_version="`echo "$version" | sed 's/\.[0-9]\+$//;'`"
 
   (cd "$PACKAGE_ROOT/../" &&
@@ -30,12 +31,12 @@ install()
     ln -sf ../logs logs) &&
   \
   chown -R couchdb:staff \
-    "$PACKAGE_SETTINGS/couchdb" "$PACKAGE_STORAGE/couchdb" &&
+    "$couchdb_settings" "$PACKAGE_STORAGE/couchdb" &&
   \
   chown -R couchdb-lucene:staff \
     "$PACKAGE_STORAGE/couchdb-lucene" &&
   \
-  chmod 0750 "$PACKAGE_SETTINGS/couchdb" \
+  chmod 0750 "$couchdb_settings" \
     "$PACKAGE_STORAGE/couchdb" "$PACKAGE_STORAGE/couchdb-lucene" &&
   \
   chown -R gammu:gammu \
@@ -54,6 +55,10 @@ install()
   if [ -z "$is_update" ]; then
     info 'Installing default CouchDB databases'
     install_default_couchdb_databases "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
+  fi &&
+  \
+  if ! [ -f "$couchdb_settings/local.ini" ]; then
+    cp -a "$couchdb_settings/private/local.ini" "$couchdb_settings/"
   fi
 
   return "$?"
