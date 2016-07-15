@@ -177,7 +177,7 @@ main() {
   local ssh_host="ec2-user@$external_fqdn"
 
   if ! [ -f "$ssh_id" ]; then
-    fatal "SSH private key file `$ssh_id` not found"
+    fatal "SSH private key file '$ssh_id' not found"
   fi
 
   while [ "$n" -gt 0 ]; do
