@@ -24,7 +24,7 @@ create_empty_directories()
     \
     for platform in x64 x86 armv6; do
       mkdir -p "images/$platform" \
-        "initrd/$platform/lib" "platform/templates/java/$platform"
+        "initrd/$platform/lib" "templates/java/$platform"
     done &&
     \
     mkdir -p \

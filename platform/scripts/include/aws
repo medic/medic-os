@@ -1,0 +1,35 @@
+#!/bin/sh
+
+aws_load_settings()
+{
+  local settings="$1"
+
+  if [ -z "$settings" ]; then
+    settings='./config/aws/settings'
+  fi
+
+  if [ "$settings" ]; then
+    source "$settings" \
+      || fatal "Couldn't load settings data from '$settings'"
+
+    settings="`cat "$settings"`" \
+      || fatal "Couldn't read settings data from '$settings'"
+  fi
+
+  if [ -z "$AWS_ACCESS_KEY" ]; then
+    unset AWS_ACCESS_KEY
+  fi
+
+  if [ -z "$AWS_SECRET_KEY" ]; then
+    unset AWS_SECRET_KEY
+  fi
+
+  if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+    unset AWS_ACCESS_KEY_ID
+  fi
+
+  if [ -z "$AWS_SECRET_KEY_ID" ]; then
+    unset AWS_SECRET_KEY_ID
+  fi
+}
+ 

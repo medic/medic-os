@@ -2,6 +2,9 @@
 
 set -o pipefail
 
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/../.."
+
 fatal() {
 
   echo >&2
@@ -21,7 +24,7 @@ usage() {
 discover_server_role() {
 
   curl -s 'http://169.254.169.254/latest/meta-data/iam/info' \
-    | jq .InstanceProfileArn | sed -r 's/^".*\/([^"]+)"$/\1/;' 2>/dev/null
+    | jq .InstanceProfileArn | sed -r 's/^"[^\/]*\/([^"]+)"$/\1/;' 2>/dev/null
 }
 
 ssh_command() {
@@ -50,9 +53,11 @@ main() {
 
   local fs_size='20'
   local iam_role='$inherit'
-  local security_group='ssh-only'
   local time_zone='America/Los_Angeles'
-  local default_availability_zone='us-west-1a'
+
+  local security_group='ssh-only'
+  local default_region='us-west-2'
+  local default_availability_zone='us-west-2a'
   local ssh_key_name='nightly-builds@medicmobile.org'
 
   local vm_url='https://github.com/medic/medic-os'
@@ -77,6 +82,8 @@ main() {
     fi
   fi
 
+  settings="`aws_load_settings "$settings"`"
+
   local ami='';
   local ssh_private_key_path='';
   local ssh_private_key_contents='';
@@ -92,18 +99,14 @@ main() {
     export TZ="$time_zone"
   fi
 
-  if [ "$settings" ]; then
-    source "$settings" \
-      || fatal "Couldn't load settings data from '$settings'"
-
-    settings="`cat "$settings"`" \
-      || fatal "Couldn't read settings data from '$settings'"
-  fi
-
   if [ "$SSH_PRIVATE_KEY" ]; then
     ssh_private_key_path="$SSH_PRIVATE_KEY"
     ssh_private_key_contents="`cat "$ssh_private_key_path"`" \
       || fatal "Couldn't read private key from '$ssh_private_key_path'"
+  fi
+
+  if [ -z "$EC2_REGION" ]; then
+    EC2_REGION="$default_region"
   fi
 
   if [ -z "$EC2_AVAILABILITY_ZONE" ]; then
@@ -113,7 +116,7 @@ main() {
   local extra_create_args=''
 
   if [ "$iam_role" = '$inherit' ]; then
-    extra_create_args="-p '`discover_server_role`'" \
+    extra_create_args="-p \"`discover_server_role`\"" \
       || fatal 'Unable to discover server role'
   else
     extra_create_args="-p '$iam_role'"
@@ -126,8 +129,9 @@ main() {
 
   local instance_data="`
     ec2-run-instances "$ami" $extra_create_args \
+      -g "$security_group" -k "$ssh_key_name" \
       -t "$instance_type" -b "/dev/sda1=:$fs_size" \
-      -k "$ssh_key_name" -z "$EC2_AVAILABILITY_ZONE" -g "$security_group"
+      --region "$EC2_REGION" -z "$EC2_AVAILABILITY_ZONE"
   `" &&
   \
   local instance_id="`
@@ -287,8 +291,8 @@ main() {
   echo 'done.' >&2
   echo -n 'Terminating instance... ' >&2
 
-  ec2-terminate-instances "$instance_id" &>/dev/null \
-    || fatal 'Failed to terminate instance'
+  #ec2-terminate-instances "$instance_id" &>/dev/null \
+  #  || fatal 'Failed to terminate instance'
 
   echo 'done.' >&2
 
@@ -299,6 +303,12 @@ main() {
   echo 'Build complete.' >&2
   return 0
 }
+
+cd "$base_dir" \
+  || fatal 'Unable to locate root directory'
+
+source ./platform/scripts/include/aws \
+  || fatal 'Unable to load one or more required libraries'
 
 main "$@"
 exit "$?"
