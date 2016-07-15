@@ -29,7 +29,7 @@ Instance Creation (ISO)
 
 Once you have an ISO image in hand, you can:
 
-1. Boot the ISO in a virtual machine. VMware Player, Workstation, and Fusion are
+1. Boot the ISO in a virtual machine. [VMware Player](https://github.com/medic/medic-docs/blob/master/md/install/mmva-vmware.md), [Workstation](https://github.com/medic/medic-docs/blob/master/md/install/mmva-vbox.md), and [Fusion](https://github.com/medic/medic-docs/blob/master/md/install/mmva-vmware-fusion.md) are
    fully supported; Virtualbox and Hyper-V lack GSM modem features but are otherwise
    supported.
 
