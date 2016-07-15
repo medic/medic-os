@@ -11,6 +11,11 @@ usage()
   exit 1
 }
 
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
 fatal()
 {
   echo "Fatal: $*" >&2
