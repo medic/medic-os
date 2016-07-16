@@ -5,17 +5,19 @@ aws_load_settings()
   local settings="$1"
 
   if [ -z "$settings" ]; then
-    settings='./config/aws/settings'
+    settings='./platform/config/aws/settings'
   fi
 
   if [ "$settings" ]; then
-    source "$settings" \
-      || fatal "Couldn't load settings data from '$settings'"
-
     settings="`cat "$settings"`" \
       || fatal "Couldn't read settings data from '$settings'"
   fi
 
+  echo "$settings"
+}
+
+aws_cleanup_environment()
+{
   if [ -z "$AWS_ACCESS_KEY" ]; then
     unset AWS_ACCESS_KEY
   fi

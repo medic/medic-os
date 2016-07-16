@@ -85,10 +85,12 @@ main()
     usage
   fi
 
-  settings="`aws_load_settings "$settings_file"`" \
+  settings="`aws_load_settings "$settings_file"`" && eval "$settings" \
     || fatal 'Unable to load AWS settings'
 
+  aws_cleanup_environment &&
   mirror "$bucket" 'medic-os/mirror/source' "$settings_file"
+
   return "$?"
 }
 

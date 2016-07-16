@@ -82,7 +82,9 @@ main() {
     fi
   fi
 
-  settings="`aws_load_settings "$settings"`"
+  settings="`aws_load_settings "$settings"`" &&
+    eval "$settings" && aws_cleanup_environment \
+      || fatal 'Unable to read AWS environment/settings file'
 
   local ami='';
   local ssh_private_key_path='';
@@ -103,6 +105,10 @@ main() {
     ssh_private_key_path="$SSH_PRIVATE_KEY"
     ssh_private_key_contents="`cat "$ssh_private_key_path"`" \
       || fatal "Couldn't read private key from '$ssh_private_key_path'"
+  fi
+
+  if ! [ -f "$ssh_private_key_path" ]; then
+    fatal "SSH private key file '$ssh_private_key_path' not found"
   fi
 
   if [ -z "$EC2_REGION" ]; then
@@ -175,10 +181,6 @@ main() {
   local rv='0'
   local ssh_id="$ssh_private_key_path"
   local ssh_host="ec2-user@$external_fqdn"
-
-  if ! [ -f "$ssh_id" ]; then
-    fatal "SSH private key file '$ssh_id' not found"
-  fi
 
   while [ "$n" -gt 0 ]; do
 
