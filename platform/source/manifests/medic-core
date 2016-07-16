@@ -28,7 +28,7 @@ libutempter, http://ftp.altlinux.org/pub/people/ldv/utempter/libutempter-1.1.6.t
 logrotate, https://fedorahosted.org/releases/l/o/logrotate/logrotate-3.8.5.tar.gz
 lrzip, http://ck.kolivas.org/apps/lrzip/lrzip-0.630.tar.bz2
 lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
-maven, http://mirrors.ibiblio.org/apache/maven/maven-3/3.3.1/source/apache-maven-3.3.1-src.tar.gz
+maven, https://archive.apache.org/dist/maven/maven-3/3.3.1/source/apache-maven-3.3.1-src.tar.gz
 nano, http://www.nano-editor.org/dist/v2.4/nano-2.4.2.tar.gz
 ncurses, http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
 nginx, http://nginx.org/download/nginx-1.9.11.tar.gz
