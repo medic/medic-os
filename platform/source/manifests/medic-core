@@ -9,7 +9,7 @@ curl, http://curl.haxx.se/download/curl-7.35.0.tar.lzma
 diffutils, http://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz
 erica, https://medic-mobile.s3.amazonaws.com/medic-os/mirror/source/erica-0.5.0.tar.gz
 erlang, http://www.erlang.org/download/otp_src_17.4.tar.gz
-gammu, https://medic-mobile.s3.amazonaws.com/medic-os/mirror/source/gammu-1.33.0.tar.xz
+gammu, http://dl.cihar.com/gammu/releases/gammu-1.33.0.tar.xz
 gammu-json, https://github.com/medic/gammu-json.git
 garden-maker, https://github.com/garden20/garden_maker.git
 git, https://www.kernel.org/pub/software/scm/git/git-2.4.6.tar.xz
@@ -26,7 +26,7 @@ libusb, http://jaist.dl.sourceforge.net/project/libusb/libusb-1.0/libusb-1.0.9/l
 libusb-compat, http://jaist.dl.sourceforge.net/project/libusb/libusb-compat-0.1/libusb-compat-0.1.5/libusb-compat-0.1.5.tar.bz2
 libutempter, http://ftp.altlinux.org/pub/people/ldv/utempter/libutempter-1.1.6.tar.bz2
 logrotate, https://fedorahosted.org/releases/l/o/logrotate/logrotate-3.8.5.tar.gz
-lrzip, https://medic-mobile.s3.amazonaws.com/medic-os/mirror/source/lrzip-0.615.tar.bz2
+lrzip, http://ck.kolivas.org/apps/lrzip/lrzip-0.630.tar.bz2
 lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
 maven, http://mirrors.ibiblio.org/apache/maven/maven-3/3.3.1/source/apache-maven-3.3.1-src.tar.gz
 nano, http://www.nano-editor.org/dist/v2.4/nano-2.4.2.tar.gz
