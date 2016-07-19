@@ -187,13 +187,13 @@ main() {
     sleep 10 && n=$[n - 1]
 
     ssh_command "$ssh_host" "$ssh_id" \
-      'mkdir -p medic-os/platform/config/aws-current .ssh' &&
+      'mkdir -p medic-os/platform/config/aws .ssh' &&
     \
     echo 'done.' >&2 &&
     echo -n 'Establishing connection to instance... ' >&2 &&
     \
     echo "$settings" | ssh_command  "$ssh_host" "$ssh_id" \
-      'cat > medic-os/platform/config/aws-current/settings' && \
+      'cat > medic-os/platform/config/aws/settings' && \
     \
     echo "$ssh_private_key_contents" \
       | ssh_command  "$ssh_host" "$ssh_id" 'cat >> .ssh/id_rsa' && \
@@ -204,7 +204,7 @@ main() {
          echo -n 'Setting up environment... ' >&2 &&
          \
          export TZ='$time_zone' &&
-         source medic-os/platform/config/aws-current/settings &&
+         source medic-os/platform/config/aws/settings &&
          echo 'done.' >&2 &&
          \
          echo -n 'Resizing filesystem... ' >&2 &&
@@ -256,15 +256,16 @@ main() {
          \
          echo -n 'Building EBS images:' >&2 &&
          ./platform/scripts/build-ebs-image \
-           '$platform' output/*'-$platform-xen' \
-             'Medic OS $platform - `date +%Y%m%d`' /dev/sdb && \
+           medic-os/platform/config/aws/settings \
+             '$platform' output/*'-$platform-xen' \
+             'Medic OS Nightly $platform - `date +%Y%m%d`' /dev/sdb && \
          \
          echo 'EBS images built successfully.' >&2 &&
          \
          echo 'Uploading ISO images:' >&2 &&
          ./platform/scripts/upload-iso-images \
-           "$UPLOAD_METHOD" "$UPLOAD_USER" \
-             "$UPLOAD_HOST" "$UPLOAD_TARGET" "$UPLOAD_OPTIONS" && \
+           medic-os/platform/config/aws/settings \
+             '$platform' '`date +%Y%m%d`' 'nightly' &&
          \
          echo 'ISO images uploaded successfully.' && sync"
 
