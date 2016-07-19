@@ -257,7 +257,7 @@ main() {
          \
          echo -n 'Building EBS images:' >&2 &&
          ./platform/scripts/build-ebs-image \
-           '$cfg_dir/aws/settings' \
+           '../$cfg_dir/aws/settings' \
              '$platform' output/*'-$platform-xen' \
                'Medic OS Nightly $platform - `date +%Y%m%d`' /dev/sdb && \
          \
@@ -265,7 +265,7 @@ main() {
          \
          echo 'Uploading ISO images:' >&2 &&
          ./platform/scripts/upload-iso-images \
-           '$cfg_dir/aws/settings' \
+           '../$cfg_dir/aws/settings' \
              '$platform' '`date +%Y%m%d`' 'nightly' &&
          \
          echo 'ISO images uploaded successfully.' && sync"
