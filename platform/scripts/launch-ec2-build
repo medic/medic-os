@@ -7,7 +7,6 @@ base_dir="`dirname "$self"`/../.."
 
 fatal() {
 
-  echo >&2
   echo "Fatal: $@" >&2
   exit 111
 }
