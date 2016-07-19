@@ -181,21 +181,24 @@ main() {
   local rv='0'
   local ssh_id="$ssh_private_key_path"
   local ssh_host="ec2-user@$external_fqdn"
+  local cfg_dir='./medic-os/platform/config'
 
   while [ "$n" -gt 0 ]; do
 
     sleep 10 && n=$[n - 1]
 
-    ssh_command "$ssh_host" "$ssh_id" 'mkdir -p .ssh' &&
+    echo "$ssh_private_key_contents" | ssh_command  "$ssh_host" "$ssh_id" \
+      'mkdir -p .ssh && cat >> .ssh/id_rsa' && \
     \
     echo 'done.' >&2 &&
     echo -n 'Establishing connection to instance... ' >&2 &&
     \
-    echo "$settings" | ssh_command  "$ssh_host" "$ssh_id" \
-      'cat > medic-os/platform/config/aws/settings' && \
+    ssh_command "$ssh_host" "$ssh_id" \
+      "mkdir -p '$cfg_dir' && ln -sf aws-defaults '$cfg_dir/aws'" &&
     \
-    echo "$ssh_private_key_contents" \
-      | ssh_command  "$ssh_host" "$ssh_id" 'cat >> .ssh/id_rsa' && \
+    echo "$settings" | ssh_command  "$ssh_host" "$ssh_id" \
+      "mkdir -p '$cfg_dir/aws-defaults' &&
+       cat > '$cfg_dir/aws-defaults/settings'" && \
     \
     ssh_command  "$ssh_host" "$ssh_id" \
       "echo 'done.' >&2 &&
@@ -203,7 +206,7 @@ main() {
          echo -n 'Setting up environment... ' >&2 &&
          \
          export TZ='$time_zone' &&
-         source medic-os/platform/config/aws/settings &&
+         source '$cfg_dir/aws/settings' &&
          echo 'done.' >&2 &&
          \
          echo -n 'Resizing filesystem... ' >&2 &&
@@ -226,8 +229,7 @@ main() {
          echo 'done.' >&2 &&
          \
          echo -n 'Installing build-time dependencies... ' >&2 &&
-         sudo ./medic-os/platform/config/redhat/scripts/prepare-system \
-           -q -y &>/dev/null &&
+         sudo '$cfg_dir/redhat/scripts/prepare-system' -qy &>/dev/null &&
          echo 'done.' >&2 &&
          \
          echo -n 'Applying latest Medic OS updates... ' >&2 &&
@@ -255,15 +257,15 @@ main() {
          \
          echo -n 'Building EBS images:' >&2 &&
          ./platform/scripts/build-ebs-image \
-           medic-os/platform/config/aws/settings \
+           '$cfg_dir/aws/settings' \
              '$platform' output/*'-$platform-xen' \
-             'Medic OS Nightly $platform - `date +%Y%m%d`' /dev/sdb && \
+               'Medic OS Nightly $platform - `date +%Y%m%d`' /dev/sdb && \
          \
          echo 'EBS images built successfully.' >&2 &&
          \
          echo 'Uploading ISO images:' >&2 &&
          ./platform/scripts/upload-iso-images \
-           medic-os/platform/config/aws/settings \
+           '$cfg_dir/aws/settings' \
              '$platform' '`date +%Y%m%d`' 'nightly' &&
          \
          echo 'ISO images uploaded successfully.' && sync"
