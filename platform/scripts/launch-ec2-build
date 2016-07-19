@@ -186,8 +186,7 @@ main() {
 
     sleep 10 && n=$[n - 1]
 
-    ssh_command "$ssh_host" "$ssh_id" \
-      'mkdir -p medic-os/platform/config/aws .ssh' &&
+    ssh_command "$ssh_host" "$ssh_id" 'mkdir -p .ssh' &&
     \
     echo 'done.' >&2 &&
     echo -n 'Establishing connection to instance... ' >&2 &&
@@ -294,8 +293,9 @@ main() {
   echo 'done.' >&2
   echo -n 'Terminating instance... ' >&2
 
-  #ec2-terminate-instances "$instance_id" &>/dev/null \
-  #  || fatal 'Failed to terminate instance'
+  ec2-terminate-instances \
+    "$instance_id" --region "$EC2_REGION" &>/dev/null \
+      || fatal 'Failed to terminate instance'
 
   echo 'done.' >&2
 
