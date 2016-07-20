@@ -38,7 +38,7 @@ mirror()
   local temp_dir="`mktemp -d`" && cd "$temp_dir" \
     || fatal 'Unable to create temporary directory'
 
-  mkdir -p "$target_path" \
+  mkdir -p -- "$target_path" \
     || fatal 'Unable to create target directory structure'
 
   # Download phase 
@@ -72,7 +72,7 @@ mirror()
   done
        
   rv="$?"
-  rm -rf "$temp_dir"
+  rm -rf -- "$temp_dir"
   return "$rv"
 }
 

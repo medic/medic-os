@@ -195,7 +195,7 @@ main()
     sudo mount -o loop "$image" /mnt/loopback \
       || fatal "Failure while mounting loopback image '$image'"
 
-    sudo cp -a /mnt/loopback/* /mnt/startup/ \
+    sudo cp -a -- /mnt/loopback/* /mnt/startup/ \
       || fatal 'Failure while copying files'
 
     sudo umount /mnt/loopback /mnt/startup \

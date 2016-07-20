@@ -187,16 +187,16 @@ main() {
     sleep 10 && n=$[n - 1]
 
     echo "$ssh_private_key_contents" | ssh_command  "$ssh_host" "$ssh_id" \
-      'mkdir -p .ssh && cat >> .ssh/id_rsa' && \
+      'mkdir -p -- .ssh && cat >> .ssh/id_rsa' && \
     \
     echo 'done.' >&2 &&
     echo -n 'Establishing connection to instance... ' >&2 &&
     \
     ssh_command "$ssh_host" "$ssh_id" \
-      "mkdir -p '$cfg_dir' && ln -sf aws-defaults '$cfg_dir/aws'" &&
+      "mkdir -p -- '$cfg_dir' && ln -sf aws-defaults '$cfg_dir/aws'" &&
     \
     echo "$settings" | ssh_command  "$ssh_host" "$ssh_id" \
-      "mkdir -p '$cfg_dir/aws-defaults' &&
+      "mkdir -p -- '$cfg_dir/aws-defaults' &&
        cat > '$cfg_dir/aws-defaults/settings'" && \
     \
     ssh_command  "$ssh_host" "$ssh_id" \
@@ -254,7 +254,7 @@ main() {
          \
          echo 'Medic OS build complete.' >&2 &&
          \
-         echo -n 'Building EBS images:' >&2 &&
+         echo 'Building EBS images:' >&2 &&
          ./platform/scripts/build-ebs-image \
            '../$cfg_dir/aws/settings' \
              '$platform' output/*'-$platform-xen' \

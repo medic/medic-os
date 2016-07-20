@@ -70,7 +70,7 @@ main()
     echo -n "Building JDK/JRE archive for '$platform'... " >&2 &&
     \
     (cd "$src_dir/java-current" && \
-      rm -f selected && ln -sf "$platform" selected) && \
+      rm -f -- selected && ln -sf -- "$platform" selected) && \
     \
     tar -cf - "$src_dir/java" \
       "$src_dir/java-current/selected" \

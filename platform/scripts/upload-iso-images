@@ -43,19 +43,29 @@ upload_s3()
   local temp_dir="`mktemp -d`" || return 1
   local upload_dir="$temp_dir/$UPLOAD_PATH/$build_name"
 
-  mkdir -p "$upload_dir/iso/$platform" &&
-  mkdir -p "$upload_dir/packages/$platform" &&
+  echo -n 'Preparing files... ' >&2 &&
   \
-  cp -a output/*-virtual.iso \
+  mkdir -p -- "$upload_dir/iso/$platform" &&
+  mkdir -p -- "$upload_dir/packages/$platform" &&
+  \
+  cp -a -- output/*-virtual.iso \
     "$upload_dir/iso/$platform" &&
   \
-  cp -a "platform/images/$platform/iso/packages"/*.vpkg \
+  cp -a -- "platform/images/$platform/iso/packages"/*.vpkg \
     "$upload_dir/packages/$platform" &&
   \
+  echo 'done.' >&2 &&
+  echo -n 'Uploading files to S3... ' >&2 &&
+  \
   (cd "$temp_dir" &&
-    s3put -b "$UPLOAD_BUCKET" -p "$temp_dir" --region "$EC2_REGION" .)
+    s3put -q -b "$UPLOAD_BUCKET" -p "$temp_dir" --region "$EC2_REGION" .) &&
+  \
+  echo 'done.' >&2
 
-  return "$?"
+  local rv="$?"
+  rm -rf -- "$temp_dir"
+
+  return "$rv"
 }
 
 main()
