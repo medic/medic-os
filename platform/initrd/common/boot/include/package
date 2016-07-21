@@ -314,8 +314,13 @@ package_update()
   fi
 
   if [ -z "$v_prev" ]; then
-    warn "Package '$package' is not currently installed"
-    return 3
+    if [ -z "$force_install" ]; then
+      warn "Package '$package' is not currently installed"
+      return 3
+    else
+      package_install "$package"
+      return "$?"
+    fi
   fi
 
   if [ "$v_prev" -ge "$v_new" ]; then
