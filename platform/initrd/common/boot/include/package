@@ -318,7 +318,7 @@ package_update()
       warn "Package '$package' is not currently installed"
       return 3
     else
-      package_install "$package"
+      package_install "$path"
       return "$?"
     fi
   fi
