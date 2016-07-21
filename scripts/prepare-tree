@@ -79,6 +79,7 @@ create_empty_directories()
       packages/medic-core/settings/medic-core/couchdb/local.d \
       packages/medic-rdbms/storage/medic-rdbms/postgresql/logs \
       packages/medic-rdbms/storage/medic-rdbms/postgresql/data \
+      packages/medic-rdbms/storage/medic-rdbms/postgresql/passwd \
       packages/concierge/storage \
       packages/concierge/storage/concierge \
       packages/concierge/storage/concierge/passwd \
