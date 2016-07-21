@@ -1,0 +1,37 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/hypervisor'
+
+install()
+{
+  local is_update="$1"
+  shift 1
+
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/env" &&
+  merge_environment /srv || return 255
+
+  local version="$PACKAGE_VERSION"
+  local platform="`cat /etc/platform`"
+  local major_version="`echo "$version" | sed 's/\.[0-9]\+$//;'`"
+
+  (cd "$PACKAGE_ROOT/../" &&
+    rm -f default && ln -sf "$platform" default) &&
+  \
+  (cd "$PACKAGE_ROOT/../../" &&
+    rm -f "v$major_version" &&
+    ln -sf "v$version" "v$major_version" &&
+    rm -f current && ln -sf v"$version" current) &&
+  \
+  source "$base/include/logrotate" &&
+  logrotate_install
+
+  return "$?"
+}
+
+install "$@"
+exit "$?"
+

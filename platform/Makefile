@@ -286,6 +286,11 @@ medic-core-pkg:
 	scripts/build-package 'medic-core' 16131 '${PLATFORM}' && \
 	echo 'done.'
 
+medic-rdbms-pkg:
+	@echo -n 'Compressing package 'medic-rdbms'... ' && \
+	scripts/build-package 'medic-core' 95301 '${PLATFORM}' && \
+	echo 'done.'
+
 system-services-pkg:
 	@echo -n 'Compressing package 'system-services'... ' && \
 	scripts/build-package 'system-services' 10212 '${PLATFORM}' && \

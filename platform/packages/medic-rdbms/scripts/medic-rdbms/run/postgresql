@@ -1,0 +1,18 @@
+#!/bin/sh
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv || return 255
+
+  cd "$PACKAGE_ROOT" &&
+  exec su -c 'exec bin/postmaster' postgresql \
+    >> "$PACKAGE_STORAGE/postgresql/logs/startup.log" 2>&1
+}
+
+start
+exit "$?"
+

@@ -7,9 +7,11 @@ PLATFORM := $(shell ../scripts/detect-platform)
 JAVA_VERSION ?= 1.7.80
 VM_TOOLS_VERSION ?= 9.4.6
 MEDIC_CORE_VERSION ?= 1.6.1
+MEDIC_RDBMS_VERSION ?= 9.5.3
 
 VM_TOOLS_ROOT ?= /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
 MEDIC_CORE_ROOT ?= /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
+MEDIC_RDBMS_ROOT ?= /srv/software/medic-rdbms/v${MEDIC_RDBMS_VERSION}/${PLATFORM}
 
 PKG_DIR ?= ../packages
 JAVA_PKG_ROOT ?= ${PKG_DIR}/java/software/java/v${JAVA_VERSION}/${PLATFORM}
@@ -30,10 +32,10 @@ KERNEL_MODULE_PATH := ${CURDIR}/../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSI
 all: build copy finalize
 
 build: build-all
-build-all: build-core build-vm-tools build-medic-core
+build-all: build-core build-vm-tools build-medic-core build-medic-rdbms
 
 copy: copy-all
-copy-all: copy-core copy-medic-core copy-vm-tools set-pax-flags
+copy-all: copy-core copy-vm-tools copy-medic-core copy-medic-rdbms set-pax-flags
 
 finalize: finalize-all
 finalize-all: verify-packages finalize-initrd
@@ -127,6 +129,28 @@ copy-medic-core:
 preload-medic-core:
 	@(cd medic-core && \
 	  ${QMAKE} preload ROOT='${MEDIC_CORE_ROOT}')
+
+
+medic-rdbms: build-medic-rdbms copy-medic-rdbms
+
+clean-medic-rdbms:
+	@rm -rf /srv/software/medic-rdbms && \
+	(cd medic-rdbms && ${MAKE} clean)
+
+build-medic-rdbms:
+	@(cd medic-rdbms && ${QMAKE} all \
+	    BITS='${BITS}' PLATFORM='${PLATFORM}' \
+	    ROOT='${MEDIC_RDBMS_ROOT}' PARALLEL='${PARALLEL}')
+
+copy-medic-rdbms:
+	@echo -n "Copying files for 'medic-rdbms'... "
+	@(cd medic-core && \
+	  ./scripts/prepare-dist '${MEDIC_RDBMS_ROOT}' && \
+	  mkdir -p ../../packages/medic-rdbms/software && \
+	  rm -rf ../../packages/medic-rdbms/software/medic-rdbms && \
+	  cp -R /srv/software/medic-rdbms \
+	    ../../packages/medic-core/software/medic-rdbms)
+	@echo 'done.'
 
 
 # Private targets
