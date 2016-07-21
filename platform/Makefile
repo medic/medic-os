@@ -39,7 +39,7 @@ initrd: build-initrd
 native: build-native-tarball
 
 images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae
-packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg medic-transport-pkg
+packages: strip-binaries medic-core-pkg medic-rdbms-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg medic-transport-pkg
 
 
 # Public targets
@@ -288,7 +288,7 @@ medic-core-pkg:
 
 medic-rdbms-pkg:
 	@echo -n 'Compressing package 'medic-rdbms'... ' && \
-	scripts/build-package 'medic-core' 95301 '${PLATFORM}' && \
+	scripts/build-package 'medic-rdbms' 95301 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
