@@ -144,12 +144,12 @@ build-medic-rdbms:
 
 copy-medic-rdbms:
 	@echo -n "Copying files for 'medic-rdbms'... "
-	@(cd medic-core && \
+	@(cd medic-rdbms && \
 	  ./scripts/prepare-dist '${MEDIC_RDBMS_ROOT}' && \
 	  mkdir -p ../../packages/medic-rdbms/software && \
 	  rm -rf ../../packages/medic-rdbms/software/medic-rdbms && \
 	  cp -R /srv/software/medic-rdbms \
-	    ../../packages/medic-core/software/medic-rdbms)
+	    ../../packages/medic-rdbms/software/medic-rdbms)
 	@echo 'done.'
 
 
