@@ -26,9 +26,65 @@ install()
     ln -sf "v$version" "v$major_version" &&
     rm -f current && ln -sf v"$version" current) &&
   \
+  (cd "$PACKAGE_STORAGE" &&
+    chown -R postgresql:postgresql postgresql/data) &&
+  \
+  initialize_cluster 'postgresql' \
+    "$PACKAGE_STORAGE/postgresql/data" "$is_update" &&
+  \
   source "$base/include/logrotate" &&
   logrotate_install
 
+  return "$?"
+}
+
+initialize_cluster()
+{
+  local user="$1"
+  local data_dir="$2"
+  local is_update="$3"
+  shift 3
+
+  if [ "$is_update" ]; then
+    return 0
+  fi
+
+  local data_dir="`realpath "$data_dir"`"
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Unable to locate specified data directory'
+    return 1
+  fi
+
+  local passwd_dir="$PACKAGE_STORAGE/postgresql/passwd"
+  local passwd_file="$passwd_dir/postgresql"
+
+  local random_passwd="`
+    dd if=/dev/urandom bs=4096 count=10 2>/dev/null \
+      | sha512sum | cut -d' ' -f1
+  `"
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Random password generation failed'
+    return 2
+  fi
+
+  rm -f "$passwd_file" &&
+  echo "$random_passwd" > "$passwd_file" &&
+  chown concierge:postgresql "$passwd_file" &&
+  chmod 0440 "$passwd_file"
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Administrator credential storage failed'
+    return 3
+  fi
+
+  local command="
+    '$PACKAGE_ROOT/bin/initdb' --pwfile=/dev/stdin \
+      -E UTF-8 -U "$user" -D '$data_dir' < "$passwd_file"
+  "
+
+  su - "$user" -c "$command"
   return "$?"
 }
 
