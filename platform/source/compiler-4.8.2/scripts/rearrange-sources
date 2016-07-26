@@ -23,7 +23,7 @@ apply_patches()
 finished_path="$base_dir/../../status/compiler.finished"
 
 if [ -f "$finished_path" ]; then
-  echo "Tree already rearranged for collection 'compiler'; skipping" >&2
+  echo "Tree already rearranged for 'compiler'; skipping" >&2
   exit 0
 fi
 

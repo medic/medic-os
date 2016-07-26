@@ -291,6 +291,11 @@ medic-rdbms-pkg:
 	scripts/build-package 'medic-rdbms' 95301 '${PLATFORM}' && \
 	echo 'done.'
 
+medic-couch2pg-pkg:
+	@echo -n 'Compressing package 'medic-couch2pg'... ' && \
+	scripts/build-package 'medic-couch2pg' 10000 '${PLATFORM}' && \
+	echo 'done.'
+
 system-services-pkg:
 	@echo -n 'Compressing package 'system-services'... ' && \
 	scripts/build-package 'system-services' 10212 '${PLATFORM}' && \

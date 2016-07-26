@@ -77,6 +77,7 @@ create_empty_directories()
       packages/medic-core/settings/medic-core/couchdb-lucene \
       packages/medic-core/settings/medic-core/couchdb/default.d \
       packages/medic-core/settings/medic-core/couchdb/local.d \
+      packages/medic-couch2pg/storage/medic-couch2pg/logs \
       packages/medic-rdbms/storage/medic-rdbms/postgresql/logs \
       packages/medic-rdbms/storage/medic-rdbms/postgresql/data \
       packages/medic-rdbms/storage/medic-rdbms/postgresql/passwd \

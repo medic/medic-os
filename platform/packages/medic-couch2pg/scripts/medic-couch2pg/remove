@@ -1,0 +1,18 @@
+#!/bin/sh
+
+source '/boot/include/package'
+
+remove()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/env" &&
+  merge_environment /srv || return 255
+
+  return "$?"
+}
+
+remove "$@"
+exit "$?"
+

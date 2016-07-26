@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -o pipefail
+
+main()
+{
+  return 0
+}
+
+main "$@"
+exit "$?"
+

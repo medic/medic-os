@@ -10,12 +10,7 @@ source "$base_dir/../medic-core/scripts/include/rearrange"
 
 rename()
 {
-  find . -type d -exec chmod 755 {} \; &&
-    chown -R 0:0 . &&
-  \
-  for pkg in pv; do
-    ln -s "../../medic-core/source/$pkg" "$pkg"
-  done
+  mv medic-analytics medic-couch2pg
 }
 
 apply_patches()
@@ -23,10 +18,10 @@ apply_patches()
   true
 }
 
-finished_path="$base_dir/../../status/medic-rdbms.finished"
+finished_path="$base_dir/../../status/medic-couch2pg.finished"
 
 if [ -f "$finished_path" ]; then
-  echo "Tree already rearranged for 'medic-rdbms'; skipping" >&2
+  echo "Tree already rearranged for 'medic-couch2pg'; skipping" >&2
   exit 0
 fi
 

@@ -37,7 +37,7 @@ apply_patches()
 finished_path="$base_dir/../../status/core.finished"
 
 if [ -f "$finished_path" ]; then
-  echo "Tree already rearranged for collection 'core'; skipping" >&2
+  echo "Tree already rearranged for 'core'; skipping" >&2
   exit 0
 fi
 

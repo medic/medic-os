@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -o pipefail
+
+prefix="$1"
+
+if ! [ -d "$prefix" ]; then
+  echo "Usage: $0 <prefix>" >&2
+  exit 111
+fi
+

@@ -142,7 +142,7 @@ update_garden_maker()
 finished_path="$base_dir/../../status/medic-core.finished"
 
 if [ -f "$finished_path" ]; then
-  echo "Tree already rearranged for collection 'medic-core'; skipping" >&2
+  echo "Tree already rearranged for 'medic-core'; skipping" >&2
   exit 0
 fi
 
