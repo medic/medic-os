@@ -81,7 +81,7 @@ initialize_cluster()
 
   local command="
     '$PACKAGE_ROOT/bin/initdb' --pwfile=/dev/stdin \
-      -E UTF-8 -U "$user" -D '$data_dir' < "$passwd_file"
+      -E UTF-8 -U '$user' -D '$data_dir' < "$passwd_file"
   "
 
   su - "$user" -c "$command"
