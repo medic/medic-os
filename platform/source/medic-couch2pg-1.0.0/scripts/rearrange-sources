@@ -10,7 +10,7 @@ source "$base_dir/../medic-core/scripts/include/rearrange"
 
 rename()
 {
-  true
+  mv medic-couch2pg medic-couch2pg-snapshot
 }
 
 apply_patches()

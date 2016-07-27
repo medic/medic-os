@@ -1,17 +1,14 @@
 
 # Variables
 
-PARALLEL ?= 16
 SHELL := /bin/bash
-PLATFORM := $(shell ../../scripts/detect-platform)
 
 
 # Public targets
 
 all: status
 	@mkdir -p '${ROOT}' && \
-	./scripts/build-all '${ROOT}' '${START}' '${START_VERSION}' \
-	  '${STOP}' '${STOP_VERSION}' '${PLATFORM}' '${BITS}' '${PARALLEL}'
+	./scripts/build-all '${ROOT}' '${MEDIC_CORE_ROOT}'
 
 clean: clean-logs
 	./scripts/clean-all
@@ -19,8 +16,8 @@ clean: clean-logs
 stats: recalculate-stats
 
 recalculate-stats:
-	@for file in 'logs/${PLATFORM}'/*'-${TS}.log'; do \
-	  stats_file="stats/${PLATFORM}/` \
+	@for file in logs/*'-${TS}.log'; do \
+	  stats_file="stats/` \
 	    basename "$$file" .log | sed 's/-${TS}//g;' \
 	  `.count" && \
 	  wc -l < "$$file" > "$$stats_file"; \
@@ -31,7 +28,7 @@ recalculate-stats:
 
 status:
 	@echo && ./scripts/print-status 'start' \
-        'Building package `medic-rdbms` for `${PLATFORM}`'
+        'Building package `medic-couch2pg`'
 
 clean-logs:
 	rm -f logs/*/*.log

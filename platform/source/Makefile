@@ -8,9 +8,11 @@ JAVA_VERSION ?= 1.7.80
 VM_TOOLS_VERSION ?= 9.4.6
 MEDIC_CORE_VERSION ?= 1.6.1
 MEDIC_RDBMS_VERSION ?= 9.5.3
+MEDIC_COUCH2PG_VERSION ?= 1.0.0
 
 VM_TOOLS_ROOT ?= /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
 MEDIC_CORE_ROOT ?= /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
+MEDIC_COUCH2PG_ROOT ?= /srv/software/medic-couch2pg/v${MEDIC_COUCH2PG_VERSION}
 MEDIC_RDBMS_ROOT ?= /srv/software/medic-rdbms/v${MEDIC_RDBMS_VERSION}/${PLATFORM}
 
 PKG_DIR ?= ../packages
@@ -32,16 +34,16 @@ KERNEL_MODULE_PATH := ${CURDIR}/../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSI
 all: build copy finalize
 
 build: build-all
-build-all: build-core build-vm-tools build-medic-core build-medic-rdbms
+build-all: build-core build-vm-tools build-medic-core build-medic-rdbms build-medic-couch2pg
 
 copy: copy-all
-copy-all: copy-core copy-vm-tools copy-medic-core copy-medic-rdbms set-pax-flags
+copy-all: copy-core copy-vm-tools copy-medic-core copy-medic-rdbms copy-medic-couch2pg set-pax-flags
 
 finalize: finalize-all
 finalize-all: verify-packages finalize-initrd
 
 clean: clean-all
-clean-all: clean-core clean-vm-tools clean-medic-core clean-java clean-compiler
+clean-all: clean-core clean-vm-tools clean-medic-core clean-medic-rdbms clean-medic-couch2pg clean-java clean-compiler
 
 
 # Public targets
@@ -150,6 +152,26 @@ copy-medic-rdbms:
 	  rm -rf ../../packages/medic-rdbms/software/medic-rdbms && \
 	  cp -R /srv/software/medic-rdbms \
 	    ../../packages/medic-rdbms/software/medic-rdbms)
+	@echo 'done.'
+
+
+medic-couch2pg: build-medic-couch2pg copy-medic-couch2pg
+
+clean-medic-couch2pg:
+	(cd medic-couch2pg && ${MAKE} clean)
+
+build-medic-couch2pg:
+	@(cd medic-couch2pg && ${QMAKE} all \
+	  ROOT='${MEDIC_COUCH2PG_ROOT}' MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}')
+
+copy-medic-couch2pg:
+	@echo -n "Copying files for 'medic-couch2pg'... "
+	@(cd medic-couch2pg && \
+	  ./scripts/prepare-dist '${MEDIC_COUCH2PG_ROOT}' && \
+	  mkdir -p ../../packages/medic-couch2pg/software && \
+	  rm -rf ../../packages/medic-couch2pg/software/medic-couch2pg && \
+	  cp -R /srv/software/medic-couch2pg \
+	    ../../packages/medic-couch2pg/software/medic-couch2pg)
 	@echo 'done.'
 
 

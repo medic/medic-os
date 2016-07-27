@@ -9,17 +9,40 @@ source "$base_dir/scripts/include/logger" 2>/dev/null &&
 source "$base_dir/scripts/include/builder" 2>/dev/null \
     || fatal 'Unable to load a required library'
 
-main()
-{
-  return 0
-}
-
 fatal()
 {
   echo "$0: fatal: $*" >&2
   exit 1
 }
 
-cd "$base_dir/source" && main "$@"
+build_couch2pg()
+{
+  local name='medic-couch2pg'
+
+  local prefix="$1"
+  local medic_core_prefix="$2"
+
+  builder_should_run "$name" || return 0
+
+  (cd "source/$name" &&
+    rm -rfv node_modules &&
+    \
+    NODE_ENV=production \
+      "$medic_core_prefix/bin/npm" install 2>/dev/null &&
+    \
+    rm -rfv node_modules/sqlite3 &&
+    mkdir -p "$prefix" && cp -av * "$prefix") | log "$name"
+
+  builder_check_status "$name" "${PIPESTATUS[0]}"
+}
+
+main()
+{
+  builder_initialize &&
+  builder_setup_globals &&
+  build_couch2pg "$@"
+}
+
+cd "$base_dir" && main "$@"
 exit "$?"
 
