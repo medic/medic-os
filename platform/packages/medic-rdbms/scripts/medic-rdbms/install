@@ -38,6 +38,24 @@ install()
   return "$?"
 }
 
+create_system_user_if_necessary()
+{
+  local user="$1"
+  local user_uid="$2"
+  local user_gecos="$3"
+  shift 3
+
+  if id -u "$user" &>/dev/null; then
+    return 0
+  fi
+
+  addgroup -S -g "$user_uid" "$user" &&
+  adduser -G "$user" -D -H -u "$user_uid" \
+    -h /var/empty -g "$user_gecos" -s /bin/sh "$user"
+
+  return "$?"
+}
+
 initialize_cluster()
 {
   local user="$1"
@@ -69,6 +87,14 @@ initialize_cluster()
     return 2
   fi
 
+  create_system_user_if_necessary \
+    postgresql 80 'PostgreSQL Process Account'
+
+  if [ "$?" -ne 0 ]; then
+    warn 'PostgreSQL system account creation failed'
+    return 3
+  fi
+
   rm -f "$passwd_file" &&
   echo "$random_passwd" > "$passwd_file" &&
   chown concierge:postgresql "$passwd_file" &&
@@ -76,7 +102,7 @@ initialize_cluster()
 
   if [ "$?" -ne 0 ]; then
     warn 'Administrator credential storage failed'
-    return 3
+    return 4
   fi
 
   local command="
