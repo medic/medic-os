@@ -18,8 +18,8 @@ install()
   local platform="`cat /etc/platform`"
   local major_version="`echo "$version" | sed 's/\.[0-9]\+$//;'`"
 
-  create_system_group_if_necessary \
-    postgresql 80 &&
+  create_system_group_if_necessary postgresql 80 &&
+  create_system_group_if_necessary rdbms-users 90 &&
   \
   create_system_user_if_necessary \
     postgresql 80 'PostgreSQL Process Account' postgresql
