@@ -18,6 +18,14 @@ install()
   local platform="`cat /etc/platform`"
   local major_version="`echo "$version" | sed 's/\.[0-9]\+$//;'`"
 
+  create_system_user_if_necessary \
+    postgresql 80 'PostgreSQL Process Account'
+
+  if [ "$?" -ne 0 ]; then
+    warn 'PostgreSQL system account creation failed'
+    return 1
+  fi
+
   (cd "$PACKAGE_ROOT/../" &&
     rm -f default && ln -sf "$platform" default) &&
   \
@@ -87,14 +95,6 @@ initialize_cluster()
     return 2
   fi
 
-  create_system_user_if_necessary \
-    postgresql 80 'PostgreSQL Process Account'
-
-  if [ "$?" -ne 0 ]; then
-    warn 'PostgreSQL system account creation failed'
-    return 3
-  fi
-
   rm -f "$passwd_file" &&
   echo "$random_passwd" > "$passwd_file" &&
   chown concierge:postgresql "$passwd_file" &&
@@ -102,7 +102,7 @@ initialize_cluster()
 
   if [ "$?" -ne 0 ]; then
     warn 'Administrator credential storage failed'
-    return 4
+    return 3
   fi
 
   local command="
