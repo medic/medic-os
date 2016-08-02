@@ -1,0 +1,27 @@
+#!/bin/sh
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv || return 255
+
+  envdir "$PACKAGE_SETTINGS/postgresql/env" \
+    template-expand 'mustache' 't' \
+      "$PACKAGE_SETTINGS/postgresql/templates" \
+      "$PACKAGE_STORAGE/postgresql/data"
+
+  return "$?"
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+

@@ -29,6 +29,14 @@ install()
     return 1
   fi
 
+  create_settings_defaults "$PACKAGE_SETTINGS/postgresql/env" \
+    lc_time C lc_numeric C lc_messages C lc_monetary C timezone UTC
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Failure while installing default settings'
+    return 2
+  fi
+
   (cd "$PACKAGE_ROOT/../" &&
     rm -f default && ln -sf "$platform" default) &&
   \
@@ -79,6 +87,29 @@ create_system_user_if_necessary()
     -h /var/empty -g "$user_gecos" -s /bin/sh "$user"
 
   return "$?"
+}
+
+create_settings_defaults()
+{
+  local directory="$1"
+  shift 1
+
+  while [ "$#" -gt 0 ]; do
+
+    local key="$1"
+    local value="$2"
+
+    local path="$directory/`basename "$key"`" \
+      || return 1
+
+    if [ ! -f "$path" ]; then
+      echo "$value" > "$path" || return 2
+    fi
+
+    shift 2
+  done
+
+  return 0
 }
 
 initialize_cluster()

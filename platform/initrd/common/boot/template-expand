@@ -1,0 +1,30 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/template'
+
+main()
+{
+  local template_style="$1"
+  local file_extension="$2"
+  shift 2
+
+  if [ "$#" -lt 2 -o $(($# % 2)) -ne 0 ]; then
+    usage
+  fi
+
+  template_expand_directories \
+    "$template_style" "$file_extension" "$@"
+
+  return "$?"
+}
+
+usage()
+{
+  echo "Usage: $0 style extension [ src_dir target_dir ]..."
+  exit 111
+}
+
+main "$@"
+exit "$?"
+
