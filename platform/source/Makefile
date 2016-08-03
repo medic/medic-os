@@ -162,7 +162,9 @@ clean-medic-couch2pg:
 
 build-medic-couch2pg:
 	@(cd medic-couch2pg && ${QMAKE} all \
-	  ROOT='${MEDIC_COUCH2PG_ROOT}' MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}')
+	    ROOT='${MEDIC_COUCH2PG_ROOT}' \
+	    COMPILER_ROOT='${COMPILER_ROOT}' \
+	    MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}')
 
 copy-medic-couch2pg:
 	@echo -n "Copying files for 'medic-couch2pg'... "

@@ -20,15 +20,20 @@ build_couch2pg()
   local name='medic-couch2pg'
 
   local prefix="$1"
-  local medic_core_prefix="$2"
+  local compiler_prefix="$2"
+  local medic_core_prefix="$3"
 
-  builder_should_run "$name" || return 0
+  builder_should_run "$name" \
+    || return 0
+
+  prepend_paths "$compiler_prefix" "$medic_core_prefix" \
+    || return 1
 
   (cd "source/$name" &&
     rm -rfv node_modules &&
     \
     NODE_ENV=production \
-      "$medic_core_prefix/bin/npm" install 2>/dev/null &&
+      "$medic_core_prefix/bin/npm" install 2>&1 &&
     \
     rm -rfv node_modules/sqlite3 &&
     mkdir -p "$prefix" && cp -av * "$prefix") | log "$name"

@@ -8,7 +8,7 @@ SHELL := /bin/bash
 
 all: status
 	@mkdir -p '${ROOT}' && \
-	./scripts/build-all '${ROOT}' '${MEDIC_CORE_ROOT}'
+	./scripts/build-all '${ROOT}' '${COMPILER_ROOT}' '${MEDIC_CORE_ROOT}'
 
 clean: clean-logs
 	./scripts/clean-all
