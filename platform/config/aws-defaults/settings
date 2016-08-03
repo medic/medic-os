@@ -17,8 +17,8 @@ export AWS_ACCESS_KEY=''
 export AWS_SECRET_KEY=''
 
 export UPLOAD_METHOD='s3'
-export UPLOAD_BUCKET='medic-mobile'
-export UPLOAD_PATH='medic-os/build/output'
+export UPLOAD_BUCKET='medic'
+export UPLOAD_PATH='os/builds'
 
 #export UPLOAD_METHOD='rsync'
 #export UPLOAD_HOST='nightly@nightly.medicmobile.org'

@@ -60,10 +60,10 @@ main() {
   local ssh_key_name='nightly-builds@medicmobile.org'
 
   local vm_url='https://github.com/medic/medic-os'
-  local s3_base_url='https://medic-mobile.s3.amazonaws.com'
+  local s3_base_url='https://medic.s3.amazonaws.com'
 
-  local source_url="$s3_base_url/medic-os/build/source"
-  local mirror_url="$s3_base_url/medic-os/mirror/source"
+  local source_url="$s3_base_url/os/source"
+  local mirror_url="$s3_base_url/os/mirror"
 
   if [ "$1" = '-h' -o "$1" = '--help' -o $# -gt 4 ]; then
     usage
