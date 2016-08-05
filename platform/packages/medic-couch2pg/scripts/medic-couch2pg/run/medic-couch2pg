@@ -22,8 +22,8 @@ start()
   source "$base/../env" &&
   merge_environment /srv &&
   \
-  local passwd_file="$PACKAGE_STORAGE/../medic-rdbms/passwd/postgresql" &&
-  wait_for_passwd_file "$passwd_file" &&
+  local passwd_dir="$PACKAGE_STORAGE/../medic-rdbms/postgresql/passwd" &&
+  wait_for_passwd_file "$passwd_dir/postgresql" &&
   \
   local logs="$PACKAGE_STORAGE/logs" &&
   local couch2pg_cmd="node '$PACKAGE_ROOT/index.js'"
