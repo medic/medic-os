@@ -265,13 +265,13 @@ main()
     build_npm_remote 'node-gyp' "$prefix"
   fi &&
   \
-  build_npm_remote 'async' "$prefix" &&
-  build_npm_remote 'express' "$prefix" &&
+  build_npm_remote 'async@1' "$prefix" &&
+  build_npm_remote 'express@4' "$prefix" &&
   build_npm_remote 'garden-core' "$prefix" &&
   build_npm_remote 'kanso' "$prefix" &&
-  build_npm_remote 'lazy' "$prefix" &&
-  build_npm_remote 'request' "$prefix" &&
-  build_npm_remote 'hbs' "$prefix" &&
+  build_npm_remote 'lazy@1' "$prefix" &&
+  build_npm_remote 'request@2' "$prefix" &&
+  build_npm_remote 'hbs@4' "$prefix" &&
   build_npm_remote 'grunt-cli' "$prefix" &&
   \
   build_npm_local 'medic-transport' "$prefix" &&
