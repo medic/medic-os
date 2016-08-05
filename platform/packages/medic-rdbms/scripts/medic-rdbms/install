@@ -63,7 +63,7 @@ create_system_group_if_necessary()
   local group_gid="$2"
   shift 2
 
-  if id -g "$group" &>/dev/null; then
+  if grep -q "^$group:" /etc/group; then
     return 0
   fi
 

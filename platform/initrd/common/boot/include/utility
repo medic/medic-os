@@ -110,7 +110,9 @@ use_package()
 
 emit()
 {
-  echo "$@" >&2
+  if [ -z "$logger_suppress_messages" ]; then
+    echo "$@" >&2
+  fi
 }
 
 print()
@@ -146,9 +148,10 @@ log()
   fi
 }
 
-if [ "$verbose" ]; then
-  log='/dev/stderr'
-else
+# Defaults: later includes may override
+if [ "$logger_suppress_output" ]; then
   log='/dev/null'
+else
+  log='/dev/stderr'
 fi
 

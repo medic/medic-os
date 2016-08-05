@@ -211,7 +211,7 @@ package_install()
   if [ -x "$srv_dir/scripts/$package/install" ]; then
 
     log "Running installation script for package '$package'"
-    "$srv_dir/scripts/$package/install" "$is_package_update"
+    "$srv_dir/scripts/$package/install" "$is_package_update" >> "$log" 2>&1
 
     if [ "$?" -ne 0 ]; then
       warn "Installation script for package '$package' failed"
@@ -353,7 +353,7 @@ package_update()
   if [ -x "$srv_dir/scripts/$package/install" ]; then
 
     log "Running installation script for package '$package'"
-    "$srv_dir/scripts/$package/install" 'update'
+    "$srv_dir/scripts/$package/install" 'update' >> "$log" 2>&1
 
     if [ "$?" -ne 0 ]; then
       warn "Installation script for package '$package' failed"
@@ -444,7 +444,7 @@ package_setup()
     local task_name="$package/`basename -- "$script"`"
     info "Running setup task '$task_name'"
 
-    if ! "$script"; then
+    if ! "$script" >> "$log" 2>&1; then
       warn "Setup task '$task_name' failed to complete"
     fi
   done
