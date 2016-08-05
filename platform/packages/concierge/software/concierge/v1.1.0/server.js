@@ -1264,7 +1264,8 @@ var make_couchdb_user_creation_request = function (_user, _passwd,
                                                    _create_settings) {
 
   var roles = [
-    'national-manager', 'kujua_user', 'data_entry', 'national_admin'
+    'medic-admin', 'national-manager',
+      'kujua_user', 'data_entry', 'national_admin'
   ];
 
   if (!_.isObject(_user)) {
