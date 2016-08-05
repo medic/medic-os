@@ -1267,10 +1267,6 @@ var make_couchdb_user_creation_request = function (_user, _passwd,
     'national-manager', 'kujua_user', 'data_entry', 'national_admin'
   ];
 
-  if (_user === 'admin') {
-    roles.push('_admin');
-  }
-
   if (!_.isObject(_user)) {
     _user = { name: _user };
   }
