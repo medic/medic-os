@@ -159,7 +159,32 @@ initialize_cluster()
   "
 
   su - "$user" -c "$command"
-  return "$?"
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Database cluster initialization failed'
+    return 4
+  fi
+
+  local command="
+    '$PACKAGE_ROOT/bin/postgres' \
+      --single -D '$data_dir' template1
+  "
+  
+  local create_sql="
+    create database medic encoding = 'UTF-8';
+  "
+
+  local backend_output="`
+    echo "$create_sql" \
+      | su - "$user" -c "$command" 2>&1 >/dev/null
+  `"
+
+  if [ ! -z "$backend_output" ]; then
+    warn 'Failed to create initial database'
+    return 5
+  fi
+
+  return 0
 }
 
 install "$@"
