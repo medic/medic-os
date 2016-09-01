@@ -9,7 +9,8 @@ install()
     libuuid-devel tcl libtool gettext-devel expect mkisofs libattr-devel \
     lzma zlib-devel bzip2-devel perl-devel cmake libdb4-devel iptables-devel &&
   \
-  alternatives --auto python
+  alternatives --auto python &&
+  yum "$@" install python27-boto
 
   return "$?"
 }
