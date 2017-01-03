@@ -4,10 +4,10 @@ ant, http://archive.apache.org/dist/ant/source/apache-ant-1.9.4-src.tar.gz
 bladox-tools, https://medic.s3.amazonaws.com/os/mirror/bladox-tools-1.5.24.tar.xz
 bzip2, http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
 couchdb, http://apache.osuosl.org/couchdb/source/1.6.1/apache-couchdb-1.6.1.tar.gz
-couchdb-lucene, https://medic-mobile.s3.amazonaws.com/medic-os/mirror/source/couchdb-lucene-1.0.2.tar.gz
+couchdb-lucene, https://medic.s3.amazonaws.com/os/mirror/couchdb-lucene-1.0.2.tar.gz
 curl, http://curl.haxx.se/download/curl-7.35.0.tar.lzma
 diffutils, http://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz
-erica, https://medic-mobile.s3.amazonaws.com/medic-os/mirror/source/erica-0.5.0.tar.gz
+erica, https://medic.s3.amazonaws.com/os/mirror/erica-0.5.0.tar.gz
 erlang, http://www.erlang.org/download/otp_src_17.4.tar.gz
 gammu, http://dl.cihar.com/gammu/releases/gammu-1.33.0.tar.xz
 gammu-json, https://github.com/medic/gammu-json.git
