@@ -48,7 +48,11 @@ bootinit:
 	@(cd initrd/common && tar -cf - boot | xz -9ec) \
 	  > ../output/"${SYSTEM_IMAGE_NAME}-${DATE}-all-bootinit.tar.xz"
 
-compile:
+compile-only:
+	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
+	    ${QMAKE} build PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
+
+build:
 	@if [ -z '${SKIP_COMPILER}' ]; then \
 	  ${QMAKE} compiler || exit "$$?"; \
 	fi

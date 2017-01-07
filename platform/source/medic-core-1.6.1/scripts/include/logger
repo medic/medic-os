@@ -78,10 +78,12 @@ logger()
     while read x; do
       line=$[$line + 1]
       local percent=$[100 * $line / $expected_lines]
-
+      if [ "$percent" -ge 100 ]; then
+        percent='100'
+      fi
       echo "$x" >> "$output_path"
       printf '\r%9s: %s' "$name" \
-        "Approximately $percent% complete " >&2
+        "Approximately $percent% complete... " >&2
     done
     echo 'done.' >&2
   fi

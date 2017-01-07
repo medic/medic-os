@@ -1,6 +1,7 @@
 
 # Variables
 
+BITS ?= 64
 PARALLEL ?= 16
 PLATFORM := $(shell ../scripts/detect-platform)
 
@@ -63,7 +64,7 @@ core: build-core copy-core
 
 build-core:
 	@source medic-core/scripts/include/builder && \
-	builder_setup_cache && \
+	builder_setup_cache; \
 	(cd core && ${QMAKE} \
 	  COMPILER_ROOT='${COMPILER_ROOT}' \
 	  PATH="${MEDIC_CORE_ROOT}/bin:$$PATH" \

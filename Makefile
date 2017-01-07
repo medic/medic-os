@@ -18,7 +18,7 @@ build: reset-time prepare-tree
 	@echo "`tput bold`Building packages`tput sgr0`" >&2 && echo >&2
 	@(cd platform && \
 	  export HOME="`readlink -f ../.. 2>/dev/null || realpath ../..`" && \
-	  source ./.profile && ${QMAKE} compile all)
+	  source ./.profile && ${QMAKE} build all)
 
 repackage: reset-time prepare-tree
 	@(cd platform/source && \
