@@ -684,7 +684,9 @@ var add_openssh_public_key = function (_req, _key, _callback) {
  */
 var save_system_password = function (_name, _passwd, _callback) {
 
-  var system_passwd_path = path.join(system_passwd_dir, _name);
+  var system_passwd_path = path.join(
+    system_passwd_dir, _name
+  );
 
   fs.open(system_passwd_path, 'w', 0640, function (_err, _fd) {
 
@@ -1046,6 +1048,30 @@ var setup_minimal_couchdb_accounts = function (_req,
       });
     },
 
+    /* Step 4.5:
+     *   Create a user settings document for the `admin` user. */
+
+    function (_cb) {
+
+      var put = make_couchdb_user_creation_request(
+        'admin', _passwd, request_template, true
+      );
+
+      request.put(put, function (_err, _resp, _body) {
+
+        /* Detect and ignore conflicts:
+         *  A conflict means the document has already been created. */
+
+        if (_resp.statusCode == 409) {
+          return _cb();
+        }
+
+        return check_response(
+          _err, _resp, _req, 'Administrative user settings creation', _cb
+        );
+      });
+    },
+
     /* Step 5:
      *   Set up an administrative password for the named user. */
 
@@ -1082,6 +1108,26 @@ var setup_minimal_couchdb_accounts = function (_req,
       request.put(put, function (_err, _resp, _body) {
         return check_response(
           _err, _resp, _req, 'User creation', _cb
+        );
+      });
+    },
+
+    /* Step 6.5:
+     *   Create a user settings document for the named user. */
+
+    function (_cb) {
+
+      if (is_builtin_user_name(_user.name)) {
+        return _cb(); /* Skip this step */
+      }
+
+      var put = make_couchdb_user_creation_request(
+        _user, _passwd, request_template, true
+      );
+
+      request.put(put, function (_err, _resp, _body) {
+        return check_response(
+          _err, _resp, _req, 'User settings creation', _cb
         );
       });
     }
@@ -1214,17 +1260,27 @@ var setup_couchdb_service_account = function (_req, _account_name,
  *   ordinary string representing the user name.
  */
 var make_couchdb_user_creation_request = function (_user, _passwd,
-                                                   _request_template) {
+                                                   _request_extra,
+                                                   _create_settings) {
+
+  var roles = [
+    'medic-admin', 'national-manager',
+      'kujua_user', 'data_entry', 'national_admin'
+  ];
 
   if (!_.isObject(_user)) {
     _user = { name: _user };
   }
 
   var doc = {
-    type: 'user', roles: [],
-    name: _user.name, password: _passwd,
+    roles: roles, name: _user.name,
     _id: 'org.couchdb.user:' + _user.name,
+    type: (_create_settings ? 'user-settings' : 'user')
   };
+
+  if (!_create_settings) {
+    doc.password = _passwd;
+  }
 
   var attributes = {
     phone: true, email: true, fullname: true
@@ -1236,12 +1292,16 @@ var make_couchdb_user_creation_request = function (_user, _passwd,
     }
   });
 
+  var url = (
+    protocol + server + '/' +
+      (_create_settings ? 'medic' : '_users') + '/' + doc._id
+  );
+
   var req = {
-    body: JSON.stringify(doc),
-    url: protocol + server + '/_users/' + doc._id
+    url: url, body: JSON.stringify(doc)
   };
 
-  return _.extend(req, (_request_template || {}));
+  return _.extend(req, (_request_extra || {}));
 };
 
 /**

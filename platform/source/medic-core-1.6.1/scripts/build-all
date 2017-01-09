@@ -5,6 +5,11 @@ set -o pipefail
 self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
 base_dir="`dirname "$self"`/.."
 
+warn()
+{
+  echo "Warning: $*" >&2
+}
+
 fatal()
 {
   echo "Fatal error: $*" >&2
@@ -118,11 +123,18 @@ main()
     (disable_parallelism && build_make 'usb-modeswitch-data' \
      'install' "DESTDIR='$prefix' PREFIX='$prefix'") &&
     \
-    # In libacl, libattr: make reinstall safe
-    rm -f "$prefix/lib/libattr.so".* "$prefix/lib/libacl.so".* &&
+    # libattr: Make reinstall safe
+    if builder_should_run 'attr'; then
+      rm -f "$prefix/lib/libattr.so".*
+    fi &&
     \
     (disable_parallelism && build_autoconf 'attr' \
       "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib') &&
+    \
+    # libacl: Make reinstall safe
+    if builder_should_run 'acl'; then
+      rm -f "$prefix/lib/libacl.so".*
+    fi &&
     \
     (disable_parallelism && build_autoconf 'acl' \
       "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib') &&
@@ -148,6 +160,7 @@ main()
   \
   build_autoconf 'diffutils' "$stdarg" &&
   build_autoconf 'patch' "$stdarg" &&
+  build_autoconf 'jq' "$stdarg --disable-maintainer-mode" &&
   build_autoconf 'nano' "$stdarg --with-shared --enable-utf8" &&
   \
   (disable_parallelism && build_config 'openssl' \
@@ -252,13 +265,13 @@ main()
     build_npm_remote 'node-gyp' "$prefix"
   fi &&
   \
-  build_npm_remote 'async' "$prefix" &&
-  build_npm_remote 'express' "$prefix" &&
+  build_npm_remote 'async@1' "$prefix" &&
+  build_npm_remote 'express@4' "$prefix" &&
   build_npm_remote 'garden-core' "$prefix" &&
   build_npm_remote 'kanso' "$prefix" &&
-  build_npm_remote 'lazy' "$prefix" &&
-  build_npm_remote 'request' "$prefix" &&
-  build_npm_remote 'hbs' "$prefix" &&
+  build_npm_remote 'lazy@1' "$prefix" &&
+  build_npm_remote 'request@2' "$prefix" &&
+  build_npm_remote 'hbs@4' "$prefix" &&
   build_npm_remote 'grunt-cli' "$prefix" &&
   \
   build_npm_local 'medic-transport' "$prefix" &&

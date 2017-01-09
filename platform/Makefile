@@ -16,20 +16,21 @@ TIMESTAMP := $(shell date +'%Y-%m-%d %H:%M:%S')
 SYSTEM_ID ?= medic-os
 SYSTEM_NAME ?= Medic OS
 SYSTEM_VERSION_STRING ?= 1.1.0
+SYSTEM_IMAGE_NAME := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}
 
 COMPILER_VERSION ?= 4.8.2
 COMPILER_ROOT ?= /srv/software/compiler/v${COMPILER_VERSION}/${PLATFORM}
 
 ifeq (${RELEASE},)
-  SYSTEM_IMAGE_ID := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}-${DATE}-${PLATFORM}
+  SYSTEM_IMAGE_ID := ${SYSTEM_IMAGE_NAME}-${DATE}-${PLATFORM}
 else
-  SYSTEM_IMAGE_ID := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}-${PLATFORM}
+  SYSTEM_IMAGE_ID := ${SYSTEM_IMAGE_NAME}-${PLATFORM}
 endif
 
 
 # Meta-targets
 
-all: packages images
+all: bootinit packages images
 
 iso: build-iso-image
 xen: build-xen-image
@@ -38,10 +39,14 @@ initrd: build-initrd
 native: build-native-tarball
 
 images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae
-packages: strip-binaries medic-core-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg medic-transport-pkg
+packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg medic-transport-pkg
 
 
 # Public targets
+
+bootinit:
+	@(cd initrd/common && tar -cf - boot | xz -9ec) \
+	  > ../output/"${SYSTEM_IMAGE_NAME}-${DATE}-all-bootinit.tar.xz"
 
 compile:
 	@if [ -z '${SKIP_COMPILER}' ]; then \
@@ -268,27 +273,37 @@ strip-binaries:
 
 concierge-pkg:
 	@echo -n 'Compressing package 'concierge'... ' && \
-	scripts/build-package 'concierge' 10110 '${PLATFORM}' && \
+	scripts/build-package 'concierge' 10112 '${PLATFORM}' && \
 	echo 'done.'
 
 java-pkg:
 	@echo -n 'Compressing package 'java'... ' && \
-	scripts/build-package 'java' 17760 '${PLATFORM}' && \
+	scripts/build-package 'java' 17801 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 16120 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 16131 '${PLATFORM}' && \
+	echo 'done.'
+
+medic-rdbms-pkg:
+	@echo -n 'Compressing package 'medic-rdbms'... ' && \
+	scripts/build-package 'medic-rdbms' 95301 '${PLATFORM}' && \
+	echo 'done.'
+
+medic-couch2pg-pkg:
+	@echo -n 'Compressing package 'medic-couch2pg'... ' && \
+	scripts/build-package 'medic-couch2pg' 10000 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
 	@echo -n 'Compressing package 'system-services'... ' && \
-	scripts/build-package 'system-services' 10200 '${PLATFORM}' && \
+	scripts/build-package 'system-services' 10212 '${PLATFORM}' && \
 	echo 'done.'
 
 vm-tools-pkg:
 	@echo -n 'Compressing package 'vm-tools'... ' && \
-	scripts/build-package 'vm-tools' 94611 '${PLATFORM}' && \
+	scripts/build-package 'vm-tools' 94612 '${PLATFORM}' && \
 	echo 'done.'
 
 shrink-gardener:
@@ -296,7 +311,7 @@ shrink-gardener:
 
 gardener-pkg: shrink-gardener
 	@echo -n 'Compressing package 'gardener'... ' && \
-	scripts/build-package 'gardener' 11001 '${PLATFORM}' && \
+	scripts/build-package 'gardener' 11002 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-transport-pkg:

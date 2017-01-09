@@ -1,0 +1,192 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/hypervisor'
+
+install()
+{
+  local is_update="$1"
+  shift 1
+
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/env" &&
+  merge_environment /srv || return 255
+
+  local version="$PACKAGE_VERSION"
+  local platform="`cat /etc/platform`"
+  local major_version="`echo "$version" | sed 's/\.[0-9]\+$//;'`"
+
+  create_system_group_if_necessary postgresql 80 &&
+  create_system_group_if_necessary rdbms-users 90 &&
+  \
+  create_system_user_if_necessary \
+    postgresql 80 'PostgreSQL Process Account' postgresql
+
+  if [ "$?" -ne 0 ]; then
+    warn 'PostgreSQL system account creation failed'
+    return 1
+  fi
+
+  create_settings_defaults "$PACKAGE_SETTINGS/postgresql/env" \
+    lc_time C lc_numeric C lc_messages C lc_monetary C timezone UTC
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Failure while installing default settings'
+    return 2
+  fi
+
+  (cd "$PACKAGE_ROOT/../" &&
+    rm -f default && ln -sf "$platform" default) &&
+  \
+  (cd "$PACKAGE_ROOT/../../" &&
+    rm -f "v$major_version" &&
+    ln -sf "v$version" "v$major_version" &&
+    rm -f current && ln -sf v"$version" current) &&
+  \
+  (cd "$PACKAGE_STORAGE" &&
+    chown -R postgresql:postgresql postgresql/data) &&
+  \
+  initialize_cluster 'postgresql' \
+    "$PACKAGE_STORAGE/postgresql/data" "$is_update" &&
+  \
+  source "$base/include/logrotate" &&
+  logrotate_install
+
+  return "$?"
+}
+
+create_system_group_if_necessary()
+{
+  local group="$1"
+  local group_gid="$2"
+  shift 2
+
+  if grep -q "^$group:" /etc/group; then
+    return 0
+  fi
+
+  addgroup -S -g "$group_gid" "$group"
+  return "$?"
+}
+
+create_system_user_if_necessary()
+{
+  local user="$1"
+  local user_uid="$2"
+  local user_gecos="$3"
+  local user_group="$4"
+  shift 4
+
+  if id -u "$user" &>/dev/null; then
+    return 0
+  fi
+
+  adduser -G "$user_group" -D -H -u "$user_uid" \
+    -h /var/empty -g "$user_gecos" -s /bin/sh "$user"
+
+  return "$?"
+}
+
+create_settings_defaults()
+{
+  local directory="$1"
+  shift 1
+
+  while [ "$#" -gt 0 ]; do
+
+    local key="$1"
+    local value="$2"
+
+    local path="$directory/`basename "$key"`" \
+      || return 1
+
+    if [ ! -f "$path" ]; then
+      echo "$value" > "$path" || return 2
+    fi
+
+    shift 2
+  done
+
+  return 0
+}
+
+initialize_cluster()
+{
+  local user="$1"
+  local data_dir="$2"
+  local is_update="$3"
+  shift 3
+
+  if [ "$is_update" ]; then
+    return 0
+  fi
+
+  local data_dir="`realpath "$data_dir"`"
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Unable to locate specified data directory'
+    return 1
+  fi
+
+  local passwd_dir="$PACKAGE_STORAGE/postgresql/passwd"
+  local passwd_file="$passwd_dir/postgresql"
+
+  local random_passwd="`
+    dd if=/dev/urandom bs=4096 count=10 2>/dev/null \
+      | sha512sum | cut -d' ' -f1
+  `"
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Random password generation failed'
+    return 2
+  fi
+
+  rm -f "$passwd_file" &&
+  echo "$random_passwd" > "$passwd_file" &&
+  chown concierge:postgresql "$passwd_file" &&
+  chmod 0440 "$passwd_file"
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Administrator credential storage failed'
+    return 3
+  fi
+
+  local command="
+    '$PACKAGE_ROOT/bin/initdb' --pwfile=/dev/stdin \
+      -E UTF-8 -U '$user' -D '$data_dir' < "$passwd_file"
+  "
+
+  su - "$user" -c "$command"
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Database cluster initialization failed'
+    return 4
+  fi
+
+  local command="
+    '$PACKAGE_ROOT/bin/postgres' \
+      --single -D '$data_dir' template1
+  "
+  
+  local create_sql="
+    create database medic encoding = 'UTF-8';
+  "
+
+  local backend_output="`
+    echo "$create_sql" \
+      | su - "$user" -c "$command" 2>&1 >/dev/null
+  `"
+
+  if [ ! -z "$backend_output" ]; then
+    warn 'Failed to create initial database'
+    return 5
+  fi
+
+  return 0
+}
+
+install "$@"
+exit "$?"
+

@@ -634,6 +634,22 @@ builder_setup_cache()
   return 1
 }
 
+builder_setup_globals()
+{
+  pkg_start="$1"
+  timestamp="`date +%Y%m%d-%H%M%S`"
+
+  if [ "$pkg_start" ]; then
+    echo -n 1 > "$run_status_file"
+  else
+    echo -n 0 > "$run_status_file"
+  fi
+
+  unset PLATFORM
+  prepend_paths "$prefix"
+}
+
+
 builder_setup_environment()
 {
   prefix="$1"
@@ -646,15 +662,7 @@ builder_setup_environment()
   bits="$8"
   parallel="$9"
 
-  timestamp="`date +%Y%m%d-%H%M%S`"
-
-  if [ "$pkg_start" ]; then
-    echo -n 1 > "$run_status_file"
-  else
-    echo -n 0 > "$run_status_file"
-  fi
-
-  unset PLATFORM
+  builder_setup_globals "$pkg_start"
 
   if which gmake &>/dev/null; then
     export MAKE='gmake'
@@ -670,8 +678,6 @@ builder_setup_environment()
 
   export INITIAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
   export INITIAL_DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH"
-
-  prepend_paths "$prefix"
 
   builder_detect_system \
     || fatal 'Unsupported system; please edit Makefile'

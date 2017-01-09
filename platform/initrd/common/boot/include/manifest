@@ -1,0 +1,104 @@
+#!/bin/sh
+
+set -o pipefail
+
+safe()
+{
+  local command="$1"
+  shift 1
+
+  "$command" "$@"
+  local rv="$?"
+
+  if [ "$rv" -eq 1 ]; then
+    return 0
+  fi
+
+  return "$rv"
+}
+
+manifest_compare_generic()
+{
+  local previous_manifest="$1"
+  local replacement_manifest="$2"
+  local include_added="$3"
+  local include_removed="$4"
+
+  local p='';
+
+  if [ "$include_added" ]; then
+    p="${p}+"
+  fi
+
+  if [ "$include_removed" ]; then
+    p="${p}-"
+  fi
+
+  if [ -z "$p" ]; then
+    return 1
+  fi
+
+  p="[${p}]"
+
+  local previous_sorted="`mktemp`" || return 2
+  local replacement_sorted="`mktemp`" || return 3
+
+  sort -r < "$previous_manifest" > "$previous_sorted" &&
+  sort -r < "$replacement_manifest" > "$replacement_sorted"
+
+  if [ "$?" -ne 0 ]; then
+    rm -f "$previous_sorted" "$replacement_sorted"
+    return 4
+  fi
+
+  safe diff -wdub "$previous_sorted" "$replacement_sorted" \
+    | safe grep -v "^$p$p$p " | safe grep "^$p" | sed "s/^$p//;"
+
+  local rv="$?"
+  rm -f "$previous_sorted" "$replacement_sorted"
+
+  return "$rv"
+}
+
+manifest_find_all()
+{
+  local manifest_path="$1"
+
+  sort -r < "$manifest_path"
+  return "$?"
+}
+
+manifest_find_removed()
+{
+  manifest_compare_generic "$1" "$2" '' 't'
+  return "$?"
+}
+
+manifest_find_added()
+{
+  manifest_compare_generic "$1" "$2" 't' ''
+  return "$?"
+}
+
+manifest_find_differences()
+{
+  manifest_compare_generic "$1" "$2" 't' 't'
+  return "$?"
+}
+
+manifest_filter()
+{
+  local type="$1"
+
+  case "$type" in
+    d*)
+      safe grep '/$'
+      ;;
+    *)
+      safe grep -v '/$'
+      ;;
+  esac
+
+  return "$?"
+}
+

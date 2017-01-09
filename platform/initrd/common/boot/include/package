@@ -7,14 +7,26 @@ receipts_dir="$srv_dir/system/storage/receipts"
 settings_dir="$srv_dir/system/settings/packages"
 supervisor_dir="$srv_dir/system/storage/supervisor"
 
+package_sanitize_name()
+{
+  local package="$1"
+
+  basename -- "$package"
+  return "$?"
+}
+
+service_sanitize_name()
+{
+  local service="$1"
+
+  basename -- "$service"
+  return "$?"
+}
+
 package_extract_metadata()
 {
   local path="$1"
   local metadata_key="$2"
-
-  if ! [ -r "$path" ]; then
-    return 1
-  fi
 
   ar -p "$path" "$metadata_key" 2>/dev/null
   return "$?"
@@ -57,9 +69,111 @@ package_retrieve_installed_version()
   return "$?"
 }
 
+package_is_installed()
+{
+  local package="$1"
+
+  test -f "$receipts_dir/$package/version" 2>/dev/null
+  return "$?"
+}
+
+package_manifest_copy()
+{
+  local package="$1"
+  local manifest_path="$2"
+
+  if [ -z "$manifest_path" ]; then
+    manifest_path="$receipts_dir/$package/manifest"
+  fi
+
+  local version="`package_retrieve_installed_version "$package"`" \
+    || return 1
+
+  local new_manifest_path="$manifest_path.$version"
+
+  cp -af -- "$manifest_path" "$new_manifest_path" &&
+  echo "$new_manifest_path"
+
+  return "$?"
+}
+
+package_manifest_remove_all()
+{
+  local package="$1"
+  local manifest_path="$2"
+
+  if [ -z "$manifest_path" ]; then
+    manifest_path="$receipts_dir/$package/manifest"
+  fi
+
+  if ! cd "$srv_dir"; then
+    warn "Unable to change directory to '$srv_dir'"
+    return 1
+  fi
+
+  manifest_find_all "$manifest_path" \
+    | manifest_filter 'file' | while read file; do
+
+    if ! [ -k "$file" ]; then
+      if ! rm -f -- "$file" &>/dev/null; then
+        warn "Unable to remove file '$srv_dir/$file'"
+      fi
+    fi
+  done
+
+  manifest_find_all "$manifest_path" \
+    | manifest_filter 'directory' | while read dir; do
+
+    if [ -d "$dir" ]; then
+      if ! rmdir --ignore-fail-on-non-empty -- "$dir" &>/dev/null; then
+        info "Unable to remove directory '$srv_dir/$dir'"
+      fi
+    fi
+  done
+
+  return "$?"
+}
+
+package_manifest_remove_differential()
+{
+  local package="$1"
+  local manifest_previous="$2"
+  local manifest_current="$3"
+
+  if ! cd "$srv_dir"; then
+    warn "Unable to change directory to '$srv_dir'"
+    return 1
+  fi
+
+  manifest_find_removed "$manifest_previous" "$manifest_current" \
+    | manifest_filter 'file' | while read file; do
+
+    if ! [ -k "$file" ]; then
+      if ! rm -f -- "$file" &>/dev/null; then
+        warn "Unable to remove file '$srv_dir/$file'"
+      fi
+    fi
+  done
+
+  manifest_find_removed "$manifest_previous" "$manifest_current" \
+    | manifest_filter 'directory' | while read dir; do
+
+    if [ -d "$dir" ]; then
+      if ! rmdir --ignore-fail-on-non-empty "$dir" &>/dev/null; then
+        info "Unable to remove directory '$srv_dir/$dir'"
+      fi
+    fi
+  done
+
+  return "$?"
+}
+
 package_install()
 {
   local path="$1"
+  local skip_autostart="$2"
+  local skip_setup_tasks="$3"
+  local is_package_update="$4"
 
   if ! [ -r "$path" ]; then
     return 1
@@ -78,7 +192,7 @@ package_install()
     echo -n "$version" > "$receipts_dir/$package/version"
 
   if [ "$?" -ne 0 ]; then
-    rm -f "$receipts_dir/$package/version"
+    rm -f -- "$receipts_dir/$package/version"
     return 3
   fi
 
@@ -90,24 +204,42 @@ package_install()
 
   if [ "$?" -ne 0 ]; then
     warn "Failed to extract files for package '$package' from '$path'"
-    rm -f "$receipts_dir/$package"
+    rm -f -- "$receipts_dir/$package"
     return 4
   fi
 
   if [ -x "$srv_dir/scripts/$package/install" ]; then
 
     log "Running installation script for package '$package'"
-
-    "$srv_dir/scripts/$package/install" \
-      || warn "Installation script for package '$package' failed"
+    "$srv_dir/scripts/$package/install" "$is_package_update" >> "$log" 2>&1
 
     if [ "$?" -ne 0 ]; then
-      rm -rf "$receipts_dir/$package"
-      return 5
+      warn "Installation script for package '$package' failed"
+      rm -rf -- "$receipts_dir/$package"
+      return 17
     fi
-  else
-    log "Skipping installation script for package '$package'"
-    log "File '$srv_dir/scripts/$package/install' is not executable"
+  fi
+
+  if [ -z "$skip_setup_tasks" ]; then
+    log "Running setup tasks for package '$package'"
+
+    if ! package_setup "$package"; then
+      warn "At least one setup script in package '$package' failed"
+      warn "Your installation of '$package' may be incomplete"
+      return 18
+    fi
+  fi
+
+  if [ -z "$skip_autostart" ]; then
+    supervisor_start "$package"
+    local rv="$?"
+
+    if [ "$rv" -eq 253 ]; then
+      info "Package '$package' has no services to start; continuing"
+    elif [ "$rv" -ne 0 ]; then
+      warn "Failed to start services for package '$package'"
+      return 19
+    fi
   fi
 
   log "Successfully installed package '$package'"
@@ -118,7 +250,7 @@ package_install()
 
 package_remove()
 {
-  local package="`basename -- "$1"`"
+  local package="$1"
 
   log "Removing package '$package'"
   log "Stopping services for package '$package'"
@@ -142,13 +274,15 @@ package_remove()
     fi
   fi
 
-  rm -rf "$receipts_dir/$package" \
-    "$supervisor_dir/$package" "$settings_dir/$package"
+  # Subshell preserves working directory
+  (package_manifest_remove_all "$package")
 
   if [ "$?" -gt 0 ]; then
     warn "Failed to remove installation records for package '$package'"
     return 3
   fi
+
+  rm -rf -- "$receipts_dir/$package"
 
   log "Successfully removed package '$package'"
   sync
@@ -160,12 +294,13 @@ package_update()
 {
   local path="$1"
   local force_install="$2"
+  local use_soft_restart="$3"
 
   local package="`package_extract_name "$path"`" &&
   local v_new="`package_extract_version "$path"`" &&
   local v_prev="`package_retrieve_installed_version "$package"`"
 
-  log "Updating package '$package'"
+  log "Updating package '$package'..."
   log "Examining version information for package '$package'"
 
   if [ "$?" -ne 0 ]; then
@@ -178,36 +313,52 @@ package_update()
     return 2
   fi
 
-  if [ "$v_prev" ]; then
-    if [ "$v_prev" -gt "$v_new" -a -z "$force_install" ]; then
-
-      warn "A newer version of '$package' is already installed"
-      warn "Use the force-install option if you want to install it anyway"
+  if [ -z "$v_prev" ]; then
+    if [ -z "$force_install" ]; then
+      warn "Package '$package' is not currently installed"
       return 3
-
-    elif [ "$v_prev" -lt "$v_new" ] 2>/dev/null; then
-
-      force_install='t'
-      log "Removing package '$package'"
-
-      if ! package_remove "$package"; then
-        warn "Failed to completely remove package '$package'"
-        return 4
-      fi
     else
-      warn "Version '$v_prev' of package '$package' is already installed"
+      package_install "$path"
+      return "$?"
     fi
-  else
-    force_install='t'
-    log "Package '$package' is not installed yet; installing"
   fi
 
-  if [ "$force_install" ]; then
-    log "Installing package '$package'"
-    if ! package_install "$path"; then
-      warn "Package '$package' encountered an error during installation"
-      warn "Software installation from file '$file' was unsuccessful"
+  if [ "$v_prev" -ge "$v_new" ]; then
+    if [ -z "$force_install" ]; then
+      warn "An equal-or-greater version of '$package' is already installed"
+      warn "Use the -f/--force option if you want to install it anyway"
+      return 4
+    fi
+  fi
+
+  if [ -z "$use_soft_restart" ]; then
+    log "Stopping supervisor for package '$package'"
+    supervisor_stop "$package"
+    local rv="$?"
+
+    if [ "$rv" -eq 253 ]; then
+      info "Package '$package' has no services to stop; continuing"
+    elif [ "$rv" -ne 0 ]; then
+      warn "Failed to stop supervisor for package '$package'"
       return 5
+    fi
+  fi
+
+  if ! package_update_twophase "$package" "$path"; then
+    warn "Error encountered while updating package '$package'"
+    warn "Software installation from file '$path' was unsuccessful"
+    return 6
+  fi
+
+  if [ -x "$srv_dir/scripts/$package/install" ]; then
+
+    log "Running installation script for package '$package'"
+    "$srv_dir/scripts/$package/install" 'update' >> "$log" 2>&1
+
+    if [ "$?" -ne 0 ]; then
+      warn "Installation script for package '$package' failed"
+      rm -rf -- "$receipts_dir/$package"
+      return 17
     fi
   fi
 
@@ -216,11 +367,56 @@ package_update()
   if ! package_setup "$package"; then
     warn "At least one setup script in package '$package' failed"
     warn "Your installation of '$package' may be incomplete"
-    return 6
+    return 18
+  fi
+
+  if [ "$use_soft_restart" ]; then
+    info "Restarting services for package '$package'..."
+
+    supervisor_list_all_services "$package" | while read service; do
+      info "Restarting service '$package/$service'"
+      if ! supervisor_service_restart "$package" "$service"; then
+        warn "Failed to restart service '$package/$service'"
+        return 19
+      fi
+    done
+  else
+    supervisor_start "$package"
+    local rv="$?"
+
+    if [ "$rv" -eq 253 ]; then
+      info "Package '$package' has no services to start; continuing"
+    elif [ "$rv" -ne 0 ]; then
+      warn "Failed to start services for package '$package'"
+      return 20
+    fi
   fi
 
   log "Finished examining package '$package'"
   return 0
+}
+
+package_update_twophase()
+{
+  local package="$1"
+  local path="$2"
+
+  local manifest="`package_manifest_copy "$package"`" \
+    || return 1
+
+  info "Installing package '$path'..."
+
+  package_install "$path" 't' 't' 't' \
+    || return 2
+
+  # Subshell preserves working directory
+  (package_manifest_remove_differential \
+    "$package" "$manifest" "$receipts_dir/$package/manifest")
+
+  local rv="$?"
+  rm -f -- "$manifest"
+
+  return "$rv"
 }
 
 package_merge_environment()
@@ -241,15 +437,15 @@ package_setup()
   local package="`basename -- "$1"`"
 
   for script in "$srv_dir/scripts/$package/setup"/*; do
-    if [ -x "$script" ]; then
+    if ! [ -x "$script" ]; then
+      continue
+    fi
 
-      local task_name="$package/`basename -- "$script"`"
-      log "Running setup task '$task_name'"
+    local task_name="$package/`basename -- "$script"`"
+    info "Running setup task '$task_name'"
 
-      "$script" >> "$log" 2>&1 \
-        || warn "Setup task '$task_name' was not successful"
-      
-      log "Finished setup task '$task_name'"
+    if ! "$script" >> "$log" 2>&1; then
+      warn "Setup task '$task_name' failed to complete"
     fi
   done
 
@@ -282,18 +478,9 @@ package_regenerate_settings()
 
 package_remove_empty_directories()
 {
-  local package="`basename -- "$1"`"
-  local software_dir="$srv_dir/software/$package"
+  local path="$1"
 
-  local file_count="`
-    find "$software_dir" -type f 2>/dev/null | wc -l
-  `"
-
-  [ "$?" -eq 0 ] || return 1
-    
-  if [ "$file_count" -eq 0 ]; then
-    rm -rf "$software_dir" || return 2
-  fi
-
+  echo "Info: Ignoring directory removal request for '$path'" >&2
   return 0
 }
+

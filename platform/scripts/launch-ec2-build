@@ -2,9 +2,11 @@
 
 set -o pipefail
 
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/../.."
+
 fatal() {
 
-  echo >&2
   echo "Fatal: $@" >&2
   exit 111
 }
@@ -12,11 +14,16 @@ fatal() {
 usage() {
 
   local app="`basename "$0"`"
-  local required_args='settings_path'
-  local optional_args='platform [ instance_type [ build_options ] ]'
+  local args='[ settings_path platform instance_type build_options ]'
 
-  echo "Usage: $app $required_args [ $optional_args ]" >&2
+  echo "Usage: $app $args" >&2
   exit 1
+}
+
+discover_server_role() {
+
+  curl -s 'http://169.254.169.254/latest/meta-data/iam/info' \
+    | jq .InstanceProfileArn | sed -r 's/^"[^\/]*\/([^"]+)"$/\1/;' 2>/dev/null
 }
 
 ssh_command() {
@@ -44,19 +51,21 @@ main() {
   local build_options="$4"
 
   local fs_size='20'
-  local security_group='ssh-only'
-  local iam_role='nightly-build-server'
+  local iam_role='$inherit'
   local time_zone='America/Los_Angeles'
-  local default_availability_zone='us-west-2b'
+
+  local security_group='ssh-only'
+  local default_region='us-west-2'
+  local default_availability_zone='us-west-2a'
   local ssh_key_name='nightly-builds@medicmobile.org'
 
-  local vm_url='https://github.com/browndav/medic-os'
-  local s3_base_url='https://medic-mobile.s3.amazonaws.com'
+  local vm_url='https://github.com/medic/medic-os'
+  local s3_base_url='https://medic.s3.amazonaws.com'
 
-  local source_url="$s3_base_url/medic-os/build/source"
-  local mirror_url="$s3_base_url/medic-os/mirror/source"
+  local source_url="$s3_base_url/os/source"
+  local mirror_url="$s3_base_url/os/mirror"
 
-  if [ -z "$settings" -o $# -gt 4 ]; then
+  if [ "$1" = '-h' -o "$1" = '--help' -o $# -gt 4 ]; then
     usage
   fi
 
@@ -72,13 +81,17 @@ main() {
     fi
   fi
 
+  settings="`aws_load_settings "$settings"`" &&
+    eval "$settings" && aws_cleanup_environment \
+      || fatal 'Unable to read AWS environment/settings file'
+
   local ami='';
   local ssh_private_key_path='';
   local ssh_private_key_contents='';
 
   case "$platform" in
     x64)
-      ami='ami-ff527ecf' ;;
+      ami='ami-eff1028f' ;;
     x86)
       ami='ami-cffea7ff' ;;
   esac
@@ -87,22 +100,31 @@ main() {
     export TZ="$time_zone"
   fi
 
-  if [ "$settings" ]; then
-    source "$settings" \
-      || fatal "Couldn't load settings data from '$settings'"
-
-    settings="`cat "$settings"`" \
-      || fatal "Couldn't read settings data from '$settings'"
-  fi
-
   if [ "$SSH_PRIVATE_KEY" ]; then
     ssh_private_key_path="$SSH_PRIVATE_KEY"
     ssh_private_key_contents="`cat "$ssh_private_key_path"`" \
       || fatal "Couldn't read private key from '$ssh_private_key_path'"
   fi
 
+  if ! [ -f "$ssh_private_key_path" ]; then
+    fatal "SSH private key file '$ssh_private_key_path' not found"
+  fi
+
+  if [ -z "$EC2_REGION" ]; then
+    EC2_REGION="$default_region"
+  fi
+
   if [ -z "$EC2_AVAILABILITY_ZONE" ]; then
     EC2_AVAILABILITY_ZONE="$default_availability_zone"
+  fi
+
+  local extra_create_args=''
+
+  if [ "$iam_role" = '$inherit' ]; then
+    extra_create_args="-p \"`discover_server_role`\"" \
+      || fatal 'Unable to discover server role'
+  else
+    extra_create_args="-p '$iam_role'"
   fi
 
   local n='16'
@@ -111,9 +133,10 @@ main() {
   echo -n 'Creating instance... ' >&2
 
   local instance_data="`
-    ec2-run-instances "$ami" \
-      -t "$instance_type" -p "$iam_role" -b "/dev/sda1=:$fs_size" \
-      -k "$ssh_key_name" -z "$EC2_AVAILABILITY_ZONE" -g "$security_group"
+    ec2-run-instances "$ami" $extra_create_args \
+      -g "$security_group" -k "$ssh_key_name" \
+      -t "$instance_type" -b "/dev/sda1=:$fs_size" \
+      --region "$EC2_REGION" -z "$EC2_AVAILABILITY_ZONE"
   `" &&
   \
   local instance_id="`
@@ -153,30 +176,28 @@ main() {
   echo "Instance name: $external_fqdn"
   echo -n 'Waiting for instance to start... ' >&2
 
-  local n='16'
+  local n='32'
   local rv='0'
   local ssh_id="$ssh_private_key_path"
   local ssh_host="ec2-user@$external_fqdn"
-
-  if ! [ -f "$ssh_id" ]; then
-    fatal "SSH private key file `$ssh_id` not found"
-  fi
+  local cfg_dir='./medic-os/platform/config'
 
   while [ "$n" -gt 0 ]; do
 
     sleep 10 && n=$[n - 1]
 
-    ssh_command "$ssh_host" "$ssh_id" \
-      'mkdir -p medic-os/platform/config/aws-current .ssh' &&
+    echo "$ssh_private_key_contents" | ssh_command  "$ssh_host" "$ssh_id" \
+      'mkdir -p -- .ssh && cat >> .ssh/id_rsa' && \
     \
     echo 'done.' >&2 &&
     echo -n 'Establishing connection to instance... ' >&2 &&
     \
-    echo "$settings" | ssh_command  "$ssh_host" "$ssh_id" \
-      'cat > medic-os/platform/config/aws-current/settings' && \
+    ssh_command "$ssh_host" "$ssh_id" \
+      "mkdir -p -- '$cfg_dir' && ln -sf aws-defaults '$cfg_dir/aws'" &&
     \
-    echo "$ssh_private_key_contents" \
-      | ssh_command  "$ssh_host" "$ssh_id" 'cat >> .ssh/id_rsa' && \
+    echo "$settings" | ssh_command  "$ssh_host" "$ssh_id" \
+      "mkdir -p -- '$cfg_dir/aws-defaults' &&
+       cat > '$cfg_dir/aws-defaults/settings'" && \
     \
     ssh_command  "$ssh_host" "$ssh_id" \
       "echo 'done.' >&2 &&
@@ -184,7 +205,7 @@ main() {
          echo -n 'Setting up environment... ' >&2 &&
          \
          export TZ='$time_zone' &&
-         source medic-os/platform/config/aws-current/settings &&
+         source '$cfg_dir/aws/settings' &&
          echo 'done.' >&2 &&
          \
          echo -n 'Resizing filesystem... ' >&2 &&
@@ -207,8 +228,7 @@ main() {
          echo 'done.' >&2 &&
          \
          echo -n 'Installing build-time dependencies... ' >&2 &&
-         sudo ./medic-os/platform/config/redhat/scripts/prepare-system \
-           -q -y &>/dev/null &&
+         sudo '$cfg_dir/redhat/scripts/prepare-system' -qy &>/dev/null &&
          echo 'done.' >&2 &&
          \
          echo -n 'Applying latest Medic OS updates... ' >&2 &&
@@ -234,17 +254,18 @@ main() {
          \
          echo 'Medic OS build complete.' >&2 &&
          \
-         echo -n 'Building EBS images:' >&2 &&
+         echo 'Building EBS images:' >&2 &&
          ./platform/scripts/build-ebs-image \
-           '$platform' output/*'-$platform-xen' \
-             'Medic OS $platform - `date +%Y%m%d`' /dev/sdb && \
+           '../$cfg_dir/aws/settings' \
+             '$platform' output/*'-$platform-xen' \
+               'Medic OS Nightly $platform - `date +%Y%m%d`' /dev/sdb && \
          \
          echo 'EBS images built successfully.' >&2 &&
          \
          echo 'Uploading ISO images:' >&2 &&
          ./platform/scripts/upload-iso-images \
-           "$UPLOAD_METHOD" "$UPLOAD_USER" \
-             "$UPLOAD_HOST" "$UPLOAD_TARGET" "$UPLOAD_OPTIONS" && \
+           '../$cfg_dir/aws/settings' \
+             '$platform' '`date +%Y%m%d`' 'nightly' &&
          \
          echo 'ISO images uploaded successfully.' && sync"
 
@@ -273,8 +294,9 @@ main() {
   echo 'done.' >&2
   echo -n 'Terminating instance... ' >&2
 
-  ec2-terminate-instances "$instance_id" &>/dev/null \
-    || fatal 'Failed to terminate instance'
+  ec2-terminate-instances \
+    "$instance_id" --region "$EC2_REGION" &>/dev/null \
+      || fatal 'Failed to terminate instance'
 
   echo 'done.' >&2
 
@@ -285,6 +307,12 @@ main() {
   echo 'Build complete.' >&2
   return 0
 }
+
+cd "$base_dir" \
+  || fatal 'Unable to locate root directory'
+
+source ./platform/scripts/include/aws \
+  || fatal 'Unable to load one or more required libraries'
 
 main "$@"
 exit "$?"

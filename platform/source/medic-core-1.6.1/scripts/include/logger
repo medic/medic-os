@@ -56,28 +56,18 @@ logger()
     return "$?"
   fi
 
-  local line=0
-  local lines_denominator=''
+  local line='0'
   local stats_path="$directory/stats/$platform/$safe_name.count"
   local expected_lines="`cat "$stats_path" 2>/dev/null`"
 
   if [ -z "$expected_lines" ]; then
-    expected_lines=0
-  else
-    lines_denominator=" of $expected_lines"
+    expected_lines='1'
   fi
 
   pv -h &>/dev/null
 
   if [ $? -eq 0 ]; then
-    while read x; do
-      line=$[$line + 1]
-      if [ "$line" -le "$expected_lines" ]; then
-        echo "$x"
-      else
-        echo "$x" >> "$output_path"
-      fi
-    done | pv -petlc -i 0.5 -N "$safe_name" -s "$expected_lines" \
+    pv -petlc -i 0.5 -N "$safe_name" -s "$expected_lines" \
       >> "$output_path"
 
     local date="`date +'%I:%M:%S%p' | tr '[A-Z]' '[a-z]'`"
@@ -85,12 +75,13 @@ logger()
     print_status "$name" \
       "Build process completed at $date" >&2
   else
-    while read i; do
+    while read x; do
       line=$[$line + 1]
-      echo "$i" >> "$output_path"
-      printf '\r%9s: %s; %s' "$name" \
-        'Estimate not yet available' \
-        "$line$lines_denominator lines processed... " >&2
+      local percent=$[100 * $line / $expected_lines]
+
+      echo "$x" >> "$output_path"
+      printf '\r%9s: %s' "$name" \
+        "Approximately $percent% complete " >&2
     done
     echo 'done.' >&2
   fi

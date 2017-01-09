@@ -2,6 +2,9 @@
 
 set -o pipefail
 
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/../.."
+
 fatal()
 {
   echo "Fatal: $*" >&2
@@ -15,25 +18,91 @@ warn()
 
 usage()
 {
-  echo "Usage: $0 method user host target options"
+  echo "Usage: $0 settings_path platform build_timestamp [build_type]"
   exit 1
+}
+
+upload_rsync()
+{
+  echo 'upload_rsync: Not yet implemented' >&2
+  return 127
+}
+
+upload_s3()
+{
+  local platform="$1"
+  local build_timestamp="$2"
+  local build_type="$3"
+
+  local build_name="$build_timestamp"
+
+  if [ "$build_type" ]; then
+    build_name="$build_type-$build_name"
+  fi
+
+  local temp_dir="`mktemp -d`" || return 1
+  local upload_dir="$temp_dir/$UPLOAD_PATH/$build_name"
+
+  echo -n 'Preparing files... ' >&2 &&
+  \
+  mkdir -p -- "$upload_dir/iso/$platform" &&
+  mkdir -p -- "$upload_dir/packages/$platform" &&
+  \
+  cp -a -- output/*-virtual.iso \
+    "$upload_dir/iso/$platform" &&
+  \
+  cp -a -- "platform/images/$platform/iso/packages"/*.vpkg \
+    "$upload_dir/packages/$platform" &&
+  \
+  echo 'done.' >&2 &&
+  echo -n 'Uploading files to S3... ' >&2 &&
+  \
+  (cd "$temp_dir" &&
+    s3put -q -b "$UPLOAD_BUCKET" -p "$temp_dir" --region "$EC2_REGION" .) &&
+  \
+  echo 'done.' >&2
+
+  local rv="$?"
+  rm -rf -- "$temp_dir"
+
+  return "$rv"
 }
 
 main()
 {
-  local method="$1"
-  local user="$2"
-  local host="$3"
-  local target="$4"
-  local options="$5"
+  local settings="$1"
+  local platform="$2"
+  local build_timestamp="$3"
+  local build_type="$4"
 
-  if [ "$1" = '-h' -o "$1" = '--help' ]; then
+  if [ "$#" -lt 2 -o "$1" = '-h' -o "$1" = '--help' ]; then
     usage
   fi
 
-  echo 'upload_iso_images:' "$@" >&2
+  settings="`aws_load_settings "$settings"`" &&
+    eval "$settings" && aws_cleanup_environment \
+      || fatal 'Unable to read AWS environment/settings file'
+
+  case "$UPLOAD_METHOD" in
+    s3)
+      upload_s3 "$platform" "$build_timestamp" "$build_type"
+      ;;
+    rsync)
+      upload_rsync "$platform" "$build_timestamp" "$build_type"
+      ;;
+    *)
+      fatal "Unknown or invalid upload method '$UPLOAD_METHOD'"
+      ;;
+  esac
+
   return 0
 }
+
+cd "$base_dir" \
+  || fatal 'Unable to locate root directory'
+
+source ./platform/scripts/include/aws \
+  || fatal 'Unable to load one or more required libraries'
 
 main "$@"
 exit "$?"

@@ -1,6 +1,7 @@
 #!/bin/sh
 
 source '/boot/include/utility'
+source '/boot/include/package'
 source '/boot/include/supervisor'
 
 reload()
@@ -35,6 +36,9 @@ main()
   require_root
   supervisor_init
 
+  package="`package_sanitize_name "$package"`" \
+    || fatal "Invalid package name '$package'"
+
   local rv=''
 
   if [ "$#" -le 0 ]; then
@@ -45,6 +49,9 @@ main()
     rv="$?"
   else
     for service in "$@"; do
+      service="`service_sanitize_name "$service"`" \
+        || fatal "Invalid service name '$service'"
+
       reload "$package" "$service"
       rv="$?"
     done

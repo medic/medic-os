@@ -1,0 +1,51 @@
+#!/bin/sh
+
+wait_for_passwd_file()
+{
+  local passwd_file="$1"
+
+  while ! [ -f "$passwd_file" ]; do
+    sleep 5
+  done
+
+  return 0
+}
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/../../medic-core/env" &&
+  merge_environment /srv &&
+  \
+  source "$base/../env" &&
+  merge_environment /srv &&
+  \
+  local pg_passwd_dir="$PACKAGE_STORAGE/../medic-rdbms/postgresql/passwd" &&
+  wait_for_passwd_file "$pg_passwd_dir/postgresql" &&
+  \
+  local couch_passwd_dir="$PACKAGE_STORAGE/../concierge/passwd" &&
+  wait_for_passwd_file "$couch_passwd_dir/gardener" &&
+  \
+  local logs="$PACKAGE_STORAGE/logs" &&
+  local couch2pg_command="node '$PACKAGE_ROOT/index.js'" &&
+  local couch_passwd="`cat "$couch_passwd_dir/gardener"`" &&
+  \
+  export COUCH2PG_SLEEP_MINS='1' &&
+  export POSTGRESQL_URL='postgres:///medic?host=/tmp' &&
+  export COUCHDB_URL="http://gardener:$couch_passwd@localhost:5984/medic" &&
+  \
+  exec nohup su -c "exec $couch2pg_command" postgresql \
+    >> "$logs/startup.log" 2>&1
+}
+
+main()
+{
+  start
+  return "$?"
+}
+
+main
+exit "$?"
+

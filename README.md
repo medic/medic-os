@@ -98,7 +98,7 @@ provide prepackaged JDK/JRE archives. On 64-bit Intel systems, run:
 
 ```shell
 file='medic-os-java-x64-latest.tar.xz' &&
-curl -LO# "https://medic-mobile.s3.amazonaws.com/medic-os/build/source/$file" &&
+curl -LO# "https://medic.s3.amazonaws.com/os/source/$file" &&
 tar -xvJf "$file"
 ```
 

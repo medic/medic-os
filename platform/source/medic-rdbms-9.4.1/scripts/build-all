@@ -33,7 +33,12 @@ main()
   [ $? -eq 0 ] \
     || fatal 'Failed to set up build environment'
 
-  build_autoconf 'pv' "$stdarg"
+  build_autoconf 'pv' "$stdarg" &&
+  \
+  (disable_library_path && build_autoconf 'readline' \
+    "$stdarg --build='$build_arch' --enable-static=no --enable-shared=yes") &&
+  \
+  build_autoconf 'postgresql' "$stdarg"
 
   if [ "$?" -ne 0 ]; then
     fatal 'One or more build steps failed; aborting'

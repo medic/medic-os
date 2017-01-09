@@ -2,6 +2,8 @@
 
 source '/boot/include/utility'
 source '/boot/include/package'
+source '/boot/include/template'
+source '/boot/include/manifest'
 source '/boot/include/supervisor'
 
 main()
@@ -14,6 +16,11 @@ main()
   supervisor_init
 
   for package in "$@"; do
+    info "Removing package '$package'..."
+
+    package="`package_sanitize_name "$package"`" \
+      || fatal "Invalid package name '$package'"
+
     package_remove "$package" \
       || fatal "Failed to remove package '$package'"
 

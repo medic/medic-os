@@ -2,15 +2,31 @@
 
 source '/boot/include/utility'
 source '/boot/include/package'
+source '/boot/include/template'
+source '/boot/include/manifest'
+source '/boot/include/supervisor'
 
 main()
 {
   local force_install=''
+  local use_soft_restart=''
+  local is_processing_args='t'
 
-  if [ "$1" = '-f' -o "$1" = '--force' ]; then
-    force_install='t'
-    shift 1
-  fi
+  while [ "$is_processing_args" ]; do
+    case "$1" in
+      -f|--force|--force-install)
+        force_install='t'
+        shift 1
+        ;;
+      -s|--soft|--soft-restart)
+        use_soft_restart='t'
+        shift 1
+        ;;
+      *)
+        is_processing_args=''
+        ;;
+    esac
+  done
 
   if [ $# -le 0 -o "$1" = '-h' -o "$1" = '--help' ]; then
     usage
@@ -18,9 +34,11 @@ main()
 
   require_root
 
-  for package in "$@"; do
-    package_update "$package" "$force_install" \
-      || fatal "Failed to update package '$package'"
+  for path in "$@"; do
+    info "Updating package '$path'..."
+
+    package_update "$path" "$force_install" "$use_soft_restart" \
+      || fatal "Failed to update package '$path'"
   done
 
   success 'All specified packages have been updated'
@@ -29,7 +47,7 @@ main()
 
 usage()
 {
-  echo "Usage: $0 [-f|--force] <package.vpkg>..." >&2
+  echo "Usage: $0 [-f|--force] [-s|--soft-restart] <package.vpkg>..." >&2
   exit 111
 }
 

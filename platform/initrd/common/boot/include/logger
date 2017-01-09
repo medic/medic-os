@@ -4,12 +4,21 @@ source '/boot/include/hypervisor'
 hypervisor_init
 
 verbose='t'
-log='/var/log/startup.log'
+logfile_path='/var/log/startup.log'
+
+if [ "$logger_suppress_output" ]; then
+  log="$logfile_path"
+fi
 
 emit()
 {
-  echo -e "`date +'[%Y/%m/%d %H:%M:%S]'` $*" \
-    >> "$log" 2>&1
+  local string="`date +'[%Y/%m/%d %H:%M:%S]'` $*"
+
+  if [ "$logger_suppress_messages" ]; then
+    echo -e "$string" >> "$logfile_path" 2>&1
+  else
+    echo -e "$string" 2>&1
+  fi
 }
 
 print()
@@ -22,4 +31,5 @@ print()
 
   return "$?"
 }
+
 

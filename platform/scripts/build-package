@@ -19,7 +19,7 @@ create_package_digest()
     > "$staging_dir/digest-$digest_type"
 
   if [ "$?" -ne 0 ]; then
-    rm -f "$staging_dir/digest-$digest_type"
+    rm -f -- "$staging_dir/digest-$digest_type"
     return 2
   fi
  
@@ -48,10 +48,11 @@ main()
   fi
 
   # Clear package staging directory
-  rm -rf "$staging_dir" && mkdir -p "$staging_dir" &&
+  rm -rf -- "$staging_dir" &&
+  mkdir -p -- "$staging_dir" &&
   \
   # Copy package metadata template
-  cp -R "metadata/packages/$package" 'staging/packages' &&
+  cp -R -- "metadata/packages/$package" 'staging/packages' &&
   \
   # Gather and compress package contents
   (cd "packages/$package" &&
@@ -67,7 +68,7 @@ main()
   echo "$platform" > "$staging_dir/platform" &&
   \
   # Record the package's creation timestamp
-  date +'%Y/%m/%d %H:%M:%S'> "$staging_dir/build-timestamp" &&
+  date -u +'%Y-%m-%dT%H:%M:%SZ'> "$staging_dir/build-timestamp" &&
   \
   # Regenerate cryptographic digests
   for type in md5 sha1 sha256 sha512; do
