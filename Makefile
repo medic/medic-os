@@ -13,6 +13,18 @@ all: require-root download build
 bootinit: reset-time
 	@cd platform && ${QMAKE} bootinit
 
+compiler: reset-time prepare-tree
+	@echo >&2
+	@echo "`tput bold`Building compiler`tput sgr0`" >&2 && echo >&2
+	@(cd platform && ${QMAKE} compiler)
+
+compile-only: reset-time prepare-tree compiler
+	@echo >&2
+	@echo "`tput bold`Compiling packages`tput sgr0`" >&2 && echo >&2
+	@(cd platform && \
+	  export HOME="`readlink -f ../.. 2>/dev/null || realpath ../..`" && \
+	  source ./.profile && ${QMAKE} compile-only)
+
 build: reset-time prepare-tree
 	@echo >&2
 	@echo "`tput bold`Building packages`tput sgr0`" >&2 && echo >&2
