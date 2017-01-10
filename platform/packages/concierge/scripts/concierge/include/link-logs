@@ -1,0 +1,10 @@
+#!/bin/sh
+
+link_logs()
+{
+  rm -f "/var/log/$PACKAGE_NAME" &&
+  ln -sf "$PACKAGE_STORAGE/logs" "/var/log/$PACKAGE_NAME"
+
+  return "$?"
+}
+

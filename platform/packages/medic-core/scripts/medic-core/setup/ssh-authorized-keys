@@ -3,7 +3,7 @@
 source '/boot/include/utility'
 source '/boot/include/hypervisor'
 
-setup()
+main()
 {
   local self="`realpath "$0"`"
   local base="`dirname -- "$self"`/.."
@@ -32,6 +32,6 @@ install_default_ssh_keys()
   return 0
 }
 
-setup "$@"
+main "$@"
 exit "$?"
 

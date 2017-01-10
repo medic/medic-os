@@ -1,6 +1,6 @@
 #!/bin/sh
 
-start()
+main()
 {
   local self="`realpath "$0"`"
   local base="`dirname -- "$self"`"
@@ -22,12 +22,6 @@ start()
   return "$?"
 }
 
-main()
-{
-  start
-  return "$?"
-}
-
-main
+main "$@"
 exit "$?"
 

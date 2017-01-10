@@ -318,11 +318,6 @@ gardener-pkg: shrink-gardener
 	scripts/build-package 'gardener' 11002 '${PLATFORM}' && \
 	echo 'done.'
 
-medic-transport-pkg:
-	@echo -n 'Compressing package 'medic-transport'... ' && \
-	scripts/build-package 'medic-transport' 10101 '${PLATFORM}' && \
-	echo 'done.'
-
 convert-boot-logo:
 	for file in logo-medic logo-medic-gray; do \
 	  pngtopnm "config/kernel/common/boot-logo/$$file.png" \
