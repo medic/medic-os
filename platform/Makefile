@@ -39,7 +39,7 @@ initrd: build-initrd
 native: build-native-tarball
 
 images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae
-packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg medic-transport-pkg
+packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg
 
 
 # Public targets
