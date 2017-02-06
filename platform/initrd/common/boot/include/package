@@ -350,24 +350,12 @@ package_update()
     return 6
   fi
 
-  if [ -x "$srv_dir/scripts/$package/install" ]; then
-
-    log "Running installation script for package '$package'"
-    "$srv_dir/scripts/$package/install" 'update' >> "$log" 2>&1
-
-    if [ "$?" -ne 0 ]; then
-      warn "Installation script for package '$package' failed"
-      rm -rf -- "$receipts_dir/$package"
-      return 17
-    fi
-  fi
-
   log "Running setup tasks for package '$package'"
 
   if ! package_setup "$package"; then
     warn "At least one setup script in package '$package' failed"
     warn "Your installation of '$package' may be incomplete"
-    return 18
+    return 17
   fi
 
   if [ "$use_soft_restart" ]; then
@@ -377,7 +365,7 @@ package_update()
       info "Restarting service '$package/$service'"
       if ! supervisor_service_restart "$package" "$service"; then
         warn "Failed to restart service '$package/$service'"
-        return 19
+        return 18
       fi
     done
   else
@@ -388,7 +376,7 @@ package_update()
       info "Package '$package' has no services to start; continuing"
     elif [ "$rv" -ne 0 ]; then
       warn "Failed to start services for package '$package'"
-      return 20
+      return 19
     fi
   fi
 

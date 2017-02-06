@@ -39,6 +39,8 @@ install()
   chmod 0750 "$couchdb_settings" \
     "$PACKAGE_STORAGE/couchdb" "$PACKAGE_STORAGE/couchdb-lucene" &&
   \
+  chmod 0700 "$PACKAGE_SETTINGS/couchdb/private" &&
+  \
   chown -R gammu:gammu \
     "$PACKAGE_STORAGE/gammu" "$PACKAGE_SETTINGS/gammu" &&
   \
@@ -54,11 +56,19 @@ install()
   \
   if [ -z "$is_update" ]; then
     info 'Installing default CouchDB databases'
-    install_default_couchdb_databases "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
+    install_default_couchdb_databases \
+      "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
   fi &&
   \
-  if ! [ -f "$couchdb_settings/local.ini" ]; then
+  if [ ! -f "$PACKAGE_SETTINGS/couchdb/local.ini" ]; then
     cp -a "$couchdb_settings/private/local.ini" "$couchdb_settings/"
+  fi &&
+  \
+  if [ "$is_update" ]; then
+    info 'Migrating administrative users'
+    migrate_admins_configuration \
+      "$PACKAGE_SETTINGS/couchdb/local.ini" \
+      "$PACKAGE_SETTINGS/couchdb/private/upgrade-admins.ini"
   fi
 
   return "$?"
@@ -84,6 +94,22 @@ install_default_couchdb_databases()
   done
 
   return 0
+}
+
+migrate_admins_configuration()
+{
+  local input_file="$1"
+  local output_file="$2"
+
+  touch "$output_file" &&
+  chmod 0600 "$output_file" &&
+  \
+  if [ -f "$input_file" ]; then
+    awk '/^ *\[admins\] *$/ { i=1; } i==1 { print; }' \
+      < "$input_file" >> "$output_file"
+  fi
+
+  return "$?"
 }
 
 install "$@"
