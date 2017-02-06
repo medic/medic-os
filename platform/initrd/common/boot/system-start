@@ -54,11 +54,12 @@ main()
   local found_device=''
   local found_version=''
 
+  supervisor_init
+  hypervisor_init
+
   if [ "`hypervisor_type`" = 'xen' ]; then
     source_device='/dev/xvda1'
   fi
-
-  supervisor_init
 
   set_echo 0
   set_bold 1
@@ -66,7 +67,9 @@ main()
   set_console_blanking 0
 
   display_centered 'Starting up...'
+
   log "Storage initialization started at `date`"
+  log "Mounting source media from '$source_device'"
 
   mount_source_image "$source_device" \
     || fatal 'Failed to mount the ISO image; possible problem with media'
