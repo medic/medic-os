@@ -287,7 +287,7 @@ java-pkg:
 
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 16131 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 16132 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-rdbms-pkg:
