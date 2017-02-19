@@ -64,20 +64,19 @@ main()
     source_dir="./packages/$package"
   fi
 
+  # Clear package staging directory
+  rm -rf -- "$staging_dir" &&
+  mkdir -p -- "$staging_dir" &&
+  \
   # Freeze paths
   output_file="`readlink -f "$output_file"`" &&
   source_dir="`readlink -f "$source_dir"`" &&
   staging_dir="`readlink -f "$staging_dir"`"
 
   if [ "$?" -ne 0 ]; then
-    echo "`pwd` '$output_file' '$source_dir' '$staging_dir'"
     fatal 'Unable to resolve one or more paths'
   fi
 
-  # Clear package staging directory
-  rm -rf -- "$staging_dir" &&
-  mkdir -p -- "$staging_dir" &&
-  \
   # Copy package metadata template, if present
   if [ -d "metadata/packages/$package" ]; then
     cp -R -- "metadata/packages/$package" 'staging/packages'
