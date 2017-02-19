@@ -51,6 +51,9 @@ install()
   initialize_cluster 'postgresql' \
     "$PACKAGE_STORAGE/postgresql/data" "$is_update" &&
   \
+  create_user 'medic' \
+    "$PACKAGE_STORAGE/postgresql/data" "$is_update" &&
+  \
   source "$base/include/logrotate" &&
   logrotate_install
 
@@ -130,28 +133,12 @@ initialize_cluster()
     return 1
   fi
 
+  user="`basename "$user"`"
   local passwd_dir="$PACKAGE_STORAGE/postgresql/passwd"
   local passwd_file="$passwd_dir/postgresql"
 
-  local random_passwd="`
-    dd if=/dev/urandom bs=4096 count=10 2>/dev/null \
-      | sha512sum | cut -d' ' -f1
-  `"
-
-  if [ "$?" -ne 0 ]; then
-    warn 'Random password generation failed'
-    return 2
-  fi
-
-  rm -f "$passwd_file" &&
-  echo "$random_passwd" > "$passwd_file" &&
-  chown concierge:postgresql "$passwd_file" &&
-  chmod 0440 "$passwd_file"
-
-  if [ "$?" -ne 0 ]; then
-    warn 'Administrator credential storage failed'
-    return 3
-  fi
+  local passwd="`generate_random_passwd "$passwd_file"`" \
+    || return 1
 
   local command="
     '$PACKAGE_ROOT/bin/initdb' --pwfile=/dev/stdin \
@@ -162,7 +149,7 @@ initialize_cluster()
 
   if [ "$?" -ne 0 ]; then
     warn 'Database cluster initialization failed'
-    return 4
+    return 2
   fi
 
   local command="
@@ -181,11 +168,79 @@ initialize_cluster()
 
   if [ ! -z "$backend_output" ]; then
     warn 'Failed to create initial database'
-    return 5
+    return 3
   fi
 
   return 0
 }
+
+create_user()
+{
+  local user="$1"
+  local data_dir="$2"
+  local is_update="$3"
+  shift 3
+
+  if [ "$is_update" ]; then
+    return 0
+  fi
+
+  user="`basename "$user"`"
+  local data_dir="`realpath "$data_dir"`"
+  local passwd_dir="$PACKAGE_STORAGE/postgresql/passwd"
+  local passwd_file="$passwd_dir/$user"
+
+  local passwd="`generate_random_passwd "$passwd_file"`" \
+    || return 1
+
+  local command="
+    '$PACKAGE_ROOT/bin/postgres' \
+      --single -D '$data_dir' template1
+  "
+  
+  local create_sql="
+    create user \"$user\" with password '$passwd'
+  "
+
+  local backend_output="`
+    echo "$create_sql" \
+      | su - postgresql -c "$command" 2>&1 >/dev/null
+  `"
+
+  if [ ! -z "$backend_output" ]; then
+    warn 'Failed to create user'
+    return 2
+  fi
+
+  return 0
+}
+
+generate_random_passwd()
+{
+  local passwd="`
+    dd if=/dev/urandom bs=4096 count=10 2>/dev/null \
+      | sha512sum | cut -d' ' -f1
+  `"
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Random password generation failed'
+    return 1
+  fi
+
+  rm -f "$passwd_file" &&
+  echo "$passwd" > "$passwd_file" &&
+  chown concierge:postgresql "$passwd_file" &&
+  chmod 0440 "$passwd_file"
+
+  if [ "$?" -ne 0 ]; then
+    warn 'Administrator credential storage failed'
+    return 2
+  fi
+
+  echo "$passwd"
+  return 0
+}
+
 
 install "$@"
 exit "$?"

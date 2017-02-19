@@ -23,7 +23,7 @@ start()
   merge_environment /srv &&
   \
   local pg_passwd_dir="$PACKAGE_STORAGE/../medic-rdbms/postgresql/passwd" &&
-  wait_for_passwd_file "$pg_passwd_dir/postgresql" &&
+  wait_for_passwd_file "$pg_passwd_dir/medic" &&
   \
   local couch_passwd_dir="$PACKAGE_STORAGE/../concierge/passwd" &&
   wait_for_passwd_file "$couch_passwd_dir/gardener" &&
