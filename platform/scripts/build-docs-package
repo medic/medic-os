@@ -1,0 +1,75 @@
+#!/bin/bash
+
+set -o pipefail
+
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
+
+fatal()
+{
+  echo "Fatal: $*" >&2
+  exit 111
+}
+
+main()
+{
+  local package_name="$1"
+  local package_version="$2"
+  shift 2
+
+  if [ $# -le 0 ]; then
+    usage
+  fi
+
+  local temp_dir="`mktemp -d`" \
+    || fatal 'Unable to create temporary directory'
+
+  for root_dir in "$@"; do
+  (
+    # Input directory
+    cd "$root_dir" &&
+	\
+	# Figure out where we are
+	local relative_prefix="`
+	  pwd | sed -E 's/^\/*srv\/*//;'
+	`" &&
+    local version_suffix="`
+	  find . -mindepth 2 -maxdepth 2 -type d | head -n1
+	`"
+    if [ -z "$version_suffix" ]; then
+      fatal 'Unable to locate package version/build directory'
+    fi
+
+	# Compute destination path (absolute)
+	local output_dir="/$temp_dir/$relative_prefix/$version_suffix" &&
+    mkdir -p "/$output_dir/man" &&
+    \
+	# Copy manual pages, flatten directory tree
+    find . -type d -name man -exec \
+      find {} -type f -name '*.[1-9]' \; | while read file; do
+        cp "$file" "/$output_dir/man/"
+    done
+  )
+  done &&
+  \
+  ./scripts/build-package \
+    "$package_name" "$package_version" 'noarch' "$temp_dir"
+
+  local rv="$?"
+  rm -rf "$temp_dir"
+
+  return "$rv"
+}
+
+usage()
+{
+  echo "Usage: $0 output_package root_directory..." >&2
+  exit 111
+}
+
+cd "$base_dir" \
+  || fatal 'Unable to locate root directory'
+
+main "$@"
+exit "$?"
+

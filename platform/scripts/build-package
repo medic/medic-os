@@ -2,6 +2,9 @@
 
 set -o pipefail
 
+self="`readlink -f "$0" 2>/dev/null || realpath "$0"`"
+base_dir="`dirname "$self"`/.."
+
 create_package_digest()
 {
   local staging_dir="$1"
@@ -31,15 +34,11 @@ main()
   local package="$1"
   local version="$2"
   local platform="$3"
+  local source_dir="$4"
+  local staging_dir="$5"
+  local output_file="$6"
 
-  if [ -z "$platform" ]; then
-    platform='x86'
-  fi
-
-  local staging_dir="staging/packages/$package"
-  local package_name="$package-v$version-$platform.vpkg"
-
-  if [ $# -lt 2 -o $# -gt 3 ]; then
+  if [ $# -lt 2 -o $# -gt 6 ]; then
     usage
   fi
 
@@ -47,16 +46,46 @@ main()
     usage
   fi
 
+  if [ -z "$platform" ]; then
+    platform='noarch'
+  fi
+
+  local package_name="$package-v$version-$platform.vpkg"
+
+  if [ -z "$staging_dir" ]; then
+    staging_dir="./staging/packages/$package"
+  fi
+
+  if [ -z "$output_file" ]; then
+    output_file="./images/$platform/iso/packages/$package_name"
+  fi
+
+  if [ -z "$source_dir" ]; then
+    source_dir="./packages/$package"
+  fi
+
+  # Freeze paths
+  output_file="`readlink -f "$output_file"`" &&
+  source_dir="`readlink -f "$source_dir"`" &&
+  staging_dir="`readlink -f "$staging_dir"`"
+
+  if [ "$?" -ne 0 ]; then
+    echo "`pwd` '$output_file' '$source_dir' '$staging_dir'"
+    fatal 'Unable to resolve one or more paths'
+  fi
+
   # Clear package staging directory
   rm -rf -- "$staging_dir" &&
   mkdir -p -- "$staging_dir" &&
   \
-  # Copy package metadata template
-  cp -R -- "metadata/packages/$package" 'staging/packages' &&
+  # Copy package metadata template, if present
+  if [ -d "metadata/packages/$package" ]; then
+    cp -R -- "metadata/packages/$package" 'staging/packages'
+  fi &&
   \
   # Gather and compress package contents
-  (cd "packages/$package" &&
-    tar -cf - * | xz -9ec > "../../$staging_dir/package.tar.xz") &&
+  (cd "$source_dir" &&
+    tar -cf - * | xz -9ec > "$staging_dir/package.tar.xz") &&
   \
   # Store the package's base name as metadata
   echo "$package" > "$staging_dir/name" &&
@@ -77,8 +106,7 @@ main()
   done &&
   \
   # Combine data and metadata to produce package
-  (cd "$staging_dir" &&
-    ar -rcs "../../../images/$platform/iso/packages/$package_name" *) &&
+  (cd "$staging_dir" && ar -rcs "$output_file" *)
 
   if [ "$?" -ne 0 ]; then
     fatal "Package creation step for '$package' failed"
@@ -100,9 +128,13 @@ fatal()
 
 usage()
 {
-  echo "Usage: $1 package-name version-number [platform]"
+  echo "Usage: $0 package-name version" >&2
+  echo "       [platform source_dir staging_dir output_file]"
   exit 2
 }
+
+cd "$base_dir" \
+  || fatal 'Unable to locate root directory'
 
 main "$@"
 exit "$?"
