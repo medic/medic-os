@@ -63,7 +63,7 @@ main()
 
 usage()
 {
-  echo "Usage: $0 output_package root_directory..." >&2
+  echo "Usage: $0 output_package output_version root_directory..." >&2
   exit 111
 }
 

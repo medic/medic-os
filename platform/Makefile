@@ -50,14 +50,9 @@ bootinit:
 
 compile-only:
 	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
-	    ${QMAKE} build PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
+	  ${QMAKE} build PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
 
-build:
-	@if [ -z '${SKIP_COMPILER}' ]; then \
-	  ${QMAKE} compiler || exit "$$?"; \
-	fi
-	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
-	    ${QMAKE} PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
+build: build-start package-docs build-finish
 
 copy:
 	@(cd source && \
@@ -87,6 +82,21 @@ clean-compiler:
 
 
 # Private targets
+
+package-docs: medic-core-docs-pkg medic-rdbms-docs-pkg vm-tools-docs-pkg
+
+build-start:
+	@if [ -z '${SKIP_COMPILER}' ]; then \
+	  ${QMAKE} compiler || exit "$$?"; \
+	fi
+	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
+	  ${QMAKE} build \
+	    PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
+
+build-finish:
+	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
+	  ${QMAKE} copy finalize \
+	    PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
 
 clean-source:
 	(cd source && ${MAKE} clean)
@@ -290,9 +300,21 @@ medic-core-pkg:
 	scripts/build-package 'medic-core' 16132 '${PLATFORM}' && \
 	echo 'done.'
 
+medic-core-docs-pkg:
+	@echo -n 'Compressing package 'medic-core-docs'... ' && \
+	scripts/build-docs-package \
+	  'medic-core-docs' 16132 /srv/software/medic-core && \
+	echo 'done.'
+
 medic-rdbms-pkg:
 	@echo -n 'Compressing package 'medic-rdbms'... ' && \
 	scripts/build-package 'medic-rdbms' 95301 '${PLATFORM}' && \
+	echo 'done.'
+
+medic-rdbms-docs-pkg:
+	@echo -n 'Compressing package 'medic-rdbms-docs'... ' && \
+	scripts/build-docs-package \
+	  'medic-rdbms-docs' 95301 /srv/software/medic-rdbms && \
 	echo 'done.'
 
 medic-couch2pg-pkg:
@@ -308,6 +330,12 @@ system-services-pkg:
 vm-tools-pkg:
 	@echo -n 'Compressing package 'vm-tools'... ' && \
 	scripts/build-package 'vm-tools' 94612 '${PLATFORM}' && \
+	echo 'done.'
+
+vm-tools-docs-pkg:
+	@echo -n 'Compressing package 'vm-tools-docs'... ' && \
+	scripts/build-docs-package \
+	  'vm-tools-docs' 94612 /srv/software/vm-tools && \
 	echo 'done.'
 
 shrink-gardener:
