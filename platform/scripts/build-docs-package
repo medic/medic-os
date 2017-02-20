@@ -28,23 +28,23 @@ main()
   (
     # Input directory
     cd "$root_dir" &&
-	\
-	# Figure out where we are
-	local relative_prefix="`
-	  pwd | sed -E 's/^\/*srv\/*//;'
-	`" &&
+    \
+    # Figure out where we are
+    local relative_prefix="`
+      pwd | sed -E 's/^\/*srv\/*//;'
+    `" &&
     local version_suffix="`
-	  find . -mindepth 2 -maxdepth 2 -type d | head -n1
-	`"
+      find . -mindepth 2 -maxdepth 2 -type d | head -n1
+    `"
     if [ -z "$version_suffix" ]; then
       fatal 'Unable to locate package version/build directory'
     fi
 
-	# Compute destination path (absolute)
-	local output_dir="/$temp_dir/$relative_prefix/$version_suffix" &&
+    # Compute destination path (absolute)
+    local output_dir="/$temp_dir/$relative_prefix/$version_suffix" &&
     mkdir -p "/$output_dir/man" &&
     \
-	# Copy manual pages, flatten directory tree
+    # Copy manual pages, flatten directory tree
     find . -type d -name man -exec \
       find {} -type f -name '*.[1-9]' \; | while read file; do
         cp "$file" "/$output_dir/man/"
