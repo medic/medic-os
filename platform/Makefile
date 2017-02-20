@@ -66,16 +66,7 @@ clean:
 	rm -rf output/* && \
 	rm -rf staging/tarball
 
-distclean: clean clean-source clean-staging
-	for platform in x86 x64 armv6; do \
-	  rm -rf "images/$$platform/iso/packages"/* && \
-	  rm -rf "initrd/$$platform/lib/modules"/* && \
-	  for type in iso xen; do \
-	    rm -f "images/$$platform/$$type/boot/kernel" \
-	      "images/$$platform/$$type/boot/image.xz" \
-	        "images/$$platform/$$type/packages"/* || exit "$$?"; \
-	  done || exit "$$?"; \
-	done
+distclean: clean clean-images clean-staging clean-source
 
 clean-compiler:
 	(cd source && ${MAKE} clean-compiler)
@@ -106,6 +97,17 @@ clean-staging:
 	rm -rf packages/vm-tools/software && \
 	rm -rf packages/medic-core/software && \
 	rm -rf 'staging/software/${PLATFORM}'/*
+
+clean-images:
+	for platform in x86 x64 armv6 noarch; do \
+	  rm -rf "images/$$platform/iso/packages"/* && \
+	  rm -rf "initrd/$$platform/lib/modules"/* && \
+	  for type in iso xen; do \
+	    rm -f "images/$$platform/$$type/boot/kernel" \
+	      "images/$$platform/$$type/boot/image.xz" \
+	        "images/$$platform/$$type/packages"/* || exit "$$?"; \
+	  done || exit "$$?"; \
+	done
 
 build-iso-image: build-initrd
 	@echo -n 'Creating ISO image... ' && \
