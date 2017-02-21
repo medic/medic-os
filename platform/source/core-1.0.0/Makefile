@@ -21,13 +21,13 @@ KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSI
 all: build
 
 build: build-all
-build-all: status build-pv build-dhcpcd build-syslinux build-eudev build-sudo build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc
+build-all: status build-pv build-groff build-dhcpcd build-syslinux build-eudev build-sudo build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc
 
 copy: copy-all
-copy-all: copy-dhcpcd copy-syslinux copy-eudev copy-sudo copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
+copy-all: copy-groff copy-dhcpcd copy-syslinux copy-eudev copy-sudo copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
 
 clean: clean-all
-clean-all: clean-dhcpcd clean-syslinux clean-eudev clean-sudo clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
+clean-all: clean-groff clean-dhcpcd clean-syslinux clean-eudev clean-sudo clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
 
 
 # Public targets
@@ -39,6 +39,25 @@ build-pv:
 	  ${QMAKE} ROOT='${MEDIC_CORE_ROOT}' \
 	    START='pv' STOP='pv' PLATFORM='${PLATFORM}' \
 	    SKIP_STATUS=1 BITS='${BITS}' PARALLEL='${PARALLEL}')
+
+
+groff: build-groff
+
+build-groff: build-pv
+	@./scripts/logger 'groff' '${PLATFORM}' \
+	  'cd source/groff && \
+	    ./configure --without-x --prefix=/usr && \
+	    ${MAKE} all CFLAGS="${CFLAGS}" && \
+		${MAKE} install DESTDIR="${INITRD_PATH}"'
+
+copy-groff:
+	@cd '${INITRD_PATH}/usr/bin' && \
+	ln -sf tbl gtbl
+
+clean-groff:
+	@if [ -h source/groff ]; then \
+	  (cd source/groff && ${QMAKE} clean); \
+	fi
 
 
 dhcpcd: build-dhcpcd
