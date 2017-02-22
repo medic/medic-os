@@ -21,16 +21,21 @@ KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSI
 all: build
 
 build: build-all
-build-all: status build-pv build-groff build-dhcpcd build-syslinux build-eudev build-sudo build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc
+build-all: status build-pv build-ncurses build-bash build-groff build-dhcpcd build-syslinux build-eudev build-sudo build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc
 
 copy: copy-all
-copy-all: copy-groff copy-dhcpcd copy-syslinux copy-eudev copy-sudo copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc
+copy-all: copy-ncurses copy-bash copy-groff copy-dhcpcd copy-syslinux copy-eudev copy-sudo copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc copy-finish
 
 clean: clean-all
-clean-all: clean-groff clean-dhcpcd clean-syslinux clean-eudev clean-sudo clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
+clean-all: clean-bash clean-ncurses clean-groff clean-dhcpcd clean-syslinux clean-eudev clean-sudo clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
 
 
 # Public targets
+
+copy-finish:
+	@cd '${INITRD_PATH}' && \
+	rm -rf usr/lib/lib*.a usr/include usr/share/doc usr/share/info
+
 
 pv: build-pv
 
@@ -39,6 +44,42 @@ build-pv:
 	  ${QMAKE} ROOT='${MEDIC_CORE_ROOT}' \
 	    START='pv' STOP='pv' PLATFORM='${PLATFORM}' \
 	    SKIP_STATUS=1 BITS='${BITS}' PARALLEL='${PARALLEL}')
+
+
+ncurses: build-ncurses
+
+build-ncurses: build-pv
+	@./scripts/logger 'ncurses' '${PLATFORM}' \
+	  'cd source/ncurses && \
+	    ./configure --prefix=/usr --with-shared --without-x && \
+	    ${MAKE} all CFLAGS="${CFLAGS}" && \
+		${MAKE} install DESTDIR="${INITRD_PATH}"'
+
+copy-ncurses:
+	@true
+
+clean-ncurses:
+	@if [ -h source/ncurses ]; then \
+	  (cd source/ncurses && ${QMAKE} clean); \
+	fi
+
+
+bash: build-bash
+
+build-bash: build-pv
+	@./scripts/logger 'bash' '${PLATFORM}' \
+	  'cd source/bash && \
+	    ./configure --prefix='' && \
+	    ${MAKE} all CFLAGS="${CFLAGS}"'
+
+copy-bash:
+	@strip --strip-unneeded source/bash/bash && \
+	cp source/bash/bash "${INITRD_PATH}/bin/bash"
+
+clean-bash:
+	@if [ -h source/bash ]; then \
+	  (cd source/bash && ${QMAKE} clean); \
+	fi
 
 
 groff: build-groff
@@ -51,8 +92,9 @@ build-groff: build-pv
 		${MAKE} install DESTDIR="${INITRD_PATH}"'
 
 copy-groff:
-	@cd '${INITRD_PATH}/usr/bin' && \
-	ln -sf tbl gtbl
+	@cd '${INITRD_PATH}/usr' && \
+	rm -rf share/groff/current/font && \
+	ln -sf bin/tbl gtbl
 
 clean-groff:
 	@if [ -h source/groff ]; then \

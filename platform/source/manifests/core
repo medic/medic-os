@@ -1,3 +1,4 @@
+bash, https://ftp.gnu.org/gnu/bash/bash-4.4.tar.gz
 busybox, http://sources.openelec.tv/mirror/busybox/busybox-1.23.1.tar.bz2
 dhcpcd, http://roy.marples.name/downloads/dhcpcd/dhcpcd-6.9.1.tar.xz
 e2fsprogs, https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v1.42.13/e2fsprogs-1.42.13.tar.xz
@@ -6,6 +7,7 @@ glibc, http://mirrors.kernel.org/gnu/glibc/glibc-2.19.tar.xz
 groff, http://ftp.gnu.org/gnu/groff/groff-1.22.3.tar.gz
 iptables, http://www.netfilter.org/projects/iptables/files/iptables-1.4.21.tar.bz2
 linux, https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.14.42.tar.xz
+ncurses, https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.0.tar.gz
 sudo, http://www.sudo.ws/dist/sudo-1.8.14p3.tar.gz
 syslinux, https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.xz
 xfsprogs, ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.2.3.tar.gz
