@@ -109,10 +109,10 @@ main()
 
   case "$platform" in
     x64)
-      aki='aki-fc8f11cc'
+      aki='aki-70cb0e10'
       architecture='x86_64' ;;
     x86)
-      aki='aki-f08f11c0'
+      aki='aki-7a69931a'
       architecture='i386' ;;
     *)
       fatal "Unsupported platform '$platform'" ;;
