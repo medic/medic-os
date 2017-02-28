@@ -252,7 +252,16 @@ package_remove()
 {
   local package="$1"
 
-  log "Removing package '$package'"
+  log "Examining version information for package '$package'"
+
+  local package="`package_extract_name "$path"`" &&
+  local version="`package_retrieve_installed_version "$package"`"
+
+  if [ -z "$package" -o "$?" -ne 0 ]; then
+    warn "Failed to read metadata from package file '$file'"
+    return 1
+  fi
+
   log "Stopping services for package '$package'"
 
   supervisor_stop "$package"
@@ -262,7 +271,7 @@ package_remove()
     info "Package '$package' has no services to stop; continuing"
   elif [ "$rv" -ne 0 ]; then
     warn "Failed to stop services for package '$package'"
-    return 1
+    return 2
   fi
 
   log "Removing package '$package'"
@@ -270,7 +279,7 @@ package_remove()
   if [ -x "$srv_dir/scripts/$package/remove" ]; then
     if ! "$srv_dir/scripts/$package/remove"; then
       warn "Removal script for '$package' exited with non-zero status"
-      return 2
+      return 3
     fi
   fi
 
@@ -279,7 +288,7 @@ package_remove()
 
   if [ "$?" -gt 0 ]; then
     warn "Failed to remove installation records for package '$package'"
-    return 3
+    return 4
   fi
 
   rm -rf -- "$receipts_dir/$package"
@@ -316,10 +325,9 @@ package_update()
   local v_new="`package_extract_version "$path"`" &&
   local v_prev="`package_retrieve_installed_version "$package"`"
 
-  log "Updating package '$package'..."
   log "Examining version information for package '$package'"
 
-  if [ "$?" -ne 0 ]; then
+  if [ -z "$package" -o "$?" -ne 0 ]; then
     warn "Failed to read metadata from package file '$file'"
     return 1
   fi
@@ -328,6 +336,8 @@ package_update()
     warn "Invalid package version information in file '$file'"
     return 2
   fi
+  
+  log "Updating package '$package'..."
 
   if [ -z "$v_prev" ]; then
     if [ -z "$force_install" ]; then
