@@ -14,6 +14,7 @@ start()
 
   cd "$PACKAGE_ROOT" &&
   exec su -c "$command" postgresql \
+    | /boot/timestamp \
     >> "$PACKAGE_STORAGE/postgresql/logs/startup.log" 2>&1
 }
 
