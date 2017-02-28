@@ -28,6 +28,7 @@ start()
     vmci vsock vmxnet vmxnet3 vmhgfs vmblock vmsync &&
   \
   exec vmtoolsd \
+    | /boot/timestamp \
     >> "$PACKAGE_STORAGE/vmtoolsd/logs/startup.log" 2>&1
 }
 

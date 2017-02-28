@@ -10,6 +10,7 @@ start()
 
   exec "$PACKAGE_ROOT/sbin/avahi-daemon" \
     -f "$PACKAGE_SETTINGS/avahi/avahi-daemon.conf" \
+      | /boot/timestamp \
       >> "$PACKAGE_STORAGE/avahi/logs/startup.log" 2>&1
 }
 
