@@ -9,6 +9,7 @@ start()
   merge_environment /srv || return 255
 
   exec "$PACKAGE_ROOT/sbin/sshd" -D \
+    | /boot/timestamp \
     >> "$PACKAGE_STORAGE/openssh/logs/startup.log" 2>&1
 }
 

@@ -10,6 +10,7 @@ start()
 
   cd "$PACKAGE_ROOT" &&
   exec su -c 'exec bin/couchdb' couchdb \
+    | /boot/timestamp \
     >> "$PACKAGE_STORAGE/couchdb/logs/startup.log" 2>&1
 }
 

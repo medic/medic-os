@@ -33,6 +33,7 @@ start()
   #  This actually executes the long-running java process.
   \
   exec su -c "exec '$PACKAGE_ROOT/java/bin/run'" couchdb-lucene \
+    | /boot/timestamp \
     >> "$PACKAGE_STORAGE/couchdb-lucene/logs/startup.log" 2>&1
 }
 
