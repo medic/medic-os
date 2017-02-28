@@ -6,7 +6,9 @@ start()
   local log_path="$logs_dir/cron.log"
 
   mkdir -p "$logs_dir" &&
-  exec crond -f -L "$log_path" >> "$log_path" 2>&1
+  \
+  exec crond -f -L "$log_path" 2>&1 \
+    | /boot/timestamp >> startup.log
 }
 
 main()

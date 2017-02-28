@@ -8,9 +8,9 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  exec "$PACKAGE_ROOT/bin/nginx" -p "$PACKAGE_STORAGE/nginx/data" \
+  exec "$PACKAGE_ROOT/bin/nginx" -p "$PACKAGE_STORAGE/nginx/data" 2>&1 \
     | /boot/timestamp \
-    >> "$PACKAGE_STORAGE/nginx/logs/startup.log" 2>&1
+    >> "$PACKAGE_STORAGE/nginx/logs/startup.log"
 }
 
 start

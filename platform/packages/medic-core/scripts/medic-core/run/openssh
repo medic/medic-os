@@ -8,9 +8,9 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  exec "$PACKAGE_ROOT/sbin/sshd" -D \
+  exec "$PACKAGE_ROOT/sbin/sshd" -D 2>&1 \
     | /boot/timestamp \
-    >> "$PACKAGE_STORAGE/openssh/logs/startup.log" 2>&1
+    >> "$PACKAGE_STORAGE/openssh/logs/startup.log"
 }
 
 main()

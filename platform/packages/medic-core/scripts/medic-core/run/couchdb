@@ -9,9 +9,9 @@ start()
   merge_environment /srv || return 255
 
   cd "$PACKAGE_ROOT" &&
-  exec su -c 'exec bin/couchdb' couchdb \
+  exec su -c 'exec bin/couchdb' couchdb 2>&1 \
     | /boot/timestamp \
-    >> "$PACKAGE_STORAGE/couchdb/logs/startup.log" 2>&1
+    >> "$PACKAGE_STORAGE/couchdb/logs/startup.log"
 }
 
 start

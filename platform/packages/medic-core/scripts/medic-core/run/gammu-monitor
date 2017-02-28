@@ -21,9 +21,9 @@ start()
 
   local logs_dir="$PACKAGE_STORAGE/gammu/logs" &&
   \
-  exec "$base/../private/gammu-monitor" \
+  exec "$base/../private/gammu-monitor" 2>&1 \
     | /boot/timestamp \
-    >> "$logs_dir/gammu-monitor.log" 2>&1
+    >> "$logs_dir/gammu-monitor.log"
 }
 
 main()

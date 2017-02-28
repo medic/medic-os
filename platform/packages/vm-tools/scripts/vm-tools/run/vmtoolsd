@@ -27,9 +27,9 @@ start()
   modprobe -a \
     vmci vsock vmxnet vmxnet3 vmhgfs vmblock vmsync &&
   \
-  exec vmtoolsd \
+  exec vmtoolsd 2>&1 \
     | /boot/timestamp \
-    >> "$PACKAGE_STORAGE/vmtoolsd/logs/startup.log" 2>&1
+    >> "$PACKAGE_STORAGE/vmtoolsd/logs/startup.log"
 }
 
 start

@@ -36,9 +36,9 @@ start()
   export POSTGRESQL_URL='postgres:///medic?host=/tmp' &&
   export COUCHDB_URL="http://gardener:$couch_passwd@localhost:5984/medic" &&
   \
-  exec nohup su -c "exec $couch2pg_command" postgresql \
+  exec nohup su -c "exec $couch2pg_command" postgresql 2>&1 \
     | /boot/timestamp \
-    >> "$logs/startup.log" 2>&1
+    >> "$logs/startup.log"
 }
 
 main()

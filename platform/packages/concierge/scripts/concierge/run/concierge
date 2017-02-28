@@ -10,8 +10,9 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  exec node "$PACKAGE_ROOT/server.js" \
-    >> "$PACKAGE_STORAGE/logs/startup.log" 2>&1
+  exec node "$PACKAGE_ROOT/server.js" 2>&1 \
+    | /boot/timestamp \
+    >> "$PACKAGE_STORAGE/logs/startup.log"
 }
 
 main()
