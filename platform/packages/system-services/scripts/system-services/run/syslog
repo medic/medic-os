@@ -7,7 +7,7 @@ start()
 
   mkdir -p "$logs_dir" &&
   \
-  exec syslogd -n -O "$log_path" -b 4 2>&1
+  exec syslogd -n -O "$log_path" -b 4 2>&1 \
     | /boot/timestamp >> "$log_path"
 }
 
