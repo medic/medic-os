@@ -69,7 +69,9 @@ install()
     migrate_admins_configuration \
       "$PACKAGE_SETTINGS/couchdb/local.ini" \
       "$PACKAGE_SETTINGS/couchdb/private/upgrade-admins.ini"
-  fi
+  fi &&
+  \
+  chown couchdb:staff "$couchdb_settings/private/local.ini"
 
   return "$?"
 }
