@@ -254,7 +254,7 @@ package_remove()
 
   log "Examining version information for package '$package'"
 
-  local package="`package_extract_name "$path"`" &&
+  package="`package_extract_name "$package"`" &&
   local version="`package_retrieve_installed_version "$package"`"
 
   if [ -z "$package" -o "$?" -ne 0 ]; then
