@@ -253,14 +253,12 @@ package_remove()
   local package="$1"
 
   log "Examining version information for package '$package'"
-
-  package="`package_extract_name "$package"`" &&
   local version="`package_retrieve_installed_version "$package"`"
-
-  if [ -z "$package" -o "$?" -ne 0 ]; then
-    warn "Failed to read metadata from package file '$file'"
-    return 1
-  fi
+                                                                 
+  if [ -z "$package" -o "$?" -ne 0 ]; then                       
+    warn "Failed to read installation data for package '$package'"  
+    return 1                                                
+  fi                                                        
 
   log "Stopping services for package '$package'"
 
