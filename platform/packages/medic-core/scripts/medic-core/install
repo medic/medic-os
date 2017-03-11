@@ -39,7 +39,7 @@ install()
   chmod 0750 "$couchdb_settings" \
     "$PACKAGE_STORAGE/couchdb" "$PACKAGE_STORAGE/couchdb-lucene" &&
   \
-  chmod 0700 "$PACKAGE_SETTINGS/couchdb/private" &&
+  chmod 0700 "$couchdb_settings/private" &&
   \
   chown -R gammu:gammu \
     "$PACKAGE_STORAGE/gammu" "$PACKAGE_SETTINGS/gammu" &&
@@ -60,18 +60,18 @@ install()
       "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
   fi &&
   \
-  if [ ! -f "$PACKAGE_SETTINGS/couchdb/local.ini" ]; then
+  if [ ! -f "$couchdb_settings/local.ini" ]; then
     cp -a "$couchdb_settings/private/local.ini" "$couchdb_settings/"
   fi &&
   \
   if [ "$is_update" ]; then
     info 'Migrating administrative users'
     migrate_admins_configuration \
-      "$PACKAGE_SETTINGS/couchdb/local.ini" \
-      "$PACKAGE_SETTINGS/couchdb/private/upgrade-admins.ini"
+      "$couchdb_settings/local.ini" \
+      "$couchdb_settings/private/upgrade-admins.ini"
   fi &&
   \
-  chown couchdb:staff "$couchdb_settings/private/local.ini"
+  chown couchdb:staff "$couchdb_settings/local.ini"
 
   return "$?"
 }
