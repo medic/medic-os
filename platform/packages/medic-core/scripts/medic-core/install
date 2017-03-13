@@ -69,9 +69,7 @@ install()
     migrate_admins_configuration \
       "$couchdb_settings/local.ini" \
       "$couchdb_settings/private/upgrade-admins.ini"
-  fi &&
-  \
-  chown couchdb:staff "$couchdb_settings/local.ini"
+  fi
 
   return "$?"
 }
@@ -104,7 +102,8 @@ migrate_admins_configuration()
   local output_file="$2"
 
   touch "$output_file" &&
-  chmod 0600 "$output_file" &&
+  chmod 0640 "$output_file" &&
+  chown couchdb:staff "$output_file" &&
   \
   if [ -f "$input_file" ]; then
     awk '/^ *\[admins\] *$/ { i=1; } i==1 { print; }' \
