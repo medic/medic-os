@@ -25,10 +25,6 @@ apply_patches()
   (cd linux && patch -s -p1 \
     < ../../patches/grsecurity-linux.diff) &&
   (cd linux && patch -s -p1 \
-    < ../../patches/linux-final_putname.diff) &&
-  (cd linux && patch -s -p1 \
-    < ../../patches/linux-grsec-do_const.diff) &&
-  (cd linux && patch -s -p1 \
     < ../../patches/linux-grsec-localversion.diff) &&
   (cd dhcpcd && patch -s -p1 \
     < ../../patches/dhcpcd-configure-sa_family_t.diff)

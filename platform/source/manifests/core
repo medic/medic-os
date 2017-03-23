@@ -6,7 +6,7 @@ eudev, http://dev.gentoo.org/~blueness/eudev/eudev-3.2.1.tar.gz
 glibc, http://mirrors.kernel.org/gnu/glibc/glibc-2.19.tar.xz
 groff, http://ftp.gnu.org/gnu/groff/groff-1.22.3.tar.gz
 iptables, http://www.netfilter.org/projects/iptables/files/iptables-1.4.21.tar.bz2
-linux, https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.14.42.tar.xz
+linux, https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.9.17.tar.xz
 ncurses, https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.0.tar.gz
 sudo, http://www.sudo.ws/dist/sudo-1.8.14p3.tar.gz
 syslinux, https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.xz

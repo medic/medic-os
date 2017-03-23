@@ -25,7 +25,7 @@ libressl, http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-2.3.4.tar.gz
 libusb, http://jaist.dl.sourceforge.net/project/libusb/libusb-1.0/libusb-1.0.9/libusb-1.0.9.tar.bz2
 libusb-compat, http://jaist.dl.sourceforge.net/project/libusb/libusb-compat-0.1/libusb-compat-0.1.5/libusb-compat-0.1.5.tar.bz2
 libutempter, http://ftp.altlinux.org/pub/people/ldv/utempter/libutempter-1.1.6.tar.bz2
-logrotate, https://fedorahosted.org/releases/l/o/logrotate/logrotate-3.8.5.tar.gz
+logrotate, https://slackbuilds.org/mirror/slackware/slackware64-current/source/a/logrotate/logrotate-3.8.9.tar.gz
 lrzip, http://ck.kolivas.org/apps/lrzip/lrzip-0.630.tar.bz2
 lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
 maven, https://archive.apache.org/dist/maven/maven-3/3.3.1/source/apache-maven-3.3.1-src.tar.gz
