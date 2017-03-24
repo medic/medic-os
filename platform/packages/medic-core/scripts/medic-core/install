@@ -40,6 +40,7 @@ install()
     "$PACKAGE_STORAGE/couchdb" "$PACKAGE_STORAGE/couchdb-lucene" &&
   \
   chmod 0700 "$couchdb_settings/private" &&
+  chmod 0700 "$PACKAGE_SETTINGS/openssh/private" &&
   \
   chown -R gammu:gammu \
     "$PACKAGE_STORAGE/gammu" "$PACKAGE_SETTINGS/gammu" &&

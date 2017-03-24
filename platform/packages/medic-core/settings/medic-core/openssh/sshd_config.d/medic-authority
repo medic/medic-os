@@ -1,0 +1,4 @@
+
+RevokedKeys /srv/settings/medic-core/openssh/private/revocation-list
+TrustedUserCAKeys /srv/settings/medic-core/openssh/private/medic-ca-root.pub
+

@@ -190,14 +190,6 @@ rebuild-kernel:
 	    KERNEL_VERSION='${KERNEL_VERSION}' KERNEL_EXTRA='${KERNEL_EXTRA}' \
 	    KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' PARALLEL='${PARALLEL}')
 
-rebuild-vm-tools-modules:
-	@echo -n "Rebuilding 'open-vm-tools' kernel modules... " && \
-	(cd vm-tools/source/open-vm-tools/modules && \
-	  ${QMAKE} clean &>/dev/null && \
-	  ${QMAKE} all install &>/dev/null) && \
-	depmod -a -b '../initrd/${PLATFORM}' '${KERNEL_VERSION}' && \
-	echo 'done.'
-
 copy-java-template: clean-java
 	@echo -n "Copying package template for 'java'... " && \
 	rm -rf ../packages/java/software && \
