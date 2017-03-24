@@ -269,9 +269,7 @@ build-x86-image-nopae:
 	  echo 'Building x86 kernel with PAE disabled...' && \
 	  (cd source && \
 	    ../scripts/prepend-path '${COMPILER_ROOT}' \
-	      ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
-	    ../scripts/prepend-path '${COMPILER_ROOT}' \
-	      ${QMAKE} rebuild-vm-tools-modules) && \
+	      ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae')
 	  \
 	  ${QMAKE} build-iso-image ISO_EXTRA='-nopae'; \
 	fi
@@ -279,8 +277,8 @@ build-x86-image-nopae:
 rebuild-kernel:
 	@echo 'Rebuilding kernel...' && \
 	(cd source && \
-	  ../scripts/prepend-path '${COMPILER_ROOT}' \
-	    ${QMAKE} rebuild-kernel rebuild-vm-tools-modules)
+	  ../scripts/prepend-path \
+	    '${COMPILER_ROOT}' ${QMAKE} rebuild-kernel)
 
 strip-binaries:
 	@echo -n 'Removing unnecessary symbols... ' && \

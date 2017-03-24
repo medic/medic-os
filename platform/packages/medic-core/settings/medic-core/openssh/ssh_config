@@ -28,3 +28,6 @@
 #   VisualHostKey no
 #   ProxyCommand ssh -q -W %h:%p gateway.example.com
 
+# Support add-on configuration
+Include /srv/settings/medic-core/openssh/ssh_config.d/*
+
