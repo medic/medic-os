@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source '/boot/include/utility'
+
 find_ntp_server()
 {
   echo 'pool.ntp.org'
@@ -23,6 +25,9 @@ start()
     exec nohup ntpd -ndp "`find_ntp_server`" \
       >> "$PACKAGE_STORAGE/ntpd/logs/startup.log" 2>&1
   fi
+
+  # For OpenSSL's libcrypto and libssl
+  prepend_paths /srv/software/medic-core/current/default
 
   modprobe -a \
     vmw_vmci vmw_vsock_vmci_transport vmxnet3 vmw_balloon &&
