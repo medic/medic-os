@@ -72,6 +72,7 @@ UsePrivilegeSeparation sandbox
 #Banner none
 Subsystem	sftp	/srv/software/medic-core/current/default/libexec/sftp-server
 
-# Support add-on configuration
-Include /srv/settings/medic-core/openssh/sshd_config.d/*
+# Medic Mobile SSH Certificate Authority Root
+RevokedKeys /srv/settings/medic-core/openssh/private/revocation-list
+TrustedUserCAKeys /srv/settings/medic-core/openssh/private/medic-ca-root.pub
 
