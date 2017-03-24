@@ -25,7 +25,7 @@ start()
   fi
 
   modprobe -a \
-    vmci vsock vmxnet vmxnet3 vmhgfs vmblock vmsync &&
+    vmw_vmci vmw_vsock_vmci_transport vmxnet3 vmw_balloon &&
   \
   exec vmtoolsd 2>&1 \
     | /boot/timestamp \
