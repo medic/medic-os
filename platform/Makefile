@@ -269,7 +269,7 @@ build-x86-image-nopae:
 	  echo 'Building x86 kernel with PAE disabled...' && \
 	  (cd source && \
 	    ../scripts/prepend-path '${COMPILER_ROOT}' \
-	      ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae') &&
+	      ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae') && \
 	  \
 	  ${QMAKE} build-iso-image ISO_EXTRA='-nopae'; \
 	fi
