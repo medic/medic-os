@@ -88,7 +88,7 @@ main()
    build_autoconf 'open-vm-tools' \
     "$stdarg --without-x \
      --with-linuxdir='$kernel_module_path' \
-     --with-kernel-release='$kernel_version' \
+     --with-kernel-release='$kernel_version' --without-ssl \
      --without-gtk2 --without-pam --without-icu --without-xerces") &&
   \
   builder_remove_static_libraries 'vmtools' 'hgfs' 'guestlib'
