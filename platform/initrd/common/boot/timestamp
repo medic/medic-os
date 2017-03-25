@@ -1,7 +1,40 @@
-#!/bin/sh
+#!/bin/bash
 
-exec awk '{
+# Produce a timestamped version of stdin on stdout:
+#   This script spawns a subprocess using the argument
+#   list provided to it, and then traps/forwards signals
+#   to ensure that the subprocess is not orphaned when
+#   this script terminates. Notes: we can't use `exec`
+#   due to the presence of a pipeline; `ash` has bugs
+#   in its `wait` function that require us to use bash.
+
+pid=''
+
+_signal()
+{
+  local signal="$1"
+  shift 1
+
+  echo kill "$@" "-$signal" $pid
+  kill "$@" "-$signal" $pid
+}
+
+trap_all()
+{
+  for signal in "$@"; do
+    trap "_signal $signal" $signal
+  done
+}
+
+trap '_signal TERM' INT
+trap '_signal TERM' HUP
+trap_all QUIT TRAP ABRT TERM STOP TSTP CONT USR1 USR2
+
+"$@" | awk '{
   print "["strftime("%Y-%m-%d %H:%M:%S")"] "$0;
   fflush();
-}'
+}' &
+
+pid="`jobs -p`"
+wait "$pid"
 

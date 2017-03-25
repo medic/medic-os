@@ -7,8 +7,8 @@ start()
 
   mkdir -p "$logs_dir" &&
   \
-  exec crond -f -L "$log_path" 2>&1 \
-    | /boot/timestamp >> startup.log
+  exec /boot/timestamp crond -f -L "$log_path" \
+    >> startup.log 2>&1
 }
 
 main()

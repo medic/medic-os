@@ -20,16 +20,15 @@ start()
   merge_environment /srv || return 255
 
   if ! detect_vmware; then
-    exec nohup ntpd -ndp "`find_ntp_server`" \
+    exec /boot/timestamp ntpd -ndp "`find_ntp_server`" \
       >> "$PACKAGE_STORAGE/ntpd/logs/startup.log" 2>&1
   fi
 
   modprobe -a \
     vmw_vmci vmw_vsock_vmci_transport vmxnet3 vmw_balloon &&
   \
-  exec vmtoolsd 2>&1 \
-    | /boot/timestamp \
-    >> "$PACKAGE_STORAGE/vmtoolsd/logs/startup.log"
+  exec /boot/timestamp vmtoolsd \
+    >> "$PACKAGE_STORAGE/vmtoolsd/logs/startup.log" 2>&1
 }
 
 start
