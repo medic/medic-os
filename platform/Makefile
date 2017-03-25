@@ -383,7 +383,7 @@ delete-downloaded:
 	  for manifest in source/manifests/*; do \
 	    pkg="`basename "$$manifest"`" && \
 	    if [ "$$pkg" != '*' ]; then \
-	      (cd "source/$$pkg" && rm -rf "$$type"/*) || exit "$$?"; \
+	      (cd "source/$$pkg" && rm -rf "$$type"/[^.]*) || exit "$$?"; \
 	    fi; \
 	  done; \
 	done
