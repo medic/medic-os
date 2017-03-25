@@ -15,7 +15,6 @@ _signal()
   local signal="$1"
   shift 1
 
-  echo kill "$@" "-$signal" $pid
   kill "$@" "-$signal" $pid
 }
 
