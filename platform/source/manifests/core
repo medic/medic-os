@@ -1,5 +1,5 @@
 bash, https://ftp.gnu.org/gnu/bash/bash-4.4.tar.gz
-busybox, http://sources.openelec.tv/mirror/busybox/busybox-1.23.1.tar.bz2
+busybox, https://busybox.net/downloads/busybox-1.26.2.tar.bz2
 dhcpcd, http://roy.marples.name/downloads/dhcpcd/dhcpcd-6.9.1.tar.xz
 e2fsprogs, https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v1.42.13/e2fsprogs-1.42.13.tar.xz
 eudev, http://dev.gentoo.org/~blueness/eudev/eudev-3.2.1.tar.gz
