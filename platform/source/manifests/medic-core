@@ -36,7 +36,7 @@ node, https://nodejs.org/dist/v6.9.5/node-v6.9.5.tar.gz
 node-fs-ext, https://github.com/baudehlo/node-fs-ext.git
 node-gammu-json, https://github.com/medic/node-gammu-json.git
 nodelint, https://github.com/tav/nodelint.git
-openssh, http://openbsd.mirrors.pair.com/OpenSSH/portable/openssh-7.4p1.tar.gz
+openssh, https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-7.5p1.tar.gz
 openssl, https://www.openssl.org/source/openssl-1.0.2k.tar.gz
 patch, http://ftp.gnu.org/gnu/patch/patch-2.7.tar.xz
 paxctl, http://pax.grsecurity.net/paxctl-0.9.tar.gz
