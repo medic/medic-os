@@ -37,7 +37,7 @@ repackage: reset-time prepare-tree
 	  ${QMAKE} preload-medic-core) && \
 	(cd platform && \
 	  ${QMAKE} clean &>/dev/null && \
-	  ${QMAKE} rebuild-kernel copy all)
+	  ${QMAKE} copy all)
 
 clean: require-root
 	@shopt -u xpg_echo && \

@@ -41,6 +41,7 @@ create_empty_directories()
       initrd/common/var/lib \
       initrd/common/var/lock \
       initrd/common/var/log \
+      initrd/common/var/run \
       packages/java/storage \
       packages/java/storage/java \
       packages/medic-transport/storage \

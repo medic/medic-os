@@ -27,6 +27,8 @@ install()
     ln -sf "v$version" "v$major_version" &&
     rm -f current && ln -sf v"$version" current) &&
   \
+  mkdir -p /var/run/nginx &&
+  \
   (cd "$PACKAGE_STORAGE/nginx/state" && \
     ln -sf ../logs logs) &&
   \
@@ -57,8 +59,7 @@ install()
   \
   if [ -z "$is_update" ]; then
     info 'Installing default CouchDB databases'
-    install_default_couchdb_databases \
-      "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
+    install_default_couchdb_databases "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
   fi &&
   \
   if [ ! -f "$couchdb_settings/local.ini" ]; then

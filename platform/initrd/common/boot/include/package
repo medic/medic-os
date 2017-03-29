@@ -317,7 +317,8 @@ package_update()
   local path="$1"
   local force_install="$2"
   local use_soft_restart="$3"
-  local setup_on_version_match="$4"
+  local setup_if_version_match="$4"
+  local force_install_over_newer="$5"
 
   local package="`package_extract_name "$path"`" &&
   local v_new="`package_extract_version "$path"`" &&
@@ -348,10 +349,10 @@ package_update()
   fi
 
   if [ "$v_prev" -ge "$v_new" ]; then
-    if [ "$setup_on_version_match" ]; then
+    if [ "$setup_if_newer_version" ]; then
       package_update_run_setup "$package"
       return "$?"
-    elif [ -z "$force_install" ]; then
+    elif [ -z "$force_install_over_newer" ]; then
       warn "An equal-or-greater version of '$package' is already installed"
       warn "Use the -f/--force option if you want to install it anyway"
       return 4

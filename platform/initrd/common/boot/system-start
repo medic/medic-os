@@ -165,7 +165,7 @@ main()
   for package_path in /mnt/startup/packages/*.vpkg; do
 
     # Install or update package
-    package_update "$package_path" "$is_newly_initialized" '' 't'
+    package_update "$package_path" 't' '' 't'
 
     # Demand success
     if [ "$?" -ne 0 ]; then
