@@ -26,8 +26,11 @@ install_default_ssh_keys()
     return 0
   fi
 
+  local output_path="/home/$user/.ssh/$output_file"
+
+  mkdir -p "$output_path" &&
   (exec "$PACKAGE_ROOT/sbin/ec2-metadata" -u \
-    | grep '^\(ssh\|ecdsa\)-' >> "/home/$user/.ssh/$output_file") &
+    | grep '^\(ssh\|ecdsa\)-' >> "/home/$user/.ssh/$output_file" 2>&1) &
 
   return 0
 }

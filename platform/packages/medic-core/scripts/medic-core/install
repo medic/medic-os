@@ -66,62 +66,13 @@ install()
   fi &&
   \
   if [ "$is_update" ]; then
-    info 'Migrating administrative users' &&
-    \
+    info 'Migrating administrative users'
     migrate_admins_configuration \
       "$couchdb_settings/local.ini" \
-      "$couchdb_settings/private/upgrade-admins.ini" &&
-    \
-    add_missing_couchdb_system_account 'system' 'lucene' &&
-    add_missing_couchdb_system_account 'system' 'gardener' &&
-    add_missing_couchdb_system_account 'system' 'transport'
+      "$couchdb_settings/private/upgrade-admins.ini"
   fi
 
   return "$?"
-}
-add_missing_couchdb_system_account()
-{
-  local auth_user="$1"
-  local user="$2"
-  shift 2
-
-  # Already exists? Do nothing.
-  if [ -f "$passwd_base/$user" ]; then
-    return 0
-  fi
-
-  auth_user="`basename -- "$auth_user"`"
-  local passwd_base='/srv/storage/concierge/passwd'
-  local auth_passwd="`cat "$passwd_base/$auth_user"`"
-
-  if [ ! -f "$passwd_base/$auth_user" ]; then
-    return 1
-  fi
-
-  # Special-case for backward compatibility
-  if [ "$auth_user" = 'system' ]; then
-    auth_user='service'
-  fi
-
-  local base_url="http://$auth_user:$auth_passwd@localhost:5984"
-  local admin_url="$base_url/_config/admins/$user"
-
-  local passwd="`
-    dd if=/dev/urandom bs=4096 count=1 2>/dev/null \
-      | sha512sum | cut -d' ' -f1
-  `"
-
-  if [ "$?" -ne 0 ]; then
-    return 2
-  fi
-
-  curl -s -XPUT "$admin_url" -d "\"$passwd\"" -o/dev/null \
-    || return "$?"
-
-  echo "$passwd" > "$passwd_base/$user" \
-    || return 3
-
-  return 0
 }
 
 install_default_couchdb_databases()
