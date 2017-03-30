@@ -40,7 +40,7 @@ wait_for_ip_address()
 
 main()
 {
-  local version='10100'
+  local version='11000'
   local swap_size='1024'
   local source_device='/dev/sr0'
 
@@ -120,18 +120,23 @@ main()
 
   if [ -z "$found_version" ]; then
     for device in `echo -n "$scan_devices"`; do
-      if is_storage_valid "$device"; then
 
-        initialize_storage "$device" "$swap_size" "$version" \
-          >> "$log" 2>&1
+      if ! is_storage_valid "$device"; then
+        continue
+      fi
+      
+      if ! is_storage_empty "$device"; then
+        continue
+      fi
 
-        if [ "$?" -eq 0 ]; then
-          found_device="$device"
-          found_version="$version"
-          is_newly_initialized='t'
-          break
-        fi
+      initialize_storage "$device" "$swap_size" "$version" \
+        >> "$log" 2>&1
 
+      if [ "$?" -eq 0 ]; then
+        found_device="$device"
+        found_version="$version"
+        is_newly_initialized='t'
+        break
       fi
     done
   fi
