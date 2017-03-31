@@ -27,7 +27,7 @@ main()
     save_cursor_position
 
     if [ "$ip_address" ]; then
-      display_centered "Server is available at http://$ip_address."
+      display_centered "Server is available at https://$ip_address."
     else
       set_bold 1
       display_centered "Server has no IP address at this time."

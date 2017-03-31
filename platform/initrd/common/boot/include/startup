@@ -126,11 +126,14 @@ initialize_storage()
   mkfs.ext4 -b 2048 -i 4096 "${device}2" &&
   mount -o rw,nodev,nosuid "${device}2" "$srv_dir" &&
   \
-  mkdir -p "$srv_dir/software" \
-    "$srv_dir/storage" "$srv_dir/scripts" \
+  mkdir -p \
+    "$srv_dir/software" "$srv_dir/storage" \
+    "$srv_dir/scripts" "$srv_dir/tmp" \
     "$system_settings_dir" "$receipts_dir/system" &&
   \
-  mkdir -p "$receipts_dir/system"
+  chown root:staff "$srv_dir/tmp" &&
+  chmod 1770 "$srv_dir/tmp" &&
+  \
   echo "$version" > "$receipts_dir/system/version" &&
   sync && sleep 1 && sync
 
@@ -213,6 +216,14 @@ synchronize_disks()
 migrate_system()
 {
   local old_receipts_dir='/srv/receipts'
+
+  mkdir -p "$srv_dir/tmp" &&
+  chown root:staff "$srv_dir/tmp" &&
+  chmod 1770 "$srv_dir/tmp"
+
+  if [ "$?" -ne 0 ]; then
+    return "$?"
+  fi
 
   if [ -d "$old_receipts_dir" ]; then
     mkdir -p -- "$receipts_dir" &&

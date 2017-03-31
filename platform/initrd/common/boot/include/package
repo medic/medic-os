@@ -179,6 +179,7 @@ package_install()
     return 1
   fi
 
+  local path_uncompressed="`mktemp -p /srv/tmp`" &&
   local package="`package_extract_name "$path"`" &&
   local version="`package_extract_version "$path"`"
 
@@ -186,26 +187,61 @@ package_install()
     return 2
   fi
  
-  log "Installing package '$package'"
+  local metadata_dir="$receipts_dir/$package"
+  local version_file="$metadata_dir/version"
+  local manifest_file="$metadata_dir/manifest"
 
-  mkdir -p "$receipts_dir/$package" &&
-    echo -n "$version" > "$receipts_dir/$package/version"
+  log "Starting installation for package '$package'"
+
+  mkdir -p "$metadata_dir" &&
+  echo -n "$version" > "$version_file"
 
   if [ "$?" -ne 0 ]; then
-    rm -f -- "$receipts_dir/$package/version"
+    rm -f -- "$version_file"
     return 3
+  fi
+
+  log "Decompressing package '$package'"
+
+  ar -p "$path" package.tar.xz \
+    | xz -dc > "$path_uncompressed"
+
+  if [ "$?" -ne 0 ]; then
+    warn "Failed to decompress package '$package' from '$path'"
+    rm -f -- "$version_file" "$path_uncompressed"
+    return 4
+  fi
+
+  log "Examining package '$package'"
+  
+  mkdir -p "$srv_dir/scripts/$package" &&
+  tar -tf "$path_uncompressed" > "$manifest_file"
+
+  if [ "$?" -ne 0 ]; then
+    warn "Failed to list files for package '$package' from '$path'"
+    rm -f -- "$version_file" "$manifest_file" "$path_uncompressed"
+    return 5
+  fi
+
+  log "Examining destination volume for '$package'"
+
+  (cd "$srv_dir" && while read i; do
+    echo -n # FIXME: Actually remove files
+   done) < "$manifest_file"
+
+  if [ "$?" -ne 0 ]; then
+    warn "Failed to clean destination for '$package'; continuing anyway"
   fi
 
   log "Extracting files for package '$package'"
 
-  mkdir -p "$receipts_dir/$package" "$srv_dir/scripts/$package" &&
-    ar -p "$path" package.tar.xz | xz -dc \
-      | (cd "$srv_dir" && tar -xvf - > "$receipts_dir/$package/manifest")
+  (cd "$srv_dir" &&
+    tar -xf "$path_uncompressed")
 
   if [ "$?" -ne 0 ]; then
     warn "Failed to extract files for package '$package' from '$path'"
-    rm -f -- "$receipts_dir/$package"
-    return 4
+    rm -f -- "$version_file" "$manifest_file" "$path_uncompressed"
+    return 7
   fi
 
   if [ -x "$srv_dir/scripts/$package/install" ]; then
@@ -215,7 +251,7 @@ package_install()
 
     if [ "$?" -ne 0 ]; then
       warn "Installation script for package '$package' failed"
-      rm -rf -- "$receipts_dir/$package"
+      rm -f -- "$receipts_dir/$package/manifest" "$path_uncompressed"
       return 17
     fi
   fi
