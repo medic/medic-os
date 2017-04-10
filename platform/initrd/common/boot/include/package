@@ -385,7 +385,7 @@ package_update()
   fi
 
   if [ "$v_prev" -ge "$v_new" ]; then
-    if [ "$setup_if_newer_version" ]; then
+    if [ "$setup_if_version_match" ]; then
       package_update_run_setup "$package"
       return "$?"
     elif [ -z "$force_install_over_newer" ]; then
