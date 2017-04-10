@@ -1,0 +1,21 @@
+#!/bin/bash -eu
+
+cd "$(dirname $0)"
+
+conf_file="$(pwd)/../../platform/packages/medic-core/settings/medic-core/nginx/nginx.conf"
+
+log() {
+  echo "[$0] $@"
+}
+
+log "Conf file at: $conf_file"
+
+log "Rewriting hardcoded config values..."
+sed -i.bak -E \
+    -e "s_/srv/_$(pwd)/_" \
+    -e 's_listen[[:space:]]*80;_listen 8080;_' \
+    -e 's_listen[[:space:]]*443[[:space:]]+ssl;_listen 8081 ssl;_' \
+      "$conf_file"
+
+log "Starting nginx..."
+sudo nginx -c "$conf_file"

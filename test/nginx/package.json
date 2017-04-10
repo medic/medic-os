@@ -1,0 +1,16 @@
+{
+  "name": "nginx-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "nginx.conf.spec.js",
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha nginx.conf.spec.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "request": "^2.81.0"
+  }
+}

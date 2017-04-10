@@ -1,0 +1,30 @@
+#!/bin/bash -eu
+
+cd "$(dirname $0)"
+
+log() {
+  echo "[$0] $@"
+}
+
+finalise() {
+  log "Cleaning up..."
+  set +eu
+  sudo pkill -P $nginx_pid
+  log "Finished."
+}
+trap finalise EXIT
+
+./start_nginx &
+nginx_pid="$!"
+
+log "Starting echo server(s)..."
+node ./echo-server.js 5988 &
+
+log "Installing node dependencies..."
+npm install
+
+log "Starting tests..."
+NODE_TLS_REJECT_UNAUTHORIZED=0 npm test
+log "Tests complete."
+
+log "Tests passed successfully!"

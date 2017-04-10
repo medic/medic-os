@@ -1,0 +1,9 @@
+language: node_js
+node_js: "6.10"
+sudo: required
+addons:
+  apt:
+    packages:
+    - nginx-extras
+before_script: sudo groupadd nobody
+script: ./test/nginx/run
