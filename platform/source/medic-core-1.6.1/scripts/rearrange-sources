@@ -27,7 +27,13 @@ rename()
       `";
     fi
   done &&
-   \
+  \
+  for file in LuaJIT-*; do
+    if [ -d "$file" ]; then
+      mv "$file" "`echo "$file" | tr '[A-Z]' '[a-z]'`"
+    fi
+  done &&
+  \
   for file in xdelta3-*; do
     if [ -d "$file" ]; then
       mv "$file" "`echo "$file" | sed -E 's/^xdelta3-/xdelta-/;'`";
