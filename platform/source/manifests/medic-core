@@ -57,3 +57,4 @@ usbutils, https://www.kernel.org/pub/linux/utils/usb/usbutils/usbutils-008.tar.x
 xdelta, https://github.com/jmacd/xdelta-gpl/releases/download/v3.0.11/xdelta3-3.0.11.tar.gz
 xz, http://tukaani.org/xz/xz-5.2.1.tar.xz
 zlib, http://www.zlib.net/zlib-1.2.11.tar.gz
+zsync, http://zsync.moria.org.uk/download/zsync-0.6.2.tar.bz2
