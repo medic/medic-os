@@ -22,7 +22,8 @@ var child = require('child_process'),
 var user = 'vm';
 var protocol = 'http://';
 var server = 'localhost:5984';
-var lucene_server = 'localhost:5985';
+var server_lucene = 'localhost:5985';
+var server_node = 'localhost:5986'; // port for local CouchDB node
 var api_server = 'localhost:5988';
 var private_path = '/srv/scripts/concierge/private';
 var system_passwd_dir = '/srv/storage/concierge/passwd';
@@ -433,10 +434,6 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
 var regenerate_couchdb_lucene_index = function (_url, _index_name,
                                                 _query, _req, _callback) {
 
-  // TODO: either change the caller to use lucene_server as base, or re-write it
-  //       here.
-  // NB: this change is valid for both CouchDB1.0 and 2.0
-
   var get = clone(_req || {});
   var url = [ _url, _index_name ].join('/');
 
@@ -805,10 +802,7 @@ var _delete_couchdb_user = function (_user_name, _is_admin,
                                      _request_params, _callback) {
 
   var users_url = protocol + server + '/_users/';
-  // TODO: this is no longer exposed on 5984 directly, you need to either
-  //       specify the local node or change the port to 5986 (though this may be
-  //       disabled in later CouchDB 2.x releases)
-  var config_url = protocol + server + '/_config/';
+  var config_url = protocol + server_node + '/_config/';
 
   /* Primary URL:
    *   Either the `admins` document or the user document. */
@@ -891,8 +885,7 @@ var _delete_couchdb_user = function (_user_name, _is_admin,
 var delete_couchdb_unknown_users = function (_query_admins_list,
                                              _request_params, _callback) {
   var url = (
-    // TODO: config is no longer exposed, see other comments
-    protocol + server + '/_config/' +
+    protocol + server_node + '/_config/' +
       (_query_admins_list ? 'admins' : 'users')
   );
 
@@ -1326,8 +1319,7 @@ var make_couchdb_user_creation_request = function (_user, _passwd,
 make_couchdb_password_change_request = function (_name, _password,
                                                  _request_template) {
 
-  // TODO: use 5986 or add node, see other comments
-  var admins_url = server + '/_config/admins';
+  var admins_url = server_node + '/_config/admins';
 
   var req = {
     body: JSON.stringify(_password),
@@ -1452,7 +1444,7 @@ var run_background_setup_tasks = function (_req, _user, _passwd, _callback) {
   //       http://localhost:5984/_fti/local/medic/_design/medic
   //       becomes
   //       http://localhost:5985/local/medic/_design/medic
-  var fti_path = '/_fti/local/medic/_design/medic';
+  var fti_path = server_lucene + '/local/medic/_design/medic';
 
   /* Change passwords:
    *   The system and CouchDB passwords are modified here. */
@@ -1477,11 +1469,10 @@ var run_background_setup_tasks = function (_req, _user, _passwd, _callback) {
        *   with the CouchDB changes feed, effectively building any
        *   indexes that have been deleted or haven't been generated. */
 
-      var url = protocol + server + fti_path;
+      var url = protocol + server_lucene + fti_path;
       var req = { auth: { user: 'admin', pass: _passwd } };
 
       regenerate_couchdb_lucene_index(
-        // TODO: url is wrong here, should use `lucene_server` as base not
         url, 'data_records', 'reindex', req, _next_fn
       );
     },
@@ -1541,8 +1532,7 @@ var add_couchdb_defaults = function (_req, _admin_passwd, _callback) {
      *   Restrict CouchDB to valid users only. */
 
     function (_cb) {
-      // TODO add node or change port, see other comments
-      var config_url = server + '/_config/couch_httpd_auth';
+      var config_url = server_node + '/_config/couch_httpd_auth';
 
       put.body = '"true"';
       put.url = protocol + config_url + '/require_valid_user';
