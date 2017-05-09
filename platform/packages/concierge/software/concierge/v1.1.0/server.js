@@ -1532,7 +1532,7 @@ var add_couchdb_defaults = function (_req, _admin_passwd, _callback) {
      *   Restrict CouchDB to valid users only. */
 
     function (_cb) {
-      var config_url = server_node + '/_config/couch_httpd_auth';
+      var config_url = server_node + '/_config/chttpd';
 
       put.body = '"true"';
       put.url = protocol + config_url + '/require_valid_user';
