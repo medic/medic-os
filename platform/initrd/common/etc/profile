@@ -56,3 +56,8 @@ for script in /etc/profile.d/*; do
  fi
 done
 
+# Include helpful information for people looking for man pages
+man()
+{
+ echo 'For man pages, please visit https://busybox.net/downloads/BusyBox.html.'
+}
