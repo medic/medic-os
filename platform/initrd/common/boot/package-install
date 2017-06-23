@@ -23,6 +23,8 @@ main()
   fi
 
   for path in "$@"; do
+    [ -f "$path" ] || fatal "File not found: $path"
+
     local package="`package_extract_name "$path"`" \
       || fatal "Failed to determine name of package '$path'"
 
