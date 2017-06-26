@@ -41,7 +41,6 @@ Once you have an ISO image in hand, you can:
 
 4. Click _Finish_, then log in to the application using your credentials from step three.
 
-
 Administrative Access
 ---------------------
 
@@ -52,7 +51,7 @@ step three above.
 
 If you are a developer, have physical access to the virtual machine console, and are
 attempting to troubleshoot an issue that has rendered the virtual machine inaccessible,
-switch to virtual terminal six to regain access.
+switch to virtual terminal six (Alt-F6 and enter) to regain access.
 
 
 Building Medic OS
