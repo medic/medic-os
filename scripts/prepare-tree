@@ -28,6 +28,9 @@ create_empty_directories()
     done &&
     \
     mkdir -p \
+      images/x86/iso/packages \
+      images/x64/iso/packages \
+      images/noarch/iso/packages \
       initrd/common/etc/ashrc.d \
       initrd/common/etc/profile.d \
       initrd/common/etc/sysconfig \
@@ -94,9 +97,12 @@ create_empty_directories()
       packages/gardener/storage/gardener/private \
       packages/gardener/storage/gardener/logs \
       packages/gardener/scripts/gardener/private \
-      images/x86/iso/packages \
-      images/x64/iso/packages \
-      images/noarch/iso/packages
+      source/compiler/incoming \
+      source/core/incoming \
+      source/medic-core/incoming \
+      source/medic-couch2pg/incoming \
+      source/medic-rdbms/incoming \
+      source/vm-tools/incoming
   )
 
   return "$?"
