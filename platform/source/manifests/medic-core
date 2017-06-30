@@ -12,6 +12,7 @@ erlang, http://www.erlang.org/download/otp_src_17.4.tar.gz
 gammu, http://dl.cihar.com/gammu/releases/gammu-1.33.0.tar.xz
 gammu-json, https://github.com/medic/gammu-json.git
 garden-maker, https://github.com/garden20/garden_maker.git
+gawk, https://ftp.gnu.org/gnu/gawk/gawk-4.1.4.tar.xz
 git, https://www.kernel.org/pub/software/scm/git/git-2.4.6.tar.xz
 icu, http://download.icu-project.org/files/icu4c/51.2/icu4c-51_2-src.tgz
 inotify-tools, http://github.com/downloads/rvoicilas/inotify-tools/inotify-tools-3.14.tar.gz
@@ -45,7 +46,7 @@ paxctl, http://pax.grsecurity.net/paxctl-0.9.tar.gz
 pcre, http://jaist.dl.sourceforge.net/project/pcre/pcre/8.33/pcre-8.33.tar.bz2
 popt, http://rpm5.org/files/popt/popt-1.16.tar.gz
 pv, http://www.ivarch.com/programs/sources/pv-1.6.0.tar.bz2
-readline, http://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz
+readline, http://ftp.gnu.org/gnu/readline/readline-7.0.tar.gz
 rebar, https://github.com/basho/rebar.git
 rsync, https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
 screen, http://ftp.gnu.org/gnu/screen/screen-4.3.1.tar.gz

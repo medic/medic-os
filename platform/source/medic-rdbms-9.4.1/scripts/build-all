@@ -33,6 +33,11 @@ main()
   [ $? -eq 0 ] \
     || fatal 'Failed to set up build environment'
 
+  prepend_paths /srv/software/medic-core/*/*/
+
+  [ $? -eq 0 ] \
+    || fatal 'Failed to set up build $PATH variable'
+
   build_autoconf 'pv' "$stdarg" &&
   \
   (disable_library_path && build_autoconf 'readline' \

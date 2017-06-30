@@ -77,7 +77,7 @@ clean-compiler:
 package-docs: medic-core-docs-pkg medic-rdbms-docs-pkg vm-tools-docs-pkg
 
 build-start:
-	@if [ -z '${SKIP_COMPILER}' ]; then \
+	@if [ -n '${BUILD_COMPILER}' ]; then \
 	  ${QMAKE} compiler || exit "$$?"; \
 	fi
 	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
@@ -209,7 +209,7 @@ upload-ami-image: build-ami-image
 	echo 'done.'
 
 check-compiler-root:
-	@if [ -z '${COMPILER_ROOT}' ]; then \
+	@if [ '${BUILD_COMPILER}' -a -z '${COMPILER_ROOT}' ]; then \
 	  echo 'Warning: Compiler root not specified' >&2; \
 	  echo 'Warning: Resulting image may be incomplete' >&2; \
 	fi
@@ -217,15 +217,19 @@ check-compiler-root:
 copy-compiler-libraries: check-compiler-root
 	@echo -n 'Copying compiler libraries...' && \
 	\
+	if [ '${BUILD_COMPILER}' ]; then \
+	  export PATH="${COMPILER_ROOT}/bin:$$PATH"; \
+	fi;
+	\
 	mkdir -p '${INITRD_PATH}/lib' && \
-	export PATH="${COMPILER_ROOT}/bin:$$PATH" && \
-	compiler_root="$$(dirname "$$(which gcc)")/../" && \
+	compiler_root="`dirname "$$(gcc --print-libgcc-file-name)"`" && \
 	\
-	cd "$$compiler_root/lib" && \
+	cd "$$compiler_root" && \
 	\
-	for lib in ssp gcc_s stdc++; do \
-	  cp -a "lib$$lib.so" "lib$$lib.so."* \
-	    '${INITRD_PATH}/lib' || exit "$$?"; \
+	for lib in gcc_s stdc++; do \
+	  cp -aL "lib$$lib.so"* '${INITRD_PATH}/lib' && \
+	  chmod +x "${INITRD_PATH}/lib/lib$$lib.so"* \
+            || exit "$$?"; \
 	done && \
 	\
 	echo 'done.'

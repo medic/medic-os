@@ -97,7 +97,11 @@ main()
   builder_remove_static_libraries 'form' 'form_g' \
     'menu' 'menu_g' 'ncurses' 'ncurses_g' 'ncurses++' 'panel' 'panel_g' &&
   \
-  build_autoconf 'popt' "$stdarg --enable-shared --disable-static" &&
+  build_autoconf 'popt' \
+    "$stdarg --enable-shared --disable-static" &&
+  \
+  build_autoconf 'gawk' \
+    "$stdarg --enable-shared --disable-static --program-prefix=g" &&
   \
   if [ "$build_platform" = 'linux-elf' ]; then
 
