@@ -219,7 +219,7 @@ copy-compiler-libraries: check-compiler-root
 	\
 	if [ '${BUILD_COMPILER}' ]; then \
 	  export PATH="${COMPILER_ROOT}/bin:$$PATH"; \
-	fi;
+	fi && \
 	\
 	mkdir -p '${INITRD_PATH}/lib' && \
 	compiler_root="`dirname "$$(gcc --print-libgcc-file-name)"`" && \
