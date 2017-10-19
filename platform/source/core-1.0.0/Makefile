@@ -306,7 +306,7 @@ build-glibc:
 	  "cd source/glibc && unset MAKEFLAGS && \
 	    mkdir -p '${STAGING_PATH}/glibc' && \
 	    mkdir -p build-directory && cd build-directory && \
-	    CFLAGS='-Os' ../configure --prefix='' \
+	    ../configure --prefix='' \
 	      --enable-shared --disable-static \
 	      --disable-multi-arch --disable-nscd && \
 	    ${PMAKE} && \

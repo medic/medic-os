@@ -19,9 +19,7 @@ apply_patches()
   (cd busybox && patch -s -p1 \
     < ../../patches/busybox-depmod.diff) &&
   (cd glibc && patch -s -p1 \
-    < ../../patches/glibc-2.19-git-updates-20160217.diff) &&
-  (cd glibc && patch -s -p1 \
-    < ../../patches/glibc-2.19-cve-2015-7547.diff) &&
+    < ../../patches/glibc-2.23-upstream-fixes.patch) &&
   (cd linux && patch -s -p1 \
     < ../../patches/grsecurity-linux.diff) &&
   (cd linux && patch -s -p1 \
