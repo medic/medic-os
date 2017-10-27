@@ -9,7 +9,7 @@ SHELL := /bin/bash
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
-CFLAGS += -Os -fstack-protector-all
+CFLAGS += -Os
 
 KERNEL_SOURCE_PATH := $(shell readlink -f source/linux)
 INITRD_PATH := $(shell readlink -f ../../initrd/${PLATFORM})
@@ -57,7 +57,9 @@ build-ncurses: build-pv
 		${MAKE} install DESTDIR="${INITRD_PATH}"'
 
 copy-ncurses:
-	@true
+	@cd "${INITRD_PATH}/usr/lib" && \
+	  ln -sf libncurses.so libtinfo.so && \
+	  ln -sf libncurses.so libtinfo.so.5
 
 clean-ncurses:
 	@if [ -h source/ncurses ]; then \
