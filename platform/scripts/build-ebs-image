@@ -148,7 +148,7 @@ main()
       || fatal "Failure while setting tags on volume '$volume_id'"
 
   ec2-attach-volume "$volume_id" --region "$EC2_REGION" -i "`
-    ec2-metadata -i | cut -d: -f2 | sed -E 's/^ *//'
+    ec2metadata -i | cut -d: -f2 | sed -E 's/^ *//'
   `" -d "$device" >/dev/null || fatal 'Failed to attach temporary volume'
 
   echo 'done.' >&2
