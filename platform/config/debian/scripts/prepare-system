@@ -2,7 +2,7 @@
 
 install()
 {
-  apt-get "$@" install curl jq bc python gperf \
+  apt-get "$@" install curl jq bc python gperf ec2-api-tools \
     linux-headers-generic linux-libc-dev g++ gcc-5-plugin-dev \
     autoconf automake bison flex nasm ruby patch git ntpdate intltool \
     pkg-config libncurses5-dev uuid-dev expect tcl libtool gettext \
