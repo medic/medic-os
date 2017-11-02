@@ -263,14 +263,14 @@ main() {
          sudo tar xJf medic-os-core-src-latest.tar.xz &&
          echo 'done.' >&2 &&
          \
-         echo -n 'Installing build-time dependencies... ' >&2 &&
-         sudo '$cfg_dir/$flavor/scripts/prepare-system' -qy &>/dev/null &&
-         echo 'done.' >&2 &&
-         \
          echo -n 'Applying latest Medic OS updates... ' >&2 &&
          (cd medic-os/platform &&
            sudo git remote set-url origin "$vm_url" &&
            sudo git stash -q && sudo git pull -q) &&
+         echo 'done.' >&2 &&
+         \
+         echo -n 'Installing build-time dependencies... ' >&2 &&
+         sudo '$cfg_dir/$flavor/scripts/prepare-system' -qy &>/dev/null &&
          echo 'done.' >&2 &&
          \
          echo -n 'Extracting Medic OS JDK/JRE module... ' >&2 &&
