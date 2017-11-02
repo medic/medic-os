@@ -109,7 +109,7 @@ main()
 
   case "$platform" in
     x64)
-      aki='aki-70cb0e10'
+      aki='aki-fc8f11cc'
       architecture='x86_64' ;;
     x86)
       aki='aki-7a69931a'
