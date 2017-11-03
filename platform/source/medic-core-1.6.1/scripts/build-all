@@ -101,7 +101,8 @@ main()
     "$stdarg --enable-shared --disable-static" &&
   \
   build_autoconf 'gawk' \
-    "$stdarg --enable-shared --disable-static --program-prefix=g" &&
+    "$stdarg --enable-shared \
+     --disable-static --without-mpfr --program-prefix=g" &&
   \
   if [ "$build_platform" = 'linux-elf' ]; then
 
