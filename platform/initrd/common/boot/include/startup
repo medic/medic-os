@@ -30,8 +30,11 @@ is_storage_empty()
   return 1
 }
 
-mount_special_filesystems()
+do_mount_special_filesystems()
 {
+  local bind_root="$1"
+  shift 1
+
   local rv='0'
 
   while [ "$#" -gt 0 ]; do
@@ -42,17 +45,36 @@ mount_special_filesystems()
 
     local original_type="`stat -fc %T "$dir"`"
 
-    if [ "$original_type" != "$type" ]; then
-      if ! mount -t "$type" "$type" "$dir"; then
-        warn "Failed to mount a '$type' filesystem at '$dir'"
-        rv="$(($rv + 1))"
+    if [ -z "$bind_root" ]; then
+      if [ "$original_type" != "$type" ]; then
+        mount -t "$type" "$type" "$dir"
+      else
+        log "Volume of type '$type' is already mounted at '$dir'"
       fi
     else
-      log "Volume of type '$type' is already mounted at '$dir'"
+      mount --bind "$dir" "$bind_root/$dir"
+    fi
+
+    if [ "$?" -ne 0 ]; then
+      warn "Failed to mount a '$type' filesystem at '$dir'"
+      rv="$(($rv + 1))"
     fi
   done
 
   return "$?"
+}
+
+mount_special_filesystems()
+{
+  do_mount_special_filesystems '' "$@"
+}
+
+bind_mount_special_filesystems()
+{
+  local bind_root="$1"
+  shift 1
+
+  do_mount_special_filesystems "$bind_root" "$@"
 }
 
 disconnect_storage()

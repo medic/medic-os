@@ -55,6 +55,7 @@ main()
   local found_device=''
   local found_version=''
 
+  package_init
   supervisor_init
   hypervisor_init
 

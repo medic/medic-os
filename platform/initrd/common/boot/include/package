@@ -7,6 +7,12 @@ receipts_dir="$srv_dir/system/storage/receipts"
 settings_dir="$srv_dir/system/settings/packages"
 supervisor_dir="$srv_dir/system/storage/supervisor"
 
+package_init()
+{
+  mkdir -p -m 1777 "$srv_dir/tmp"
+  return "$?"
+}
+
 package_sanitize_name()
 {
   local package="$1"
