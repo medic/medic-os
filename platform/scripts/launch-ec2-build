@@ -294,7 +294,7 @@ main() {
          ./platform/scripts/build-ebs-image \
            '../$cfg_dir/aws/settings' \
              '$platform' output/*'-$platform-xen' \
-               'Medic OS Nightly $platform - `date +%Y%m%d`' /dev/sdf && \
+               'Medic OS Nightly $platform - `date +%Y%m%d`' /dev/sdd && \
          \
          echo 'EBS images built successfully.' >&2 &&
          \

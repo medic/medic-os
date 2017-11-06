@@ -20,13 +20,18 @@ main()
 
   local total_packages='0'
   local finished_packages='0'
+  local is_newly_initialized=''
+
+  if package_is_first_run; then
+    is_newly_initialized='t'
+  fi
 
   for package_path in /mnt/startup/packages/*.vpkg; do
     total_packages="$(($total_packages + 1))"
   done
 
   for package_path in /mnt/startup/packages/*.vpkg; do
-    package_update "$package_path" 'force' \
+    package_update "$package_path" "$is_newly_initialized" \
       || fatal 'Failed to extract required software from disk/image'
 
     finished_packages="$(($finished_packages + 1))"
