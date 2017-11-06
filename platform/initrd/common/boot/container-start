@@ -21,7 +21,7 @@ main()
   info 'Bind mounting filesystems...'
 
   bind_mount_special_filesystems "$root" \
-    proc /proc sys /sys dev /dev
+    proc /proc sys /sys dev /dev devpts /dev/pts
 
   if [ "$?" -ne 0 ]; then
     fatal 'Failed to mount one or more required filesystems'
