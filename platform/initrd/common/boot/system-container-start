@@ -31,7 +31,7 @@ main()
   done
 
   for package_path in /mnt/startup/packages/*.vpkg; do
-    package_update "$package_path" "$is_newly_initialized" \
+    package_update "$package_path" "$is_newly_initialized" '' 't' \
       || fatal 'Failed to extract required software from disk/image'
 
     finished_packages="$(($finished_packages + 1))"
