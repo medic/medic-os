@@ -91,8 +91,8 @@ main()
   build_autoconf 'libusb-compat' \
     "$stdarg --enable-static=no --enable-shared=yes" &&
   \
-  build_autoconf 'ncurses' "$stdarg --with-shared" &&
-  builder_create_library_aliases 'ncurses' "$prefix" 'ncurses' 'tinfo' &&
+  build_autoconf 'ncurses' \
+    "$stdarg --without-x --with-shared --with-termlib" &&
   \
   builder_remove_static_libraries 'form' 'form_g' \
     'menu' 'menu_g' 'ncurses' 'ncurses_g' 'ncurses++' 'panel' 'panel_g' &&

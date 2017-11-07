@@ -52,7 +52,7 @@ build-ncurses: build-pv
 	@./scripts/logger 'ncurses' '${PLATFORM}' \
 	  'cd source/ncurses && \
 	    CPPFLAGS=-P ./configure \
-              --prefix=/usr --with-shared --without-x && \
+              --prefix=/usr --with-shared --without-x --with-termlib && \
 	    ${MAKE} all CFLAGS="${CFLAGS}" && \
 		${MAKE} install DESTDIR="${INITRD_PATH}"'
 
