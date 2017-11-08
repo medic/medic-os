@@ -265,7 +265,7 @@ main()
       --with-erlang='$prefix/lib/erlang/usr/include' \
       --with-js-include='$prefix/include/js' --with-js-lib='$prefix/lib'" &&
   \
-  build_npm_local 'nodelint' "$prefix" &&
+  build_npm_remote 'nodelint' "$prefix" &&
   \
   if [ "`build_version 'node' 2`" -ge 10 ]; then
     build_npm_remote 'node-gyp' "$prefix"
@@ -280,8 +280,8 @@ main()
   build_npm_remote 'hbs@4' "$prefix" &&
   build_npm_remote 'grunt-cli' "$prefix" &&
   \
-  build_npm_local 'node-fs-ext' "$prefix" 't' &&
-  build_npm_local 'node-gammu-json' "$prefix" &&
+  build_npm_remote 'node-fs-ext' "$prefix" 't' &&
+  build_npm_remote 'node-gammu-json' "$prefix" &&
   \
   # Maven: make reinstall safe
   builder_clear_java_directory 'java' "$prefix" &&
