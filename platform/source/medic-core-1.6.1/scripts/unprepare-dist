@@ -4,9 +4,13 @@ set -o pipefail
 
 prefix="$1"
 
-if ! [ -d "$prefix" ]; then
+if [ "$#" -lt 1 ]; then
   echo "Usage: $0 <prefix>" >&2
   exit 111
+fi
+
+if [ ! -d "$prefix" ]; then
+  exit 0
 fi
 
 (cd "$prefix" &&
