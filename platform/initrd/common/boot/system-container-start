@@ -1,5 +1,9 @@
 #!/bin/sh
 
+export logger_suppress_output='t'
+export logger_suppress_messages='t'
+
+source '/boot/include/logger'
 source '/boot/include/utility'
 source '/boot/include/startup'
 source '/boot/include/package'
