@@ -57,7 +57,9 @@ build-ncurses: build-pv
 		${MAKE} install DESTDIR="${INITRD_PATH}"'
 
 copy-ncurses:
-	@true
+	@cd "${INITRD_PATH}/lib" && \
+	  ln -sf libncurses.so ../usr/lib/libtinfo.so && \
+	  ln -sf libncurses.so ../usr/lib/libtinfo.so.5
 
 clean-ncurses:
 	@if [ -h source/ncurses ]; then \
