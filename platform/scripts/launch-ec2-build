@@ -286,7 +286,7 @@ main() {
          \
          echo 'Starting Medic OS build process:' >&2 &&
          sudo make all \
-           PLATFORM='$platform' $build_options &&
+           URL='$mirror_url' PLATFORM='$platform' $build_options &&
          \
          echo 'Medic OS build complete.' >&2 &&
          \
