@@ -3,7 +3,7 @@ attr, https://download.savannah.gnu.org/releases/attr/attr-2.4.47.src.tar.gz
 ant, https://archive.apache.org/dist/ant/source/apache-ant-1.9.4-src.tar.gz
 bladox-tools, https://medic.s3.amazonaws.com/os/mirror/bladox-tools-1.5.24.tar.xz
 bzip2, http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
-couchdb, https://apache.osuosl.org/couchdb/source/1.6.1/apache-couchdb-1.6.1.tar.gz
+couchdb, https://apache.osuosl.org/couchdb/source/1.7.0/apache-couchdb-1.7.0.tar.gz
 couchdb-lucene, https://medic.s3.amazonaws.com/os/mirror/couchdb-lucene-1.0.2.tar.gz
 curl, https://curl.haxx.se/download/curl-7.35.0.tar.lzma
 diffutils, https://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz
@@ -14,11 +14,10 @@ gammu-json, https://github.com/medic/gammu-json.git
 garden-maker, https://github.com/garden20/garden_maker.git
 gawk, https://ftp.gnu.org/gnu/gawk/gawk-4.1.4.tar.xz
 git, https://www.kernel.org/pub/software/scm/git/git-2.4.6.tar.xz
-icu, https://ssl.icu-project.org/files/icu4c/51.2/icu4c-51_2-src.tgz
+icu, https://ssl.icu-project.org/files/icu4c/60.1/icu4c-60_1-src.tgz
 inotify-tools, https://github.com/downloads/rvoicilas/inotify-tools/inotify-tools-3.14.tar.gz
 js, https://ftp.mozilla.org/pub/mozilla.org/js/js185-1.0.0.tar.gz
 jq, https://github.com/stedolan/jq/releases/download/jq-1.5/jq-1.5.tar.gz
-medic-transport, https://github.com/medic/medic-transport.git
 libffi, https://mirrors.kernel.org/sources.redhat.com/libffi/libffi-3.0.13.tar.gz
 libidn, https://ftp.gnu.org/gnu/libidn/libidn-1.27.tar.gz
 libpcap, http://www.tcpdump.org/release/libpcap-1.7.4.tar.gz
