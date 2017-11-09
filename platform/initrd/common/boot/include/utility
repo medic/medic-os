@@ -143,7 +143,7 @@ fatal()
 
 log()
 {
-  if [ "$verbose" ]; then
+  if [ -z "$logger_suppress_debug" ]; then
     emit "Debug: $*"
   fi
 }

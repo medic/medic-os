@@ -1,5 +1,6 @@
 #!/bin/sh
 
+export logger_suppress_debug='t'
 export logger_suppress_output='t'
 export logger_suppress_messages=''
 
