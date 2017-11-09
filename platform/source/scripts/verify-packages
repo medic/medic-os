@@ -96,8 +96,8 @@ main()
     || fatal 'Failed to find a required binary in medic-core/sbin'
 
   check_binaries 'medic-core' 'bin' \
-    node couchdb erl gammu curl ssh rsync lrzip lzma \
-      xdelta3 diff patch getfacl getfattr openssl kanso npm nodelint \
+    node couchdb erl gammu curl ssh rsync lrzip lzma eslint \
+      xdelta3 diff patch getfacl getfattr openssl kanso npm \
 	    || fatal 'Failed to find a required binary in medic-core/bin'
 
   check_binaries 'java' 'bin' java \

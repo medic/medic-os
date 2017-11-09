@@ -40,8 +40,7 @@ rename()
     fi
   done &&
   \
-  for pkg in rebar nodelint gammu-json \
-    node-gammu-json node-fs-ext garden_maker; do
+  for pkg in rebar gammu-json node-fs-ext garden_maker; do
     \
     if [ -d "$pkg" ]; then
       mv "$pkg" "`echo "$pkg" | tr '_' '-'`-devel";
@@ -103,8 +102,6 @@ apply_patches()
     < ../../../../patches/js-fix-makefile-loop.diff) &&
   (cd maven && patch -s -p1 \
     < ../../patches/maven-preserve-destination.diff) &&
-  (cd nodelint && patch -s -p1 \
-    < ../../patches/nodelint-install-script.diff) &&
   (cd ncurses && patch -s -p1 \
     < ../../patches/ncurses-reference-fix.diff) &&
   (cd inotify-tools && patch -s -p1 \

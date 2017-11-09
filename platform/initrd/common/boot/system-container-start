@@ -1,10 +1,10 @@
 #!/bin/sh
 
 export logger_suppress_output='t'
-export logger_suppress_messages='t'
+export logger_suppress_messages=''
 
-source '/boot/include/logger'
 source '/boot/include/utility'
+source '/boot/include/logger'
 source '/boot/include/startup'
 source '/boot/include/package'
 source '/boot/include/template'

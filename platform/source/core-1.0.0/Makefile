@@ -58,8 +58,8 @@ build-ncurses: build-pv
 
 copy-ncurses:
 	@cd "${INITRD_PATH}/lib" && \
-	  ln -sf libncurses.so ../usr/lib/libtinfo.so && \
-	  ln -sf libncurses.so ../usr/lib/libtinfo.so.5
+	  ln -sf ../usr/lib/libncurses.so libtinfo.so && \
+	  ln -sf ../usr/lib/libncurses.so libtinfo.so.5
 
 clean-ncurses:
 	@if [ -h source/ncurses ]; then \

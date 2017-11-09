@@ -361,26 +361,6 @@ build_make_install()
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
 
-build_npm_local()
-{
-  local name="$1"
-  local prefix="$2"
-  local is_native="$3"
-
-  builder_should_run "$name" || return 0
-
-  local args='-g --verbose'
-
-  if [ "$CACHE_ENABLED" -a "$is_native" ]; then
-    args="$args --unsafe-perm"
-  fi
-
-  (cd "$name" && unset MAKE &&
-    "$prefix/bin/npm" install $args) 2>&1 | log "$name"
-  
-  builder_check_status "$name" "${PIPESTATUS[0]}"
-}
-
 build_npm_remote()
 {
   local name="$1"
@@ -389,11 +369,7 @@ build_npm_remote()
 
   builder_should_run "$name" || return 0
 
-  local args='-g --verbose'
-
-  if [ "$CACHE_ENABLED" -a "$is_native" ]; then
-    args="$args --unsafe-perm"
-  fi
+  local args='-g --verbose --unsafe-perm'
 
   (unset MAKE && "$prefix/bin/npm" \
     install $args "$name") 2>&1 | log "$name"
