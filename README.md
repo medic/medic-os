@@ -148,7 +148,7 @@ environments:
 
 ```shell
 cd platform/source/medic-core &&
-  sudo make ROOT=/srv/software/medic-core/v1.6.1/x64
+  sudo make ROOT=/srv/software/medic-core/v1.7.0/x64
 ```
 
 We recommend doing this in a `screen` session, as it can take 60-90
@@ -160,7 +160,7 @@ If you'd rather not do this manually, try running the following:
 
 ```shell
 source medic-os/platform/initrd/common/boot/include/utility &&
-prepend_paths /srv/software/medic-core/v1.6.1/x64
+prepend_paths /srv/software/medic-core/v1.7.0/x64
 ```
 
 To start CouchDB as an unprivileged user, you currently need to modify
@@ -168,7 +168,7 @@ the ownership of a few directories. This will be automated in a future
 release:
 
 ```shell
-prefix='/srv/software/medic-core/v1.6.1/x64' &&
+prefix='/srv/software/medic-core/v1.7.0/x64' &&
 for dir in var/log var/lib var/run etc; do
   sudo chown -R "`id -un`:`id -gn`" "$prefix/$dir/couchdb";
 done
@@ -249,7 +249,7 @@ has its own subdirectory beneath `software`. These directories are further
 divided by version and architecture, if applicable.  Symbolic links are
 maintained for a "default" version and architecture. As an example, binaries for
 `medic-core` can always be found beneath `/srv/software/medic-core/current/default`;
-version `1.6.1` for `x64` can be found at `/srv/software/medic-core/v1.6.1/x64`.
+version `1.7.0` for `x64` can be found at `/srv/software/medic-core/v1.7.0/x64`.
 
 The `storage` directory contains service-specific data that is generated during
 normal use of the system. Each package has its own directory beneath `storage`,
