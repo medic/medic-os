@@ -95,8 +95,5 @@ up='../../../../..'
   rm -f tcpdump.*) &&
 \
 (cd "$prefix/lib/node_modules" &&
-  rm -rf node-gyp npm/man nodelint/man1) &&
-\
-(cd "$prefix/lib/node_modules/medic-transport/node_modules" &&
-  rm -rf node-gammu-json && ln -sf ../../node-gammu-json)
+  rm -rf node-gyp npm/man nodelint/man1)
 
