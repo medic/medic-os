@@ -1,0 +1,6 @@
+version: '2'
+
+services:
+  medic-os:
+    build: .
+    image: medic/medic-os:1.7.1
