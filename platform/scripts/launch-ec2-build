@@ -99,7 +99,7 @@ main() {
       flavor_user='ubuntu'
       flavor_name='Ubuntu Linux'
       flavor_update_command='apt-get -qy update'
-      flavor_upgrade_command='apt-get -qy upgrade'
+      flavor_upgrade_command='DEBIAN_FRONTEND=noninteractive apt-get -qy upgrade'
     ;;
     redhat)
       flavor_user='ec2-user'
