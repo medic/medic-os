@@ -301,13 +301,13 @@ java-pkg:
 
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 16132 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 17100 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-docs-pkg:
 	@echo -n 'Compressing package 'medic-core-docs'... ' && \
 	scripts/build-docs-package \
-	  'medic-core-docs' 16132 /srv/software/medic-core && \
+	  'medic-core-docs' 17100 /srv/software/medic-core && \
 	echo 'done.'
 
 medic-rdbms-pkg:
