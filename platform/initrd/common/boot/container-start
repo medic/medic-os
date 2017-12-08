@@ -14,21 +14,8 @@ main()
   cd "$dirname" \
     || fatal "Failed to locate script; check permissions"
 
-  # Mount all filesystems:
-  #   Do this before changing our filesystem root; the
-  #   supervisor library requires a functioning /proc and /sys.
-
-  info 'Bind mounting filesystems...'
-
-  bind_mount_special_filesystems "$root" \
-    proc /proc sys /sys dev /dev devpts /dev/pts
-
-  if [ "$?" -ne 0 ]; then
-    fatal 'Failed to mount one or more required filesystems'
-  fi
-
-  exec chroot "$root" "/boot/system-container-start"
-  fatal 'Root directory change failed'
+  exec "/boot/system-container-start"
+  fatal 'Container start failed'
 }
 
 main "$@"

@@ -25,6 +25,10 @@ merge_environment()
   export PATH="$java_root/bin:$java_root/java/bin:$PATH"
   export CONCIERGE_PASSWD_PATH="$PACKAGE_STORAGE/../concierge/passwd"
 
+  if [ -r /etc/os-release ]; then
+    source /etc/os-release
+  fi
+
   return 0
 }
 
