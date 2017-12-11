@@ -62,6 +62,9 @@ download: require-root reset-time prepare-tree
 	  ${QMAKE} force-move-downloaded; \
 	fi
 
+docker:
+	@docker-compose build
+
 # Private targets
 
 require-root:
