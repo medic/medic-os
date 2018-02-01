@@ -38,7 +38,7 @@ package_extract_metadata()
   local path="$1"
   local metadata_key="$2"
 
-  ar -p "$path" "$metadata_key" 2>/dev/null
+  busybox ar -p "$path" "$metadata_key" 2>/dev/null
   return "$?"
 }
 
@@ -213,7 +213,7 @@ package_install()
 
   log "Decompressing package '$package'"
 
-  ar -p "$path" package.tar.xz \
+  busybox ar -p "$path" package.tar.xz \
     | xz -dc > "$path_uncompressed"
 
   if [ "$?" -ne 0 ]; then

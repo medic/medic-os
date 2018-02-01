@@ -70,7 +70,14 @@ create_system_group_if_necessary()
     return 0
   fi
 
-  addgroup -S -g "$group_gid" "$group"
+  if [ "$ID_LIKE" = 'debian' ]; then
+    # Ubuntu userspace
+    groupadd -r -g "$group_gid" "$group"
+  else
+    # Busybox userspace
+    busybox addgroup -S -g "$group_gid" "$group"
+  fi
+
   return "$?"
 }
 
@@ -86,8 +93,15 @@ create_system_user_if_necessary()
     return 0
   fi
 
-  adduser -G "$user_group" -D -H -u "$user_uid" \
-    -h /var/empty -g "$user_gecos" -s /bin/sh "$user"
+  if [ "$ID_LIKE" = 'debian' ]; then
+    # Ubuntu userspace
+    useradd -g "$user_group" -u "$user_uid" \
+      -d /var/empty -c "$user_gecos" -s /bin/sh "$user"
+  else
+    # Busybox userspace
+    busybox adduser -G "$user_group" -D -H -u "$user_uid" \
+      -h /var/empty -g "$user_gecos" -s /bin/sh "$user"
+  fi
 
   return "$?"
 }

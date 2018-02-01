@@ -37,8 +37,9 @@ xen: build-xen-image
 
 initrd: build-initrd
 native: build-native-tarball
+docker: build-docker-staging
 
-images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae
+images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-docker-staging build-x86-image-nopae
 packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg
 
 
@@ -64,7 +65,7 @@ compiler:
 
 clean:
 	rm -rf output/* && \
-	rm -rf staging/tarball
+	rm -rf staging/tarball staging/docker
 
 distclean: clean clean-images clean-staging clean-source
 
@@ -164,6 +165,21 @@ build-ami-image:
 	  -i 'output/image' -r "$$architecture" >/dev/null || exit "$$?"; \
 	\
 	rm -f output/image; \
+	echo 'done.'
+
+build-docker-staging:
+	@echo -n 'Staging files for Docker... ' && \
+	\
+	base_dir='staging/docker/${PLATFORM}' && \
+	staging_dir="$$base_dir/${SYSTEM_IMAGE_ID}-docker" && \
+	\
+	mkdir -p "$$staging_dir" && \
+	cp -a initrd/common/boot "$$staging_dir/" && \
+	(cd "$$staging_dir" && mkdir -p srv mnt/startup) && \
+	\
+	cp -a 'images/${PLATFORM}/iso/packages' \
+	  "$$staging_dir/mnt/startup/" && \
+	\
 	echo 'done.'
 
 build-native-tarball:
