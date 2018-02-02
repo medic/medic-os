@@ -243,7 +243,7 @@ generate_random_passwd()
 
   rm -f "$passwd_file" &&
   echo "$passwd" > "$passwd_file" &&
-  chown concierge:postgresql "$passwd_file" &&
+  chown root:postgresql "$passwd_file" &&
   chmod 0440 "$passwd_file"
 
   if [ "$?" -ne 0 ]; then

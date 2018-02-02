@@ -40,7 +40,7 @@ native: build-native-tarball
 docker: build-docker-staging
 
 images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-docker-staging build-x86-image-nopae
-packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg
+packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg java-pkg system-services-pkg vm-tools-pkg
 
 
 # Public targets
@@ -305,11 +305,6 @@ strip-binaries:
 	./scripts/strip-binaries packages && \
 	echo 'done.'
 
-concierge-pkg:
-	@echo -n 'Compressing package 'concierge'... ' && \
-	scripts/build-package 'concierge' 10112 '${PLATFORM}' && \
-	echo 'done.'
-
 java-pkg:
 	@echo -n 'Compressing package 'java'... ' && \
 	scripts/build-package 'java' 17801 '${PLATFORM}' && \
@@ -356,14 +351,6 @@ vm-tools-docs-pkg:
 	@echo -n 'Compressing package 'vm-tools-docs'... ' && \
 	scripts/build-docs-package \
 	  'vm-tools-docs' 94612 /srv/software/vm-tools && \
-	echo 'done.'
-
-shrink-gardener:
-	@./scripts/shrink-gardener
-
-gardener-pkg: shrink-gardener
-	@echo -n 'Compressing package 'gardener'... ' && \
-	scripts/build-package 'gardener' 11002 '${PLATFORM}' && \
 	echo 'done.'
 
 convert-boot-logo:

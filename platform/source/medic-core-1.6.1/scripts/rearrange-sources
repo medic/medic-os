@@ -40,7 +40,7 @@ rename()
     fi
   done &&
   \
-  for pkg in rebar gammu-json node-fs-ext garden_maker; do
+  for pkg in rebar gammu-json node-fs-ext; do
     \
     if [ -d "$pkg" ]; then
       mv "$pkg" "`echo "$pkg" | tr '_' '-'`-devel";
@@ -94,8 +94,6 @@ apply_patches()
     < ../../patches/gammu-fix-files-backend.diff) &&
   (cd gammu && patch -s -p1 \
     < ../../patches/gammu-utf16-sms-multipart.diff) &&
-  (cd garden-maker && patch -s -p1 \
-    < ../../patches/garden-maker-medic.diff) &&
   (cd icu && patch -s -p2 \
     < ../../../patches/icu-libicudata-linkage.diff) &&
   (cd js && patch -s -p1 \
@@ -123,23 +121,6 @@ enforce_minimum_size()
   return 1
 }
 
-update_garden_maker()
-{
-  local assets_path='garden-maker/assets'
-
-  for i in `seq 1 5`; do
-    (cd garden-maker && ./update.sh) &&
-      enforce_minimum_size 10240 "$assets_path/futon.zip" &&
-        enforce_minimum_size 10240 "$assets_path/dashboard.couch" && return 0
-
-    echo 'Failure while updating garden-maker; retrying...' >&2
-  done
-
-  echo 'Too many failures while updating garden-maker; aborting' >&2
-  return 1
-}
-
-
 finished_path="$base_dir/../../status/medic-core.finished"
 
 if [ -f "$finished_path" ]; then
@@ -157,8 +138,6 @@ echo -n "Creating symbolic links... " >&2 &&
   symlink && echo 'done.' >&2 &&
 echo -n "Applying patches... " >&2 &&
   apply_patches && echo 'done.' >&2 &&
-echo "Updating garden-maker:" >&2 &&
-  update_garden_maker &&
 \
 touch "$finished_path"
 

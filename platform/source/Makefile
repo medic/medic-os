@@ -115,7 +115,7 @@ clean-medic-core:
 build-medic-core:
 	@(cd medic-core && \
 	  ./scripts/unprepare-dist '${MEDIC_CORE_ROOT}' && \
-	  ${QMAKE} all preload \
+	  ${QMAKE} all \
 	    BITS='${BITS}' PLATFORM='${PLATFORM}' \
 	    ROOT='${MEDIC_CORE_ROOT}' PARALLEL='${PARALLEL}')
 
@@ -128,10 +128,6 @@ copy-medic-core:
 	  cp -R /srv/software/medic-core \
 	    ../../packages/medic-core/software/medic-core)
 	@echo 'done.'
-
-preload-medic-core:
-	@(cd medic-core && \
-	  ${QMAKE} preload ROOT='${MEDIC_CORE_ROOT}')
 
 
 medic-rdbms: build-medic-rdbms copy-medic-rdbms

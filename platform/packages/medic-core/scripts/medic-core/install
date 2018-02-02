@@ -41,21 +41,10 @@ install()
   chmod 0750 "$couchdb_settings" \
     "$PACKAGE_STORAGE/couchdb" "$PACKAGE_STORAGE/couchdb-lucene" &&
   \
-  chmod 0700 "$couchdb_settings/private" &&
-  chmod 0700 "$PACKAGE_SETTINGS/openssh/private" &&
-  \
-  chown -R gammu:gammu \
-    "$PACKAGE_STORAGE/gammu" "$PACKAGE_SETTINGS/gammu" &&
-  \
-  find "$PACKAGE_STORAGE/gammu" \
-    -type d -exec chmod 0750 {} \; &&
-  \
-  for binary in \
-    "$PACKAGE_ROOT/bin/gammu-json" \
-    "$PACKAGE_ROOT/bin/gammu-smsd-inject"; do
-    \
-    chown gammu:gammu-inject "$binary" && chmod 4110 "$binary"
-  done &&
+  chmod 0700 \
+    "$SERVICE_PASSWD_PATH" \
+    "$couchdb_settings/private" \
+    "$PACKAGE_SETTINGS/openssh/private" &&
   \
   if [ -z "$is_update" ]; then
     info 'Installing default CouchDB databases'

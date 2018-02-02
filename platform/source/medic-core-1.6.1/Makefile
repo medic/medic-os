@@ -43,13 +43,6 @@ status:
         	'Building package `medic-core` for `${PLATFORM}`'; \
 	fi
 
-gardenize:
-	@./scripts/gardenize-couchdb '${ROOT}'
-
-preload: gardenize
-	@./scripts/preload-couchdb \
-	  '${ROOT}' '${CHANNEL}' '${DISTRIBUTION}'
-
 clean-logs:
 	rm -f logs/*/*.log
 

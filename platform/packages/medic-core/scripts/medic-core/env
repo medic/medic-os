@@ -24,10 +24,8 @@ merge_environment()
   export LD_LIBRARY_PATH="$root/lib:$LD_LIBRARY_PATH"
 
   export JAVA_HOME="$java_root"
+  export SERVICE_PASSWD_PATH="$PACKAGE_STORAGE/passwd"
   export PATH="$java_root/bin:$java_root/java/bin:$PATH"
-
-  export GAMMU_SMS_DEVICES='/dev/ttyUSB? /dev/ttyACM? /dev/ttyHS?'
-  export CONCIERGE_PASSWD_PATH="$PACKAGE_STORAGE/../concierge/passwd"
 
   return 0
 }

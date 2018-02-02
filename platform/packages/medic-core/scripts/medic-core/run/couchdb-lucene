@@ -20,9 +20,9 @@ start()
   merge_environment /srv || return 255
 
   # Wait for account password to be set:
-  #  Concierge will create an account for us to use.
+  #  The medic-core package will create an account for us.
 
-  wait_for_passwd_file "$CONCIERGE_PASSWD_PATH/lucene"
+  wait_for_passwd_file "$SERVICE_PASSWD_PATH/lucene"
 
   # Update password:
   #  This rewrites the CouchDB URI in couchdb-lucene.ini.

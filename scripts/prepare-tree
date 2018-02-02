@@ -60,12 +60,7 @@ create_empty_directories()
       packages/system-services/storage/system-services \
       packages/system-services/storage/system-services/logs \
       packages/system-services/settings/system-services/cron \
-      packages/medic-core/storage/medic-core/gammu \
-      packages/medic-core/storage/medic-core/gammu/inbox \
-      packages/medic-core/storage/medic-core/gammu/outbox \
-      packages/medic-core/storage/medic-core/gammu/sent \
-      packages/medic-core/storage/medic-core/gammu/errors \
-      packages/medic-core/storage/medic-core/gammu/logs \
+      packages/medic-core/storage/medic-core/passwd \
       packages/medic-core/storage/medic-core/nginx \
       packages/medic-core/storage/medic-core/nginx/state \
       packages/medic-core/storage/medic-core/nginx/data \
@@ -87,10 +82,6 @@ create_empty_directories()
       packages/medic-rdbms/storage/medic-rdbms/postgresql/passwd \
       packages/medic-rdbms/settings/medic-rdbms/postgresql/env \
       packages/medic-rdbms/settings/medic-rdbms/postgresql/templates/postgresql.conf.d \
-      packages/concierge/storage \
-      packages/concierge/storage/concierge \
-      packages/concierge/storage/concierge/passwd \
-      packages/concierge/storage/concierge/logs \
       packages/gardener/storage \
       packages/gardener/storage/gardener \
       packages/gardener/storage/gardener/data \

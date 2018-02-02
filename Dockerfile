@@ -12,23 +12,16 @@ RUN ln -sf /bin/bash /bin/sh
 RUN apt-get -q=2 -y install apt-utils busybox gawk less psmisc vim xz-utils
 
 RUN groupadd avahi
-RUN groupadd concierge-auth
 RUN groupadd couchdb
 RUN groupadd couchdb-lucene
-RUN groupadd gammu
-RUN groupadd gammu-inject
-RUN groupadd gardener
 RUN groupadd nobody
 RUN groupadd postgresql
 RUN groupadd sshd
 RUN groupadd vm
 
 RUN useradd -rd /var/empty -c 'Service - Avahi' -g avahi avahi
-RUN useradd -rd /var/empty -c 'Service - Concierge' -g concierge-auth concierge
 RUN useradd -rd /var/empty -c 'Service - CouchDB' -g couchdb couchdb
 RUN useradd -rd /var/empty -c 'Service - Lucene' -g couchdb-lucene couchdb-lucene
-RUN useradd -rd /var/empty -c 'Service - Gammu' -g gammu gammu
-RUN useradd -rd /var/empty -c 'Service - Gardener' -g gardener gardener
 RUN useradd -rd /var/empty -c 'Service - Postgres' -g postgresql postgresql
 RUN useradd -rd /var/empty -c 'Service - Secure Shell' -g sshd sshd
 RUN useradd -rd /var/empty -c 'Legacy - VM Login' -g vm vm
