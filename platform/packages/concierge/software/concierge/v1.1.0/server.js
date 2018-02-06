@@ -22,6 +22,8 @@ var child = require('child_process'),
 var user = 'vm';
 var protocol = 'http://';
 var server = 'localhost:5984';
+var server_lucene = 'localhost:5985';
+var server_node = 'localhost:5986'; // port for local CouchDB node
 var api_server = 'localhost:5988';
 var private_path = '/srv/scripts/concierge/private';
 var system_passwd_dir = '/srv/storage/concierge/passwd';
@@ -286,8 +288,9 @@ var poll_required_services = function (_req, _res, _callback) {
       }));
     }
 
+    var info;
     try {
-      var info = JSON.parse(_body);
+      info = JSON.parse(_body);
     } catch (_e) {
       return _callback(_.extend(rv, {
         failure: true,
@@ -299,7 +302,7 @@ var poll_required_services = function (_req, _res, _callback) {
       ready: true, version: info.version,
       detail: 'All required services are currently running'
     }));
-  });  
+  });
 };
 
 /**
@@ -369,8 +372,9 @@ var regenerate_couchdb_views = function (_database_url, _ddoc_name,
       });
     }
 
+    var ddoc;
     try {
-      var ddoc = JSON.parse(_body);
+      ddoc = JSON.parse(_body);
     } catch (_e) {
       return _callback({
         error: true, detail: _e,
@@ -664,7 +668,7 @@ var add_openssh_public_key = function (_req, _key, _callback) {
 
   addkey.on('exit', function (_code, _signal) {
 
-    if (_code != 0) {
+    if (_code !== 0) {
       return request_error(
         'Failed to add public key(s): internal error',
           _req, _callback
@@ -707,7 +711,7 @@ var save_system_password = function (_name, _passwd, _callback) {
       });
     });
   });
-}
+};
 
 /**
  * read_system_password:
@@ -754,7 +758,7 @@ var set_unix_password = function (_req, _passwd, _confirm, _callback) {
 
     passwd.on('exit', function (_code, _signal) {
 
-      if (_code != 0) {
+      if (_code !== 0) {
         return request_error(
           'Password change failed: password utility indicated a failure',
             _req, _callback
@@ -780,7 +784,7 @@ var is_builtin_user_name = function (_user_name) {
 
   /* Reserved */
   var builtin_users = [
-    'admin', 'lucene', 'gardener', 'transport', 'concierge' 
+    'admin', 'lucene', 'gardener', 'transport', 'concierge'
   ];
 
   /* Normalize */
@@ -798,7 +802,7 @@ var _delete_couchdb_user = function (_user_name, _is_admin,
                                      _request_params, _callback) {
 
   var users_url = protocol + server + '/_users/';
-  var config_url = protocol + server + '/_config/';
+  var config_url = protocol + server_node + '/_config/';
 
   /* Primary URL:
    *   Either the `admins` document or the user document. */
@@ -852,8 +856,9 @@ var _delete_couchdb_user = function (_user_name, _is_admin,
         return _callback();
       }
 
+      var doc;
       try {
-        var doc = JSON.parse(_body);
+        doc = JSON.parse(_body);
       } catch (_e) {
         return _callback();
       }
@@ -880,7 +885,7 @@ var _delete_couchdb_user = function (_user_name, _is_admin,
 var delete_couchdb_unknown_users = function (_query_admins_list,
                                              _request_params, _callback) {
   var url = (
-    protocol + server + '/_config/' +
+    protocol + server_node + '/_config/' +
       (_query_admins_list ? 'admins' : 'users')
   );
 
@@ -898,8 +903,9 @@ var delete_couchdb_unknown_users = function (_query_admins_list,
       });
     }
 
+    var doc;
     try {
-      var doc = JSON.parse(_body);
+      doc = JSON.parse(_body);
     } catch (_e) {
       return _callback({
         error: true,
@@ -1249,7 +1255,7 @@ var setup_couchdb_service_account = function (_req, _account_name,
 
     return _callback(_err, system_passwd);
   });
-};      
+};
 
 /**
  * make_couchdb_user_creation_request:
@@ -1313,7 +1319,7 @@ var make_couchdb_user_creation_request = function (_user, _passwd,
 make_couchdb_password_change_request = function (_name, _password,
                                                  _request_template) {
 
-  var admins_url = server + '/_config/admins';
+  var admins_url = server_node + '/_config/admins';
 
   var req = {
     body: JSON.stringify(_password),
@@ -1432,7 +1438,13 @@ var run_background_setup_tasks = function (_req, _user, _passwd, _callback) {
   };
 
   var db_path = '/medic';
-  var fti_path = '/_fti/local/medic/_design/medic';
+  // TODO: this path is no longer correct. _fti no longer exists (and shouldn't
+  //       be setup). Instead, just refer to port 5985 and drop _fti
+  //       e.g.
+  //       http://localhost:5984/_fti/local/medic/_design/medic
+  //       becomes
+  //       http://localhost:5985/local/medic/_design/medic
+  var fti_path = server_lucene + '/local/medic/_design/medic';
 
   /* Change passwords:
    *   The system and CouchDB passwords are modified here. */
@@ -1457,7 +1469,7 @@ var run_background_setup_tasks = function (_req, _user, _passwd, _callback) {
        *   with the CouchDB changes feed, effectively building any
        *   indexes that have been deleted or haven't been generated. */
 
-      var url = protocol + server + fti_path;
+      var url = protocol + server_lucene + fti_path;
       var req = { auth: { user: 'admin', pass: _passwd } };
 
       regenerate_couchdb_lucene_index(
@@ -1520,7 +1532,7 @@ var add_couchdb_defaults = function (_req, _admin_passwd, _callback) {
      *   Restrict CouchDB to valid users only. */
 
     function (_cb) {
-      var config_url = server + '/_config/couch_httpd_auth'
+      var config_url = server_node + '/_config/chttpd';
 
       put.body = '"true"';
       put.url = protocol + config_url + '/require_valid_user';
@@ -1531,13 +1543,13 @@ var add_couchdb_defaults = function (_req, _admin_passwd, _callback) {
         );
       });
     }
-  ], 
+  ],
 
   /* Completion */
   function (_err) {
     return _callback(_err);
   });
-}
+};
 
 /**
  * main:
