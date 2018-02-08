@@ -13,7 +13,7 @@ main()
   local password="`cat "$SERVICE_PASSWD_PATH/lucene"`" \
     || return 0
 
-  local serc="$PACKAGE_STORAGE/couchdb-lucene/templates/couchdb-lucene.ini.tmpl"
+  local src="$PACKAGE_STORAGE/couchdb-lucene/templates/couchdb-lucene.ini.tmpl"
   local dest="$PACKAGE_SETTINGS/couchdb-lucene/couchdb-lucene.ini"
 
   umask 266 &&
