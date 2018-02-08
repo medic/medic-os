@@ -13,10 +13,14 @@ main()
   local password="`cat "$SERVICE_PASSWD_PATH/lucene"`" \
     || return 0
 
-  export PASSWORD="$password" && template_expand 'mustache' \
-    "$PACKAGE_STORAGE/couchdb-lucene/templates/couchdb-lucene.ini.tmpl" \
-    "$PACKAGE_SETTINGS/couchdb-lucene/couchdb-lucene.ini"
-  
+  local serc="$PACKAGE_STORAGE/couchdb-lucene/templates/couchdb-lucene.ini.tmpl"
+  local dest="$PACKAGE_SETTINGS/couchdb-lucene/couchdb-lucene.ini"
+
+  umask 266 &&
+  export PASSWORD="$password" &&
+  template_expand 'mustache' "$src" "$dest" &&
+  chown couchdb-lucene "$dest"
+
   return "$?"
 }
 

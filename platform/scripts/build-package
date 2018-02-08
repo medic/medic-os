@@ -84,7 +84,7 @@ main()
   \
   # Gather and compress package contents
   (cd "$source_dir" &&
-    tar -cf - * | xz -9ec > "$staging_dir/package.tar.xz") &&
+    tar -cf - * | xz -c > "$staging_dir/package.tar.xz") &&
   \
   # Store the package's base name as metadata
   echo "$package" > "$staging_dir/name" &&

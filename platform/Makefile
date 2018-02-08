@@ -46,7 +46,7 @@ packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg java-
 # Public targets
 
 bootinit:
-	@(cd initrd/common && tar -cf - boot | xz -9ec) \
+	@(cd initrd/common && tar -cf - boot | xz -c) \
 	  > ../output/"${SYSTEM_IMAGE_NAME}-${DATE}-all-bootinit.tar.xz"
 
 compile-only:
@@ -196,14 +196,14 @@ build-native-tarball:
 	  "$$staging_dir/mnt/startup/" && \
 	\
 	(cd "$$staging_dir/../" && tar -cf - .) \
-	  | xz -9ec > "output/${SYSTEM_IMAGE_ID}-native.tar.xz" && \
+	  | xz -c > "output/${SYSTEM_IMAGE_ID}-native.tar.xz" && \
 	\
 	echo 'done.'
 
 compress-xen-image:
 	@echo -n 'Compressing Xen image... ' && \
 	\
-	xz -0qcf 'output/${SYSTEM_IMAGE_ID}-xen' \
+	xz -0 -cf 'output/${SYSTEM_IMAGE_ID}-xen' \
 	  > 'output/${SYSTEM_IMAGE_ID}-xen.xz' && \
 	\
 	echo 'done.'

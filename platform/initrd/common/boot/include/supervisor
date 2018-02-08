@@ -103,6 +103,7 @@ _supervisor_process()
     local pid="$!"
     local pid_file="$pkg_status_dir/volatile/$service.pid"
     local restart_file="$pkg_status_dir/volatile/$service.restart"
+    local postrun_script="$srv_dir/scripts/$package/postrun/$service"
 
     log "Started '$package/$service'; pid is '$pid'"
 
@@ -111,6 +112,10 @@ _supervisor_process()
 
     rm -f "$restart_file" \
       || log "Failed to remove '$restart_file'"
+
+    if [ -x "$postrun_script" ]; then
+      "$postrun_script"
+    fi
 
     _safe_waitpid "$pid"
     local status="$?"
@@ -220,7 +225,6 @@ _start_supervisor_process()
   local ppid_file="$pkg_status_dir/volatile/$service.ppid"
 
   if supervisor_is_service_watched "$package" "$service"; then
-    warn "Supervisor already running for '$package/$service'"
     return 0
   fi
 

@@ -9,7 +9,9 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get -q=2 -y update
 RUN apt-get -q=2 -y upgrade
 RUN ln -sf /bin/bash /bin/sh
-RUN apt-get -q=2 -y install apt-utils busybox gawk less psmisc vim xz-utils
+
+RUN apt-get -q=2 -y install \
+  apt-utils busybox gawk isc-dhcp-client less net-tools psmisc vim xz-utils
 
 RUN groupadd avahi
 RUN groupadd couchdb
