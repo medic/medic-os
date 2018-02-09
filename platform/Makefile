@@ -305,9 +305,19 @@ strip-binaries:
 	./scripts/strip-binaries packages && \
 	echo 'done.'
 
+horticulturalist-pkg:
+	@echo -n 'Compressing package 'horticulturalist'... ' && \
+	scripts/build-package 'horticulturalist' 00600 '${PLATFORM}' && \
+	echo 'done.'
+
 java-pkg:
 	@echo -n 'Compressing package 'java'... ' && \
 	scripts/build-package 'java' 17801 '${PLATFORM}' && \
+	echo 'done.'
+
+medic-api-pkg:
+	@echo -n 'Compressing package 'medic-api'... ' && \
+	scripts/build-package 'medic-api' 00100 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-pkg:
@@ -321,6 +331,11 @@ medic-core-docs-pkg:
 	  'medic-core-docs' 17100 /srv/software/medic-core && \
 	echo 'done.'
 
+medic-couch2pg-pkg:
+	@echo -n 'Compressing package 'medic-couch2pg'... ' && \
+	scripts/build-package 'medic-couch2pg' 10000 '${PLATFORM}' && \
+	echo 'done.'
+
 medic-rdbms-pkg:
 	@echo -n 'Compressing package 'medic-rdbms'... ' && \
 	scripts/build-package 'medic-rdbms' 95301 '${PLATFORM}' && \
@@ -332,9 +347,9 @@ medic-rdbms-docs-pkg:
 	  'medic-rdbms-docs' 95301 /srv/software/medic-rdbms && \
 	echo 'done.'
 
-medic-couch2pg-pkg:
-	@echo -n 'Compressing package 'medic-couch2pg'... ' && \
-	scripts/build-package 'medic-couch2pg' 10000 '${PLATFORM}' && \
+medic-sentinel-pkg:
+	@echo -n 'Compressing package 'medic-sentinel'... ' && \
+	scripts/build-package 'medic-sentinel' 00100 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:

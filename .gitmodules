@@ -1,0 +1,3 @@
+[submodule "platform/packages/horticulturalist/software/horticulturalist/current"]
+	path = platform/packages/horticulturalist/software/horticulturalist/current
+	url = https://github.com/medic/horticulturalist.git

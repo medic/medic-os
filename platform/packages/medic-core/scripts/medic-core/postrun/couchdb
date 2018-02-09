@@ -160,6 +160,7 @@ postinstall()
 
   create_couchdb_admin 'lucene' && 
   create_couchdb_admin 'medic-api' &&
+  create_couchdb_admin 'medic-couch2pg' &&
   create_couchdb_admin 'medic-sentinel' &&
   create_couchdb_admin 'horticulturalist'
 

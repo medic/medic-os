@@ -2,6 +2,29 @@
 
 srv_dir='/srv'
 
+wait_for_file()
+{
+  local file="$1"
+
+  while ! [ -f "$file" ]; do
+    sleep 1
+  done
+
+  return 0
+}
+
+wait_for_user()
+{
+  local user="$1"
+
+  while ! id -u "$user" &>/dev/null; do
+    [ "$?" -eq 0 ] && break
+    sleep 1
+  done
+
+  return 0
+}
+
 is_integer()
 {
   for n in "$@"; do
@@ -50,6 +73,52 @@ read_integer_file()
   fi
 
   return 255
+}
+
+create_system_group_if_necessary()
+{
+  local group="$1"
+  local group_gid="$2"
+  shift 2
+
+  if grep -q "^$group:" /etc/group; then
+    return 0
+  fi
+
+  if [ "$ID_LIKE" = 'debian' ]; then
+    # Ubuntu userspace
+    groupadd -r -g "$group_gid" "$group"
+  else
+    # Busybox userspace
+    busybox addgroup -S -g "$group_gid" "$group"
+  fi
+
+  return "$?"
+}
+
+create_system_user_if_necessary()
+{
+  local user="$1"
+  local user_uid="$2"
+  local user_gecos="$3"
+  local user_group="$4"
+  shift 4
+
+  if id -u "$user" &>/dev/null; then
+    return 0
+  fi
+
+  if [ "$ID_LIKE" = 'debian' ]; then
+    # Ubuntu userspace
+    useradd -g "$user_group" -u "$user_uid" \
+      -d /var/empty -c "$user_gecos" -s /bin/sh "$user"
+  else
+    # Busybox userspace
+    busybox adduser -G "$user_group" -D -H -u "$user_uid" \
+      -h /var/empty -g "$user_gecos" -s /bin/sh "$user"
+  fi
+
+  return "$?"
 }
 
 require_root()
