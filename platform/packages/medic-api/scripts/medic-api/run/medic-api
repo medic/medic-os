@@ -1,0 +1,32 @@
+#!/bin/sh -e
+
+source '/boot/include/utility'
+source '/boot/include/hypervisor'
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/../../medic-core/env" &&
+  merge_environment /srv &&
+  \
+  source "$base/../env" &&
+  merge_environment /srv &&
+  \
+  wait_for_file "$COUCH_PASSWD_FILE" &&
+  local passwd=`cat $COUCH_PASSWD_FILE` &&
+  \
+  export COUCH_NODE_NAME='couchdb@localhost' &&
+  export COUCH_URL="http://${PACKAGE_NAME}:$passwd@localhost:5984/medic" &&
+  \
+  local run_cmd="'`which node`' '$PACKAGE_SOFTWARE/current/server.js'" &&
+  \
+  exec /boot/timestamp \
+    su -pc "cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" medic-api \
+      >> "$logs/medic-api.log" 2>&1
+}
+
+start
+exit "$?"
+
