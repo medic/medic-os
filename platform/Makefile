@@ -97,6 +97,7 @@ clean-staging:
 	rm -rf staging/packages && \
 	rm -rf packages/vm-tools/software && \
 	rm -rf packages/medic-core/software && \
+	rm -rf packages/medic-rdbms/software && \
 	rm -rf 'staging/software/${PLATFORM}'/*
 
 clean-images:
