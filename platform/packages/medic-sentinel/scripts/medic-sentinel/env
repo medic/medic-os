@@ -1,0 +1,26 @@
+#!/bin/sh
+
+merge_environment()
+{
+  local version='0.1.0'
+  local name='medic-sentinel'
+
+  local prefix="$1"
+
+  export PACKAGE_NAME="$name"
+  export PACKAGE_VERSION="$version"
+
+  export MEDIC_SENTINEL_UID='97'
+  export MEDIC_SENTINEL_GID='97'
+
+  export PACKAGE_SCRIPTS="$prefix/scripts/$name"
+  export PACKAGE_STORAGE="$prefix/storage/$name"
+  export PACKAGE_SOFTWARE="$prefix/software/$name"
+  export PACKAGE_SETTINGS="$prefix/settings/$name"
+
+  export MEDIC_CORE_PACKAGE_STORAGE="$PACKAGE_STORAGE/../medic-core/"
+  export COUCH_PASSWD_FILE="${MEDIC_CORE_PACKAGE_STORAGE}/passwd/medic-sentinel"
+
+  return 0
+}
+

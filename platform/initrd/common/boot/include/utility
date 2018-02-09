@@ -13,18 +13,6 @@ wait_for_file()
   return 0
 }
 
-wait_for_user()
-{
-  local user="$1"
-
-  while ! id -u "$user" &>/dev/null; do
-    [ "$?" -eq 0 ] && break
-    sleep 1
-  done
-
-  return 0
-}
-
 is_integer()
 {
   for n in "$@"; do
