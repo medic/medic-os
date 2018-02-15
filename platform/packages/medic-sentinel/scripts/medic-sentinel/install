@@ -32,7 +32,11 @@ install()
     'Medic Sentinel Process Account' medic-sentinel &&
   \
   mkdir -p "$PACKAGE_STORAGE/logs" &&
-  chown -R medic-sentinel:medic-sentinel "$PACKAGE_SOFTWARE"
+  \
+  if id "$HORTICULTURALIST_USER" &>/dev/null; then
+    chown -R "$HORTICULTURALIST_USER:$HORTICULTURALIST_GROUP" \
+      "$PACKAGE_SOFTWARE"
+  fi
 
   return "$?"
 }

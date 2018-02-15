@@ -12,6 +12,8 @@ merge_environment()
 
   export MEDIC_SENTINEL_UID='97'
   export MEDIC_SENTINEL_GID='97'
+  export HORTICULTURALIST_USER='horticulturalist'
+  export HORTICULTURALIST_GROUP='horticulturalist'
 
   export PACKAGE_SCRIPTS="$prefix/scripts/$name"
   export PACKAGE_STORAGE="$prefix/storage/$name"

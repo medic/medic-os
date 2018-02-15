@@ -7,11 +7,14 @@ merge_environment()
 
   local prefix="$1"
 
+  export PREFIX="$prefix"
   export PACKAGE_NAME="$name"
   export PACKAGE_VERSION="$version"
 
   export HORTICULTURALIST_UID='95'
   export HORTICULTURALIST_GID='95'
+  export HORTICULTURALIST_USER="$name"
+  export HORTICULTURALIST_GROUP="$name"
 
   export PACKAGE_SCRIPTS="$prefix/scripts/$name"
   export PACKAGE_STORAGE="$prefix/storage/$name"
