@@ -211,13 +211,13 @@ postinstall()
     fatal "Failed to create an interactive admin account"
   fi
 
+  info 'New CouchDB Administrative User: medic'
+
   if [ "$DOCKER_ADMIN_PASSWORD" ]; then
-    info 'User: medic'
     warn 'A new administrative password was explicitly set via the CLI'
     info 'The new administrative password will not be displayed'
   else
-    info 'User: medic'
-    info "Password: `read_password admin`"
+    info "New CouchDB Administrative Password: `read_password medic`"
     warn 'A new administrative password has been randomly assigned'
     warn 'This will not be displayed again; please make a note of it'
   fi
