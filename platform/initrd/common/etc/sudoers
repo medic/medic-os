@@ -4,3 +4,5 @@ Defaults	secure_path = /usr/sbin:/usr/bin:/sbin:/bin:/boot
 root		ALL = (ALL) ALL
 vm		ALL = NOPASSWD: ALL
 
+#includedir	/etc/sudoers.d
+

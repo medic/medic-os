@@ -20,11 +20,15 @@ start()
   export COUCH_NODE_NAME='couchdb@localhost' &&
   export COUCH_URL="http://${PACKAGE_NAME}:$passwd@localhost:5984/medic" &&
   \
-  local run_cmd="'`which node`' '$PACKAGE_SOFTWARE/current/server.js'" &&
+  local script="'$PACKAGE_SOFTWARE/current/server.js'" &&
+  local run_cmd="'`which node`' $script" &&
+  \
+  cd "$PACKAGE_SOFTWARE/current" &&
+  wait_for_file "$script" &&
   \
   exec /boot/timestamp \
-    su -pc "cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" medic-api \
-      >> "$logs/medic-api.log" 2>&1
+    su -c "cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" medic-api \
+      >> "$PACKAGE_STORAGE/logs/medic-api.log" 2>&1
 }
 
 start

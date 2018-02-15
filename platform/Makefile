@@ -40,7 +40,7 @@ native: build-native-tarball
 docker: build-docker-staging
 
 images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-docker-staging build-x86-image-nopae
-packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg java-pkg system-services-pkg vm-tools-pkg
+packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg horticulturalist-pkg medic-api-pkg medic-sentinel-pkg java-pkg system-services-pkg vm-tools-pkg
 
 
 # Public targets

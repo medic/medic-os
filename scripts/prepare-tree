@@ -11,8 +11,9 @@ fatal()
 
 set_permissions()
 {
-  chmod 1777 \
-    platform/initrd/common/tmp &&
+  chmod 1777 platform/initrd/common/tmp &&
+  chmod 0440 platform/initrd/common/etc/sudoers &&
+  chmod 0750 platform/initrd/common/etc/sudoers.d
 
   return "$?"
 }
@@ -33,6 +34,7 @@ create_empty_directories()
       images/noarch/iso/packages \
       initrd/common/etc/ashrc.d \
       initrd/common/etc/profile.d \
+      initrd/common/etc/sysconfig \
       initrd/common/etc/sysconfig \
       initrd/common/dev \
       initrd/common/mnt \
@@ -57,6 +59,8 @@ create_empty_directories()
       packages/system-services/storage/system-services \
       packages/system-services/storage/system-services/logs \
       packages/system-services/settings/system-services/cron \
+      packages/medic-api/software/medic-api \
+      packages/medic-api/storage/medic-api \
       packages/medic-core/storage/medic-core/passwd \
       packages/medic-core/storage/medic-core/nginx \
       packages/medic-core/storage/medic-core/nginx/state \
@@ -79,6 +83,8 @@ create_empty_directories()
       packages/medic-rdbms/storage/medic-rdbms/postgresql/passwd \
       packages/medic-rdbms/settings/medic-rdbms/postgresql/env \
       packages/medic-rdbms/settings/medic-rdbms/postgresql/templates/postgresql.conf.d \
+      packages/medic-sentinel/software/medic-sentinel \
+      packages/medic-sentinel/storage/medic-sentinel \
       source/compiler/incoming \
       source/core/incoming \
       source/medic-core/incoming \

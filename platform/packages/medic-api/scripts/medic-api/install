@@ -11,9 +11,6 @@ install()
   local self="`realpath "$0"`"
   local base="`dirname -- "$self"`"
 
-  source "$base/../horticulturalist/env" &&
-  merge_environment /srv || return 255
-
   source "$base/env" &&
   merge_environment /srv || return 255
 
@@ -24,14 +21,15 @@ install()
 
   echo "Installing version $PACKAGE_VERSION"
 
-  mkdir -p "$PACKAGE_STORAGE/logs" &&
-  mkdir -p "$PACKAGE_SOFTWARE/current" &&
-  chown -R "$HORTICULTURALIST_UID:medic-api" "$PACKAGE_SOFTWARE"
-  \
-  create_system_group_if_necessary medic-api "$MEDIC_API_GID" &&
+  create_system_group_if_necessary \
+    medic-api "$MEDIC_API_GID" &&
   \
   create_system_user_if_necessary \
-    medic-api "$MEDIC_API_UID" 'Medic API Process Account' medic-api
+    medic-api "$MEDIC_API_UID" \
+    'Medic API Process Account' medic-api &&
+  \
+  mkdir -p "$PACKAGE_STORAGE/logs" &&
+  chown -R medic-api:medic-api "$PACKAGE_SOFTWARE"
 
   return "$?"
 }

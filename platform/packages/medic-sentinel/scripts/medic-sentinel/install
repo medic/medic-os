@@ -24,14 +24,15 @@ install()
 
   echo "Installing medic-sentinel v$PACKAGE_VERSION"
 
-  mkdir -p "$PACKAGE_SOFTWARE/current" &&
-  mkdir -p "$PACKAGE_STORAGE/logs" &&
-  chown -R "$HORTICULTURALIST_UID:medic-sentinel" "$PACKAGE_SOFTWARE"
-  \
-  create_system_group_if_necessary medic-sentinel "$MEDIC_SENTINEL_GID" &&
+  create_system_group_if_necessary \
+    medic-sentinel "$MEDIC_SENTINEL_GID" &&
   \
   create_system_user_if_necessary \
-    medic-api "$MEDIC_SENTINEL_UID" 'Medic Sentinel Process Account' medic-sentinel
+    medic-sentinel "$MEDIC_SENTINEL_UID" \
+    'Medic Sentinel Process Account' medic-sentinel &&
+  \
+  mkdir -p "$PACKAGE_STORAGE/logs" &&
+  chown -R medic-sentinel:medic-sentinel "$PACKAGE_SOFTWARE"
 
   return "$?"
 }

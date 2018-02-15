@@ -1,15 +1,7 @@
 #!/bin/sh
 
-wait_for_passwd_file()
-{
-  local passwd_file="$1"
-
-  while ! [ -f "$passwd_file" ]; do
-    sleep 5
-  done
-
-  return 0
-}
+source '/boot/include/utility'
+source '/boot/include/hypervisor'
 
 start()
 {
@@ -23,12 +15,11 @@ start()
   merge_environment /srv &&
   \
   local pg_passwd_dir="$PACKAGE_STORAGE/../medic-rdbms/postgresql/passwd" &&
-  wait_for_passwd_file "$pg_passwd_dir/medic" &&
+  wait_for_file "$pg_passwd_dir/medic" &&
   \
   local couch_passwd_dir="$PACKAGE_STORAGE/../medic-core/passwd" &&
-  wait_for_passwd_file "$couch_passwd_dir/couch2pg" &&
+  wait_for_file "$couch_passwd_dir/couch2pg" &&
   \
-  local logs="$PACKAGE_STORAGE/logs" &&
   local couch2pg_command="'`which node`' '$PACKAGE_ROOT/index.js'" &&
   local couch_passwd="`cat "$couch_passwd_dir/medic-couch2pg"`" &&
   \
@@ -37,7 +28,7 @@ start()
   export COUCHDB_URL="http://gardener:$couch_passwd@localhost:5984/medic" &&
   \
   exec /boot/timestamp su -c "exec $couch2pg_command" postgresql \
-    >> "$logs/startup.log" 2>&1
+    >> "$PACKAGE_STORAGE/logs/startup.log" 2>&1
 }
 
 main()

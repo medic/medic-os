@@ -8,6 +8,9 @@ start()
   local self="`realpath "$0"`"
   local base="`dirname -- "$self"`"
 
+  source "$base/../../medic-core/env" &&
+  merge_environment /srv &&
+  \
   source "$base/../env" &&
   merge_environment /srv &&
   \
@@ -21,8 +24,8 @@ start()
   local run_cmd="'`which node`' '$script' --medic-os" &&
   \
   exec /boot/timestamp \
-    su -pc "cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" horticulturalist \
-      >> "$logs/horticulturalist.log" 2>&1
+    su -c "cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" horticulturalist \
+      >> "$PACKAGE_STORAGE/logs/horticulturalist.log" 2>&1
 }
 
 start

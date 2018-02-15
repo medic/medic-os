@@ -1,16 +1,5 @@
 #!/bin/sh
 
-wait_for_passwd_file()
-{
-  local passwd_file="$1"
-
-  while ! [ -f "$passwd_file" ]; do
-    sleep 5
-  done
-
-  return 0
-}
-
 start()
 {
   local self="`realpath "$0"`"
@@ -22,7 +11,7 @@ start()
   # Wait for account password to be set:
   #  The medic-core package will create an account for us.
 
-  wait_for_passwd_file "$SERVICE_PASSWD_PATH/lucene"
+  wait_for_file "$SERVICE_PASSWD_PATH/lucene"
 
   # Update password:
   #  This rewrites the CouchDB URI in couchdb-lucene.ini.

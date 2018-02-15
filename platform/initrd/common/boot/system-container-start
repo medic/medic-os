@@ -45,12 +45,6 @@ main()
     info "Setting up software ($percent_packages% complete)..."
   done
 
-  log 'Software setup process complete'
-  info 'Checking authentication database...'
-
-  persist_authentication_database >> "$log" 2>&1 \
-    || fatal 'Failed to initialize authentication database'
-
   info 'Starting services...'
 
   supervisor_reset \

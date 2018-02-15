@@ -11,7 +11,7 @@ RUN apt-get -q=2 -y upgrade
 RUN ln -sf /bin/bash /bin/sh
 
 RUN apt-get -q=2 -y install \
-  apt-utils busybox gawk isc-dhcp-client less net-tools psmisc vim xz-utils
+  apt-utils busybox gawk isc-dhcp-client less net-tools psmisc sudo vim xz-utils
 
 RUN groupadd avahi
 RUN groupadd couchdb
@@ -26,7 +26,7 @@ RUN useradd -rd /var/empty -c 'Service - CouchDB' -g couchdb couchdb
 RUN useradd -rd /var/empty -c 'Service - Lucene' -g couchdb-lucene couchdb-lucene
 RUN useradd -rd /var/empty -c 'Service - Postgres' -g postgresql postgresql
 RUN useradd -rd /var/empty -c 'Service - Secure Shell' -g sshd sshd
-RUN useradd -rd /var/empty -c 'Legacy - VM Login' -g vm vm
+RUN useradd -rd /home/vm -c 'Legacy - VM Login' -g vm -s /bin/bash vm
 
 ADD platform/staging/docker/x64/medic-os-*-docker /
 

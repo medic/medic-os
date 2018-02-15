@@ -21,12 +21,15 @@ install()
 
   echo "Installing horticulturalist v$PACKAGE_VERSION"
 
-  mkdir -p "$PACKAGE_STORAGE/logs" &&
   create_system_group_if_necessary horticulturalist "$HORTICULTURALIST_GID" &&
   \
   create_system_user_if_necessary \
     horticulturalist "$HORTICULTURALIST_UID" \
-      'Horticulturalist Process Account' horticulturalist
+      'Horticulturalist Process Account' horticulturalist "$PACKAGE_STORAGE" &&
+  \
+  mkdir -p "$PACKAGE_STORAGE/logs" &&
+  chmod 0750 "$PACKAGE_STORAGE" &&
+  chown -R horticulturalist:horticulturalist "$PACKAGE_STORAGE"
 
   return "$?"
 }

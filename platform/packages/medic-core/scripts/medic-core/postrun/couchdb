@@ -37,12 +37,20 @@ is_setup_needed()
   ! is_existing_user 'admin'
 }
 
+get_user_password_file()
+{
+  local user="$1"
+  shift 1
+
+  echo "`get_password_directory`/$user"
+}
+
 is_existing_user()
 {
   local user="$1"
   shift 1
 
-  test -f "`get_password_directory`/$user"
+  test -f "`get_user_password_file "$user"`"
 }
 
 read_password()
@@ -50,7 +58,17 @@ read_password()
   local user="$1"
   shift 1
 
-  cat "`get_password_directory`/$user"
+  cat "`get_user_password_file "$user"`"
+}
+
+write_password()
+{
+  local user="$1"
+  local passwd="$2"
+  shift 2
+
+  # Fix me: this shows up in `ps`
+  echo "$passwd" > "`get_user_password_file "$user"`"
 }
 
 generate_random_password()
@@ -95,7 +113,8 @@ create_couchdb_put()
 create_couchdb_admin()
 {
   local user="$1"
-  shift 1
+  local passwd="$2"
+  shift 2
 
   # Refuse to overwrite password
   if is_existing_user "$user"; then
@@ -105,9 +124,19 @@ create_couchdb_admin()
   # Target file for new password
   local passwd_file="`get_password_directory`/$user"
 
+  if [ ! -z "$passwd" ]; then
+    # Password specified on command line
+    passwd="`write_password "$user" "$passwd"`"
+  else
+    # Password randomly generated
+    passwd="`generate_random_password "$passwd_file"`"
+  fi
+
+  if [ "$?" -ne 0 ]; then
+    return 2
+  fi
+
   local url="`get_base_config_url`" &&
-  local passwd="`generate_random_password "$passwd_file"`" &&
-  \
   create_couchdb_put "$user" "$passwd_file" 't' \
     | curl -K- -sfX PUT "$url/_config/admins/$user" >/dev/null
 
@@ -146,14 +175,22 @@ postinstall()
     || fatal "CouchDB failed to start properly"
 
   info 'Setting up CouchDB administrative account' &&
-  create_couchdb_admin 'admin' &&
-  info 'Restricting CouchDB to authorized users only' &&
-  perform_couchdb_lockdown
+  create_couchdb_admin 'admin'
 
   local rv="$?"
 
-  if [ "$rv" -ne 1 -a "$rv" -ne 0 ]; then
+  if [ "$rv" -eq 1 ]; then
+    warn "Administrative account appears to exist; aborting"
+    return 0
+  elif [ "$rv" -ne 0 ]; then
     fatal "Failed to create initial CouchDB administrative account"
+  fi
+
+  info 'Restricting CouchDB to authorized users only' &&
+  perform_couchdb_lockdown
+
+  if [ "$?" -ne 0 ]; then
+    fatal "Failed to lock out invalid CouchDB users"
   fi
 
   info 'Creating CouchDB service accounts'
@@ -166,6 +203,23 @@ postinstall()
 
   if [ "$?" -ne 0 ]; then
     fatal "Failed to create one or more service accounts"
+  fi
+
+  create_couchdb_admin 'medic' "$DOCKER_ADMIN_PASSWORD"
+
+  if [ "$?" -ne 0 ]; then
+    fatal "Failed to create an interactive admin account"
+  fi
+
+  if [ "$DOCKER_ADMIN_PASSWORD" ]; then
+    info 'User: medic'
+    warn 'A new administrative password was explicitly set via the CLI'
+    info 'The new administrative password will not be displayed'
+  else
+    info 'User: medic'
+    info "Password: `read_password admin`"
+    warn 'A new administrative password has been randomly assigned'
+    warn 'This will not be displayed again; please make a note of it'
   fi
 
   info 'CouchDB first-run setup successful'
