@@ -21,6 +21,7 @@ merge_environment()
   export PACKAGE_SOFTWARE="$prefix/software/$name"
   export PACKAGE_SETTINGS="$prefix/settings/$name"
 
+  export BOOTSTRAP_COMPLETE_FILE="$PACKAGE_SETTINGS/.bootstrapped"
   export MEDIC_CORE_PACKAGE_STORAGE="$PACKAGE_STORAGE/../medic-core/"
   export COUCH_PASSWD_FILE="${MEDIC_CORE_PACKAGE_STORAGE}/passwd/horticulturalist"
 

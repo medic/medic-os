@@ -8,26 +8,26 @@ start()
   local self="`realpath "$0"`"
   local base="`dirname -- "$self"`"
 
-  source "$base/../../medic-core/env" &&
-  merge_environment /srv &&
-  \
   source "$base/../env" &&
   merge_environment /srv &&
   \
   wait_for_file "$COUCH_PASSWD_FILE" &&
   local passwd=`cat $COUCH_PASSWD_FILE` &&
   \
+  source "$base/../../medic-core/env" &&
+  merge_environment /srv 'path-only' &&
+  \
   export COUCH_NODE_NAME='couchdb@localhost' &&
   export COUCH_URL="http://${PACKAGE_NAME}:$passwd@localhost:5984/medic" &&
   \
-  local script="'$PACKAGE_SOFTWARE/current/server.js'" &&
-  local run_cmd="'`which node`' $script" &&
-  \
-  cd "$PACKAGE_SOFTWARE/current" &&
+  local script="$PACKAGE_SOFTWARE/current/server.js" &&
   wait_for_file "$script" &&
   \
+  local run_cmd="'`which node`' '$script'" &&
+  local command_line="cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" &&
+  \
   exec /boot/timestamp \
-    su -c "cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" medic-api \
+    su -c "$command_line" medic-api \
       >> "$PACKAGE_STORAGE/logs/medic-api.log" 2>&1
 }
 

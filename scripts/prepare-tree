@@ -59,6 +59,7 @@ create_empty_directories()
       packages/system-services/storage/system-services \
       packages/system-services/storage/system-services/logs \
       packages/system-services/settings/system-services/cron \
+      packages/medic-api/settings/medic-api \
       packages/medic-api/software/medic-api \
       packages/medic-api/storage/medic-api \
       packages/medic-core/storage/medic-core/passwd \
@@ -83,8 +84,12 @@ create_empty_directories()
       packages/medic-rdbms/storage/medic-rdbms/postgresql/passwd \
       packages/medic-rdbms/settings/medic-rdbms/postgresql/env \
       packages/medic-rdbms/settings/medic-rdbms/postgresql/templates/postgresql.conf.d \
+      packages/medic-sentinel/settings/medic-sentinel \
       packages/medic-sentinel/software/medic-sentinel \
       packages/medic-sentinel/storage/medic-sentinel \
+      packages/horticulturalist/settings/horticulturalist \
+      packages/horticulturalist/software/horticulturalist \
+      packages/horticulturalist/storage/horticulturalist \
       source/compiler/incoming \
       source/core/incoming \
       source/medic-core/incoming \

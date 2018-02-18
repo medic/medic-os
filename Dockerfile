@@ -31,5 +31,5 @@ RUN useradd -rd /home/vm -c 'Legacy - VM Login' -g vm -s /bin/bash vm
 ADD platform/staging/docker/x64/medic-os-*-docker /
 
 VOLUME [ "/srv" ]
-ENTRYPOINT [ "/boot/container-start", "/" ]
+ENTRYPOINT [ "/bin/bash", "-l", "/boot/container-start", "/" ]
 

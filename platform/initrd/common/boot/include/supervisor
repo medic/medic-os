@@ -31,9 +31,14 @@ _safe_waitpid()
 
   EINTR=0
   wait "$pid"
-
   local status="$?"
 
+  # GNU Bash
+  if [ "$BASH_VERSION" ]; then
+    return "$status"
+  fi
+
+  # Busybox ash
   while [ "$EINTR" -gt 0 ]; do
     EINTR=0
     wait "$pid"

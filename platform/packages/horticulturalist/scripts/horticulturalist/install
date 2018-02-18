@@ -28,8 +28,7 @@ install()
     "$HORTICULTURALIST_UID" 'Horticulturalist Process Account' \
     "$HORTICULTURALIST_GROUP" "$PACKAGE_STORAGE" &&
   \
-  mkdir -p "$PACKAGE_STORAGE/logs" &&
-  chmod 0750 "$PACKAGE_STORAGE" &&
+  mkdir -p "$PACKAGE_STORAGE/logs" && chmod 0750 "$PACKAGE_STORAGE" &&
   chown -R "$HORTICULTURALIST_USER:$HORTICULTURALIST_GROUP" "$PACKAGE_STORAGE"
 
   return "$?"

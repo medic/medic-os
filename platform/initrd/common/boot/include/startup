@@ -230,8 +230,8 @@ attempt_manual_network_configuration()
 
 synchronize_disks()
 {
-  for i in `seq 1 3`; do
-    sync && sleep 1
+  for i in `seq 1 5`; do
+    sync && sleep 2
   done
 }
 

@@ -6,7 +6,7 @@ wait_for_file()
 {
   local file="$1"
 
-  while ! [ -f "$file" ]; do
+  while ! [ -e "$file" ]; do
     sleep 1
   done
 
@@ -175,27 +175,6 @@ use_package()
   $command "$srv_dir/software/$package/current/default"
 }
 
-# Logging:
-#   Provide a number of different log targets. The `emit`
-#   function is for raw not-necessarily-visual output, and
-#   the `print` function is for raw visual output. The `info`,
-#   `warn`, and `fatal` functions are higher-level exported
-#   logging functions that should be used by client code.
-#   The `log` method is an invisible-by-default debug target.
-#   Any of these functions can be overridden post-inclusion.
-
-emit()
-{
-  if [ -z "$logger_suppress_messages" ]; then
-    echo "$@" >&2
-  fi
-}
-
-print()
-{
-  emit "$@"
-}
-
 success()
 {
   emit "Success: $*"
@@ -224,10 +203,34 @@ log()
   fi
 }
 
-# Defaults: later includes may override
-if [ "$logger_suppress_output" ]; then
-  log='/dev/null'
-else
-  log='/dev/stderr'
+# Logging:
+#   Provide a number of different default low-level log targets.
+#   The `emit` function is for raw not-necessarily-visual output;
+#   the `print` function is for raw visual output. The `log`
+#   method is an invisible-by-default debug target. The `$log`
+#   variable is a file path that can be used in an append-only
+#   file descriptor redirection operation Any of these functions
+#   can be overridden post-inclusion.
+
+if [ -z "$log" ]; then
+
+  emit()
+  {
+    if [ -z "$logger_suppress_messages" ]; then
+      echo "$@" >&2
+    fi
+  }
+
+  print()
+  {
+    emit "$@"
+  }
+
+  if [ "$logger_suppress_output" ]; then
+    log='/dev/null'
+  else
+    log='/dev/stderr'
+  fi
+
 fi
 

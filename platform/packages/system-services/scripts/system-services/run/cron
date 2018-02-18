@@ -6,8 +6,9 @@ start()
 
   mkdir -p "$logs_dir" &&
   \
-  exec /boot/timestamp busybox crond -f -L "$log_path" \
-    >> "$logs_dir/cron.log" 2>&1
+  exec /boot/timestamp \
+    busybox crond -f -L "$log_path" \
+      >> "$logs_dir/cron.log" 2>&1
 }
 
 main()
