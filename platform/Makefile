@@ -37,27 +37,23 @@ xen: build-xen-image
 
 initrd: build-initrd
 native: build-native-tarball
+docker: build-docker-staging
 
-images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-x86-image-nopae
-packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg
+images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-docker-staging build-x86-image-nopae
+packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg horticulturalist-pkg medic-api-pkg medic-sentinel-pkg java-pkg system-services-pkg vm-tools-pkg
 
 
 # Public targets
 
 bootinit:
-	@(cd initrd/common && tar -cf - boot | xz -9ec) \
+	@(cd initrd/common && tar -cf - boot | xz -c) \
 	  > ../output/"${SYSTEM_IMAGE_NAME}-${DATE}-all-bootinit.tar.xz"
 
 compile-only:
 	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
-	    ${QMAKE} build PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
+	  ${QMAKE} build PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
 
-build:
-	@if [ -z '${SKIP_COMPILER}' ]; then \
-	  ${QMAKE} compiler || exit "$$?"; \
-	fi
-	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
-	    ${QMAKE} PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
+build: build-start package-docs build-finish
 
 copy:
 	@(cd source && \
@@ -69,24 +65,30 @@ compiler:
 
 clean:
 	rm -rf output/* && \
-	rm -rf staging/tarball
+	rm -rf staging/tarball staging/docker
 
-distclean: clean clean-source clean-staging
-	for platform in x86 x64 armv6; do \
-	  rm -rf "images/$$platform/iso/packages"/* && \
-	  rm -rf "initrd/$$platform/lib/modules"/* && \
-	  for type in iso xen; do \
-	    rm -f "images/$$platform/$$type/boot/kernel" \
-	      "images/$$platform/$$type/boot/image.xz" \
-	        "images/$$platform/$$type/packages"/* || exit "$$?"; \
-	  done || exit "$$?"; \
-	done
+distclean: clean clean-images clean-staging clean-source
 
 clean-compiler:
 	(cd source && ${MAKE} clean-compiler)
 
 
 # Private targets
+
+package-docs: medic-core-docs-pkg medic-rdbms-docs-pkg vm-tools-docs-pkg
+
+build-start:
+	@if [ -n '${BUILD_COMPILER}' ]; then \
+	  ${QMAKE} compiler || exit "$$?"; \
+	fi
+	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
+	  ${QMAKE} build \
+	    PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
+
+build-finish:
+	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
+	  ${QMAKE} copy finalize \
+	    PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
 
 clean-source:
 	(cd source && ${MAKE} clean)
@@ -95,7 +97,19 @@ clean-staging:
 	rm -rf staging/packages && \
 	rm -rf packages/vm-tools/software && \
 	rm -rf packages/medic-core/software && \
+	rm -rf packages/medic-rdbms/software && \
 	rm -rf 'staging/software/${PLATFORM}'/*
+
+clean-images:
+	for platform in x86 x64 armv6 noarch; do \
+	  rm -rf "images/$$platform/iso/packages"/* && \
+	  rm -rf "initrd/$$platform/lib/modules"/* && \
+	  for type in iso xen; do \
+	    rm -f "images/$$platform/$$type/boot/kernel" \
+	      "images/$$platform/$$type/boot/image.xz" \
+	        "images/$$platform/$$type/packages"/* || exit "$$?"; \
+	  done || exit "$$?"; \
+	done
 
 build-iso-image: build-initrd
 	@echo -n 'Creating ISO image... ' && \
@@ -154,6 +168,21 @@ build-ami-image:
 	rm -f output/image; \
 	echo 'done.'
 
+build-docker-staging:
+	@echo -n 'Staging files for Docker... ' && \
+	\
+	base_dir='staging/docker/${PLATFORM}' && \
+	staging_dir="$$base_dir/${SYSTEM_IMAGE_ID}-docker" && \
+	\
+	mkdir -p "$$staging_dir" && \
+	cp -a initrd/common/boot "$$staging_dir/" && \
+	(cd "$$staging_dir" && mkdir -p srv mnt/startup) && \
+	\
+	cp -a 'images/${PLATFORM}/iso/packages' \
+	  "$$staging_dir/mnt/startup/" && \
+	\
+	echo 'done.'
+
 build-native-tarball:
 	@echo -n 'Creating native tarball... ' && \
 	\
@@ -168,14 +197,14 @@ build-native-tarball:
 	  "$$staging_dir/mnt/startup/" && \
 	\
 	(cd "$$staging_dir/../" && tar -cf - .) \
-	  | xz -9ec > "output/${SYSTEM_IMAGE_ID}-native.tar.xz" && \
+	  | xz -c > "output/${SYSTEM_IMAGE_ID}-native.tar.xz" && \
 	\
 	echo 'done.'
 
 compress-xen-image:
 	@echo -n 'Compressing Xen image... ' && \
 	\
-	xz -0qcf 'output/${SYSTEM_IMAGE_ID}-xen' \
+	xz -0 -cf 'output/${SYSTEM_IMAGE_ID}-xen' \
 	  > 'output/${SYSTEM_IMAGE_ID}-xen.xz' && \
 	\
 	echo 'done.'
@@ -197,7 +226,7 @@ upload-ami-image: build-ami-image
 	echo 'done.'
 
 check-compiler-root:
-	@if [ -z '${COMPILER_ROOT}' ]; then \
+	@if [ '${BUILD_COMPILER}' -a -z '${COMPILER_ROOT}' ]; then \
 	  echo 'Warning: Compiler root not specified' >&2; \
 	  echo 'Warning: Resulting image may be incomplete' >&2; \
 	fi
@@ -205,15 +234,19 @@ check-compiler-root:
 copy-compiler-libraries: check-compiler-root
 	@echo -n 'Copying compiler libraries...' && \
 	\
+	if [ '${BUILD_COMPILER}' ]; then \
+	  export PATH="${COMPILER_ROOT}/bin:$$PATH"; \
+	fi && \
+	\
 	mkdir -p '${INITRD_PATH}/lib' && \
-	export PATH="${COMPILER_ROOT}/bin:$$PATH" && \
-	compiler_root="$$(dirname "$$(which gcc)")/../" && \
+	compiler_root="`dirname "$$(gcc --print-libgcc-file-name)"`" && \
 	\
-	cd "$$compiler_root/lib" && \
+	cd "$$compiler_root" && \
 	\
-	for lib in ssp gcc_s stdc++; do \
-	  cp -a "lib$$lib.so" "lib$$lib.so."* \
-	    '${INITRD_PATH}/lib' || exit "$$?"; \
+	for lib in gcc_s stdc++; do \
+	  cp -aL "lib$$lib.so"* '${INITRD_PATH}/lib' && \
+	  chmod +x "${INITRD_PATH}/lib/lib$$lib.so"* \
+            || exit "$$?"; \
 	done && \
 	\
 	echo 'done.'
@@ -257,9 +290,7 @@ build-x86-image-nopae:
 	  echo 'Building x86 kernel with PAE disabled...' && \
 	  (cd source && \
 	    ../scripts/prepend-path '${COMPILER_ROOT}' \
-	      ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae' && \
-	    ../scripts/prepend-path '${COMPILER_ROOT}' \
-	      ${QMAKE} rebuild-vm-tools-modules) && \
+	      ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae') && \
 	  \
 	  ${QMAKE} build-iso-image ISO_EXTRA='-nopae'; \
 	fi
@@ -267,17 +298,17 @@ build-x86-image-nopae:
 rebuild-kernel:
 	@echo 'Rebuilding kernel...' && \
 	(cd source && \
-	  ../scripts/prepend-path '${COMPILER_ROOT}' \
-	    ${QMAKE} rebuild-kernel rebuild-vm-tools-modules)
+	  ../scripts/prepend-path \
+	    '${COMPILER_ROOT}' ${QMAKE} rebuild-kernel)
 
 strip-binaries:
 	@echo -n 'Removing unnecessary symbols... ' && \
 	./scripts/strip-binaries packages && \
 	echo 'done.'
 
-concierge-pkg:
-	@echo -n 'Compressing package 'concierge'... ' && \
-	scripts/build-package 'concierge' 10112 '${PLATFORM}' && \
+horticulturalist-pkg:
+	@echo -n 'Compressing package 'horticulturalist'... ' && \
+	scripts/build-package 'horticulturalist' 00600 '${PLATFORM}' && \
 	echo 'done.'
 
 java-pkg:
@@ -285,9 +316,25 @@ java-pkg:
 	scripts/build-package 'java' 17801 '${PLATFORM}' && \
 	echo 'done.'
 
+medic-api-pkg:
+	@echo -n 'Compressing package 'medic-api'... ' && \
+	scripts/build-package 'medic-api' 00100 '${PLATFORM}' && \
+	echo 'done.'
+
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 16131 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 17100 '${PLATFORM}' && \
+	echo 'done.'
+
+medic-core-docs-pkg:
+	@echo -n 'Compressing package 'medic-core-docs'... ' && \
+	scripts/build-docs-package \
+	  'medic-core-docs' 17100 /srv/software/medic-core && \
+	echo 'done.'
+
+medic-couch2pg-pkg:
+	@echo -n 'Compressing package 'medic-couch2pg'... ' && \
+	scripts/build-package 'medic-couch2pg' 10000 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-rdbms-pkg:
@@ -295,9 +342,15 @@ medic-rdbms-pkg:
 	scripts/build-package 'medic-rdbms' 95301 '${PLATFORM}' && \
 	echo 'done.'
 
-medic-couch2pg-pkg:
-	@echo -n 'Compressing package 'medic-couch2pg'... ' && \
-	scripts/build-package 'medic-couch2pg' 10000 '${PLATFORM}' && \
+medic-rdbms-docs-pkg:
+	@echo -n 'Compressing package 'medic-rdbms-docs'... ' && \
+	scripts/build-docs-package \
+	  'medic-rdbms-docs' 95301 /srv/software/medic-rdbms && \
+	echo 'done.'
+
+medic-sentinel-pkg:
+	@echo -n 'Compressing package 'medic-sentinel'... ' && \
+	scripts/build-package 'medic-sentinel' 00100 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
@@ -310,12 +363,10 @@ vm-tools-pkg:
 	scripts/build-package 'vm-tools' 94612 '${PLATFORM}' && \
 	echo 'done.'
 
-shrink-gardener:
-	@./scripts/shrink-gardener
-
-gardener-pkg: shrink-gardener
-	@echo -n 'Compressing package 'gardener'... ' && \
-	scripts/build-package 'gardener' 11002 '${PLATFORM}' && \
+vm-tools-docs-pkg:
+	@echo -n 'Compressing package 'vm-tools-docs'... ' && \
+	scripts/build-docs-package \
+	  'vm-tools-docs' 94612 /srv/software/vm-tools && \
 	echo 'done.'
 
 convert-boot-logo:
@@ -355,7 +406,7 @@ delete-downloaded:
 	  for manifest in source/manifests/*; do \
 	    pkg="`basename "$$manifest"`" && \
 	    if [ "$$pkg" != '*' ]; then \
-	      (cd "source/$$pkg" && rm -rf "$$type"/*) || exit "$$?"; \
+	      (cd "source/$$pkg" && rm -rf "$$type"/[^.]*) || exit "$$?"; \
 	    fi; \
 	  done; \
 	done

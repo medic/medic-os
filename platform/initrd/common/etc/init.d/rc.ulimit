@@ -1,4 +1,4 @@
-#!/bin/ash
+#!/bin/busybox ash
 
 for type in e r; do
   ulimit "-$type" 0

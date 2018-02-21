@@ -86,14 +86,46 @@ main() {
       || fatal 'Unable to read AWS environment/settings file'
 
   local ami='';
+  local flavor_name='';
+  local flavor_user='';
+  local flavor_update_command='';
   local ssh_private_key_path='';
   local ssh_private_key_contents='';
 
-  case "$platform" in
-    x64)
-      ami='ami-eff1028f' ;;
-    x86)
-      ami='ami-cffea7ff' ;;
+  local flavor='debian';
+
+  case "$flavor" in
+    debian)
+      flavor_user='ubuntu'
+      flavor_name='Ubuntu Linux'
+      flavor_update_command='apt-get -qy update'
+      flavor_upgrade_command='DEBIAN_FRONTEND=noninteractive apt-get -qy upgrade'
+    ;;
+    redhat)
+      flavor_user='ec2-user'
+      flavor_name='Amazon Linux'
+      flavor_update_command='true'
+      flavor_upgrade_command='yum -qy update'
+    ;;
+  esac
+
+  case "$flavor" in
+    debian)
+      case "$platform" in
+        x64)
+          ami='ami-0a00ce72' ;;
+        x86)
+          ami='ami-49f43f31' ;;
+      esac
+    ;;
+    redhat)
+      case "$platform" in
+        x64)
+          ami='ami-eff1028f' ;;
+        x86)
+          ami='ami-cffea7ff' ;;
+      esac
+    ;;
   esac
 
   if [ "$time_zone" ]; then
@@ -150,7 +182,7 @@ main() {
 
   ec2-create-tags "$instance_id" \
     --tag Name="Nightly Build: Medic OS on `date +'%Y-%m-%d at %l:%M%P'`" \
-    --tag Platform='Amazon Linux' --tag Environment="$platform" \
+    --tag Platform="$flavor_name" --tag Environment="$platform" \
     --tag Backup='false' --tag User="browndav" &>/dev/null && \
   \
   echo "done." >&2
@@ -176,11 +208,11 @@ main() {
   echo "Instance name: $external_fqdn"
   echo -n 'Waiting for instance to start... ' >&2
 
-  local n='32'
+  local n='64'
   local rv='0'
   local ssh_id="$ssh_private_key_path"
-  local ssh_host="ec2-user@$external_fqdn"
   local cfg_dir='./medic-os/platform/config'
+  local ssh_host="$flavor_user@$external_fqdn"
 
   while [ "$n" -gt 0 ]; do
 
@@ -212,8 +244,12 @@ main() {
          sudo resize2fs /dev/xvda1 &>/dev/null &&
          echo 'done.' >&2 &&
          \
-         echo -n 'Updating system packages... ' >&2 &&
-         sudo yum -q -y update &>/dev/null &&
+         echo -n 'Updating system package lists... ' >&2 &&
+         sudo $flavor_update_command &>/dev/null &&
+         echo 'done.' >&2 &&
+         \
+         echo -n 'Upgrading system packages... ' >&2 &&
+         sudo $flavor_upgrade_command &>/dev/null &&
          echo 'done.' >&2 &&
          \
          echo 'Downloading Medic OS core:' >&2 &&
@@ -227,14 +263,14 @@ main() {
          sudo tar xJf medic-os-core-src-latest.tar.xz &&
          echo 'done.' >&2 &&
          \
-         echo -n 'Installing build-time dependencies... ' >&2 &&
-         sudo '$cfg_dir/redhat/scripts/prepare-system' -qy &>/dev/null &&
-         echo 'done.' >&2 &&
-         \
          echo -n 'Applying latest Medic OS updates... ' >&2 &&
          (cd medic-os/platform &&
            sudo git remote set-url origin "$vm_url" &&
            sudo git stash -q && sudo git pull -q) &&
+         echo 'done.' >&2 &&
+         \
+         echo -n 'Installing build-time dependencies... ' >&2 &&
+         sudo '$cfg_dir/$flavor/scripts/prepare-system' -qy &>/dev/null &&
          echo 'done.' >&2 &&
          \
          echo -n 'Extracting Medic OS JDK/JRE module... ' >&2 &&
@@ -258,7 +294,7 @@ main() {
          ./platform/scripts/build-ebs-image \
            '../$cfg_dir/aws/settings' \
              '$platform' output/*'-$platform-xen' \
-               'Medic OS Nightly $platform - `date +%Y%m%d`' /dev/sdb && \
+               'Medic OS Nightly $platform - `date +%Y%m%d`' /dev/xvdf && \
          \
          echo 'EBS images built successfully.' >&2 &&
          \

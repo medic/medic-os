@@ -13,8 +13,10 @@ start()
   "
 
   cd "$PACKAGE_ROOT" &&
-  exec su -c "$command" postgresql \
-    >> "$PACKAGE_STORAGE/postgresql/logs/startup.log" 2>&1
+  \
+  exec /boot/timestamp \
+    su -c "$command" postgresql \
+      >> "$PACKAGE_STORAGE/postgresql/logs/startup.log" 2>&1
 }
 
 start

@@ -1,0 +1,229 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/logger'
+
+chomp()
+{
+  tr -d '\r\n'
+}
+
+get_base_config_url()
+{
+  echo 'http://localhost:5984'
+}
+
+get_password_directory()
+{
+  echo "$PACKAGE_STORAGE/passwd"
+}
+
+wait_for_couchdb()
+{
+  local n=15
+
+  while [ "$n" -gt 0 ]; do
+    curl "`get_base_config_url`" &>/dev/null
+    [ "$?" -eq 0 ] && return 0
+    sleep 1
+    n=$[$n-1]
+  done
+
+  return 1
+}
+
+is_setup_needed()
+{
+  ! is_existing_user 'admin'
+}
+
+get_user_password_file()
+{
+  local user="$1"
+  shift 1
+
+  echo "`get_password_directory`/$user"
+}
+
+is_existing_user()
+{
+  local user="$1"
+  shift 1
+
+  test -f "`get_user_password_file "$user"`"
+}
+
+read_password()
+{
+  local user="$1"
+  shift 1
+
+  cat "`get_user_password_file "$user"`"
+}
+
+write_password()
+{
+  local user="$1"
+  local passwd="$2"
+  shift 2
+
+  # Fix me: this shows up in `ps`
+  echo "$passwd" > "`get_user_password_file "$user"`"
+}
+
+generate_random_password()
+{
+  local file="$1"
+  local bytes="$2"
+  shift 1
+
+  if [ -z "$bytes" ]; then
+    bytes='8'
+  fi
+
+  openssl rand -hex -out "$file" "$bytes"
+} 
+
+create_couchdb_put()
+{
+  local user="$1"
+  local payload="$2"
+  local payload_is_file="$3"
+  shift 3
+
+  local cmd='cat'
+
+  if [ -z "$payload_is_file" ]; then
+    cmd='echo'
+  fi
+
+  # Authenticate if needed
+  if is_existing_user 'admin' && [ "$user" != 'admin' ]; then
+    echo -n 'user = "admin:' &&
+    cat "`get_password_directory`/admin" | chomp &&
+    echo '"'
+  fi
+
+  # Send JSON-encoded string payload
+  echo -n 'data = "\"' &&
+  "$cmd" "$payload" | chomp &&
+  echo '\""'
+}
+
+create_couchdb_admin()
+{
+  local user="$1"
+  local passwd="$2"
+  shift 2
+
+  # Refuse to overwrite password
+  if is_existing_user "$user"; then
+    return 1
+  fi
+
+  # Target file for new password
+  local passwd_file="`get_password_directory`/$user"
+
+  if [ ! -z "$passwd" ]; then
+    # Password specified on command line
+    passwd="`write_password "$user" "$passwd"`"
+  else
+    # Password randomly generated
+    passwd="`generate_random_password "$passwd_file"`"
+  fi
+
+  if [ "$?" -ne 0 ]; then
+    return 2
+  fi
+
+  local url="`get_base_config_url`" &&
+  create_couchdb_put "$user" "$passwd_file" 't' \
+    | curl -K- -sfX PUT "$url/_config/admins/$user" >/dev/null
+
+  if [ ${PIPESTATUS[1]} -ne 0 ]; then
+    return 127
+  fi
+
+  chmod 0400 "$passwd_file"
+}
+
+perform_couchdb_lockdown()
+{
+  local base_url="`get_base_config_url`" &&
+  local url="$base_url/_config/couch_httpd_auth/require_valid_user" &&
+  \
+  create_couchdb_put '' 'true' \
+    | curl -K- -sfX PUT "$url" >/dev/null
+}
+
+postinstall()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv || return 255
+
+  if ! is_setup_needed; then
+    info 'CouchDB is already configured'
+    return 0
+  fi
+
+  info 'Setting up CouchDB for the first time'
+
+  wait_for_couchdb \
+    || fatal "CouchDB failed to start properly"
+
+  info 'Setting up CouchDB administrative account' &&
+  create_couchdb_admin 'admin'
+
+  local rv="$?"
+
+  if [ "$rv" -eq 1 ]; then
+    warn "Administrative account appears to exist; aborting"
+    return 0
+  elif [ "$rv" -ne 0 ]; then
+    fatal "Failed to create initial CouchDB administrative account"
+  fi
+
+  info 'Restricting CouchDB to authorized users only' &&
+  perform_couchdb_lockdown
+
+  if [ "$?" -ne 0 ]; then
+    fatal "Failed to lock out invalid CouchDB users"
+  fi
+
+  info 'Creating CouchDB service accounts'
+
+  create_couchdb_admin 'lucene' && 
+  create_couchdb_admin 'medic-api' &&
+  create_couchdb_admin 'medic-couch2pg' &&
+  create_couchdb_admin 'medic-sentinel' &&
+  create_couchdb_admin 'horticulturalist'
+
+  if [ "$?" -ne 0 ]; then
+    fatal "Failed to create one or more service accounts"
+  fi
+
+  create_couchdb_admin 'medic' "$DOCKER_ADMIN_PASSWORD"
+
+  if [ "$?" -ne 0 ]; then
+    fatal "Failed to create an interactive admin account"
+  fi
+
+  info 'New CouchDB Administrative User: medic'
+
+  if [ "$DOCKER_ADMIN_PASSWORD" ]; then
+    warn 'A new administrative password was explicitly set via the CLI'
+    info 'The new administrative password will not be displayed'
+  else
+    info "New CouchDB Administrative Password: `read_password medic`"
+    warn 'A new administrative password has been randomly assigned'
+    warn 'This will not be displayed again; please make a note of it'
+  fi
+
+  info 'CouchDB first-run setup successful'
+}
+
+postinstall "$@"
+

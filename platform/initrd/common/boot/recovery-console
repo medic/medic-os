@@ -34,7 +34,7 @@ main()
   # Force home directory:
   #  We won't be a login shell, so set this up manually.
 
-  export HOME='/root'
+  export HOME='/'
 
   # Set path:
   #  Include the service and package management scripts.

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source '/boot/include/utility'
+
 main()
 {
   local self="`realpath "$0"`"
@@ -7,6 +9,11 @@ main()
 
   source "$base/../env" &&
   merge_environment /srv || return 255
+
+  # Skip on Ubuntu/Debian
+  if is_debian_like; then
+    return 0
+  fi
 
   (cd "$PACKAGE_ROOT" &&
     mkdir -p /lib/udev/rules.d/ &&

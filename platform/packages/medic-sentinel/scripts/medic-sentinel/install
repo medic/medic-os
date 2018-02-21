@@ -1,0 +1,45 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/hypervisor'
+
+install()
+{
+  local is_update="$1"
+  shift 1
+
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/../horticulturalist/env" &&
+  merge_environment /srv || return 255
+
+  source "$base/env" &&
+  merge_environment /srv || return 255
+
+  if [ "$is_update" ]; then
+    echo "Updating medic-sentinel v$PACKAGE_VERSION"
+    return 0
+  fi
+
+  echo "Installing medic-sentinel v$PACKAGE_VERSION"
+
+  create_system_group_if_necessary \
+    medic-sentinel "$MEDIC_SENTINEL_GID" &&
+  \
+  create_system_user_if_necessary \
+    medic-sentinel "$MEDIC_SENTINEL_UID" \
+    'Medic Sentinel Process Account' medic-sentinel &&
+  \
+  mkdir -p "$PACKAGE_STORAGE/logs" &&
+  \
+  if id "$HORTICULTURALIST_USER" &>/dev/null; then
+    chown -R "$HORTICULTURALIST_USER:$HORTICULTURALIST_GROUP" \
+      "$PACKAGE_SOFTWARE"
+  fi
+
+  return "$?"
+}
+
+install "$@"
+exit "$?"

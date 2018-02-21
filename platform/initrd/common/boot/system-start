@@ -8,6 +8,7 @@ source '/boot/include/logger'
 source '/boot/include/cursor'
 source '/boot/include/startup'
 source '/boot/include/package'
+source '/boot/include/manifest'
 source '/boot/include/template'
 source '/boot/include/supervisor'
 source '/boot/include/hypervisor'
@@ -39,7 +40,7 @@ wait_for_ip_address()
 
 main()
 {
-  local version='10100'
+  local version='11000'
   local swap_size='1024'
   local source_device='/dev/sr0'
 
@@ -54,6 +55,7 @@ main()
   local found_device=''
   local found_version=''
 
+  package_init
   supervisor_init
   hypervisor_init
 
@@ -119,18 +121,23 @@ main()
 
   if [ -z "$found_version" ]; then
     for device in `echo -n "$scan_devices"`; do
-      if is_storage_valid "$device"; then
 
-        initialize_storage "$device" "$swap_size" "$version" \
-          >> "$log" 2>&1
+      if ! is_storage_valid "$device"; then
+        continue
+      fi
+      
+      if ! is_storage_empty "$device"; then
+        continue
+      fi
 
-        if [ "$?" -eq 0 ]; then
-          found_device="$device"
-          found_version="$version"
-          is_newly_initialized='t'
-          break
-        fi
+      initialize_storage "$device" "$swap_size" "$version" \
+        >> "$log" 2>&1
 
+      if [ "$?" -eq 0 ]; then
+        found_device="$device"
+        found_version="$version"
+        is_newly_initialized='t'
+        break
       fi
     done
   fi
@@ -162,8 +169,14 @@ main()
   done
 
   for package_path in /mnt/startup/packages/*.vpkg; do
-    package_update "$package_path" "$is_newly_initialized" \
-      || fatal 'Failed to extract required software from disk/image'
+
+    # Install or update package
+    package_update "$package_path" 't' '' 't'
+
+    # Demand success
+    if [ "$?" -ne 0 ]; then
+      fatal 'Failed to extract required software from disk/image'
+    fi
 
     finished_packages="$(($finished_packages + 1))"
     local percent_packages="$((100 * $finished_packages / $total_packages))"

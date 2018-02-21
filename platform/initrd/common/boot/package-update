@@ -37,8 +37,9 @@ main()
   for path in "$@"; do
     info "Updating package '$path'..."
 
-    package_update "$path" "$force_install" "$use_soft_restart" \
-      || fatal "Failed to update package '$path'"
+    package_update \
+      "$path" "$force_install" "$use_soft_restart" '' "$force_install" \
+        || fatal "Failed to update package '$path'"
   done
 
   success 'All specified packages have been updated'

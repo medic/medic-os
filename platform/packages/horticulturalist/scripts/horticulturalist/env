@@ -1,0 +1,30 @@
+#!/bin/sh
+
+merge_environment()
+{
+  local version='0.6.0'
+  local name='horticulturalist'
+
+  local prefix="$1"
+
+  export PREFIX="$prefix"
+  export PACKAGE_NAME="$name"
+  export PACKAGE_VERSION="$version"
+
+  export HORTICULTURALIST_UID='95'
+  export HORTICULTURALIST_GID='95'
+  export HORTICULTURALIST_USER="$name"
+  export HORTICULTURALIST_GROUP="$name"
+
+  export PACKAGE_SCRIPTS="$prefix/scripts/$name"
+  export PACKAGE_STORAGE="$prefix/storage/$name"
+  export PACKAGE_SOFTWARE="$prefix/software/$name"
+  export PACKAGE_SETTINGS="$prefix/settings/$name"
+
+  export BOOTSTRAP_COMPLETE_FILE="$PACKAGE_SETTINGS/.bootstrapped"
+  export MEDIC_CORE_PACKAGE_STORAGE="$PACKAGE_STORAGE/../medic-core/"
+  export COUCH_PASSWD_FILE="${MEDIC_CORE_PACKAGE_STORAGE}/passwd/horticulturalist"
+
+  return 0
+}
+

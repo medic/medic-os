@@ -7,7 +7,7 @@ PLATFORM := $(shell ../scripts/detect-platform)
 
 JAVA_VERSION ?= 1.7.80
 VM_TOOLS_VERSION ?= 9.4.6
-MEDIC_CORE_VERSION ?= 1.6.1
+MEDIC_CORE_VERSION ?= 1.7.1
 MEDIC_RDBMS_VERSION ?= 9.5.3
 MEDIC_COUCH2PG_VERSION ?= 1.0.0
 
@@ -26,7 +26,7 @@ SHELL := /bin/bash
 PMAKE := ${MAKE} -j${PARALLEL}
 QMAKE := ${MAKE} --no-print-directory
 
-KERNEL_VERSION := 3.14.42
+KERNEL_VERSION := 4.9.17
 KERNEL_MODULE_PATH := ${CURDIR}/../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSION}
 
 
@@ -115,7 +115,7 @@ clean-medic-core:
 build-medic-core:
 	@(cd medic-core && \
 	  ./scripts/unprepare-dist '${MEDIC_CORE_ROOT}' && \
-	  ${QMAKE} all preload \
+	  ${QMAKE} all \
 	    BITS='${BITS}' PLATFORM='${PLATFORM}' \
 	    ROOT='${MEDIC_CORE_ROOT}' PARALLEL='${PARALLEL}')
 
@@ -128,10 +128,6 @@ copy-medic-core:
 	  cp -R /srv/software/medic-core \
 	    ../../packages/medic-core/software/medic-core)
 	@echo 'done.'
-
-preload-medic-core:
-	@(cd medic-core && \
-	  ${QMAKE} preload ROOT='${MEDIC_CORE_ROOT}')
 
 
 medic-rdbms: build-medic-rdbms copy-medic-rdbms
@@ -189,14 +185,6 @@ rebuild-kernel:
 	    MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}' \
 	    KERNEL_VERSION='${KERNEL_VERSION}' KERNEL_EXTRA='${KERNEL_EXTRA}' \
 	    KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' PARALLEL='${PARALLEL}')
-
-rebuild-vm-tools-modules:
-	@echo -n "Rebuilding 'open-vm-tools' kernel modules... " && \
-	(cd vm-tools/source/open-vm-tools/modules && \
-	  ${QMAKE} clean &>/dev/null && \
-	  ${QMAKE} all install &>/dev/null) && \
-	depmod -a -b '../initrd/${PLATFORM}' '${KERNEL_VERSION}' && \
-	echo 'done.'
 
 copy-java-template: clean-java
 	@echo -n "Copying package template for 'java'... " && \

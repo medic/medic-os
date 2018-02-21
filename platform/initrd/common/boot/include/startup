@@ -17,16 +17,24 @@ is_storage_valid()
 is_storage_empty()
 {
   local device="$1"
-  
-  local rv="`dd if="$device" bs=4096 count=16 2>/dev/null \
-    | hexdump -v | head -n4096 | grep -v '^[0-9a-f]\+ [ 0]\+$'`"
 
-  [ -z "$rv" ]
-  return "$?"
+  local data="`
+    dd if="$device" bs=4096 count=16 2>/dev/null \
+      | hexdump -v | head -n4096 | grep -v '^[0-9a-f]\+ [ 0]\+$'
+  `"
+
+  if [ $? -eq 0 -a -z "$data" ]; then
+    return 0
+  fi
+
+  return 1
 }
 
-mount_special_filesystems()
+do_mount_special_filesystems()
 {
+  local bind_root="$1"
+  shift 1
+
   local rv='0'
 
   while [ "$#" -gt 0 ]; do
@@ -37,23 +45,42 @@ mount_special_filesystems()
 
     local original_type="`stat -fc %T "$dir"`"
 
-    if [ "$original_type" != "$type" ]; then
-      if ! mount -t "$type" "$type" "$dir"; then
-        warn "Failed to mount a '$type' filesystem at '$dir'"
-        rv="$(($rv + 1))"
+    if [ -z "$bind_root" ]; then
+      if [ "$original_type" != "$type" ]; then
+        mount -t "$type" "$type" "$dir"
+      else
+        log "Volume of type '$type' is already mounted at '$dir'"
       fi
     else
-      log "Volume of type '$type' is already mounted at '$dir'"
+      mount --bind "$dir" "$bind_root/$dir"
+    fi
+
+    if [ "$?" -ne 0 ]; then
+      warn "Failed to mount a '$type' filesystem at '$dir'"
+      rv="$(($rv + 1))"
     fi
   done
 
   return "$?"
 }
 
+mount_special_filesystems()
+{
+  do_mount_special_filesystems '' "$@"
+}
+
+bind_mount_special_filesystems()
+{
+  local bind_root="$1"
+  shift 1
+
+  do_mount_special_filesystems "$bind_root" "$@"
+}
+
 disconnect_storage()
 {
   local device="$1"
-  
+
   umount -f "$srv_dir" 2>/dev/null
   swapoff "${device}1" 2>/dev/null
 
@@ -65,7 +92,7 @@ find_storage()
   local device="$1"
 
   disconnect_storage "$device"
-  
+
   swapon -p16 "${device}1" 2>/dev/null &&
     mkdir -p "$srv_dir" && mount "${device}2" "$srv_dir" 2>/dev/null
 
@@ -73,10 +100,23 @@ find_storage()
     disconnect_storage "$device"
     return 1
   fi
- 
+
+  # Obtain system version:
+  #   Look in the preferred location: the receipts directory.
+
   local version="`
     cat "$receipts_dir/system/version" 2>/dev/null
   `"
+
+  # Fallback:
+  #   Some old OS versions use this type of directory structure.
+  #   We need to support it in order to upgrade successfully.
+
+  if [ "$?" -ne 0 -o -z "$version" ]; then
+    local version="`
+      cat "$srv_dir/receipts/system/version" 2>/dev/null
+    `"
+  fi
 
   if [ "$?" -ne 0 -o "$version" -le 0 ] &>/dev/null; then
     disconnect_storage "$device"
@@ -94,7 +134,7 @@ initialize_storage()
   local version="$3"
 
   disconnect_storage "$device"
-   
+
   echo -e "o\\nn\\np\\n1\\n1\\n+${swap_size}M" \
     "\\nt\\n82\\nn\\np\\n2\\n\\n\\np\\nw" \
       | fdisk "$device" &&
@@ -108,11 +148,14 @@ initialize_storage()
   mkfs.ext4 -b 2048 -i 4096 "${device}2" &&
   mount -o rw,nodev,nosuid "${device}2" "$srv_dir" &&
   \
-  mkdir -p "$srv_dir/software" \
-    "$srv_dir/storage" "$srv_dir/scripts" \
+  mkdir -p \
+    "$srv_dir/software" "$srv_dir/storage" \
+    "$srv_dir/scripts" "$srv_dir/tmp" \
     "$system_settings_dir" "$receipts_dir/system" &&
   \
-  mkdir -p "$receipts_dir/system"
+  chown root:staff "$srv_dir/tmp" &&
+  chmod 1770 "$srv_dir/tmp" &&
+  \
   echo "$version" > "$receipts_dir/system/version" &&
   sync && sleep 1 && sync
 
@@ -125,7 +168,7 @@ mount_source_image()
 
   unmount_source_image  
   mkdir -p /mnt/startup && mount "$device" /mnt/startup
-  
+
   return "$?"
 }
 
@@ -139,7 +182,9 @@ update_system()
 {
   local version="$1"
 
+  migrate_system &&
   echo "$version" > "$receipts_dir/system/version"
+
   return "$?"
 }
 
@@ -185,8 +230,28 @@ attempt_manual_network_configuration()
 
 synchronize_disks()
 {
-  for i in `seq 1 3`; do
-    sync && sleep 1
+  for i in `seq 1 5`; do
+    sync && sleep 2
   done
+}
+
+migrate_system()
+{
+  local old_receipts_dir='/srv/receipts'
+
+  mkdir -p "$srv_dir/tmp" &&
+  chown root:staff "$srv_dir/tmp" &&
+  chmod 1770 "$srv_dir/tmp"
+
+  if [ "$?" -ne 0 ]; then
+    return "$?"
+  fi
+
+  if [ -d "$old_receipts_dir" ]; then
+    mkdir -p -- "$receipts_dir" &&
+    mv -- "$old_receipts_dir" "$receipts_dir/../"
+  fi
+
+  return "$?"
 }
 

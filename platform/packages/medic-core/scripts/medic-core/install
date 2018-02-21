@@ -27,6 +27,8 @@ install()
     ln -sf "v$version" "v$major_version" &&
     rm -f current && ln -sf v"$version" current) &&
   \
+  mkdir -p /var/run/nginx &&
+  \
   (cd "$PACKAGE_STORAGE/nginx/state" && \
     ln -sf ../logs logs) &&
   \
@@ -39,74 +41,13 @@ install()
   chmod 0750 "$couchdb_settings" \
     "$PACKAGE_STORAGE/couchdb" "$PACKAGE_STORAGE/couchdb-lucene" &&
   \
-  chmod 0700 "$PACKAGE_SETTINGS/couchdb/private" &&
+  chmod 0700 \
+    "$SERVICE_PASSWD_PATH" \
+    "$couchdb_settings/private" \
+    "$PACKAGE_SETTINGS/openssh/private" &&
   \
-  chown -R gammu:gammu \
-    "$PACKAGE_STORAGE/gammu" "$PACKAGE_SETTINGS/gammu" &&
-  \
-  find "$PACKAGE_STORAGE/gammu" \
-    -type d -exec chmod 0750 {} \; &&
-  \
-  for binary in \
-    "$PACKAGE_ROOT/bin/gammu-json" \
-    "$PACKAGE_ROOT/bin/gammu-smsd-inject"; do
-    \
-    chown gammu:gammu-inject "$binary" && chmod 4110 "$binary"
-  done &&
-  \
-  if [ -z "$is_update" ]; then
-    info 'Installing default CouchDB databases'
-    install_default_couchdb_databases \
-      "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
-  fi &&
-  \
-  if [ ! -f "$PACKAGE_SETTINGS/couchdb/local.ini" ]; then
+  if [ ! -f "$couchdb_settings/local.ini" ]; then
     cp -a "$couchdb_settings/private/local.ini" "$couchdb_settings/"
-  fi &&
-  \
-  if [ "$is_update" ]; then
-    info 'Migrating administrative users'
-    migrate_admins_configuration \
-      "$PACKAGE_SETTINGS/couchdb/local.ini" \
-      "$PACKAGE_SETTINGS/couchdb/private/upgrade-admins.ini"
-  fi
-
-  return "$?"
-}
-
-install_default_couchdb_databases()
-{
-  local package_root="$1"
-  local storage_dir="$2"
-
-  local src_dir="$package_root/share/couchdb/garden"
-  local dst_dir="$storage_dir/couchdb/data"
-
-  for path in "$src_dir"/*.couch; do
-
-    local dst_path="$dst_dir/`basename -- "$path"`" \
-      || return "$?"
-
-    if ! [ -f "$dst_path" ]; then
-      cp -a "$path" "$dst_path" && chown couchdb:couchdb "$dst_path" \
-        || return "$?"
-    fi
-  done
-
-  return 0
-}
-
-migrate_admins_configuration()
-{
-  local input_file="$1"
-  local output_file="$2"
-
-  touch "$output_file" &&
-  chmod 0600 "$output_file" &&
-  \
-  if [ -f "$input_file" ]; then
-    awk '/^ *\[admins\] *$/ { i=1; } i==1 { print; }' \
-      < "$input_file" >> "$output_file"
   fi
 
   return "$?"

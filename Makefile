@@ -33,11 +33,9 @@ build: reset-time prepare-tree
 	  source ./.profile && ${QMAKE} build all)
 
 repackage: reset-time prepare-tree
-	@(cd platform/source && \
-	  ${QMAKE} preload-medic-core) && \
-	(cd platform && \
+	@(cd platform && \
 	  ${QMAKE} clean &>/dev/null && \
-	  ${QMAKE} rebuild-kernel copy all)
+	  ${QMAKE} copy all)
 
 clean: require-root
 	@shopt -u xpg_echo && \
@@ -61,6 +59,9 @@ download: require-root reset-time prepare-tree
 	if ! [ -f platform/status/move.finished ]; then \
 	  ${QMAKE} force-move-downloaded; \
 	fi
+
+docker:
+	@docker-compose build
 
 # Private targets
 

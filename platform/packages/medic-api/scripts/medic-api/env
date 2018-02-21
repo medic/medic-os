@@ -1,0 +1,28 @@
+#!/bin/sh
+
+merge_environment()
+{
+  local version='0.1.0'
+  local name='medic-api'
+
+  local prefix="$1"
+
+  export PACKAGE_NAME="$name"
+  export PACKAGE_VERSION="$version"
+
+  export MEDIC_API_UID='96'
+  export MEDIC_API_GID='96'
+  export HORTICULTURALIST_USER='horticulturalist'
+  export HORTICULTURALIST_GROUP='horticulturalist'
+
+  export PACKAGE_SCRIPTS="$prefix/scripts/$name"
+  export PACKAGE_STORAGE="$prefix/storage/$name"
+  export PACKAGE_SOFTWARE="$prefix/software/$name"
+  export PACKAGE_SETTINGS="$prefix/settings/$name"
+
+  export MEDIC_CORE_PACKAGE_STORAGE="$PACKAGE_STORAGE/../medic-core/"
+  export COUCH_PASSWD_FILE="${MEDIC_CORE_PACKAGE_STORAGE}/passwd/medic-api"
+
+  return 0
+}
+

@@ -48,7 +48,7 @@ upload_s3()
   mkdir -p -- "$upload_dir/iso/$platform" &&
   mkdir -p -- "$upload_dir/packages/$platform" &&
   \
-  cp -a -- output/*-virtual.iso \
+  cp -a -- output/*-virtual.iso output/*-native.tar.xz \
     "$upload_dir/iso/$platform" &&
   \
   cp -a -- "platform/images/$platform/iso/packages"/*.vpkg \

@@ -8,9 +8,10 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
-  exec "$PACKAGE_ROOT/sbin/avahi-daemon" \
-    -f "$PACKAGE_SETTINGS/avahi/avahi-daemon.conf" \
-      >> "$PACKAGE_STORAGE/avahi/logs/startup.log" 2>&1
+  exec /boot/timestamp \
+    "$PACKAGE_ROOT/sbin/avahi-daemon" \
+      -f "$PACKAGE_SETTINGS/avahi/avahi-daemon.conf" \
+        >> "$PACKAGE_STORAGE/avahi/logs/startup.log" 2>&1
 }
 
 start

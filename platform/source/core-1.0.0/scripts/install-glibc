@@ -29,18 +29,22 @@ install()
   cd "$from_prefix" \
     || fatal "Unable to locate source directory '$from_prefix'"
 
+  mkdir -p "$to_prefix/lib" \
+    || fatal "Unable to create target directory '$to_prefix/lib'"
+
   for l in \
-    ld libc libanl libcrypt libdl libm libnsl libnss_compat \
-    libnss_dns libnss_files libpthread libresolv librt libutil; do
+    ld libBrokenLocale libc libcidn libanl libcrypt libdl libm libmemusage \
+    libmvec libnsl libnss_compat libnss_dns libnss_files libpcprofile \
+    libpthread libresolv librt libSegFault libthread_db libutil; do
 
     local found_library=''
 
     # Copy libraries
     for file in lib/$l.so lib/$l.so.* lib/$l-*.so lib/$l-*.so.*; do
-      if [ -f "$file" ]; then
+      if [ -f "$file" -o -h "$file" ]; then
 
         rm -f "$to_prefix/$file" &&
-        cp -a "$file" "$to_prefix/lib"
+        cp -a "$file" "$to_prefix/lib/"
 
         if [ "$?" -ne 0 ]; then
           warn "Unable to copy '$file' for '$l'"

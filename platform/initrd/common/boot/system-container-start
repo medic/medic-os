@@ -1,0 +1,72 @@
+#!/bin/sh
+
+export logger_suppress_debug='t'
+export logger_suppress_output='t'
+export logger_suppress_messages=''
+
+source '/boot/include/utility'
+source '/boot/include/logger'
+source '/boot/include/startup'
+source '/boot/include/package'
+source '/boot/include/template'
+source '/boot/include/supervisor'
+
+main()
+{
+  package_init
+  supervisor_init
+
+  # Update packages:
+  #   Update each package necessary for proper startup; the `package_update`
+  #   function will avoid overwriting existing binaries if it's able to.
+
+  log 'Starting software update process'
+  info 'Setting up software...'
+
+  local total_packages='0'
+  local finished_packages='0'
+  local is_newly_initialized=''
+
+  if package_is_first_run; then
+    is_newly_initialized='t'
+  fi
+
+  for package_path in /mnt/startup/packages/*.vpkg; do
+    total_packages="$(($total_packages + 1))"
+  done
+
+  for package_path in /mnt/startup/packages/*.vpkg; do
+    package_update "$package_path" "$is_newly_initialized" '' 't' \
+      || fatal 'Failed to extract required software from disk/image'
+
+    finished_packages="$(($finished_packages + 1))"
+    local percent_packages="$((100 * $finished_packages / $total_packages))"
+
+    info "Setting up software ($percent_packages% complete)..."
+  done
+
+  info 'Starting services...'
+
+  supervisor_reset \
+    || fatal "Failed to reset supervisor status information"
+
+  for dir in /srv/scripts/*; do
+    if [ -f "$dir/start" ]; then
+      local pkg="`basename -- "$dir"`"
+      supervisor_start "$pkg" \
+        || fatal "Failed to start required network service '$pkg'"
+    fi
+  done
+
+  info 'Synchronizing disks...'
+  synchronize_disks
+
+  info 'System started successfully'
+  /boot/recovery-console
+
+  return 0
+}
+
+main "$@"
+exit "$?"
+

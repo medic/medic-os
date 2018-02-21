@@ -1,4 +1,6 @@
 
+Include /srv/settings/medic-core/openssh/ssh_config.d/*
+
 # Host *
 #   ForwardAgent no
 #   ForwardX11 no

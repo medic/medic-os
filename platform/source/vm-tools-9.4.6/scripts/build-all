@@ -69,6 +69,9 @@ main()
   build_autoconf 'libdaemon' \
     "$stdarg --enable-shared --disable-static" &&
   \
+  build_autoconf 'libmspack' \
+    "$stdarg --enable-shared --disable-static" &&
+  \
   builder_remove_static_libraries 'daemon' &&
   \
   (weaken_fortify_source && build_autoconf 'avahi' \
@@ -85,8 +88,8 @@ main()
    build_autoconf 'open-vm-tools' \
     "$stdarg --without-x \
      --with-linuxdir='$kernel_module_path' \
-     --with-kernel-release='$kernel_version' \
-     --without-gtk2 --without-pam --without-icu") &&
+     --with-kernel-release='$kernel_version' --without-ssl \
+     --without-gtk2 --without-pam --without-icu --without-xerces") &&
   \
   builder_remove_static_libraries 'vmtools' 'hgfs' 'guestlib'
 

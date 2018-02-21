@@ -1,0 +1,39 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/hypervisor'
+
+install()
+{
+  local is_update="$1"
+  shift 1
+
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/env" &&
+  merge_environment /srv
+
+  if [ "$is_update" ]; then
+    echo "Updating horticulturalist to v$PACKAGE_VERSION"
+    return 0
+  fi
+
+  echo "Installing horticulturalist v$PACKAGE_VERSION"
+
+  create_system_group_if_necessary "$HORTICULTURALIST_USER" \
+    "$HORTICULTURALIST_GID" &&
+  \
+  create_system_user_if_necessary "$HORTICULTURALIST_USER" \
+    "$HORTICULTURALIST_UID" 'Horticulturalist Process Account' \
+    "$HORTICULTURALIST_GROUP" "$PACKAGE_STORAGE" &&
+  \
+  mkdir -p "$PACKAGE_STORAGE/logs" && chmod 0750 "$PACKAGE_STORAGE" &&
+  chown -R "$HORTICULTURALIST_USER:$HORTICULTURALIST_GROUP" "$PACKAGE_STORAGE"
+
+  return "$?"
+}
+
+install "$@"
+exit "$?"
+

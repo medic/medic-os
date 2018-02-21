@@ -11,9 +11,6 @@ Port 33696
 #HostKey /srv/software/medic-core/current/default/etc/ssh/ssh_host_dsa_key
 #HostKey /srv/software/medic-core/current/default/etc/ssh/ssh_host_ecdsa_key
 
-KeyRegenerationInterval 30m
-ServerKeyBits 2048
-
 #SyslogFacility AUTH
 #LogLevel INFO
 
@@ -60,7 +57,6 @@ ChallengeResponseAuthentication no
 #PrintLastLog yes
 #TCPKeepAlive yes
 #UseLogin no
-UsePrivilegeSeparation sandbox
 #PermitUserEnvironment no
 #Compression delayed
 #ClientAliveInterval 0
@@ -74,4 +70,8 @@ UsePrivilegeSeparation sandbox
 
 #Banner none
 Subsystem	sftp	/srv/software/medic-core/current/default/libexec/sftp-server
+
+# Medic Mobile SSH Certificate Authority Root
+RevokedKeys /srv/settings/medic-core/openssh/private/revocation-list
+TrustedUserCAKeys /srv/settings/medic-core/openssh/private/medic-ca-root.pub
 

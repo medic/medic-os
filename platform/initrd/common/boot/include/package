@@ -5,7 +5,17 @@ set -o pipefail
 srv_dir='/srv'
 receipts_dir="$srv_dir/system/storage/receipts"
 settings_dir="$srv_dir/system/settings/packages"
-supervisor_dir="$srv_dir/system/storage/supervisor"
+
+package_init()
+{
+  mkdir -p -m 1777 "$srv_dir/tmp"
+  return "$?"
+}
+
+package_is_first_run()
+{
+  [ ! -d "$receipts_dir" ]
+}
 
 package_sanitize_name()
 {
@@ -28,7 +38,7 @@ package_extract_metadata()
   local path="$1"
   local metadata_key="$2"
 
-  ar -p "$path" "$metadata_key" 2>/dev/null
+  busybox ar -p "$path" "$metadata_key" 2>/dev/null
   return "$?"
 }
 
@@ -179,6 +189,7 @@ package_install()
     return 1
   fi
 
+  local path_uncompressed="`mktemp -p /srv/tmp`" &&
   local package="`package_extract_name "$path"`" &&
   local version="`package_extract_version "$path"`"
 
@@ -186,26 +197,61 @@ package_install()
     return 2
   fi
  
-  log "Installing package '$package'"
+  local metadata_dir="$receipts_dir/$package"
+  local version_file="$metadata_dir/version"
+  local manifest_file="$metadata_dir/manifest"
 
-  mkdir -p "$receipts_dir/$package" &&
-    echo -n "$version" > "$receipts_dir/$package/version"
+  log "Starting installation for package '$package'"
+
+  mkdir -p "$metadata_dir" &&
+  echo -n "$version" > "$version_file"
 
   if [ "$?" -ne 0 ]; then
-    rm -f -- "$receipts_dir/$package/version"
+    rm -f -- "$version_file"
     return 3
+  fi
+
+  log "Decompressing package '$package'"
+
+  busybox ar -p "$path" package.tar.xz \
+    | xz -dc > "$path_uncompressed"
+
+  if [ "$?" -ne 0 ]; then
+    warn "Failed to decompress package '$package' from '$path'"
+    rm -f -- "$version_file" "$path_uncompressed"
+    return 4
+  fi
+
+  log "Examining package '$package'"
+  
+  mkdir -p "$srv_dir/scripts/$package" &&
+  tar -tf "$path_uncompressed" > "$manifest_file"
+
+  if [ "$?" -ne 0 ]; then
+    warn "Failed to list files for package '$package' from '$path'"
+    rm -f -- "$version_file" "$manifest_file" "$path_uncompressed"
+    return 5
+  fi
+
+  log "Examining destination volume for '$package'"
+
+  (cd "$srv_dir" && while read i; do
+    echo -n # FIXME: Actually remove files
+   done) < "$manifest_file"
+
+  if [ "$?" -ne 0 ]; then
+    warn "Failed to clean destination for '$package'; continuing anyway"
   fi
 
   log "Extracting files for package '$package'"
 
-  mkdir -p "$receipts_dir/$package" "$srv_dir/scripts/$package" &&
-    ar -p "$path" package.tar.xz | xz -dc \
-      | (cd "$srv_dir" && tar -xvf - > "$receipts_dir/$package/manifest")
+  (cd "$srv_dir" &&
+    tar -xf "$path_uncompressed")
 
   if [ "$?" -ne 0 ]; then
     warn "Failed to extract files for package '$package' from '$path'"
-    rm -f -- "$receipts_dir/$package"
-    return 4
+    rm -f -- "$version_file" "$manifest_file" "$path_uncompressed"
+    return 7
   fi
 
   if [ -x "$srv_dir/scripts/$package/install" ]; then
@@ -215,7 +261,7 @@ package_install()
 
     if [ "$?" -ne 0 ]; then
       warn "Installation script for package '$package' failed"
-      rm -rf -- "$receipts_dir/$package"
+      rm -f -- "$receipts_dir/$package/manifest" "$path_uncompressed"
       return 17
     fi
   fi
@@ -252,7 +298,14 @@ package_remove()
 {
   local package="$1"
 
-  log "Removing package '$package'"
+  log "Examining version information for package '$package'"
+  local version="`package_retrieve_installed_version "$package"`"
+                                                                 
+  if [ -z "$package" -o "$?" -ne 0 ]; then                       
+    warn "Failed to read installation data for package '$package'"  
+    return 1                                                
+  fi                                                        
+
   log "Stopping services for package '$package'"
 
   supervisor_stop "$package"
@@ -262,7 +315,7 @@ package_remove()
     info "Package '$package' has no services to stop; continuing"
   elif [ "$rv" -ne 0 ]; then
     warn "Failed to stop services for package '$package'"
-    return 1
+    return 2
   fi
 
   log "Removing package '$package'"
@@ -270,7 +323,7 @@ package_remove()
   if [ -x "$srv_dir/scripts/$package/remove" ]; then
     if ! "$srv_dir/scripts/$package/remove"; then
       warn "Removal script for '$package' exited with non-zero status"
-      return 2
+      return 3
     fi
   fi
 
@@ -279,7 +332,7 @@ package_remove()
 
   if [ "$?" -gt 0 ]; then
     warn "Failed to remove installation records for package '$package'"
-    return 3
+    return 4
   fi
 
   rm -rf -- "$receipts_dir/$package"
@@ -290,20 +343,36 @@ package_remove()
   return 0
 }
 
+package_update_run_setup()
+{
+  local package="$1"
+
+  log "Running setup tasks for package '$package'"
+
+  if ! package_setup "$package"; then
+    warn "At least one setup script in package '$package' failed"
+    warn "Your installation of '$package' may be incomplete"
+    return 17
+  fi
+
+  return 0
+}
+
 package_update()
 {
   local path="$1"
   local force_install="$2"
   local use_soft_restart="$3"
+  local setup_if_version_match="$4"
+  local force_install_over_newer="$5"
 
   local package="`package_extract_name "$path"`" &&
   local v_new="`package_extract_version "$path"`" &&
   local v_prev="`package_retrieve_installed_version "$package"`"
 
-  log "Updating package '$package'..."
   log "Examining version information for package '$package'"
 
-  if [ "$?" -ne 0 ]; then
+  if [ -z "$package" -o "$?" -ne 0 ]; then
     warn "Failed to read metadata from package file '$file'"
     return 1
   fi
@@ -312,6 +381,8 @@ package_update()
     warn "Invalid package version information in file '$file'"
     return 2
   fi
+  
+  log "Updating package '$package'..."
 
   if [ -z "$v_prev" ]; then
     if [ -z "$force_install" ]; then
@@ -324,7 +395,10 @@ package_update()
   fi
 
   if [ "$v_prev" -ge "$v_new" ]; then
-    if [ -z "$force_install" ]; then
+    if [ "$setup_if_version_match" ]; then
+      package_update_run_setup "$package"
+      return "$?"
+    elif [ -z "$force_install_over_newer" ]; then
       warn "An equal-or-greater version of '$package' is already installed"
       warn "Use the -f/--force option if you want to install it anyway"
       return 4
@@ -350,13 +424,7 @@ package_update()
     return 6
   fi
 
-  log "Running setup tasks for package '$package'"
-
-  if ! package_setup "$package"; then
-    warn "At least one setup script in package '$package' failed"
-    warn "Your installation of '$package' may be incomplete"
-    return 17
-  fi
+  package_update_run_setup "$package"
 
   if [ "$use_soft_restart" ]; then
     info "Restarting services for package '$package'..."
