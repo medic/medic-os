@@ -86,6 +86,8 @@ apply_patches()
     < ../../patches/ant-disable-junit.diff) &&
   (cd bzip2 && patch -s -p1 \
     < ../../patches/bzip2-darwin-soname.diff) &&
+  (cd couchdb && patch -s -p1 \
+    < ../../patches/couchdb2-dependency-prefix.diff) &&
   (cd erlang && patch -s -p1 \
     < ../../patches/erlang-r17-pcre-fix.diff) &&
   (cd gammu && patch -s -p1 \

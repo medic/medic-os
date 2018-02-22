@@ -248,7 +248,7 @@ main()
     builder_fix_erlang_dso_linkage "$bits") &&
   \
   build_rebar 'rebar' "$prefix" './bootstrap' &&
-  build_rebar 'erica' "$prefix" 'make' &&
+  build_couchdb 'couchdb' "$prefix" &&
   \
   build_autoconf 'libffi' "$stdarg" && \
   builder_remove_static_libraries 'ffi' &&
@@ -260,15 +260,7 @@ main()
   \
   build_make_install 'gammu-json' "$prefix" "PREFIX='$prefix'" &&
   \
-  build_autoconf 'couchdb' \
-    "$stdarg --with-js-lib-name=mozjs185 \
-      --with-erlang='$prefix/lib/erlang/usr/include' \
-      --with-js-include='$prefix/include/js' --with-js-lib='$prefix/lib'" &&
-  \
-  if [ "`build_version 'node' 2`" -ge 10 ]; then
-    build_npm_remote 'node-gyp' "$prefix"
-  fi &&
-  \
+  build_npm_remote 'node-gyp' "$prefix" &&
   build_npm_remote 'kanso' "$prefix" &&
   build_npm_remote 'grunt-cli' "$prefix" &&
   build_npm_remote 'eslint' "$prefix" &&

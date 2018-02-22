@@ -473,6 +473,19 @@ build_cmake()
     make && make install) 2>&1 | log "$name"
 }
 
+build_couchdb()
+{
+  local name="$1"
+  local prefix="$2"
+
+  builder_should_run "$name" || return 0
+
+  (cd "$name" &&
+    ./configure &&
+    PREFIX="$prefix" make release &&
+    cp -a ./rel/couchdb/* "$prefix/") 2>&1 | log "$name"
+}
+
 build_rebar()
 {
   local name="$1"

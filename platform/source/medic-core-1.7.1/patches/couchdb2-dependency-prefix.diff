@@ -1,0 +1,39 @@
+--- a/src/couch/rebar.config.script	2018-02-22 10:34:04.614317240 -0800
++++ b/src/couch/rebar.config.script	2018-02-22 10:36:29.466879323 -0800
+@@ -10,6 +10,8 @@
+ %% License for the specific language governing permissions and limitations under
+ %% the License.
+ 
++PREFIX = os:getenv("PREFIX", "/usr").
++
+ CopyIfDifferent = fun(Path, Contents) ->
+     case filelib:is_file(Path) of
+         true ->
+@@ -73,14 +75,14 @@
+             {unix, freebsd} ->
+                 {"-DHAVE_CURL -I/usr/local/include", "-DHAVE_CURL -lmozjs185 -lcurl"};
+             _ ->
+-                {"-DHAVE_CURL", "-DHAVE_CURL -lmozjs185 -lcurl"}
++                {"-DHAVE_CURL -I" ++ PREFIX ++ "/include/js", "-DHAVE_CURL -L" ++ PREFIX ++ "/lib -lmozjs185 -lcurl"}
+         end;
+     _ ->
+         case os:type() of
+             {win32, _} ->
+                 {"", "/LIBPATH:C:\\relax\\js-1.8.5\\js\\src mozjs185-1.0.lib"};
+             _ ->
+-                {"", "-lmozjs185"}
++                {"-I" ++ PREFIX ++ "/include/js", "-L" ++ PREFIX ++ "/lib -lmozjs185"}
+         end
+ end,
+ 
+@@ -88,8 +90,8 @@
+ 
+ IcuPath = "priv/couch_icu_driver.so",
+ IcuSrc = ["priv/icu_driver/*.c"],
+-IcuEnv = [{"DRV_CFLAGS",  "$DRV_CFLAGS -DPIC -O2 -fno-common"},
+-          {"DRV_LDFLAGS", "$DRV_LDFLAGS -lm -licuuc -licudata -licui18n -lpthread"}],
++IcuEnv = [{"DRV_CFLAGS",  "$DRV_CFLAGS -DPIC -O2 -fno-common -I" ++ PREFIX ++ "/include"},
++          {"DRV_LDFLAGS", "$DRV_LDFLAGS -lm -licuuc -licudata -licui18n -lpthread -L" ++ PREFIX ++ "/lib"}],
+ IcuDarwinEnv = [{"CFLAGS", "-DXP_UNIX -I/usr/local/opt/icu4c/include"},
+                 {"LDFLAGS", "-L/usr/local/opt/icu4c/lib"}],
+ IcuBsdEnv = [{"CFLAGS", "-DXP_UNIX -I/usr/local/include"},
