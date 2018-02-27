@@ -11,8 +11,9 @@ fatal()
 
 set_permissions()
 {
-  chmod 1777 \
-    platform/initrd/common/tmp &&
+  chmod 1777 platform/initrd/common/tmp &&
+  chmod 0440 platform/initrd/common/etc/sudoers &&
+  chmod 0750 platform/initrd/common/etc/sudoers.d
 
   return "$?"
 }
@@ -34,6 +35,7 @@ create_empty_directories()
       initrd/common/etc/ashrc.d \
       initrd/common/etc/profile.d \
       initrd/common/etc/sysconfig \
+      initrd/common/etc/sysconfig \
       initrd/common/dev \
       initrd/common/mnt \
       initrd/common/proc \
@@ -47,9 +49,6 @@ create_empty_directories()
       initrd/common/var/run \
       packages/java/storage \
       packages/java/storage/java \
-      packages/medic-transport/storage \
-      packages/medic-transport/storage/medic-transport \
-      packages/medic-transport/storage/medic-transport/logs \
       packages/vm-tools/storage \
       packages/vm-tools/storage/vm-tools \
       packages/vm-tools/storage/vm-tools/avahi/logs \
@@ -60,12 +59,10 @@ create_empty_directories()
       packages/system-services/storage/system-services \
       packages/system-services/storage/system-services/logs \
       packages/system-services/settings/system-services/cron \
-      packages/medic-core/storage/medic-core/gammu \
-      packages/medic-core/storage/medic-core/gammu/inbox \
-      packages/medic-core/storage/medic-core/gammu/outbox \
-      packages/medic-core/storage/medic-core/gammu/sent \
-      packages/medic-core/storage/medic-core/gammu/errors \
-      packages/medic-core/storage/medic-core/gammu/logs \
+      packages/medic-api/settings/medic-api \
+      packages/medic-api/software/medic-api \
+      packages/medic-api/storage/medic-api \
+      packages/medic-core/storage/medic-core/passwd \
       packages/medic-core/storage/medic-core/nginx \
       packages/medic-core/storage/medic-core/nginx/state \
       packages/medic-core/storage/medic-core/nginx/data \
@@ -87,16 +84,12 @@ create_empty_directories()
       packages/medic-rdbms/storage/medic-rdbms/postgresql/passwd \
       packages/medic-rdbms/settings/medic-rdbms/postgresql/env \
       packages/medic-rdbms/settings/medic-rdbms/postgresql/templates/postgresql.conf.d \
-      packages/concierge/storage \
-      packages/concierge/storage/concierge \
-      packages/concierge/storage/concierge/passwd \
-      packages/concierge/storage/concierge/logs \
-      packages/gardener/storage \
-      packages/gardener/storage/gardener \
-      packages/gardener/storage/gardener/data \
-      packages/gardener/storage/gardener/private \
-      packages/gardener/storage/gardener/logs \
-      packages/gardener/scripts/gardener/private \
+      packages/medic-sentinel/settings/medic-sentinel \
+      packages/medic-sentinel/software/medic-sentinel \
+      packages/medic-sentinel/storage/medic-sentinel \
+      packages/horticulturalist/settings/horticulturalist \
+      packages/horticulturalist/software/horticulturalist \
+      packages/horticulturalist/storage/horticulturalist \
       source/compiler/incoming \
       source/core/incoming \
       source/medic-core/incoming \

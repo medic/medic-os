@@ -41,54 +41,16 @@ install()
   chmod 0750 "$couchdb_settings" \
     "$PACKAGE_STORAGE/couchdb" "$PACKAGE_STORAGE/couchdb-lucene" &&
   \
-  chmod 0700 "$couchdb_settings/private" &&
-  chmod 0700 "$PACKAGE_SETTINGS/openssh/private" &&
-  \
-  chown -R gammu:gammu \
-    "$PACKAGE_STORAGE/gammu" "$PACKAGE_SETTINGS/gammu" &&
-  \
-  find "$PACKAGE_STORAGE/gammu" \
-    -type d -exec chmod 0750 {} \; &&
-  \
-  for binary in \
-    "$PACKAGE_ROOT/bin/gammu-json" \
-    "$PACKAGE_ROOT/bin/gammu-smsd-inject"; do
-    \
-    chown gammu:gammu-inject "$binary" && chmod 4110 "$binary"
-  done &&
-  \
-  if [ -z "$is_update" ]; then
-    info 'Installing default CouchDB databases'
-    install_default_couchdb_databases "$PACKAGE_ROOT" "$PACKAGE_STORAGE"
-  fi &&
+  chmod 0700 \
+    "$SERVICE_PASSWD_PATH" \
+    "$couchdb_settings/private" \
+    "$PACKAGE_SETTINGS/openssh/private" &&
   \
   if [ ! -f "$couchdb_settings/local.ini" ]; then
     cp -a "$couchdb_settings/private/local.ini" "$couchdb_settings/"
   fi
 
   return "$?"
-}
-
-install_default_couchdb_databases()
-{
-  local package_root="$1"
-  local storage_dir="$2"
-
-  local src_dir="$package_root/share/couchdb/garden"
-  local dst_dir="$storage_dir/couchdb/data"
-
-  for path in "$src_dir"/*.couch; do
-
-    local dst_path="$dst_dir/`basename -- "$path"`" \
-      || return "$?"
-
-    if ! [ -f "$dst_path" ]; then
-      cp -a "$path" "$dst_path" && chown couchdb:couchdb "$dst_path" \
-        || return "$?"
-    fi
-  done
-
-  return 0
 }
 
 install "$@"

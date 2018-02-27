@@ -23,7 +23,7 @@ merge_environment()
   export LD_LIBRARY_PATH="$root/lib:$LD_LIBRARY_PATH"
 
   export PATH="$java_root/bin:$java_root/java/bin:$PATH"
-  export CONCIERGE_PASSWD_PATH="$PACKAGE_STORAGE/../concierge/passwd"
+  export SERVICE_PASSWD_PATH="$PACKAGE_STORAGE/passwd"
 
   if [ -r /etc/os-release ]; then
     source /etc/os-release

@@ -60,52 +60,6 @@ install()
   return "$?"
 }
 
-create_system_group_if_necessary()
-{
-  local group="$1"
-  local group_gid="$2"
-  shift 2
-
-  if grep -q "^$group:" /etc/group; then
-    return 0
-  fi
-
-  if [ "$ID_LIKE" = 'debian' ]; then
-    # Ubuntu userspace
-    groupadd -r -g "$group_gid" "$group"
-  else
-    # Busybox userspace
-    busybox addgroup -S -g "$group_gid" "$group"
-  fi
-
-  return "$?"
-}
-
-create_system_user_if_necessary()
-{
-  local user="$1"
-  local user_uid="$2"
-  local user_gecos="$3"
-  local user_group="$4"
-  shift 4
-
-  if id -u "$user" &>/dev/null; then
-    return 0
-  fi
-
-  if [ "$ID_LIKE" = 'debian' ]; then
-    # Ubuntu userspace
-    useradd -g "$user_group" -u "$user_uid" \
-      -d /var/empty -c "$user_gecos" -s /bin/sh "$user"
-  else
-    # Busybox userspace
-    busybox adduser -G "$user_group" -D -H -u "$user_uid" \
-      -h /var/empty -g "$user_gecos" -s /bin/sh "$user"
-  fi
-
-  return "$?"
-}
-
 create_settings_defaults()
 {
   local directory="$1"
@@ -241,9 +195,10 @@ generate_random_passwd()
     return 1
   fi
 
+
   rm -f "$passwd_file" &&
   echo "$passwd" > "$passwd_file" &&
-  chown concierge:postgresql "$passwd_file" &&
+  chown root:postgresql "$passwd_file" &&
   chmod 0440 "$passwd_file"
 
   if [ "$?" -ne 0 ]; then

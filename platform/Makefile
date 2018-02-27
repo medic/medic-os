@@ -40,13 +40,13 @@ native: build-native-tarball
 docker: build-docker-staging
 
 images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-docker-staging build-x86-image-nopae
-packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg concierge-pkg java-pkg system-services-pkg vm-tools-pkg gardener-pkg
+packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg horticulturalist-pkg medic-api-pkg medic-sentinel-pkg java-pkg system-services-pkg vm-tools-pkg
 
 
 # Public targets
 
 bootinit:
-	@(cd initrd/common && tar -cf - boot | xz -9ec) \
+	@(cd initrd/common && tar -cf - boot | xz -c) \
 	  > ../output/"${SYSTEM_IMAGE_NAME}-${DATE}-all-bootinit.tar.xz"
 
 compile-only:
@@ -97,6 +97,7 @@ clean-staging:
 	rm -rf staging/packages && \
 	rm -rf packages/vm-tools/software && \
 	rm -rf packages/medic-core/software && \
+	rm -rf packages/medic-rdbms/software && \
 	rm -rf 'staging/software/${PLATFORM}'/*
 
 clean-images:
@@ -196,14 +197,14 @@ build-native-tarball:
 	  "$$staging_dir/mnt/startup/" && \
 	\
 	(cd "$$staging_dir/../" && tar -cf - .) \
-	  | xz -9ec > "output/${SYSTEM_IMAGE_ID}-native.tar.xz" && \
+	  | xz -c > "output/${SYSTEM_IMAGE_ID}-native.tar.xz" && \
 	\
 	echo 'done.'
 
 compress-xen-image:
 	@echo -n 'Compressing Xen image... ' && \
 	\
-	xz -0qcf 'output/${SYSTEM_IMAGE_ID}-xen' \
+	xz -0 -cf 'output/${SYSTEM_IMAGE_ID}-xen' \
 	  > 'output/${SYSTEM_IMAGE_ID}-xen.xz' && \
 	\
 	echo 'done.'
@@ -305,14 +306,19 @@ strip-binaries:
 	./scripts/strip-binaries packages && \
 	echo 'done.'
 
-concierge-pkg:
-	@echo -n 'Compressing package 'concierge'... ' && \
-	scripts/build-package 'concierge' 10112 '${PLATFORM}' && \
+horticulturalist-pkg:
+	@echo -n 'Compressing package 'horticulturalist'... ' && \
+	scripts/build-package 'horticulturalist' 00600 '${PLATFORM}' && \
 	echo 'done.'
 
 java-pkg:
 	@echo -n 'Compressing package 'java'... ' && \
 	scripts/build-package 'java' 17801 '${PLATFORM}' && \
+	echo 'done.'
+
+medic-api-pkg:
+	@echo -n 'Compressing package 'medic-api'... ' && \
+	scripts/build-package 'medic-api' 00100 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-pkg:
@@ -326,6 +332,11 @@ medic-core-docs-pkg:
 	  'medic-core-docs' 17100 /srv/software/medic-core && \
 	echo 'done.'
 
+medic-couch2pg-pkg:
+	@echo -n 'Compressing package 'medic-couch2pg'... ' && \
+	scripts/build-package 'medic-couch2pg' 10000 '${PLATFORM}' && \
+	echo 'done.'
+
 medic-rdbms-pkg:
 	@echo -n 'Compressing package 'medic-rdbms'... ' && \
 	scripts/build-package 'medic-rdbms' 95301 '${PLATFORM}' && \
@@ -337,9 +348,9 @@ medic-rdbms-docs-pkg:
 	  'medic-rdbms-docs' 95301 /srv/software/medic-rdbms && \
 	echo 'done.'
 
-medic-couch2pg-pkg:
-	@echo -n 'Compressing package 'medic-couch2pg'... ' && \
-	scripts/build-package 'medic-couch2pg' 10000 '${PLATFORM}' && \
+medic-sentinel-pkg:
+	@echo -n 'Compressing package 'medic-sentinel'... ' && \
+	scripts/build-package 'medic-sentinel' 00100 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
@@ -356,14 +367,6 @@ vm-tools-docs-pkg:
 	@echo -n 'Compressing package 'vm-tools-docs'... ' && \
 	scripts/build-docs-package \
 	  'vm-tools-docs' 94612 /srv/software/vm-tools && \
-	echo 'done.'
-
-shrink-gardener:
-	@./scripts/shrink-gardener
-
-gardener-pkg: shrink-gardener
-	@echo -n 'Compressing package 'gardener'... ' && \
-	scripts/build-package 'gardener' 11002 '${PLATFORM}' && \
 	echo 'done.'
 
 convert-boot-logo:

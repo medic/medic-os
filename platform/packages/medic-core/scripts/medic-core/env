@@ -1,15 +1,25 @@
 #!/bin/sh
 
+source /boot/include/utility
+
 merge_environment()
 {
-  local name='medic-core'
+  local prefix="$1"
+  local path_only="$2"
+  shift 2
 
   local version='1.7.1'
+  local name='medic-core'
   local platform="`cat /etc/platform`"
 
-  local prefix="$1"
   local root="$prefix/software/$name/v$version/$platform"
   local java_root="$prefix/software/java/current/$platform"
+
+  prepend_paths "$root"
+
+  if [ "$path_only" ]; then
+    return 0
+  fi
 
   export PACKAGE_ROOT="$root"
   export PACKAGE_NAME="$name"
@@ -20,14 +30,9 @@ merge_environment()
   export PACKAGE_SOFTWARE="$prefix/software/$name"
   export PACKAGE_SETTINGS="$prefix/settings/$name"
 
-  export PATH="$root/bin:$root/sbin:$PATH"
-  export LD_LIBRARY_PATH="$root/lib:$LD_LIBRARY_PATH"
-
   export JAVA_HOME="$java_root"
+  export SERVICE_PASSWD_PATH="$PACKAGE_STORAGE/passwd"
   export PATH="$java_root/bin:$java_root/java/bin:$PATH"
-
-  export GAMMU_SMS_DEVICES='/dev/ttyUSB? /dev/ttyACM? /dev/ttyHS?'
-  export CONCIERGE_PASSWD_PATH="$PACKAGE_STORAGE/../concierge/passwd"
 
   return 0
 }

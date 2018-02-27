@@ -1,0 +1,50 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/logger'
+
+chown_packages()
+{
+  while [ "$#" -gt 0 ]; do
+    local package="$1"
+    shift 1
+
+    local dir="$PREFIX/software/$package"
+
+    mkdir -p "$dir" &&
+    chown -R "$HORTICULTURALIST_USER:$HORTICULTURALIST_GROUP" "$dir"
+  done
+}
+
+start()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv &&
+  \
+  wait_for_file "$COUCH_PASSWD_FILE" &&
+  wait_for_file "$BOOTSTRAP_COMPLETE_FILE" &&
+  \
+  source "$base/../../medic-core/env" &&
+  merge_environment /srv 'path-only' &&
+  \
+  local password="`cat "$COUCH_PASSWD_FILE"`" &&
+  export COUCH_NODE_NAME='couchdb@localhost' &&
+  export COUCH_URL="http://${PACKAGE_NAME}:${password}@localhost:5984/medic" &&
+  \
+  local script="src/index.js" &&
+  local run_cmd="'`which node`' '$script' --medic-os" &&
+  local command_line="cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" &&
+  \
+  chown_packages 'medic-api' 'medic-sentinel' &&
+  \
+  exec /boot/timestamp \
+    su -c "$command_line" "$HORTICULTURALIST_USER" \
+      >> "$PACKAGE_STORAGE/logs/horticulturalist.log" 2>&1
+}
+
+start
+exit "$?"
+

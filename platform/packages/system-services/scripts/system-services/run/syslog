@@ -7,8 +7,9 @@ start()
 
   mkdir -p "$logs_dir" &&
   \
-  exec /boot/timestamp busybox syslogd -n -O "$log_path" \
-    >> "$log_path" 2>&1
+  exec /boot/timestamp \
+    busybox syslogd -n -O "$log_path" \
+      >> "$log_path" 2>&1
 }
 
 main()

@@ -64,7 +64,10 @@ manifest_find_all()
 {
   local manifest_path="$1"
 
-  sort -r < "$manifest_path"
+  if [ -f "$manifest_path" ]; then
+    sort -r < "$manifest_path"
+  fi
+
   return "$?"
 }
 

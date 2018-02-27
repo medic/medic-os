@@ -2,6 +2,17 @@
 
 srv_dir='/srv'
 
+wait_for_file()
+{
+  local file="$1"
+
+  while ! [ -e "$file" ]; do
+    sleep 1
+  done
+
+  return 0
+}
+
 is_integer()
 {
   for n in "$@"; do
@@ -52,6 +63,71 @@ read_integer_file()
   return 255
 }
 
+is_debian_like()
+{
+  if [ -f /etc/os-release ]; then
+    source /etc/os-release || return 127
+  fi
+
+  [ "$ID_LIKE" = 'debian' ]
+}
+
+create_system_group_if_necessary()
+{
+  local group="$1"
+  local group_gid="$2"
+  shift 2
+
+  if grep -q "^$group:" /etc/group; then
+    return 0
+  fi
+
+  if is_debian_like; then
+    # Debian/Ubuntu userspace
+    groupadd -r -g "$group_gid" "$group"
+  else
+    # Busybox userspace
+    busybox addgroup -S -g "$group_gid" "$group"
+  fi
+
+  return "$?"
+}
+
+create_system_user_if_necessary()
+{
+  local user="$1"
+  local user_uid="$2"
+  local user_gecos="$3"
+  local user_group="$4"
+  local user_homedir="$5"
+  local user_shell="$6"
+  shift 6
+
+  if id -u "$user" &>/dev/null; then
+    return 0
+  fi
+
+  if [ -z "$user_homedir" ]; then
+    user_homedir='/var/empty'
+  fi
+
+  if [ -z "$user_shell" ]; then
+    user_shell='/bin/bash'
+  fi
+
+  if is_debian_like; then
+    # Debian/Ubuntu userspace
+    useradd -g "$user_group" -u "$user_uid" \
+      -d "$user_homedir" -c "$user_gecos" -s "$user_shell" "$user"
+  else
+    # Busybox userspace
+    busybox adduser -G "$user_group" -D -H -u "$user_uid" \
+      -h "$user_homedir" -g "$user_gecos" -s "$user_shell" "$user"
+  fi
+
+  return "$?"
+}
+
 require_root()
 {
   if [ "`id -u`" -ne 0 ]; then
@@ -99,27 +175,6 @@ use_package()
   $command "$srv_dir/software/$package/current/default"
 }
 
-# Logging:
-#   Provide a number of different log targets. The `emit`
-#   function is for raw not-necessarily-visual output, and
-#   the `print` function is for raw visual output. The `info`,
-#   `warn`, and `fatal` functions are higher-level exported
-#   logging functions that should be used by client code.
-#   The `log` method is an invisible-by-default debug target.
-#   Any of these functions can be overridden post-inclusion.
-
-emit()
-{
-  if [ -z "$logger_suppress_messages" ]; then
-    echo "$@" >&2
-  fi
-}
-
-print()
-{
-  emit "$@"
-}
-
 success()
 {
   emit "Success: $*"
@@ -148,10 +203,34 @@ log()
   fi
 }
 
-# Defaults: later includes may override
-if [ "$logger_suppress_output" ]; then
-  log='/dev/null'
-else
-  log='/dev/stderr'
+# Logging:
+#   Provide a number of different default low-level log targets.
+#   The `emit` function is for raw not-necessarily-visual output;
+#   the `print` function is for raw visual output. The `log`
+#   method is an invisible-by-default debug target. The `$log`
+#   variable is a file path that can be used in an append-only
+#   file descriptor redirection operation Any of these functions
+#   can be overridden post-inclusion.
+
+if [ -z "$log" ]; then
+
+  emit()
+  {
+    if [ -z "$logger_suppress_messages" ]; then
+      echo "$@" >&2
+    fi
+  }
+
+  print()
+  {
+    emit "$@"
+  }
+
+  if [ "$logger_suppress_output" ]; then
+    log='/dev/null'
+  else
+    log='/dev/stderr'
+  fi
+
 fi
 

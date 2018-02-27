@@ -33,9 +33,7 @@ build: reset-time prepare-tree
 	  source ./.profile && ${QMAKE} build all)
 
 repackage: reset-time prepare-tree
-	@(cd platform/source && \
-	  ${QMAKE} preload-medic-core) && \
-	(cd platform && \
+	@(cd platform && \
 	  ${QMAKE} clean &>/dev/null && \
 	  ${QMAKE} copy all)
 
