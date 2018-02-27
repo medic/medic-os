@@ -63,14 +63,12 @@ up='../../../../..'
     ln -sf "$up/../storage/medic-core/nginx/logs" var/log/nginx &&
   rm -rf var/run/nginx &&
     ln -sf "$up/../storage/medic-core/nginx/state" var/run/nginx &&
-  rm -rf etc/couchdb &&
-    ln -sf "$up/settings/medic-core/couchdb" etc/couchdb &&
-  rm -rf var/log/couchdb &&
-    ln -sf "$up/../storage/medic-core/couchdb/logs" var/log/couchdb &&
-  rm -rf var/lib/couchdb &&
-    ln -sf "$up/../storage/medic-core/couchdb/data" var/lib/couchdb &&
-  rm -rf var/run/couchdb &&
-    ln -sf "$up/../storage/medic-core/couchdb/state" var/run/couchdb &&
+  rm -rf couchdb/etc &&
+    ln -sf "$up/settings/medic-core/couchdb" couchdb/etc &&
+  rm -rf couchdb/log &&
+    ln -sf "$up/storage/medic-core/couchdb/logs" couchdb/log &&
+  rm -rf couchdb/data &&
+    ln -sf "$up/storage/medic-core/couchdb/data" couchdb/data &&
   rm -rf java/logs &&
     ln -sf "$up/storage/medic-core/couchdb-lucene/logs" java/logs &&
   rm -rf java/conf &&

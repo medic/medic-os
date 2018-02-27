@@ -155,11 +155,10 @@ main()
     build_make_install 'bladox-tools' "$prefix" "PREFIX='$prefix'"
   fi &&
   \
-  (disable_parallelism && build_make 'logrotate' 'all install' \
-    "PREFIX='$prefix' LFS='$CFLAGS' LDFLAGS='$LDFLAGS' BASEDIR=''") &&
-  \
   build_autoconf 'zsync' "$stdarg" &&
   build_autoconf 'xdelta' "$stdarg" &&
+  build_autoconf 'logrotate' "$stdarg" &&
+  \
   build_autoconf 'xz' "$stdarg --enable-shared --disable-static" &&
   build_autoconf 'lzo' "$stdarg --enable-shared --disable-static" &&
   build_autoconf 'lrzip' "$stdarg --enable-shared --disable-static" &&

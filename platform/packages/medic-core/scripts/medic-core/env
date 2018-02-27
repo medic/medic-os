@@ -8,14 +8,14 @@ merge_environment()
   local path_only="$2"
   shift 2
 
-  local version='1.7.1'
+  local version='2.1.1'
   local name='medic-core'
   local platform="`cat /etc/platform`"
 
-  local root="$prefix/software/$name/v$version/$platform"
+  local root="$prefix/software/$name/v$version/$platform/couchdb"
   local java_root="$prefix/software/java/current/$platform"
 
-  prepend_paths "$root"
+  prepend_paths "$root" "$root/couchdb"
 
   if [ "$path_only" ]; then
     return 0

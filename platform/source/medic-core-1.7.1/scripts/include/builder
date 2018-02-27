@@ -483,7 +483,8 @@ build_couchdb()
   (cd "$name" &&
     ./configure &&
     PREFIX="$prefix" make release &&
-    cp -a ./rel/couchdb/* "$prefix/") 2>&1 | log "$name"
+    cp -av ./rel/couchdb "$prefix/" &&
+    chown -R root:root "$prefix/couchdb") 2>&1 | log "$name"
 }
 
 build_rebar()

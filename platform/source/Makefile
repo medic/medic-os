@@ -7,7 +7,7 @@ PLATFORM := $(shell ../scripts/detect-platform)
 
 JAVA_VERSION ?= 1.7.80
 VM_TOOLS_VERSION ?= 9.4.6
-MEDIC_CORE_VERSION ?= 1.7.1
+MEDIC_CORE_VERSION ?= 2.1.1
 MEDIC_RDBMS_VERSION ?= 9.5.3
 MEDIC_COUCH2PG_VERSION ?= 1.0.0
 
@@ -77,14 +77,14 @@ copy-core:
 	  ${MAKE} copy PLATFORM='${PLATFORM}')
 
 clean-core:
-	(cd core && ${MAKE} clean)
+	(cd core && ${MAKE} clean); true
 
 
 vm-tools: build-vm-tools copy-vm-tools
 
 clean-vm-tools:
 	@rm -rf /srv/software/vm-tools && \
-	(cd vm-tools && ${MAKE} clean)
+	(cd vm-tools && ${MAKE} clean); true
 
 build-vm-tools:
 	@(cd vm-tools && ${QMAKE} \
@@ -110,7 +110,7 @@ medic-core: build-medic-core copy-medic-core
 
 clean-medic-core:
 	@rm -rf /srv/software/medic-core && \
-	(cd medic-core && ${MAKE} clean)
+	(cd medic-core && ${MAKE} clean); true
 
 build-medic-core:
 	@(cd medic-core && \
@@ -134,7 +134,7 @@ medic-rdbms: build-medic-rdbms copy-medic-rdbms
 
 clean-medic-rdbms:
 	@rm -rf /srv/software/medic-rdbms && \
-	(cd medic-rdbms && ${MAKE} clean)
+	(cd medic-rdbms && ${MAKE} clean); true
 
 build-medic-rdbms:
 	@(cd medic-rdbms && ${QMAKE} all \
@@ -155,7 +155,7 @@ copy-medic-rdbms:
 medic-couch2pg: build-medic-couch2pg copy-medic-couch2pg
 
 clean-medic-couch2pg:
-	(cd medic-couch2pg && ${MAKE} clean)
+	(cd medic-couch2pg && ${MAKE} clean); true
 
 build-medic-couch2pg:
 	@(cd medic-couch2pg && ${QMAKE} all \
@@ -204,7 +204,7 @@ set-pax-flags: copy-java-template
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
 	  '${MEDIC_CORE_PKG_ROOT}/bin/lrzip' 2>/dev/null && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czrm \
-	  '${MEDIC_CORE_PKG_ROOT}/lib/couchdb/bin/couchjs' 2>/dev/null && \
+	  '${MEDIC_CORE_PKG_ROOT}/couchdb/bin/couchjs' 2>/dev/null && \
 	echo 'done.'
 
 finalize-initrd:

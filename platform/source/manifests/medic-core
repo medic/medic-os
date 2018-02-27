@@ -23,7 +23,7 @@ libressl, https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-2.3.4.tar.gz
 libusb, https://jaist.dl.sourceforge.net/project/libusb/libusb-1.0/libusb-1.0.9/libusb-1.0.9.tar.bz2
 libusb-compat, https://jaist.dl.sourceforge.net/project/libusb/libusb-compat-0.1/libusb-compat-0.1.5/libusb-compat-0.1.5.tar.bz2
 libutempter, http://ftp.altlinux.org/pub/people/ldv/utempter/libutempter-1.1.6.tar.bz2
-logrotate, https://github.com/logrotate/logrotate/releases/download/3.9.2/logrotate-3.9.2.tar.xz
+logrotate, https://github.com/logrotate/logrotate/releases/download/3.13.0/logrotate-3.13.0.tar.xz
 lrzip, http://ck.kolivas.org/apps/lrzip/lrzip-0.630.tar.bz2
 luajit, https://luajit.org/download/LuaJIT-2.0.4.tar.gz
 lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
