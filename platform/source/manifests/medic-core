@@ -7,7 +7,6 @@ couchdb, https://apache.osuosl.org/couchdb/source/1.7.1/apache-couchdb-1.7.1.tar
 couchdb-lucene, https://medic.s3.amazonaws.com/os/mirror/couchdb-lucene-1.0.2.tar.gz
 curl, https://curl.haxx.se/download/curl-7.35.0.tar.lzma
 diffutils, https://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz
-erica, https://medic.s3.amazonaws.com/os/mirror/erica-0.5.0.tar.gz
 erlang, http://erlang.org/download/otp_src_20.2.tar.gz
 gammu, https://dl.cihar.com/gammu/releases/gammu-1.33.0.tar.xz
 gammu-json, https://github.com/medic/gammu-json.git
