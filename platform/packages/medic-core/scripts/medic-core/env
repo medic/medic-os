@@ -12,7 +12,7 @@ merge_environment()
   local name='medic-core'
   local platform="`cat /etc/platform`"
 
-  local root="$prefix/software/$name/v$version/$platform/couchdb"
+  local root="$prefix/software/$name/v$version/$platform"
   local java_root="$prefix/software/java/current/$platform"
 
   prepend_paths "$root" "$root/couchdb"
