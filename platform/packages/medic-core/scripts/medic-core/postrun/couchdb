@@ -8,9 +8,23 @@ chomp()
   tr -d '\r\n'
 }
 
-get_base_config_url()
+get_couchdb_major_version()
+{
+  echo "$PACKAGE_VERSION" | cut -d. -f1
+}
+
+get_couchdb_url()
 {
   echo 'http://localhost:5984'
+}
+
+get_couchdb_config_url()
+{
+  if [ "`get_couchdb_major_version`" -gt 1 ]; then
+    echo 'http://localhost:5986'
+  else
+    echo 'http://localhost:5984'
+  fi
 }
 
 get_password_directory()
@@ -23,7 +37,7 @@ wait_for_couchdb()
   local n=15
 
   while [ "$n" -gt 0 ]; do
-    curl "`get_base_config_url`" &>/dev/null
+    curl "`get_couchdb_config_url`" &>/dev/null
     [ "$?" -eq 0 ] && return 0
     sleep 1
     n=$[$n-1]
@@ -86,10 +100,9 @@ generate_random_password()
 
 create_couchdb_put()
 {
-  local user="$1"
+  local should_auth="$1"
   local payload="$2"
   local payload_is_file="$3"
-  shift 3
 
   local cmd='cat'
 
@@ -98,16 +111,18 @@ create_couchdb_put()
   fi
 
   # Authenticate if needed
-  if is_existing_user 'admin' && [ "$user" != 'admin' ]; then
+  if [ "$should_auth" ]; then
     echo -n 'user = "admin:' &&
     cat "`get_password_directory`/admin" | chomp &&
     echo '"'
   fi
 
-  # Send JSON-encoded string payload
-  echo -n 'data = "\"' &&
-  "$cmd" "$payload" | chomp &&
-  echo '\""'
+  # Send JSON-encoded string payload if provided
+  if [ "$#" -gt 1 ]; then
+    echo -n 'data = "\"' &&
+    "$cmd" "$payload" | chomp &&
+    echo '\""'
+  fi
 }
 
 create_couchdb_admin()
@@ -136,8 +151,16 @@ create_couchdb_admin()
     return 2
   fi
 
-  local url="`get_base_config_url`" &&
-  create_couchdb_put "$user" "$passwd_file" 't' \
+  # Authorize if admin exists
+  local should_auth=''
+
+  if is_existing_user 'admin' && [ "$user" != 'admin' ]; then
+    should_auth='t'
+  fi
+
+  # Make HTTP PUT request
+  local url="`get_couchdb_config_url`" &&
+  create_couchdb_put "$should_auth" "$passwd_file" 't' \
     | curl -K- -sfX PUT "$url/_config/admins/$user" >/dev/null
 
   if [ ${PIPESTATUS[1]} -ne 0 ]; then
@@ -147,13 +170,40 @@ create_couchdb_admin()
   chmod 0400 "$passwd_file"
 }
 
+_perform_couchdb_lockdown()
+{
+  local section_name="$1"
+  shift 1
+
+  local base_url="`get_couchdb_config_url`" &&
+  local url="$base_url/_config/$section_name/require_valid_user" &&
+  \
+  create_couchdb_put 't' 'true' \
+    | curl -K- -sfX PUT "$url" >/dev/null
+}
+
 perform_couchdb_lockdown()
 {
-  local base_url="`get_base_config_url`" &&
-  local url="$base_url/_config/couch_httpd_auth/require_valid_user" &&
+  if [ "`get_couchdb_major_version`" -gt 1 ]; then
+    _perform_couchdb_lockdown 'chttpd' || return "$?"
+  fi
+
+  _perform_couchdb_lockdown 'couch_httpd_auth' || return "$?"
+}
+
+create_system_databases()
+{
+  local url="`get_couchdb_url`" &&
+  local version="`get_couchdb_major_version`" &&
   \
-  create_couchdb_put '' 'true' \
-    | curl -K- -sfX PUT "$url" >/dev/null
+  if [ "$version" -le 1 ]; then
+    return 0
+  fi &&
+  \
+  for db in _users _replicator _global_changes; do
+    create_couchdb_put 't' | curl -K- -sfX PUT "$url/$db" >/dev/null \
+      || return "$?"
+  done
 }
 
 postinstall()
@@ -221,6 +271,9 @@ postinstall()
     warn 'A new administrative password has been randomly assigned'
     warn 'This will not be displayed again; please make a note of it'
   fi
+
+  create_system_databases \
+    || fatal 'Failed to create one or more system databases'
 
   info 'CouchDB first-run setup successful'
 }
