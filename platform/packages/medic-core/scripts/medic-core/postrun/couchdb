@@ -255,7 +255,7 @@ postinstall()
     fatal "Failed to create one or more service accounts"
   fi
 
-  create_couchdb_admin 'medic' "$DOCKER_ADMIN_PASSWORD"
+  create_couchdb_admin 'medic' "$DOCKER_COUCHDB_ADMIN_PASSWORD"
 
   if [ "$?" -ne 0 ]; then
     fatal "Failed to create an interactive admin account"
@@ -263,9 +263,9 @@ postinstall()
 
   info 'New CouchDB Administrative User: medic'
 
-  if [ "$DOCKER_ADMIN_PASSWORD" ]; then
+  if [ "$DOCKER_COUCHDB_ADMIN_PASSWORD" ]; then
     warn 'A new administrative password was explicitly set via the CLI'
-    info 'The new administrative password will not be displayed'
+    warn 'The new administrative password will not be displayed'
   else
     info "New CouchDB Administrative Password: `read_password medic`"
     warn 'A new administrative password has been randomly assigned'

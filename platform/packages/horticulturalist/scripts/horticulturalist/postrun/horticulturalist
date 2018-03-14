@@ -16,20 +16,32 @@ bootstrap()
     return 0
   fi
 
+  # If bootstrapping is already disabled, do nothing
+  if [ "$DOCKER_HORTI_BOOTSTRAP_DISABLED" ]; then
+    warn "Horticulturalist bootstraping is disabled"
+    return 0
+  fi
+
   wait_for_file "$COUCH_PASSWD_FILE" &&
   local password="`cat "$COUCH_PASSWD_FILE"`" &&
   \
   source "$base/../../medic-core/env" &&
   merge_environment /srv 'path-only' &&
   \
+  info 'Horticulturalist is now bootstrapping' &&
+  \
   export COUCH_NODE_NAME='couchdb@localhost' &&
   export COUCH_URL="http://${PACKAGE_NAME}:${password}@localhost:5984/medic" &&
   \
   local script="src/index.js" &&
   local run_cmd="'`which node`' '$script' --medic-os --only-bootstrap" &&
-  local command_line="cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" &&
   \
-  info 'Horticulturalist is now bootstrapping' &&
+  if [ "$DOCKER_HORTI_BOOTSTRAP" ]; then
+    run_cmd="$run_cmd='$DOCKER_HORTI_BOOTSTRAP'"
+    info "Horticulturalist is bootstrapping to '$DOCKER_HORTI_BOOTSTRAP'"
+  fi
+  \
+  local command_line="cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" &&
   \
   su -c "$command_line" "$HORTICULTURALIST_USER" \
     >> "$PACKAGE_STORAGE/logs/horticulturalist.log" 2>&1 &&
