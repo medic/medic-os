@@ -62,7 +62,14 @@ main()
   synchronize_disks
 
   info 'System started successfully'
-  /boot/recovery-console
+
+  if [ -z "$DOCKER_INTERACTIVE" ]; then
+    info 'Starting log streaming'
+    exec /boot/log-streamer
+  else
+    info 'Starting interactive console'
+    exec /boot/recovery-console
+  fi
 
   return 0
 }

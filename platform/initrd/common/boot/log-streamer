@@ -1,0 +1,16 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+
+main()
+{
+  while true; do
+    sleep 3600
+  done
+
+  return 0
+}
+
+main
+exit "$?"
+
