@@ -1,10 +1,8 @@
 acl, https://download.savannah.gnu.org/releases/acl/acl-2.2.52.src.tar.gz
 attr, https://download.savannah.gnu.org/releases/attr/attr-2.4.47.src.tar.gz
-ant, https://archive.apache.org/dist/ant/source/apache-ant-1.9.4-src.tar.gz
 bzip2, http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
 bladox-tools, https://medic.s3.amazonaws.com/os/mirror/bladox-tools-1.5.24.tar.xz
 couchdb, https://ftp.osuosl.org/pub/apache/couchdb/source/2.1.1/apache-couchdb-2.1.1.tar.gz
-couchdb-lucene, https://medic.s3.amazonaws.com/os/mirror/couchdb-lucene-1.0.2.tar.gz
 curl, https://curl.haxx.se/download/curl-7.35.0.tar.lzma
 diffutils, https://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz
 erlang, http://erlang.org/download/otp_src_20.2.tar.gz
@@ -27,7 +25,6 @@ logrotate, https://github.com/logrotate/logrotate/releases/download/3.13.0/logro
 lrzip, http://ck.kolivas.org/apps/lrzip/lrzip-0.630.tar.bz2
 luajit, https://luajit.org/download/LuaJIT-2.0.4.tar.gz
 lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
-maven, https://archive.apache.org/dist/maven/maven-3/3.3.1/source/apache-maven-3.3.1-src.tar.gz
 nano, https://www.nano-editor.org/dist/v2.4/nano-2.4.2.tar.gz
 ncurses, https://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
 nginx, https://nginx.org/download/nginx-1.13.6.tar.gz

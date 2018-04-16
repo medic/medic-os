@@ -5,7 +5,6 @@ BITS ?= 64
 PARALLEL ?= 16
 PLATFORM := $(shell ../scripts/detect-platform)
 
-JAVA_VERSION ?= 1.7.80
 VM_TOOLS_VERSION ?= 9.4.6
 MEDIC_CORE_VERSION ?= 2.1.1
 MEDIC_RDBMS_VERSION ?= 9.5.3
@@ -17,7 +16,6 @@ MEDIC_COUCH2PG_ROOT ?= /srv/software/medic-couch2pg/v${MEDIC_COUCH2PG_VERSION}
 MEDIC_RDBMS_ROOT ?= /srv/software/medic-rdbms/v${MEDIC_RDBMS_VERSION}/${PLATFORM}
 
 PKG_DIR ?= ../packages
-JAVA_PKG_ROOT ?= ${PKG_DIR}/java/software/java/v${JAVA_VERSION}/${PLATFORM}
 VM_TOOLS_PKG_ROOT ?= ${PKG_DIR}/vm-tools/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
 MEDIC_CORE_PKG_ROOT ?= ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
@@ -44,7 +42,7 @@ finalize: finalize-all
 finalize-all: verify-packages finalize-initrd
 
 clean: clean-all
-clean-all: clean-core clean-vm-tools clean-medic-core clean-medic-rdbms clean-medic-couch2pg clean-java clean-compiler
+clean-all: clean-core clean-vm-tools clean-medic-core clean-medic-rdbms clean-medic-couch2pg clean-compiler
 
 
 # Public targets
@@ -186,19 +184,8 @@ rebuild-kernel:
 	    KERNEL_VERSION='${KERNEL_VERSION}' KERNEL_EXTRA='${KERNEL_EXTRA}' \
 	    KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' PARALLEL='${PARALLEL}')
 
-copy-java-template: clean-java
-	@echo -n "Copying package template for 'java'... " && \
-	rm -rf ../packages/java/software && \
-	cp -a "../templates/java/${PLATFORM}/software" ../packages/java/software && \
-	echo 'done.'
-
-clean-java:
-	@rm -rf ../packages/java/software
-
-set-pax-flags: copy-java-template
+set-pax-flags:
 	@echo -n "Setting executable flags... " && \
-	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
-	  '${JAVA_PKG_ROOT}/bin/java' 2>/dev/null && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
 	  '${MEDIC_CORE_PKG_ROOT}/bin/node' 2>/dev/null && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \

@@ -35,9 +35,6 @@ install()
   chown -R couchdb:staff \
     "$couchdb_settings" "$PACKAGE_STORAGE/couchdb" &&
   \
-  chown -R couchdb-lucene:staff \
-    "$PACKAGE_STORAGE/couchdb-lucene" &&
-  \
   chmod 0750 "$couchdb_settings" \
     "$PACKAGE_STORAGE/couchdb" "$PACKAGE_STORAGE/couchdb-lucene" &&
   \
