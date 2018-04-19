@@ -15,7 +15,6 @@ RUN apt-get -q=2 -y install \
 
 RUN groupadd avahi
 RUN groupadd couchdb
-RUN groupadd couchdb-lucene
 RUN groupadd nobody
 RUN groupadd postgresql
 RUN groupadd sshd
@@ -23,7 +22,6 @@ RUN groupadd vm
 
 RUN useradd -rd /var/empty -c 'Service - Avahi' -g avahi avahi
 RUN useradd -rd /var/empty -c 'Service - CouchDB' -g couchdb couchdb
-RUN useradd -rd /var/empty -c 'Service - Lucene' -g couchdb-lucene couchdb-lucene
 RUN useradd -rd /var/empty -c 'Service - Postgres' -g postgresql postgresql
 RUN useradd -rd /var/empty -c 'Service - Secure Shell' -g sshd sshd
 RUN useradd -rd /home/vm -c 'Legacy - VM Login' -g vm -s /bin/bash vm
