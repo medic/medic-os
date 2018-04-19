@@ -25,7 +25,7 @@ create_empty_directories()
     \
     for platform in x64 x86 armv6; do
       mkdir -p "images/$platform" \
-        "initrd/$platform/lib" "templates/java/$platform"
+        "initrd/$platform/lib"
     done &&
     \
     mkdir -p \
@@ -47,8 +47,6 @@ create_empty_directories()
       initrd/common/var/lock \
       initrd/common/var/log \
       initrd/common/var/run \
-      packages/java/storage \
-      packages/java/storage/java \
       packages/vm-tools/storage \
       packages/vm-tools/storage/vm-tools \
       packages/vm-tools/storage/vm-tools/avahi/logs \
@@ -69,13 +67,10 @@ create_empty_directories()
       packages/medic-core/storage/medic-core/nginx/logs \
       packages/medic-core/storage/medic-core/openssh \
       packages/medic-core/storage/medic-core/openssh/logs \
-      packages/medic-core/storage/medic-core/couchdb-lucene/indexes \
-      packages/medic-core/storage/medic-core/couchdb-lucene/logs \
       packages/medic-core/storage/medic-core/couchdb \
       packages/medic-core/storage/medic-core/couchdb/state \
       packages/medic-core/storage/medic-core/couchdb/data \
       packages/medic-core/storage/medic-core/couchdb/logs \
-      packages/medic-core/settings/medic-core/couchdb-lucene \
       packages/medic-core/settings/medic-core/couchdb/default.d \
       packages/medic-core/settings/medic-core/couchdb/local.d \
       packages/medic-couch2pg/storage/medic-couch2pg/logs \

@@ -82,8 +82,6 @@ symlink()
 
 apply_patches()
 {
-  (cd ant && patch -s -p1 \
-    < ../../patches/ant-disable-junit.diff) &&
   (cd bzip2 && patch -s -p1 \
     < ../../patches/bzip2-darwin-soname.diff) &&
   (cd couchdb && patch -s -p1 \
@@ -100,8 +98,6 @@ apply_patches()
     < ../../../patches/icu-libicudata-linkage.diff) &&
   (cd js && patch -s -p1 \
     < ../../../../patches/js-fix-makefile-loop.diff) &&
-  (cd maven && patch -s -p1 \
-    < ../../patches/maven-preserve-destination.diff) &&
   (cd ncurses && patch -s -p1 \
     < ../../patches/ncurses-reference-fix.diff) &&
   (cd inotify-tools && patch -s -p1 \

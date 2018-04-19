@@ -260,16 +260,8 @@ main()
   build_make_install 'gammu-json' "$prefix" "PREFIX='$prefix'" &&
   \
   build_npm_remote 'node-gyp' "$prefix" &&
-  build_npm_remote 'kanso' "$prefix" &&
   build_npm_remote 'grunt-cli' "$prefix" &&
   build_npm_remote 'eslint' "$prefix" &&
-  \
-  # Maven: make reinstall safe
-  builder_clear_java_directory 'java' "$prefix" &&
-  \
-  build_ant 'ant' "$prefix" &&
-  build_maven 'maven' "$prefix" &&
-  build_couchdb_lucene 'couchdb-lucene' "$prefix" &&
   \
   builder_set_library_executable_bits "$prefix" &&
   builder_remove_library_metadata "$prefix"
