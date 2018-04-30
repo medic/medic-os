@@ -9,7 +9,7 @@ main()
   merge_environment /srv || return 255
 
   envdir "$PACKAGE_SETTINGS/postgresql/env" \
-    template-expand 'mustache' 't' \
+    /boot/template-expand 'mustache' 't' \
       "$PACKAGE_SETTINGS/postgresql/templates" \
       "$PACKAGE_STORAGE/postgresql/data"
 

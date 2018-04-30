@@ -41,7 +41,7 @@ bootstrap()
     info "Horticulturalist is bootstrapping to '$DOCKER_HORTI_BOOTSTRAP'"
   fi
   \
-  local command_line="cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" &&
+  local command_line="cd '$PACKAGE_SOFTWARE' && exec $run_cmd" &&
   \
   su -c "$command_line" "$HORTICULTURALIST_USER" \
     >> "$PACKAGE_STORAGE/logs/horticulturalist.log" 2>&1 &&

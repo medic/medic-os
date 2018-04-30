@@ -11,7 +11,8 @@ RUN apt-get -q=2 -y upgrade
 RUN ln -sf /bin/bash /bin/sh
 
 RUN apt-get -q=2 -y install \
-  apt-utils busybox gawk isc-dhcp-client less net-tools psmisc sudo vim xz-utils
+  apt-utils busybox daemontools gawk \
+  isc-dhcp-client less net-tools psmisc sudo vim xz-utils
 
 RUN groupadd avahi
 RUN groupadd couchdb

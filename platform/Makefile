@@ -308,7 +308,7 @@ strip-binaries:
 
 horticulturalist-pkg:
 	@echo -n 'Compressing package 'horticulturalist'... ' && \
-	scripts/build-package 'horticulturalist' 00600 '${PLATFORM}' && \
+	scripts/build-package 'horticulturalist' 00910 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-api-pkg:

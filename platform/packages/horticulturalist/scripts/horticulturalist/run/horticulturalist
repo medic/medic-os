@@ -36,7 +36,7 @@ start()
   \
   local script="src/index.js" &&
   local run_cmd="'`which node`' '$script' --medic-os" &&
-  local command_line="cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd" &&
+  local command_line="cd '$PACKAGE_SOFTWARE' && exec $run_cmd" &&
   \
   chown_packages 'medic-api' 'medic-sentinel' &&
   \

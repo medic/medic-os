@@ -2,7 +2,7 @@
 
 merge_environment()
 {
-  local version='0.6.0'
+  local version='0.9.1'
   local name='horticulturalist'
 
   local prefix="$1"
@@ -18,12 +18,12 @@ merge_environment()
 
   export PACKAGE_SCRIPTS="$prefix/scripts/$name"
   export PACKAGE_STORAGE="$prefix/storage/$name"
-  export PACKAGE_SOFTWARE="$prefix/software/$name"
   export PACKAGE_SETTINGS="$prefix/settings/$name"
+  export PACKAGE_SOFTWARE="$prefix/software/$name/node_modules/$name"
 
   export BOOTSTRAP_COMPLETE_FILE="$PACKAGE_SETTINGS/.bootstrapped"
   export MEDIC_CORE_PACKAGE_STORAGE="$PACKAGE_STORAGE/../medic-core/"
-  export COUCH_PASSWD_FILE="${MEDIC_CORE_PACKAGE_STORAGE}/passwd/horticulturalist"
+  export COUCH_PASSWD_FILE="${MEDIC_CORE_PACKAGE_STORAGE}/passwd/$name"
 
   return 0
 }
