@@ -36,7 +36,7 @@ build: build-all
 build-all: build-core build-vm-tools build-medic-core build-medic-rdbms build-medic-couch2pg
 
 copy: copy-all
-copy-all: copy-core copy-vm-tools copy-medic-core copy-medic-rdbms copy-medic-couch2pg set-pax-flags
+copy-all: horticulturalist copy-core copy-vm-tools copy-medic-core copy-medic-rdbms copy-medic-couch2pg set-pax-flags
 
 finalize: finalize-all
 finalize-all: verify-packages finalize-initrd
@@ -46,6 +46,14 @@ clean-all: clean-core clean-vm-tools clean-medic-core clean-medic-rdbms clean-me
 
 
 # Public targets
+
+horticulturalist:
+	@source ./scripts/include/builder && \
+	prepend_paths "${MEDIC_CORE_ROOT}" && \
+	echo -n 'Installing horticulturalist... ' >&2 && \
+	(cd ../packages/horticulturalist/software/horticulturalist && \
+	  npm install horticulturalist &>/dev/null) && \
+	echo 'done.' >&2
 
 compiler: build-compiler
 

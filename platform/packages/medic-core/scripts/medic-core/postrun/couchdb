@@ -37,7 +37,7 @@ wait_for_couchdb()
   local n=15
 
   while [ "$n" -gt 0 ]; do
-    curl "`get_couchdb_config_url`" &>/dev/null
+    curl "`get_couchdb_url`" &>/dev/null
     [ "$?" -eq 0 ] && return 0
     sleep 1
     n=$[$n-1]
@@ -77,12 +77,12 @@ read_password()
 
 write_password()
 {
-  local user="$1"
-  local passwd="$2"
+  local passwd="$1"
+  local passwd_file="$2"
   shift 2
 
   # Fix me: this shows up in `ps`
-  echo "$passwd" > "`get_user_password_file "$user"`"
+  echo "$passwd" > "$passwd_file"
 }
 
 generate_random_password()
@@ -141,10 +141,10 @@ create_couchdb_admin()
 
   if [ ! -z "$passwd" ]; then
     # Password specified on command line
-    passwd="`write_password "$user" "$passwd"`"
+    write_password "$passwd" "$passwd_file"
   else
     # Password randomly generated
-    passwd="`generate_random_password "$passwd_file"`"
+    generate_random_password "$passwd_file"
   fi
 
   if [ "$?" -ne 0 ]; then
@@ -158,16 +158,34 @@ create_couchdb_admin()
     should_auth='t'
   fi
 
-  # Make HTTP PUT request
-  local url="`get_couchdb_config_url`" &&
+  # Create administrative account
+  chmod 0400 "$passwd_file" &&
+  local config_url="`get_couchdb_config_url`" &&
   create_couchdb_put "$should_auth" "$passwd_file" 't' \
-    | curl -K- -sfX PUT "$url/_config/admins/$user" >/dev/null
+    | curl -K- -sfX PUT "$config_url/_config/admins/$user" >/dev/null
 
   if [ ${PIPESTATUS[1]} -ne 0 ]; then
     return 127
   fi
 
-  chmod 0400 "$passwd_file"
+  # Create user document for administrator
+  local url="`get_couchdb_url`" &&
+  local id="org.couchdb.user:$user" &&
+  \
+  local doc="{
+    \"id\": \"$id\", \"roles\": [],
+    \"type\": \"user\", \"name\": \"$user\"
+  }" &&
+  \
+  create_couchdb_put 't' \
+    | curl -K- -sfX PUT -H 'Content-Type: application/json' \
+        --data-binary "$doc" "$url/_users/$id" >/dev/null
+
+  if [ ${PIPESTATUS[1]} -ne 0 ]; then
+    return 126
+  fi
+
+  return 0
 }
 
 _perform_couchdb_lockdown()
@@ -201,8 +219,10 @@ create_system_databases()
   fi &&
   \
   for db in _users _replicator _global_changes; do
-    create_couchdb_put 't' | curl -K- -sfX PUT "$url/$db" >/dev/null \
-      || return "$?"
+    if ! curl -K- -sfX PUT "$url/$db" >/dev/null; then
+      warn "Failed to created system database '$db'"
+      return "$?"
+    fi
   done
 }
 
@@ -223,6 +243,11 @@ postinstall()
 
   wait_for_couchdb \
     || fatal "CouchDB failed to start properly"
+
+  info 'Creating system databases' &&
+  \
+  create_system_databases \
+    || fatal 'Failed to create one or more system databases'
 
   info 'Setting up CouchDB administrative account' &&
   create_couchdb_admin 'admin'
@@ -245,7 +270,6 @@ postinstall()
 
   info 'Creating CouchDB service accounts'
 
-  create_couchdb_admin 'lucene' && 
   create_couchdb_admin 'medic-api' &&
   create_couchdb_admin 'medic-couch2pg' &&
   create_couchdb_admin 'medic-sentinel' &&
@@ -271,9 +295,6 @@ postinstall()
     warn 'A new administrative password has been randomly assigned'
     warn 'This will not be displayed again; please make a note of it'
   fi
-
-  create_system_databases \
-    || fatal 'Failed to create one or more system databases'
 
   info 'CouchDB first-run setup successful'
 }

@@ -6,26 +6,21 @@ RUN mkdir -p /var/empty
 RUN echo x64 > /etc/platform
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get -q=2 -y update
-RUN apt-get -q=2 -y upgrade
-RUN ln -sf /bin/bash /bin/sh
+RUN apt-get -q=2 -y update --fix-missing && \
+    apt-get -q=2 -y upgrade && ln -sf /bin/bash /bin/sh
 
 RUN apt-get -q=2 -y install \
-  apt-utils busybox daemontools gawk \
-  isc-dhcp-client less net-tools psmisc sudo vim xz-utils
+  apt-utils busybox daemontools gawk isc-dhcp-client less \
+  net-tools psmisc python-pip sudo unattended-upgrades vim xz-utils
 
-RUN groupadd avahi
-RUN groupadd couchdb
-RUN groupadd nobody
-RUN groupadd postgresql
-RUN groupadd sshd
-RUN groupadd vm
+RUN groupadd avahi && groupadd couchdb && groupadd nobody && \
+    groupadd postgresql && groupadd sshd && groupadd vm
 
-RUN useradd -rd /var/empty -c 'Service - Avahi' -g avahi avahi
-RUN useradd -rd /var/empty -c 'Service - CouchDB' -g couchdb couchdb
-RUN useradd -rd /var/empty -c 'Service - Postgres' -g postgresql postgresql
-RUN useradd -rd /var/empty -c 'Service - Secure Shell' -g sshd sshd
-RUN useradd -rd /home/vm -c 'Legacy - VM Login' -g vm -s /bin/bash vm
+RUN useradd -rd /var/empty -c 'Service - Avahi' -g avahi avahi && \
+    useradd -rd /var/empty -c 'Service - CouchDB' -g couchdb couchdb && \
+    useradd -rd /var/empty -c 'Service - Postgres' -g postgresql postgresql && \
+    useradd -rd /var/empty -c 'Service - Secure Shell' -g sshd sshd && \
+    useradd -rd /home/vm -c 'Legacy - VM Login' -g vm -s /bin/bash vm
 
 ADD platform/staging/docker/x64/medic-os-*-docker /
 
