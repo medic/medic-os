@@ -21,13 +21,7 @@ install()
 
   echo "Installing version $PACKAGE_VERSION"
 
-  create_system_group_if_necessary \
-    medic-api "$MEDIC_API_GID" &&
-  \
-  create_system_user_if_necessary \
-    medic-api "$MEDIC_API_UID" \
-    'Medic API Process Account' medic-api &&
-  \
+  "$base/setup/users" &&
   mkdir -p "$PACKAGE_STORAGE/logs" &&
   \
   if id "$HORTICULTURALIST_USER" &>/dev/null; then

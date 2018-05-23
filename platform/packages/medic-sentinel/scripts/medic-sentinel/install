@@ -11,9 +11,6 @@ install()
   local self="`realpath "$0"`"
   local base="`dirname -- "$self"`"
 
-  source "$base/../horticulturalist/env" &&
-  merge_environment /srv || return 255
-
   source "$base/env" &&
   merge_environment /srv || return 255
 
@@ -24,13 +21,7 @@ install()
 
   echo "Installing medic-sentinel v$PACKAGE_VERSION"
 
-  create_system_group_if_necessary \
-    medic-sentinel "$MEDIC_SENTINEL_GID" &&
-  \
-  create_system_user_if_necessary \
-    medic-sentinel "$MEDIC_SENTINEL_UID" \
-    'Medic Sentinel Process Account' medic-sentinel &&
-  \
+  "$base/setup/users" &&
   mkdir -p "$PACKAGE_STORAGE/logs" &&
   \
   if id "$HORTICULTURALIST_USER" &>/dev/null; then

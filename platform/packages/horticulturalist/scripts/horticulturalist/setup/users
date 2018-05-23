@@ -1,0 +1,26 @@
+#!/bin/sh
+
+source '/boot/include/utility'
+source '/boot/include/hypervisor'
+
+setup()
+{
+  local self="`realpath "$0"`"
+  local base="`dirname -- "$self"`"
+
+  source "$base/../env" &&
+  merge_environment /srv
+
+  create_system_group_if_necessary "$HORTICULTURALIST_USER" \
+    "$HORTICULTURALIST_GID" &&
+  \
+  create_system_user_if_necessary "$HORTICULTURALIST_USER" \
+    "$HORTICULTURALIST_UID" 'Horticulturalist Process Account' \
+    "$HORTICULTURALIST_GROUP" "$PACKAGE_STORAGE"
+
+  return "$?"
+}
+
+setup "$@"
+exit "$?"
+
