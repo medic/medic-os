@@ -48,7 +48,7 @@ clean-all: clean-core clean-vm-tools clean-medic-core clean-medic-rdbms clean-me
 # Public targets
 
 horticulturalist:
-	@source ./scripts/include/builder && \
+	@source ./medic-core/scripts/include/builder && \
 	prepend_paths "${MEDIC_CORE_ROOT}" && \
 	echo -n 'Installing horticulturalist... ' >&2 && \
 	(cd ../packages/horticulturalist/software/horticulturalist && \

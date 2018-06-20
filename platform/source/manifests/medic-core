@@ -24,7 +24,6 @@ lrzip, http://ck.kolivas.org/apps/lrzip/lrzip-0.630.tar.bz2
 luajit, https://luajit.org/download/LuaJIT-2.0.4.tar.gz
 lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
 nano, https://www.nano-editor.org/dist/v2.4/nano-2.4.2.tar.gz
-ncurses, https://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
 nginx, https://nginx.org/download/nginx-1.13.6.tar.gz
 node, https://nodejs.org/dist/v8.9.1/node-v8.9.1.tar.gz
 openresty, https://openresty.org/download/openresty-1.11.2.3.tar.gz

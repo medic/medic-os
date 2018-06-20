@@ -92,8 +92,6 @@ apply_patches()
     < ../../../patches/icu-libicudata-linkage.diff) &&
   (cd js && patch -s -p1 \
     < ../../../../patches/js-fix-makefile-loop.diff) &&
-  (cd ncurses && patch -s -p1 \
-    < ../../patches/ncurses-reference-fix.diff) &&
   (cd inotify-tools && patch -s -p1 \
     < ../../patches/inotify-tools-include.diff) &&
   (cd libutempter && patch -s -p1 \

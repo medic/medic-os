@@ -72,7 +72,6 @@ check_libraries()
   return 0
 }
 
-
 main()
 {
   local pax_prefix="$1"
@@ -85,8 +84,7 @@ main()
     || fatal 'Failed to find pax header in medic-core binaries'
 
   check_libraries 'medic-core' \
-    z curl acl attr idn usb ssl crypto \
-    lzo2 menu history form panel ncurses icudata \
+    z curl acl attr idn usb ssl crypto lzo2 icudata \
       || fatal 'Failed to find a required library in medic-core'
 
   check_binaries 'medic-core' 'sbin' sshd paxctl logrotate \

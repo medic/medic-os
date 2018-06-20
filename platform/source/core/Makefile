@@ -21,13 +21,13 @@ KERNEL_CONFIG := ../../../../config/kernel/${PLATFORM}/dot-config-${KERNEL_VERSI
 all: build
 
 build: build-all
-build-all: status build-pv build-ncurses build-bash build-groff build-dhcpcd build-syslinux build-eudev build-sudo build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc
+build-all: status build-pv build-bash build-groff build-dhcpcd build-syslinux build-eudev build-sudo build-kernel install-kernel-modules build-iptables build-e2fsprogs build-busybox build-glibc
 
 copy: copy-all
-copy-all: copy-ncurses copy-bash copy-groff copy-dhcpcd copy-syslinux copy-eudev copy-sudo copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc copy-finish
+copy-all: copy-bash copy-groff copy-dhcpcd copy-syslinux copy-eudev copy-sudo copy-kernel copy-iptables copy-e2fsprogs copy-busybox copy-glibc copy-finish
 
 clean: clean-all
-clean-all: clean-bash clean-ncurses clean-groff clean-dhcpcd clean-syslinux clean-eudev clean-sudo clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
+clean-all: clean-bash clean-groff clean-dhcpcd clean-syslinux clean-eudev clean-sudo clean-kernel clean-iptables clean-xfsprogs clean-busybox clean-glibc clean-logs
 
 
 # Public targets
@@ -44,27 +44,6 @@ build-pv:
 	  ${QMAKE} ROOT='${MEDIC_CORE_ROOT}' \
 	    START='pv' STOP='pv' PLATFORM='${PLATFORM}' \
 	    SKIP_STATUS=1 BITS='${BITS}' PARALLEL='${PARALLEL}')
-
-
-ncurses: build-ncurses
-
-build-ncurses: build-pv
-	@./scripts/logger 'ncurses' '${PLATFORM}' \
-	  'cd source/ncurses && \
-	    CPPFLAGS=-P ./configure \
-              --prefix=/usr --with-shared --without-x && \
-	    ${MAKE} all CFLAGS="${CFLAGS}" && \
-		${MAKE} install DESTDIR="${INITRD_PATH}"'
-
-copy-ncurses:
-	@cd "${INITRD_PATH}/lib" && \
-	  ln -sf ../usr/lib/libncurses.so libtinfo.so && \
-	  ln -sf ../usr/lib/libncurses.so libtinfo.so.5
-
-clean-ncurses:
-	@if [ -h source/ncurses ]; then \
-	  (cd source/ncurses && ${QMAKE} clean); \
-	fi
 
 
 bash: build-bash
