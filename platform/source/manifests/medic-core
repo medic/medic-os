@@ -14,7 +14,7 @@ js, https://ftp.mozilla.org/pub/mozilla.org/js/js185-1.0.0.tar.gz
 jq, https://github.com/stedolan/jq/releases/download/jq-1.5/jq-1.5.tar.gz
 libffi, https://mirrors.kernel.org/sources.redhat.com/libffi/libffi-3.0.13.tar.gz
 libidn, https://ftp.gnu.org/gnu/libidn/libidn-1.27.tar.gz
-libpcap, http://www.tcpdump.org/release/libpcap-1.7.4.tar.gz
+libpcap, https://www.tcpdump.org/release/libpcap-1.7.4.tar.gz
 libressl, https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-2.3.4.tar.gz
 libusb, https://jaist.dl.sourceforge.net/project/libusb/libusb-1.0/libusb-1.0.9/libusb-1.0.9.tar.bz2
 libusb-compat, https://jaist.dl.sourceforge.net/project/libusb/libusb-compat-0.1/libusb-compat-0.1.5/libusb-compat-0.1.5.tar.bz2
@@ -33,7 +33,7 @@ openssl, https://www.openssl.org/source/openssl-1.0.2m.tar.gz
 patch, https://ftp.gnu.org/gnu/patch/patch-2.7.tar.xz
 paxctl, https://pax.grsecurity.net/paxctl-0.9.tar.gz
 pcre, https://jaist.dl.sourceforge.net/project/pcre/pcre/8.33/pcre-8.33.tar.bz2
-popt, http://rpm5.org/files/popt/popt-1.16.tar.gz
+popt, https://ftp.osuosl.org/pub/blfs/conglomeration/popt/popt-1.16.tar.gz
 pv, https://www.ivarch.com/programs/sources/pv-1.6.0.tar.bz2
 readline, https://ftp.gnu.org/gnu/readline/readline-7.0.tar.gz
 rebar, https://github.com/rebar/rebar.git

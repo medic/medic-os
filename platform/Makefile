@@ -78,9 +78,6 @@ clean-compiler:
 package-docs: medic-core-docs-pkg medic-rdbms-docs-pkg vm-tools-docs-pkg
 
 build-start:
-	@if [ -n '${BUILD_COMPILER}' ]; then \
-	  ${QMAKE} compiler || exit "$$?"; \
-	fi
 	@(cd source && ../scripts/prepend-path '${COMPILER_ROOT}' \
 	  ${QMAKE} build \
 	    PLATFORM='${PLATFORM}' COMPILER_ROOT='${COMPILER_ROOT}')
@@ -375,7 +372,7 @@ download:
 	@rm -f status/download.finished && \
 	for manifest in source/manifests/*; do \
 	  pkg="`basename "$$manifest"`" && \
-	  if [ "$$pkg" != '*' ]; then \
+	  if [ -f "$$manifest" -a "$$pkg" != '*' ]; then \
 	    ./scripts/retrieve-sources \
 	      "$$pkg" "source/$$pkg/incoming" '${URL}' && \
 	    (cd "source/$$pkg" && ./scripts/rearrange-sources) || exit "$$?"; \
@@ -387,7 +384,7 @@ move-downloaded:
 	@if ! [ -f status/move.finished ]; then \
 	  for manifest in source/manifests/*; do \
 	    pkg="`basename "$$manifest"`" && \
-	    if [ "$$pkg" != '*' ]; then \
+	    if [ -f "$$manifest" -a "$$pkg" != '*' ]; then \
 	      (cd "source/$$pkg" && find incoming -mindepth 1 \
 	        -maxdepth 1 -exec mv {} source/ \;) || exit "$$?"; \
 	    fi; \
@@ -400,7 +397,7 @@ delete-downloaded:
 	for type in incoming source; do \
 	  for manifest in source/manifests/*; do \
 	    pkg="`basename "$$manifest"`" && \
-	    if [ "$$pkg" != '*' ]; then \
+	    if [ -f "$$manifest" -a "$$pkg" != '*' ]; then \
 	      (cd "source/$$pkg" && rm -rf "$$type"/[^.]*) || exit "$$?"; \
 	    fi; \
 	  done; \
