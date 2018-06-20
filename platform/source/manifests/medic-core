@@ -25,7 +25,7 @@ luajit, https://luajit.org/download/LuaJIT-2.0.4.tar.gz
 lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
 nano, https://www.nano-editor.org/dist/v2.4/nano-2.4.2.tar.gz
 nginx, https://nginx.org/download/nginx-1.13.6.tar.gz
-node, https://nodejs.org/dist/v8.9.1/node-v8.9.1.tar.gz
+node, https://nodejs.org/dist/v8.11.3/node-v8.11.3.tar.gz
 openresty, https://openresty.org/download/openresty-1.11.2.3.tar.gz
 openssh, https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-7.6p1.tar.gz
 openssl, https://www.openssl.org/source/openssl-1.0.2m.tar.gz
