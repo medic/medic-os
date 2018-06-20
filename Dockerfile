@@ -10,7 +10,7 @@ RUN apt-get -q=2 -y update --fix-missing && \
     apt-get -q=2 -y upgrade && ln -sf /bin/bash /bin/sh
 
 RUN apt-get -q=2 -y install \
-  apt-utils busybox daemontools gawk isc-dhcp-client less \
+  apt-utils busybox daemontools gawk isc-dhcp-client less man \
   net-tools psmisc python-pip sudo unattended-upgrades vim xz-utils
 
 RUN groupadd avahi && groupadd couchdb && groupadd nobody && \

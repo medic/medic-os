@@ -310,18 +310,18 @@ horticulturalist-pkg:
 
 medic-api-pkg:
 	@echo -n 'Compressing package 'medic-api'... ' && \
-	scripts/build-package 'medic-api' 00100 '${PLATFORM}' && \
+	scripts/build-package 'medic-api' 00101 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 21100 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 21101 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-core-docs-pkg:
 	@echo -n 'Compressing package 'medic-core-docs'... ' && \
 	scripts/build-docs-package \
-	  'medic-core-docs' 21100 /srv/software/medic-core && \
+	  'medic-core-docs' 21101 /srv/software/medic-core && \
 	echo 'done.'
 
 medic-couch2pg-pkg:
@@ -342,7 +342,7 @@ medic-rdbms-docs-pkg:
 
 medic-sentinel-pkg:
 	@echo -n 'Compressing package 'medic-sentinel'... ' && \
-	scripts/build-package 'medic-sentinel' 00100 '${PLATFORM}' && \
+	scripts/build-package 'medic-sentinel' 00101 '${PLATFORM}' && \
 	echo 'done.'
 
 system-services-pkg:
