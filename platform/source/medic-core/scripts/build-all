@@ -58,16 +58,10 @@ main()
   #  These are used to vary configuration based upon
   #  the architecture that we're currently compiling for.
 
-  local gammu_extra_options=""
   local erlang_extra_options=""
 
   if [ "$architecture" = 'intel' -a "$bits" ]; then
     erlang_extra_options="--enable-m${bits}-build"
-  fi
-
-  if [ "$uname" = 'Darwin' ]; then
-    disable_stack_protector_strong
-    gammu_extra_options='-DWITH_Iconv=OFF'
   fi
 
   if ! builder_setup_cache; then
@@ -251,13 +245,6 @@ main()
   \
   build_autoconf 'libffi' "$stdarg" && \
   builder_remove_static_libraries 'ffi' &&
-  \
-  build_cmake 'gammu' "$prefix" \
-    "-DBUILD_SHARED_LIBS=ON -DWITH_Glib=OFF \
-     -DINSTALL_BASH_COMPLETION=OFF -DENABLE_PROTECTION=ON \
-     -DINSTALL_GNAPPLET=OFF -DWITH_BACKUP=OFF $gammu_extra_options" &&
-  \
-  build_make_install 'gammu-json' "$prefix" "PREFIX='$prefix'" &&
   \
   build_npm_remote 'node-gyp' "$prefix" &&
   build_npm_remote 'grunt-cli' "$prefix" &&

@@ -407,43 +407,6 @@ build_maven()
   builder_check_status "$name" "${PIPESTATUS[0]}"
 }
 
-build_lucene()
-{
-  local name="$1"
-  local prefix="$2"
-
-  builder_should_run "$name" || return 0
-
-  (cd "$name" &&
-    "$prefix/java/bin/ant" ivy-bootstrap \
-        -Divy_install_path="$prefix/java/lib" &&
-    "$prefix/java/bin/ant" compile jar \
-        -lib "$prefix/java/lib" &&
-    cp build/core/*.jar "$prefix/java/lib") 2>&1 | log "$name"
-  
-  builder_check_status "$name" "${PIPESTATUS[0]}"
-}
-
-build_couchdb_lucene()
-{
-  local name="$1"
-  local prefix="$2"
-
-  builder_should_run "$name" || return 0
-
-  # Use Maven
-  export M2_HOME="$prefix/java"
-
-  (cd "$name" &&
-    "$prefix/java/bin/mvn" && mkdir -p 'target/output' && (
-      cd 'target/output' && for i in ../couchdb-lucene-*.tar.gz; do
-        tar xvzf "$i" && cp -Rv couchdb-lucene-*/* "$prefix/java";
-      done
-    ); rv="$?"; rm -rf 'target/output'; exit "$rv") 2>&1 | log "$name"
-  
-  builder_check_status "$name" "${PIPESTATUS[0]}"
-}
-
 build_bzip2()
 {
   local name="$1"

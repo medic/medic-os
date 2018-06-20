@@ -40,7 +40,7 @@ rename()
     fi
   done &&
   \
-  for pkg in rebar gammu-json node-fs-ext; do
+  for pkg in rebar node-fs-ext; do
     \
     if [ -d "$pkg" ]; then
       mv "$pkg" "`echo "$pkg" | tr '_' '-'`-devel";
@@ -88,12 +88,6 @@ apply_patches()
     < ../../patches/couchdb2-dependency-prefix.diff) &&
   (cd erlang && patch -s -p1 \
     < ../../patches/erlang-r17-pcre-fix.diff) &&
-  (cd gammu && patch -s -p1 \
-    < ../../patches/gammu-add-configure-options.diff) &&
-  (cd gammu && patch -s -p1 \
-    < ../../patches/gammu-fix-files-backend.diff) &&
-  (cd gammu && patch -s -p1 \
-    < ../../patches/gammu-utf16-sms-multipart.diff) &&
   (cd icu && patch -s -p2 \
     < ../../../patches/icu-libicudata-linkage.diff) &&
   (cd js && patch -s -p1 \

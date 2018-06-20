@@ -24,7 +24,6 @@ clean_all()
     fi
   done
 
-  (cd gammu && rm -f CMakeCache.txt)
   return 0
 }
 

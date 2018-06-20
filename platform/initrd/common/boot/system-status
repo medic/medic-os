@@ -44,7 +44,6 @@ main()
 
     if display_services; then
       echo && display_centered ''
-      echo && display_connectivity
       move_cursor 'y' 2 && display_activity_indicator 6
       echo
     fi
@@ -55,29 +54,6 @@ main()
 
   done
 
-  return 0
-}
-
-display_connectivity()
-{
-  local base_dir='/srv/storage/medic-core/gammu/monitor';
-
-  if [ -f "$base_dir/detected" ]; then
-    display_centered "Modem is attached and functioning properly."
-    set_hypervisor_variable modem_status 2
-  elif [ -f "$base_dir/detecting" ]; then
-    set_bold 1
-    display_centered "Detected a USB GSM modem; configuring device..."
-    set_bold 0
-    set_hypervisor_variable modem_status 1
-  else
-    set_bold 1
-    display_centered "Warning: No supported GSM modem attached."
-    set_bold 0
-    set_hypervisor_variable modem_status 0
-  fi
-
-  echo && display_centered
   return 0
 }
 

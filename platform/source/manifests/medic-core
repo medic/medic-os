@@ -6,8 +6,6 @@ couchdb, https://ftp.osuosl.org/pub/apache/couchdb/source/2.1.1/apache-couchdb-2
 curl, https://curl.haxx.se/download/curl-7.35.0.tar.lzma
 diffutils, https://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz
 erlang, http://erlang.org/download/otp_src_20.2.tar.gz
-gammu, http://dl.cihar.com/gammu/releases/gammu-1.33.0.tar.xz
-gammu-json, https://github.com/medic/gammu-json.git
 gawk, https://ftp.gnu.org/gnu/gawk/gawk-4.1.4.tar.xz
 git, https://www.kernel.org/pub/software/scm/git/git-2.4.6.tar.xz
 icu, https://ssl.icu-project.org/files/icu4c/60.1/icu4c-60_1-src.tgz

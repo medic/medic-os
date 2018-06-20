@@ -6,10 +6,7 @@ staff:x:50:
 postgresql:x:80:postgresql
 rdbms-users:x:90:
 avahi:x:200:avahi
-gammu-inject:x:101:vm,gammu
 sshd:x:1000:
 vm:x:1001:
 couchdb:x:1002:
-couchdb-lucene:x:1003:
-gammu:x:1004:
 concierge-auth:x:1006:concierge,gardener
