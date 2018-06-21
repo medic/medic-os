@@ -182,16 +182,6 @@ copy-medic-couch2pg:
 
 # Private targets
 
-rebuild-kernel:
-	@(cd core && \
-	  ${QMAKE} clean-kernel &>/dev/null && \
-	  ${QMAKE} kernel \
-	    PLATFORM='${PLATFORM}' \
-	    PATH="${MEDIC_CORE_ROOT}/bin:$$PATH" \
-	    MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}' \
-	    KERNEL_VERSION='${KERNEL_VERSION}' KERNEL_EXTRA='${KERNEL_EXTRA}' \
-	    KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' PARALLEL='${PARALLEL}')
-
 set-pax-flags:
 	@echo -n "Setting executable flags... " && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \

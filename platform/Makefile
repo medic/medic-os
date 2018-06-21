@@ -32,14 +32,11 @@ endif
 
 all: bootinit packages images
 
-iso: build-iso-image
-xen: build-xen-image
-
 initrd: build-initrd
 native: build-native-tarball
 docker: build-docker-staging
 
-images: build-iso-image build-xen-image compress-xen-image build-native-tarball build-docker-staging build-x86-image-nopae
+images: build-native-tarball build-docker-staging
 packages: strip-binaries medic-core-pkg medic-rdbms-pkg medic-couch2pg-pkg horticulturalist-pkg medic-api-pkg medic-sentinel-pkg system-services-pkg vm-tools-pkg
 
 
@@ -101,69 +98,12 @@ clean-images:
 	for platform in x86 x64 armv6 noarch; do \
 	  rm -rf "images/$$platform/iso/packages"/* && \
 	  rm -rf "initrd/$$platform/lib/modules"/* && \
-	  for type in iso xen; do \
+	  for type in iso; do \
 	    rm -f "images/$$platform/$$type/boot/kernel" \
 	      "images/$$platform/$$type/boot/image.xz" \
 	        "images/$$platform/$$type/packages"/* || exit "$$?"; \
 	  done || exit "$$?"; \
 	done
-
-build-iso-image: build-initrd
-	@echo -n 'Creating ISO image... ' && \
-	\
-	cd 'images/${PLATFORM}/iso' && mkisofs -J -R \
-	  -V '${SYSTEM_NAME} v${SYSTEM_VERSION_STRING}' \
-	  -o '../../../output/${SYSTEM_IMAGE_ID}${ISO_EXTRA}-virtual.iso' \
-	  -boot-load-size 4 -boot-info-table \
-	  -no-emul-boot -b boot/isolinux/isolinux.bin \
-	  -c boot/isolinux/boot.cat . &>/dev/null && \
-	\
-	echo 'done.'
-
-build-xen-image:
-	@echo -n 'Creating Xen image... ' && \
-	\
-	loop_path="staging/loopback" && \
-	image_path='output/${SYSTEM_IMAGE_ID}-xen' && \
-	ext4_options='none,extent,large_file,has_journal' && \
-	\
-	dd if=/dev/zero of="$$image_path" \
-	  bs=1048576 seek=1023 count=1 &>/dev/null && \
-	\
-	mkfs.ext4 -O "$$ext4_options" -qF "$$image_path" >/dev/null && \
-	mount -o loop "$$image_path" "$$loop_path" && \
-	cp -a 'images/${PLATFORM}/xen'/* "$$loop_path/" && \
-	mkdir -p "$$loop_path/packages" && \
-	\
-	cp -a 'images/${PLATFORM}/iso/packages'/* \
-	  "$$loop_path/packages/" && \
-	\
-	sync && umount "$$loop_path" && sync && \
-	echo 'done.'
-
-build-ami-image:
-	@echo -n 'Building AMI instance-store image... ' && \
-	\
-	source 'config/aws/settings' && \
-	export PATH="$$EC2_HOME/bin:$$PATH" && \
-	\
-	case '${PLATFORM}' in \
-	  x86) architecture='i386';; \
-	  x64) architecture='x86_64';; \
-	  *) echo 'Fatal: Unsupported platform' >&2; exit 1 ;; \
-	esac && \
-	\
-	rm -rf 'output/${SYSTEM_IMAGE_ID}-ami' && \
-	mkdir -p 'output/${SYSTEM_IMAGE_ID}-ami' && \
-	ln -f 'output/${SYSTEM_IMAGE_ID}-xen' 'output/image' && \
-	\
-	ec2-bundle-image \
-	  -c "$$EC2_CERTIFICATE" -k "$$EC2_PRIVATE_KEY" \
-	  -u "$$AWS_ID" -d 'output/${SYSTEM_IMAGE_ID}-ami' \
-	  -i 'output/image' -r "$$architecture" >/dev/null || exit "$$?"; \
-	\
-	rm -f output/image; \
-	echo 'done.'
 
 build-docker-staging:
 	@echo -n 'Staging files for Docker... ' && \
@@ -195,30 +135,6 @@ build-native-tarball:
 	\
 	(cd "$$staging_dir/../" && tar -cf - .) \
 	  | xz -c > "output/${SYSTEM_IMAGE_ID}-native.tar.xz" && \
-	\
-	echo 'done.'
-
-compress-xen-image:
-	@echo -n 'Compressing Xen image... ' && \
-	\
-	xz -0 -cf 'output/${SYSTEM_IMAGE_ID}-xen' \
-	  > 'output/${SYSTEM_IMAGE_ID}-xen.xz' && \
-	\
-	echo 'done.'
-
-upload: upload-ami-image
-
-upload-ami-image: build-ami-image
-	@echo -n 'Uploading AMI instance-store image... ' && \
-	\
-	source 'config/aws/settings' && \
-	export PATH="$$EC2_HOME/bin:$$PATH" && \
-	\
-	ec2-upload-bundle \
-	  -a "$$AWS_ACCESS_KEY" \
-	  -s "$$AWS_SECRET_KEY" -b "$$S3_BUCKET" \
-	  -m 'output/${SYSTEM_IMAGE_ID}-ami/image.manifest.xml' \
-	    || exit "$$?"; \
 	\
 	echo 'done.'
 
@@ -270,33 +186,7 @@ build-initrd: copy-compiler-libraries prepare-initrd
 	cp -a initrd/common/* '${INITRD_PATH}/' && \
 	\
 	echo '${TIMESTAMP}' \
-	  > '${INITRD_PATH}/etc/build-timestamp' && \
-	\
-	(cd '${INITRD_PATH}' && \
-	  find * | cpio -o -H newc 2>/dev/null \
-	    | sh ../../source/core/source/linux/scripts/xz_wrap.sh \
-	      > '../../images/${PLATFORM}/iso/boot/image.xz') && \
-	\
-	(cd 'images/${PLATFORM}' && \
-	  if [ -d xen ]; then cp -a iso/boot/image.xz xen/boot/; fi) && \
-	\
-	echo 'done.'
-
-build-x86-image-nopae:
-	@if [ '${PLATFORM}' = 'x86' ]; then \
-	  echo 'Building x86 kernel with PAE disabled...' && \
-	  (cd source && \
-	    ../scripts/prepend-path '${COMPILER_ROOT}' \
-	      ${QMAKE} rebuild-kernel KERNEL_EXTRA='-nopae') && \
-	  \
-	  ${QMAKE} build-iso-image ISO_EXTRA='-nopae'; \
-	fi
-
-rebuild-kernel:
-	@echo 'Rebuilding kernel...' && \
-	(cd source && \
-	  ../scripts/prepend-path \
-	    '${COMPILER_ROOT}' ${QMAKE} rebuild-kernel)
+	  > '${INITRD_PATH}/etc/build-timestamp'
 
 strip-binaries:
 	@echo -n 'Removing unnecessary symbols... ' && \
@@ -358,7 +248,7 @@ vm-tools-pkg:
 vm-tools-docs-pkg:
 	@echo -n 'Compressing package 'vm-tools-docs'... ' && \
 	scripts/build-docs-package \
-	  'vm-tools-docs' 94612 /srv/software/vm-tools && \
+	  'vm-tools-docs' 94613 /srv/software/vm-tools && \
 	echo 'done.'
 
 convert-boot-logo:
