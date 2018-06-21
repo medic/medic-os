@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source '/boot/include/utility'
+
 find_ntp_server()
 {
   echo 'pool.ntp.org'
@@ -19,11 +21,18 @@ start()
   source "$base/../env" &&
   merge_environment /srv || return 255
 
+  # On Docker this is handled for us
+  if is_debian_like; then
+    while true; do sleep 3600; done
+  fi
+
+  # Use ntpd if not on VMware
   if ! detect_vmware; then
     exec /boot/timestamp ntpd -ndp "`find_ntp_server`" \
       >> "$PACKAGE_STORAGE/ntpd/logs/startup.log" 2>&1
   fi
 
+  # Otherwise assume VMware
   modprobe -a \
     vmw_vmci vmw_vsock_vmci_transport vmxnet3 vmw_balloon &&
   \

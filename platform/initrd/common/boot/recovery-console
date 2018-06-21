@@ -2,6 +2,8 @@
 
 main()
 {
+  trap '' INT
+
   # Recovery console:
   #  Try to set sane environment variables. This is all self-contained,
   #  just in case files from the base system are missing or damaged.

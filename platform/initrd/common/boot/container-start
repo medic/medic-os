@@ -11,6 +11,8 @@ main()
   local root="$1"
   shift 1
 
+  trap '' INT
+
   cd "$dirname" \
     || fatal "Failed to locate script; check permissions"
 

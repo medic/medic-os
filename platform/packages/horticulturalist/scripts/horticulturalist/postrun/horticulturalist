@@ -12,7 +12,8 @@ bootstrap()
   merge_environment /srv || return 255
 
   # If bootstrapping is already done, do nothing
-  if [ -e "$BOOTSTRAP_COMPLETE_FILE" ]; then
+  if [ -f "$BOOTSTRAP_COMPLETE_FILE" ]; then
+    info "Horticulturalist has already bootstrapped"
     return 0
   fi
 

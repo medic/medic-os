@@ -347,7 +347,7 @@ medic-sentinel-pkg:
 
 system-services-pkg:
 	@echo -n 'Compressing package 'system-services'... ' && \
-	scripts/build-package 'system-services' 10212 '${PLATFORM}' && \
+	scripts/build-package 'system-services' 10300 '${PLATFORM}' && \
 	echo 'done.'
 
 vm-tools-pkg:

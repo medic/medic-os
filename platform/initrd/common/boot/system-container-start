@@ -8,11 +8,14 @@ source '/boot/include/utility'
 source '/boot/include/logger'
 source '/boot/include/startup'
 source '/boot/include/package'
+source '/boot/include/manifest'
 source '/boot/include/template'
 source '/boot/include/supervisor'
 
 main()
 {
+  trap '' INT
+
   package_init
   supervisor_init
 

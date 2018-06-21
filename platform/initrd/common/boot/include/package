@@ -460,7 +460,7 @@ package_update_twophase()
   local manifest="`package_manifest_copy "$package"`" \
     || return 1
 
-  info "Installing package '$path'..."
+  info "Installing package '`basename "$path"`'..."
 
   package_install "$path" 't' 't' 't' \
     || return 2
