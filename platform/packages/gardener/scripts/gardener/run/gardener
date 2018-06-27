@@ -35,8 +35,9 @@ start()
   local gardener_cmd="'`which node`' '$gardener' $gardener_args" &&
   \
   export COUCH_NODE_NAME='couchdb@localhost' &&
+  export NODE_OPTIONS='--max_old_space_size=4096' &&
   \
-  exec /boot/timestamp su -c "cd '$data' && exec $gardener_cmd" gardener \
+  exec /boot/timestamp su -pc "cd '$data' && exec $gardener_cmd" gardener \
     < "$passwd_file" >> "$logs/startup.log" 2>&1
 }
 
