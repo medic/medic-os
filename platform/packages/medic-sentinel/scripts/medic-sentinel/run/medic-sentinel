@@ -17,6 +17,9 @@ start()
   source "$base/../../medic-core/env" &&
   merge_environment /srv 'path-only' &&
   \
+  export NODE_ENV='production' &&
+  export NODE_OPTIONS='--max_old_space_size=8192' &&
+  \
   export COUCH_NODE_NAME='couchdb@localhost' &&
   export COUCH_URL="http://${PACKAGE_NAME}:$passwd@localhost:5984/medic" &&
   \
@@ -27,7 +30,7 @@ start()
   local command_line="cd '$PACKAGE_SOFTWARE/current' && exec $run_cmd"
   \
   exec /boot/timestamp \
-    su -c "$command_line" medic-sentinel \
+    su -pc "$command_line" medic-sentinel \
       >> "$PACKAGE_STORAGE/logs/medic-sentinel.log" 2>&1
 }
 

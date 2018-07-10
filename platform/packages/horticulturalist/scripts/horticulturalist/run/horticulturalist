@@ -31,6 +31,10 @@ start()
   merge_environment /srv 'path-only' &&
   \
   local password="`cat "$COUCH_PASSWD_FILE"`" &&
+  \
+  export NODE_ENV='production' &&
+  export NODE_OPTIONS='--max_old_space_size=8192' &&
+  \
   export COUCH_NODE_NAME='couchdb@localhost' &&
   export COUCH_URL="http://${PACKAGE_NAME}:${password}@localhost:5984/medic" &&
   \
@@ -41,7 +45,7 @@ start()
   chown_packages 'medic-api' 'medic-sentinel' &&
   \
   exec /boot/timestamp \
-    su -c "$command_line" "$HORTICULTURALIST_USER" \
+    su -pc "$command_line" "$HORTICULTURALIST_USER" \
       >> "$PACKAGE_STORAGE/logs/horticulturalist.log" 2>&1
 }
 
