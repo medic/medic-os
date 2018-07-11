@@ -3,7 +3,7 @@ attr, http://download.savannah.gnu.org/releases/attr/attr-2.4.47.src.tar.gz
 ant, http://archive.apache.org/dist/ant/source/apache-ant-1.9.4-src.tar.gz
 bladox-tools, https://medic.s3.amazonaws.com/os/mirror/bladox-tools-1.5.24.tar.xz
 bzip2, http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
-couchdb, http://apache.osuosl.org/couchdb/source/1.7.1/apache-couchdb-1.7.1.tar.gz
+couchdb, http://apache.osuosl.org/couchdb/source/1.7.2/apache-couchdb-1.7.2.tar.gz
 couchdb-lucene, https://medic.s3.amazonaws.com/os/mirror/couchdb-lucene-1.0.2.tar.gz
 curl, http://curl.haxx.se/download/curl-7.35.0.tar.lzma
 diffutils, http://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz
@@ -32,7 +32,7 @@ maven, https://archive.apache.org/dist/maven/maven-3/3.3.1/source/apache-maven-3
 nano, http://www.nano-editor.org/dist/v2.4/nano-2.4.2.tar.gz
 ncurses, http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
 nginx, http://nginx.org/download/nginx-1.9.11.tar.gz
-node, https://nodejs.org/dist/v6.9.5/node-v6.9.5.tar.gz
+node, https://nodejs.org/download/release/v6.14.3/node-v6.14.3.tar.xz
 node-fs-ext, https://github.com/baudehlo/node-fs-ext.git
 node-gammu-json, https://github.com/medic/node-gammu-json.git
 nodelint, https://github.com/tav/nodelint.git
@@ -42,11 +42,11 @@ openssl, https://www.openssl.org/source/openssl-1.0.2k.tar.gz
 patch, http://ftp.gnu.org/gnu/patch/patch-2.7.tar.xz
 paxctl, http://pax.grsecurity.net/paxctl-0.9.tar.gz
 pcre, http://jaist.dl.sourceforge.net/project/pcre/pcre/8.33/pcre-8.33.tar.bz2
-popt, http://rpm5.org/files/popt/popt-1.16.tar.gz
+popt, ftp://anduin.linuxfromscratch.org/BLFS/popt/popt-1.16.tar.gz
 pv, http://www.ivarch.com/programs/sources/pv-1.6.0.tar.bz2
 readline, http://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz
 rebar, https://github.com/basho/rebar.git
-rsync, https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
+rsync, https://download.samba.org/pub/rsync/src/rsync-3.1.2.tar.gz
 screen, http://ftp.gnu.org/gnu/screen/screen-4.3.1.tar.gz
 strace, http://jaist.dl.sourceforge.net/project/strace/strace/4.11/strace-4.11.tar.xz
 tcpdump, http://www.tcpdump.org/release/tcpdump-4.7.4.tar.gz
