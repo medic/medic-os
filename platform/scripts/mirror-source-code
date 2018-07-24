@@ -7,7 +7,7 @@ base_dir="`dirname "$self"`/../.."
 
 usage()
 {
-  echo "Usage: $0 bucket [settings_path]" >&2
+  echo "Usage: $0 target_path [use_insecure]" >&2
   exit 1
 }
 
@@ -32,16 +32,18 @@ list_mirror_urls()
 
 mirror()
 {
-  local bucket="$1"
-  local target_path="$2"
+  local path="$1"
+  local use_insecure="$2"
 
-  local temp_dir="`mktemp -d`" && cd "$temp_dir" \
-    || fatal 'Unable to create temporary directory'
+  mkdir -p -- "$path" \
+    || fatal 'Unable to create destination directory'
 
-  mkdir -p -- "$target_path" \
-    || fatal 'Unable to create target directory structure'
+  local curl_args='-LO#'
 
-  # Download phase 
+  if [ "$use_insecure" ]; then
+    curl_args="$curl_args --insecure"
+  fi
+
   list_mirror_urls | while read url; do
 
     local file="`basename "$url"`"
@@ -52,53 +54,32 @@ mirror()
     fi
 
     echo "Downloading '$file':" &&
-    (cd "$target_path" && curl --location -#O "$url")
+    (cd "$path" && curl $curl_args "$url")
 
     if [ "$?" -ne 0 ]; then
       warn "An error occurred while fetching '$url'"
       fatal "Unable to download required file '$file'; aborting"
     fi
-  done &&
-  \
-  # Upload phase
-  find "$target_path" -type f | while read file; do
-
-    echo "Uploading '$file':" &&
-    s3put --region "$EC2_REGION" -p "$temp_dir" -b "$bucket" "$file"
-
-    if [ "$?" -ne 0 ]; then
-      fatal "Unable to upload '$file' to S3; aborting"
-    fi
   done
-       
-  rv="$?"
-  rm -rf -- "$temp_dir"
-  return "$rv"
 }
 
 main()
 {
-  local bucket="$1"
-  local settings_file="$2"
+  local path="$1"
+  local use_insecure="$2"
 
-  if [ "$#" -lt 1 -o "$1" = '-h' -o "$1" = '--help' ]; then
+  if [ "$#" -lt 1 -o "$#" -gt 2 -o "$1" = '-h' -o "$1" = '--help' ]; then
     usage
   fi
 
-  settings="`aws_load_settings "$settings_file"`" && eval "$settings" \
-    || fatal 'Unable to load AWS settings'
+  path="`readlink -f "$path" 2>/dev/null || realpath "$path" 2>/dev/null`" \
+    || fatal 'Unable to resolve absolute path for destination'
 
-  aws_cleanup_environment &&
-  mirror "$bucket" 'medic-os/mirror/source' "$settings_file"
+  cd "$base_dir" \
+    || fatal 'Unable to locate root directory'
 
-  return "$?"
+  mirror "$path" "$use_insecure"
 }
-
-cd "$base_dir" \
-  || fatal 'Unable to locate root directory'
-
-source ./platform/scripts/include/aws \
-  || fatal 'Unable to load one or more required libraries'
 
 main "$@"
 exit "$?"
