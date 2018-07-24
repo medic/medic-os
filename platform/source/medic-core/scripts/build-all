@@ -240,10 +240,6 @@ main()
   build_autoconf 'libffi' "$stdarg" && \
   builder_remove_static_libraries 'ffi' &&
   \
-  build_npm_remote 'node-gyp' "$prefix" &&
-  build_npm_remote 'grunt-cli' "$prefix" &&
-  build_npm_remote 'eslint' "$prefix" &&
-  \
   builder_set_library_executable_bits "$prefix" &&
   builder_remove_library_metadata "$prefix"
 

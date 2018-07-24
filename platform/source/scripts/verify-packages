@@ -91,7 +91,7 @@ main()
     || fatal 'Failed to find a required binary in medic-core/sbin'
 
   check_binaries 'medic-core' 'bin' \
-    node curl ssh rsync lrzip lzma eslint \
+    node curl ssh rsync lrzip lzma \
       xdelta3 diff patch getfacl getfattr openssl npm \
         || fatal 'Failed to find a required binary in medic-core/bin'
 

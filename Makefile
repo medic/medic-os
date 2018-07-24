@@ -33,16 +33,14 @@ repackage: reset-time prepare-tree
 	  ${QMAKE} copy all)
 
 clean: require-root
-	@shopt -u xpg_echo && \
-	echo -n 'Cleaning source tree... ' && \
+	@printf 'Cleaning source tree... ' && \
 	(cd platform && ${QMAKE} distclean) &>/dev/null && \
 	echo 'done.'
 
 distclean: require-root clean-initrd clean-target clean
 
 delete: require-root
-	@shopt -u xpg_echo && \
-	echo -n 'Deleting downloaded source code... ' && \
+	@printf 'Deleting downloaded source code... ' && \
 	(cd platform && ${QMAKE} delete-downloaded) && \
 	echo 'done.'
 
@@ -67,29 +65,25 @@ require-root:
 	fi
 
 clean-target:
-	@shopt -u xpg_echo && \
-	echo -n 'Cleaning target directory... ' && \
+	@printf 'Cleaning target directory... ' && \
 	if [ -d /srv ]; then \
 	  cd /srv && rm -rf software settings storage; \
 	fi && \
 	echo 'done.'
 
 clean-initrd:
-	@shopt -u xpg_echo && \
-	echo -n 'Cleaning initrd... ' && \
+	@printf 'Cleaning initrd... ' && \
 	git clean -qf platform/initrd \
 	  platform/initrd/*/lib >/dev/null && \
 	echo 'done.'
 
 reset-time:
-	@shopt -u xpg_echo && \
-	echo -n 'Synchronizing system time... ' && \
+	@printf 'Synchronizing system time... ' && \
 	ntpdate -u pool.ntp.org >/dev/null && \
 	echo 'done.'
 
 prepare-tree:
-	@shopt -u xpg_echo && \
-	echo -n 'Preparing source tree... ' && \
+	@printf 'Preparing source tree... ' && \
 	./scripts/prepare-tree && \
 	echo 'done.'
 
