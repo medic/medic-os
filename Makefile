@@ -10,24 +10,24 @@ QMAKE := ${MAKE} --no-print-directory
 
 all: require-root download build
 
-bootinit: reset-time
+bootinit:
 	@cd platform && ${QMAKE} bootinit
 
-compile-only: reset-time prepare-tree
+compile-only: prepare-tree
 	@echo >&2
 	@echo "`tput bold`Compiling packages`tput sgr0`" >&2 && echo >&2
 	@(cd platform && \
 	  export HOME="`readlink -f ../.. 2>/dev/null || realpath ../..`" && \
 	  source ./.profile && ${QMAKE} compile-only)
 
-build: reset-time prepare-tree
+build: prepare-tree
 	@echo >&2
 	@echo "`tput bold`Building packages`tput sgr0`" >&2 && echo >&2
 	@(cd platform && \
 	  export HOME="`readlink -f ../.. 2>/dev/null || realpath ../..`" && \
 	  source ./.profile && ${QMAKE} build all)
 
-repackage: reset-time prepare-tree
+repackage: prepare-tree
 	@(cd platform && \
 	  ${QMAKE} clean &>/dev/null && \
 	  ${QMAKE} copy all)
@@ -44,7 +44,7 @@ delete: require-root
 	(cd platform && ${QMAKE} delete-downloaded) && \
 	echo 'done.'
 
-download: require-root reset-time prepare-tree
+download: require-root prepare-tree
 	@if ! [ -f platform/status/download.finished ]; then \
 	  ${QMAKE} force-download; \
 	fi && \
@@ -75,11 +75,6 @@ clean-initrd:
 	@printf 'Cleaning initrd... ' && \
 	git clean -qf platform/initrd \
 	  platform/initrd/*/lib >/dev/null && \
-	echo 'done.'
-
-reset-time:
-	@printf 'Synchronizing system time... ' && \
-	ntpdate -u pool.ntp.org >/dev/null && \
 	echo 'done.'
 
 prepare-tree:
