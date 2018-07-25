@@ -7,7 +7,7 @@ install()
     autoconf automake bison flex nasm ruby patch git intltool \
     pkg-config libncurses5-dev uuid-dev expect tcl libtool gettext \
     libgettextpo-dev genisoimage libattr1-dev zlib1g-dev libbz2-dev \
-    libperl-dev cmake libdb5.3-dev iptables-dev zip gperf ccache gawk &&
+    libperl-dev cmake libdb5.3-dev iptables-dev zip gperf ccache gawk kmod &&
   \
   # Use python-boto's s3put by default
   zcat /usr/share/doc/python-boto/examples/s3put.gz > /usr/bin/s3put &&
