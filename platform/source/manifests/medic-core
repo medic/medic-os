@@ -2,10 +2,10 @@ acl, https://download.savannah.gnu.org/releases/acl/acl-2.2.52.src.tar.gz
 attr, https://download.savannah.gnu.org/releases/attr/attr-2.4.47.src.tar.gz
 bzip2, http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
 bladox-tools, https://medic.s3.amazonaws.com/os/mirror/bladox-tools-1.5.24.tar.xz
-couchdb, https://www-eu.apache.org/dist/couchdb/source/2.1.2/apache-couchdb-2.1.2.tar.gz
+couchdb, https://www-eu.apache.org/dist/couchdb/source/2.2.0/apache-couchdb-2.2.0.tar.gz
 curl, https://curl.haxx.se/download/curl-7.35.0.tar.lzma
 diffutils, https://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz
-erlang, http://erlang.org/download/otp_src_20.2.tar.gz
+erlang, http://erlang.org/download/otp_src_19.3.tar.gz
 gawk, https://ftp.gnu.org/gnu/gawk/gawk-4.1.4.tar.xz
 git, https://www.kernel.org/pub/software/scm/git/git-2.4.6.tar.xz
 icu, https://ssl.icu-project.org/files/icu4c/60.1/icu4c-60_1-src.tgz
@@ -25,10 +25,10 @@ luajit, https://luajit.org/download/LuaJIT-2.0.4.tar.gz
 lzo, http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz
 nano, https://www.nano-editor.org/dist/v2.4/nano-2.4.2.tar.gz
 nginx, https://nginx.org/download/nginx-1.13.6.tar.gz
-node, https://nodejs.org/dist/v8.11.3/node-v8.11.3.tar.gz
+node, https://nodejs.org/dist/v8.11.4/node-v8.11.4.tar.gz
 openresty, https://openresty.org/download/openresty-1.11.2.3.tar.gz
 openssh, https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-7.6p1.tar.gz
-openssl, https://www.openssl.org/source/openssl-1.0.2m.tar.gz
+openssl, https://www.openssl.org/source/openssl-1.0.2p.tar.gz
 patch, https://ftp.gnu.org/gnu/patch/patch-2.7.tar.xz
 paxctl, https://pax.grsecurity.net/paxctl-0.9.tar.gz
 pcre, https://jaist.dl.sourceforge.net/project/pcre/pcre/8.33/pcre-8.33.tar.bz2

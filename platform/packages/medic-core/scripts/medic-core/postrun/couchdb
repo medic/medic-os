@@ -219,7 +219,7 @@ create_system_databases()
   fi &&
   \
   for db in _users _replicator _global_changes; do
-    if ! curl -K- -sfX PUT "$url/$db" >/dev/null; then
+    if ! curl -sfX PUT "$url/$db" >/dev/null; then
       warn "Failed to created system database '$db'"
       return "$?"
     fi
