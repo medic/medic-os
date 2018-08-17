@@ -22,20 +22,9 @@ Building Medic OS
 Linux
 -----
 
-To ensure a successful build, check to make sure you have the following software
-available at compilation time:
-
-  * Linux kernel version 3.10 or higher
-  * Version 2.69 or higher of `autoconf`
-
-Check out a copy of the Medic OS source repository:
-
-```shell
-git clone 'https://github.com/medic/medic-os.git'
-```
-
-Ensure that you're running Ubuntu 16.04 LTS. Other Debian-like distributions
-are known to work, but are not officially supported.
+To ensure a successful build, make sure that you're building on Ubuntu 16.04
+LTS. Other Debian-like distributions are known to work, but are not officially
+supported.
 
 Run the distribution-specific dependency installation script for your
 operating system. These scripts are interactive, and will require you to
@@ -58,8 +47,8 @@ Medic OS Internals
 Filesystem Layout
 -----------------
 
-All user data and non-system software is stored on a dedicated persistent ext4
-filesystem beneath `/srv`. This filesystem contains four major directories:
+All user data and non-system software is stored on a dedicated persistent
+volume beneath `/srv`. This volume contains four major directories:
 `scripts`, `settings`, `software`, `storage`. Beneath each of these, further
 directories are organized by package name, then by service name. For example,
 a service named `nginx` provided by a package named `medic-core` would likely
