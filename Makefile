@@ -8,6 +8,7 @@ QMAKE := ${MAKE} --no-print-directory
 
 # Public targets
 
+repackage: do-repackage docker
 all: require-root download build docker
 
 bootinit:
@@ -19,11 +20,6 @@ build: prepare-tree
 	@(cd platform && \
 	  export HOME="`readlink -f ../.. 2>/dev/null || realpath ../..`" && \
 	  source ./.profile && ${QMAKE} build all)
-
-repackage: prepare-tree
-	@(cd platform && \
-	  ${QMAKE} clean &>/dev/null && \
-	  ${QMAKE} copy all)
 
 clean: require-root
 	@printf 'Cleaning source tree... ' && \
@@ -50,6 +46,11 @@ docker:
 	@docker-compose build
 
 # Private targets
+
+do-repackage: prepare-tree
+	@(cd platform && \
+	  ${QMAKE} clean &>/dev/null && \
+	  ${QMAKE} copy all)
 
 require-root:
 	@if [ "`id -u`" -ne 0 ]; then \

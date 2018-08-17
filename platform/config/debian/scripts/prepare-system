@@ -4,9 +4,9 @@ install()
 {
   apt-get "$@" install curl jq bc python-boto gperf ec2-api-tools g++ \
     cloud-utils linux-headers-generic linux-libc-dev gcc-5-plugin-dev \
-    autoconf automake bison flex nasm ruby patch git intltool \
-    pkg-config libncurses5-dev uuid-dev expect tcl libtool gettext \
-    libgettextpo-dev genisoimage libattr1-dev zlib1g-dev libbz2-dev \
+    autoconf automake bison flex nasm ruby patch git intltool pkg-config \
+    libncurses5-dev libreadline6-dev libpopt-dev libpcre3-dev uuid-dev \
+    expect tcl libtool libgettextpo-dev libattr1-dev zlib1g-dev libbz2-dev \
     libperl-dev cmake libdb5.3-dev iptables-dev zip gperf ccache gawk &&
   \
   # Use python-boto's s3put by default

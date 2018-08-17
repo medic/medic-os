@@ -39,21 +39,8 @@ up='../../../../..'
   rm -rf couchdb/data &&
     ln -sf "$up/storage/medic-core/couchdb/data" couchdb/data) &&
 \
-(cd "$prefix/bin" &&
-  chmod u-s,g-s screen screen-* &&
-  rm -f gitk libusb.py jadmaker node-gyp *-config *.old &&
-  for binary in git-receive-pack git-upload-archive; do
-    rm -f "$binary" && ln -sf git "$binary";
-  done &&
-  for binary in git git-cvsserver git-shell git-upload-pack; do
-    rm -f "$binary" && ln -sf "../libexec/git-core/$binary" "$binary";
-  done) &&
-\
 (cd "$prefix/lib" &&
   rm -rf erlang/erts-5.10.4/man) &&
-\
-(cd "$prefix/sbin" &&
-  rm -f tcpdump.*) &&
 \
 (cd "$prefix/lib/node_modules" &&
   rm -rf node-gyp npm/man nodelint/man1)

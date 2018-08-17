@@ -10,8 +10,10 @@ RUN apt-get -q=2 -y update --fix-missing && \
     apt-get -q=2 -y upgrade && ln -sf /bin/bash /bin/sh
 
 RUN apt-get -q=2 -y install \
-  apt-utils busybox daemontools gawk isc-dhcp-client less man \
-  net-tools psmisc python-pip sudo unattended-upgrades vim xz-utils
+     acl apt-utils attr bzip2 busybox curl daemontools diffutils \
+     gawk git isc-dhcp-client less man inotify-tools jq libreadline6 \
+     libpcre3 libpopt0 lrzip nano net-tools patch psmisc rsync screen \
+     strace sudo unattended-upgrades vim xdelta xz-utils
 
 RUN groupadd avahi && groupadd couchdb && groupadd nobody && \
     groupadd postgresql && groupadd sshd && groupadd vm

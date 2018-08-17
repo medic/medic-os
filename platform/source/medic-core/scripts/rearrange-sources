@@ -28,35 +28,12 @@ rename()
     fi
   done &&
   \
-  for file in LuaJIT-*; do
-    if [ -d "$file" ]; then
-      mv "$file" "`echo "$file" | tr '[A-Z]' '[a-z]'`"
-    fi
-  done &&
-  \
-  for file in xdelta3-*; do
-    if [ -d "$file" ]; then
-      mv "$file" "`echo "$file" | sed -E 's/^xdelta3-/xdelta-/;'`";
-    fi
-  done &&
-  \
-  for pkg in rebar node-fs-ext; do
+  for pkg in rebar; do
     \
     if [ -d "$pkg" ]; then
       mv "$pkg" "`echo "$pkg" | tr '_' '-'`-devel";
     fi
   done &&
-  \
-  local version="`find_version icu4c*.tgz`" &&
-  mv icu "icu-`fix_version "$version"`" &&
-  \
-  local version="`find_version usbutils-*.tar.*`" &&
-  local source="`find * -prune -type d -name 'usbutils-*'`" &&
-  mv "$source" "usbutils-`fix_version "$version"`" &&
-  \
-  local version="`find_version usb-modeswitch-*.*.*.tar.*`" &&
-  local source="`find * -prune -type d -name 'usb-modeswitch-data-*'`" &&
-  mv "$source" "usb-modeswitch-data-$version" &&
   \
   local version="`find_version node-v*.tar.*`" &&
   local source="`find * -prune -type d -name 'node-v*'`" &&
@@ -73,29 +50,18 @@ symlink()
     ln -sf "../$dir" "$dir";
   done &&
   \
-  local icu_target="`readlink icu`" && \
-  rm -f icu && ln -sf "$icu_target/source" icu &&
-  \
   local js_target="`readlink js`" && \
   rm -f js && ln -sf "$js_target/js/src" js
 }
 
 apply_patches()
 {
-  (cd bzip2 && patch -s -p1 \
-    < ../../patches/bzip2-darwin-soname.diff) &&
   (cd couchdb && patch -s -p1 \
     < ../../patches/couchdb2-dependency-prefix.diff) &&
   (cd erlang && patch -s -p1 \
     < ../../patches/erlang-r17-pcre-fix.diff) &&
-  (cd icu && patch -s -p2 \
-    < ../../../patches/icu-libicudata-linkage.diff) &&
   (cd js && patch -s -p1 \
-    < ../../../../patches/js-fix-makefile-loop.diff) &&
-  (cd inotify-tools && patch -s -p1 \
-    < ../../patches/inotify-tools-include.diff) &&
-  (cd libutempter && patch -s -p1 \
-    < ../../patches/libutempter-fix-makefile-links.diff)
+    < ../../../../patches/js-fix-makefile-loop.diff)
 }
 
 enforce_minimum_size()

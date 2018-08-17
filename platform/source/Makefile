@@ -138,8 +138,6 @@ set-pax-flags:
 	@echo -n "Setting executable flags... " && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
 	  '${MEDIC_CORE_PKG_ROOT}/bin/node' 2>/dev/null && \
-	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czms \
-	  '${MEDIC_CORE_PKG_ROOT}/bin/lrzip' 2>/dev/null && \
 	'${MEDIC_CORE_ROOT}/sbin/paxctl' -Czrm \
 	  '${MEDIC_CORE_PKG_ROOT}/couchdb/bin/couchjs' 2>/dev/null && \
 	echo 'done.'

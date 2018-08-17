@@ -39,10 +39,6 @@ main()
     || fatal 'Failed to set up build $PATH variable'
 
   build_autoconf 'pv' "$stdarg" &&
-  \
-  (disable_library_path && build_autoconf 'readline' \
-    "$stdarg --build='$build_arch' --enable-static=no --enable-shared=yes") &&
-  \
   build_autoconf 'postgresql' "$stdarg"
 
   if [ "$?" -ne 0 ]; then

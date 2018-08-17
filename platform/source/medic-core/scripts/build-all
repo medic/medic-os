@@ -71,90 +71,15 @@ main()
   (disable_stack_protector &&
     build_autoconf 'pv' "$stdarg") &&
   \
-  (disable_parallelism && simple_cflags &&
-    build_autoconf 'zlib' "--shared $stdarg") &&
-  \
-  builder_remove_static_libraries 'z' &&
-  \
-  build_bzip2 'bzip2' "$prefix" &&
-  builder_remove_static_libraries 'bz2' &&
-  \
-  build_autoconf 'libusb' \
-    "$stdarg --enable-static=no --enable-shared=yes" &&
-  \
-  build_autoconf 'libusb-compat' \
-    "$stdarg --enable-static=no --enable-shared=yes" &&
-  \
-  build_autoconf 'popt' \
-    "$stdarg --enable-shared --disable-static" &&
-  \
-  build_autoconf 'gawk' \
-    "$stdarg --enable-shared \
-     --disable-static --without-mpfr --program-prefix=g" &&
-  \
   if [ "$build_platform" = 'linux-elf' ]; then
-
-    local initrd_prefix="`readlink -f "../../../initrd/$platform"`" \
-      || fatal 'Unable to locate initrd directory'
-
-    build_make_install 'libutempter' "$prefix" \
-      "DESTDIR='$prefix' libdir=/lib \
-       libexecdir=/lib includedir=/include mandir=/man" &&
-    \
-    builder_remove_static_libraries 'utempter' &&
-    \
-    build_autoconf 'screen' "$stdarg" &&
-    build_autoconf 'strace' "$stdarg" &&
-    \
-    build_autoconf 'usbutils' \
-      "$stdarg UDEV_CFLAGS='-I$initrd_prefix/usr/include' \
-       UDEV_LIBS='-L$initrd_prefix/lib -l:libudev.so.1'" &&
-    \
-    (disable_parallelism && build_make 'usb-modeswitch' \
-     'install-static' "DESTDIR='$prefix' PREFIX='$prefix'" 'y') &&
-    \
-    (disable_parallelism && build_make 'usb-modeswitch-data' \
-     'install' "DESTDIR='$prefix' PREFIX='$prefix'") &&
-    \
-    # libattr: Make reinstall safe
-    if builder_should_run 'attr'; then
-      rm -f "$prefix/lib/libattr.so".*
-    fi &&
-    \
-    (disable_parallelism && build_autoconf 'attr' \
-      "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib') &&
-    \
-    # libacl: Make reinstall safe
-    if builder_should_run 'acl'; then
-      rm -f "$prefix/lib/libacl.so".*
-    fi &&
-    \
-    (disable_parallelism && build_autoconf 'acl' \
-      "$stdarg --enable-shared=yes --enable-static=no" '' 'install-lib') &&
-    \
-    build_autoconf 'inotify-tools' \
-      "$stdarg --enable-shared=yes --enable-static=no" &&
-    \
     build_make_install 'paxctl' "$prefix" "DESTDIR='$prefix'"
-
   fi &&
   \
   if [ "$bits" -eq 32 ]; then
     build_make_install 'bladox-tools' "$prefix" "PREFIX='$prefix'"
   fi &&
   \
-  build_autoconf 'zsync' "$stdarg" &&
-  build_autoconf 'xdelta' "$stdarg" &&
   build_autoconf 'logrotate' "$stdarg" &&
-  \
-  build_autoconf 'xz' "$stdarg --enable-shared --disable-static" &&
-  build_autoconf 'lzo' "$stdarg --enable-shared --disable-static" &&
-  build_autoconf 'lrzip' "$stdarg --enable-shared --disable-static" &&
-  \
-  build_autoconf 'diffutils' "$stdarg" &&
-  build_autoconf 'patch' "$stdarg" &&
-  build_autoconf 'jq' "$stdarg --disable-maintainer-mode" &&
-  build_autoconf 'nano' "$stdarg --with-shared" &&
   \
   (disable_parallelism && build_config 'openssl' \
     "shared no-asm zlib-dynamic --openssldir='$prefix/etc/ssl' $stdarg") &&
@@ -164,44 +89,6 @@ main()
   build_autoconf 'openssh' \
     "$stdarg --sysconfdir='$prefix/etc/ssh' \
      --with-zlib='$prefix' --with-ssl-dir='$prefix'" &&
-  \
-  build_autoconf 'libpcap' \
-    "$stdarg --enable-shared --disable-static --without-libnl" &&
-  \
-  builder_remove_static_libraries 'pcap' &&
-  build_autoconf 'tcpdump' "$stdarg --disable-smb --without-libnl" &&
-  \
-  build_autoconf 'libidn' "$stdarg" &&
-  builder_remove_static_libraries 'idn' &&
-  \
-  (disable_library_path && build_autoconf 'readline' \
-    "$stdarg --build='$build_arch' --enable-static=no --enable-shared=yes") &&
-  \
-  (remove_cppflags_from_cflags &&
-   simple_cflags && build_autoconf 'curl' \
-    "$stdarg --with-ssl-dir='$prefix' \
-     --with-zlib='$prefix' --with-libidn='$prefix' \
-     --with-ca-bundle='$prefix/share/curl/ca-bundle.crt'") && \
-  \
-  builder_remove_static_libraries 'curl' &&
-  \
-  builder_install_file 'curl' '../patches/curl-ca-bundle.crt' \
-    "$prefix/share/curl/ca-bundle.crt" &&
-  \
-  build_autoconf 'icu' "$stdarg" &&
-  \
-  build_autoconf 'pcre' \
-    "$stdarg --enable-utf \
-     --enable-jit --enable-shared --disable-static \
-     --enable-unicode-properties --enable-pcregrep-libbz2 \
-     --enable-pcregrep-libz --enable-pcretest-libreadline" &&
-  \
-  build_autoconf 'git' \
-    "$stdarg --with-openssl='$prefix' --with-curl='$prefix' \
-     --with-zlib='$prefix' --with-libpcre='$prefix' \
-     --without-iconv" '' "NO_INSTALL_HARDLINKS='1'" &&
-  \
-  build_autoconf 'rsync' "$stdarg" &&
   \
   (ldflags_in_cflags && build_autoconf 'nginx' \
     "$stdarg --sbin-path='$prefix/bin' \
@@ -214,11 +101,9 @@ main()
   \
   (simple_cflags &&
     build_autoconf 'node' \
-      "$stdarg --shared-zlib \
-       --shared-zlib-includes='$prefix/include' \
-       --shared-zlib-libpath='$prefix/lib' --with-intl=system-icu \
-       --shared-openssl --shared-openssl-includes='$prefix/include' \
-       --shared-openssl-libpath='$prefix/lib' --dest-cpu='$build_cpu'") &&
+      "$stdarg --shared-zlib --shared-openssl \
+       --shared-openssl-libpath='$prefix/lib' \
+       --shared-openssl-includes='$prefix/include'") &&
   \
   (disable_parallelism && disable_cppflags &&
     build_autoconf 'js' \
@@ -236,9 +121,6 @@ main()
   \
   build_rebar 'rebar' "$prefix" './bootstrap' &&
   build_couchdb 'couchdb' "$prefix" &&
-  \
-  build_autoconf 'libffi' "$stdarg" && \
-  builder_remove_static_libraries 'ffi' &&
   \
   builder_set_library_executable_bits "$prefix" &&
   builder_remove_library_metadata "$prefix"
