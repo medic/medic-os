@@ -8,17 +8,10 @@ QMAKE := ${MAKE} --no-print-directory
 
 # Public targets
 
-all: require-root download build
+all: require-root download build docker
 
 bootinit:
 	@cd platform && ${QMAKE} bootinit
-
-compile-only: prepare-tree
-	@echo >&2
-	@echo "`tput bold`Compiling packages`tput sgr0`" >&2 && echo >&2
-	@(cd platform && \
-	  export HOME="`readlink -f ../.. 2>/dev/null || realpath ../..`" && \
-	  source ./.profile && ${QMAKE} compile-only)
 
 build: prepare-tree
 	@echo >&2

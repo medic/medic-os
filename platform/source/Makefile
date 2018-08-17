@@ -10,13 +10,11 @@ MEDIC_CORE_VERSION ?= 2.1.1
 MEDIC_RDBMS_VERSION ?= 9.5.3
 MEDIC_COUCH2PG_VERSION ?= 1.0.0
 
-VM_TOOLS_ROOT ?= /srv/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
 MEDIC_CORE_ROOT ?= /srv/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 MEDIC_COUCH2PG_ROOT ?= /srv/software/medic-couch2pg/v${MEDIC_COUCH2PG_VERSION}
 MEDIC_RDBMS_ROOT ?= /srv/software/medic-rdbms/v${MEDIC_RDBMS_VERSION}/${PLATFORM}
 
 PKG_DIR ?= ../packages
-VM_TOOLS_PKG_ROOT ?= ${PKG_DIR}/vm-tools/software/vm-tools/v${VM_TOOLS_VERSION}/${PLATFORM}
 MEDIC_CORE_PKG_ROOT ?= ${PKG_DIR}/medic-core/software/medic-core/v${MEDIC_CORE_VERSION}/${PLATFORM}
 
 MAKE ?= make
@@ -33,16 +31,16 @@ KERNEL_MODULE_PATH := ${CURDIR}/../initrd/${PLATFORM}/lib/modules/${KERNEL_VERSI
 all: build copy finalize
 
 build: build-all
-build-all: build-core build-vm-tools build-medic-core build-medic-rdbms build-medic-couch2pg
+build-all: build-medic-core build-medic-rdbms build-medic-couch2pg
 
 copy: copy-all
-copy-all: horticulturalist copy-core copy-vm-tools copy-medic-core copy-medic-rdbms copy-medic-couch2pg set-pax-flags
+copy-all: horticulturalist copy-medic-core copy-medic-rdbms copy-medic-couch2pg set-pax-flags
 
 finalize: finalize-all
 finalize-all: verify-packages finalize-initrd
 
 clean: clean-all
-clean-all: clean-core clean-vm-tools clean-medic-core clean-medic-rdbms clean-medic-couch2pg clean-compiler
+clean-all: clean-medic-core clean-medic-rdbms clean-medic-couch2pg clean-compiler
 
 
 # Public targets
@@ -64,52 +62,6 @@ build-compiler:
 
 clean-compiler:
 	(cd compiler && ${MAKE} clean)
-
-
-core: build-core copy-core
-
-build-core:
-	@source medic-core/scripts/include/builder && \
-	builder_setup_cache; \
-	(cd core && ${QMAKE} \
-	  COMPILER_ROOT='${COMPILER_ROOT}' \
-	  PATH="${MEDIC_CORE_ROOT}/bin:$$PATH" \
-	  BITS='${BITS}' KERNEL_VERSION='${KERNEL_VERSION}' \
-	  MEDIC_CORE_ROOT='${MEDIC_CORE_ROOT}' PLATFORM='${PLATFORM}' \
-	  KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' PARALLEL='${PARALLEL}')
-
-copy-core:
-	@(cd core && \
-	  ${MAKE} copy PLATFORM='${PLATFORM}')
-
-clean-core:
-	(cd core && ${MAKE} clean); true
-
-
-vm-tools: build-vm-tools copy-vm-tools
-
-clean-vm-tools:
-	@rm -rf /srv/software/vm-tools && \
-	(cd vm-tools && ${MAKE} clean); true
-
-build-vm-tools:
-	@(cd vm-tools && ${QMAKE} \
-	  PLATFORM='${PLATFORM}' \
-	  KERNEL_MODULE_PATH='${KERNEL_MODULE_PATH}' \
-	  BITS='${BITS}' KERNEL_VERSION='${KERNEL_VERSION}' \
-	  ROOT='${VM_TOOLS_ROOT}' PARALLEL='${PARALLEL}') && \
-	\
-	depmod -a -b '../initrd/${PLATFORM}' '${KERNEL_VERSION}'
-
-copy-vm-tools:
-	@echo -n "Copying files for 'vm-tools'... "
-	@(cd vm-tools && \
-	  ./scripts/prepare-dist '${VM_TOOLS_ROOT}' && \
-	  mkdir -p ../../packages/vm-tools/software && \
-	  rm -rf ../../packages/vm-tools/software/vm-tools && \
-	  cp -R /srv/software/vm-tools \
-	    ../../packages/vm-tools/software/vm-tools)
-	@echo 'done.'
 
 
 medic-core: build-medic-core copy-medic-core

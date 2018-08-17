@@ -1,9 +1,0 @@
-ccache, https://www.samba.org/ftp/ccache/ccache-3.3.3.tar.xz
-cloog, https://gcc.gnu.org/pub/gcc/infrastructure/cloog-0.18.1.tar.gz
-dejagnu, https://ftp.gnu.org/gnu/dejagnu/dejagnu-1.5.1.tar.gz
-gcc, https://ftp.gnu.org/gnu/gcc/gcc-4.8.2/gcc-4.8.2.tar.bz2
-gmp, https://gmplib.org/download/gmp/gmp-6.1.0.tar.xz
-gperf, https://ftp.gnu.org/pub/gnu/gperf/gperf-3.0.4.tar.gz
-isl, https://gcc.gnu.org/pub/gcc/infrastructure/isl-0.12.2.tar.bz2
-mpc, https://ftp.gnu.org/gnu/mpc/mpc-1.0.2.tar.gz
-mpfr, https://ftp.gnu.org/gnu/mpfr/mpfr-3.1.2.tar.xz

@@ -35,7 +35,6 @@ create_empty_directories()
       initrd/common/etc/ashrc.d \
       initrd/common/etc/profile.d \
       initrd/common/etc/sysconfig \
-      initrd/common/etc/sysconfig \
       initrd/common/dev \
       initrd/common/mnt \
       initrd/common/proc \
@@ -47,12 +46,6 @@ create_empty_directories()
       initrd/common/var/lock \
       initrd/common/var/log \
       initrd/common/var/run \
-      packages/vm-tools/storage \
-      packages/vm-tools/storage/vm-tools \
-      packages/vm-tools/storage/vm-tools/avahi/logs \
-      packages/vm-tools/storage/vm-tools/avahi/state \
-      packages/vm-tools/storage/vm-tools/ntpd/logs \
-      packages/vm-tools/storage/vm-tools/vmtoolsd/logs \
       packages/system-services/storage \
       packages/system-services/storage/system-services \
       packages/system-services/storage/system-services/logs \
@@ -86,11 +79,9 @@ create_empty_directories()
       packages/horticulturalist/software/horticulturalist \
       packages/horticulturalist/storage/horticulturalist \
       source/compiler/incoming \
-      source/core/incoming \
       source/medic-core/incoming \
       source/medic-couch2pg/incoming \
       source/medic-rdbms/incoming \
-      source/vm-tools/incoming
   )
 
   return "$?"

@@ -98,11 +98,6 @@ main()
   check_binaries 'medic-core' 'couchdb' bin/couchdb \
     || fatal 'Failed to find a required binary in medic-core/couchdb'
 
-  check_binaries 'vm-tools' 'bin' vmtoolsd \
-    || fatal 'Failed to find a required binary in vm-tools/bin'
-
-  check_libraries  'vm-tools' dnet proc ffi \
-    || fatal 'Failed to find a required library in vm-tools'
   return 0
 }
 

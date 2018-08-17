@@ -1,7 +1,6 @@
 acl, https://download.savannah.gnu.org/releases/acl/acl-2.2.52.src.tar.gz
 attr, https://download.savannah.gnu.org/releases/attr/attr-2.4.47.src.tar.gz
-bzip2, http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
-bladox-tools, https://medic.s3.amazonaws.com/os/mirror/bladox-tools-1.5.24.tar.xz
+bzip2, https://fossies.org/linux/misc/bzip2-1.0.6.tar.gz
 couchdb, https://www-eu.apache.org/dist/couchdb/source/2.2.0/apache-couchdb-2.2.0.tar.gz
 curl, https://curl.haxx.se/download/curl-7.35.0.tar.lzma
 diffutils, https://ftp.gnu.org/gnu/diffutils/diffutils-3.3.tar.xz
