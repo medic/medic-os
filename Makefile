@@ -8,8 +8,8 @@ QMAKE := ${MAKE} --no-print-directory
 
 # Public targets
 
-repackage: do-repackage docker
 all: require-root download build docker
+repackage: do-repackage docker
 
 bootinit:
 	@cd platform && ${QMAKE} bootinit
