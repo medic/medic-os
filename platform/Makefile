@@ -12,7 +12,7 @@ TIMESTAMP := $(shell date +'%Y-%m-%d %H:%M:%S')
 
 SYSTEM_ID ?= medic-os
 SYSTEM_NAME ?= Medic OS
-SYSTEM_VERSION_STRING ?= 1.1.0
+SYSTEM_VERSION_STRING ?= 3.0.0
 SYSTEM_IMAGE_NAME := ${SYSTEM_ID}-v${SYSTEM_VERSION_STRING}
 
 ifeq (${RELEASE},)
@@ -103,7 +103,7 @@ strip-binaries:
 
 horticulturalist-pkg:
 	@echo -n 'Compressing package 'horticulturalist'... ' && \
-	scripts/build-package 'horticulturalist' 00910 '${PLATFORM}' && \
+	scripts/build-package 'horticulturalist' 01260 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-api-pkg:
@@ -113,7 +113,7 @@ medic-api-pkg:
 
 medic-core-pkg:
 	@echo -n 'Compressing package 'medic-core'... ' && \
-	scripts/build-package 'medic-core' 21101 '${PLATFORM}' && \
+	scripts/build-package 'medic-core' 30000 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-couch2pg-pkg:
@@ -123,7 +123,7 @@ medic-couch2pg-pkg:
 
 medic-rdbms-pkg:
 	@echo -n 'Compressing package 'medic-rdbms'... ' && \
-	scripts/build-package 'medic-rdbms' 95301 '${PLATFORM}' && \
+	scripts/build-package 'medic-rdbms' 94122 '${PLATFORM}' && \
 	echo 'done.'
 
 medic-sentinel-pkg:
@@ -133,7 +133,7 @@ medic-sentinel-pkg:
 
 system-services-pkg:
 	@echo -n 'Compressing package 'system-services'... ' && \
-	scripts/build-package 'system-services' 10300 '${PLATFORM}' && \
+	scripts/build-package 'system-services' 30000 '${PLATFORM}' && \
 	echo 'done.'
 
 convert-boot-logo:

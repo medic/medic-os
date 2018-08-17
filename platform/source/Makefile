@@ -2,7 +2,7 @@
 # Variables
 
 BITS ?= 64
-PARALLEL ?= 16
+PARALLEL ?= 8
 PLATFORM := $(shell ../scripts/detect-platform)
 
 VM_TOOLS_VERSION ?= 9.4.6
