@@ -1,0 +1,12 @@
+version: '3.1'
+
+services:
+  build_container:
+    image: ubuntu:16.04
+    volumes:
+      - .:/medic-os
+    working_dir: /medic-os
+    entrypoint:
+      - tail
+      - -f
+      - /dev/null
