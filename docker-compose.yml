@@ -3,4 +3,4 @@ version: '2'
 services:
   medic-os:
     build: .
-    image: medic/medic-os:3.0.0-pre.07
+    image: medic/medic-os:3.0.0-pre.08

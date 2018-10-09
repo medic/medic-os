@@ -8,8 +8,8 @@ QMAKE := ${MAKE} --no-print-directory
 
 # Public targets
 
-all: require-root download build docker
-repackage: do-repackage docker
+all: require-root download build
+repackage: do-repackage
 
 bootinit:
 	@cd platform && ${QMAKE} bootinit
@@ -42,8 +42,10 @@ download: require-root prepare-tree
 	  ${QMAKE} force-move-downloaded; \
 	fi
 
-docker:
-	@docker-compose build
+# Legacy command. We now prepare-tree inside ubuntu container and not in a VM.
+# After files are modified on local filesystem, then run docker build from OSX
+#docker:
+#	@docker-compose build
 
 # Private targets
 
