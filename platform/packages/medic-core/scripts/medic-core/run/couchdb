@@ -12,7 +12,7 @@ start()
   local command_line="`which couchdb`" &&
   \
   exec /boot/timestamp \
-    su -c "exec $command_line" couchdb \
+    su -c "ulimit -n 100000 && exec $command_line" couchdb \
       >> "$PACKAGE_STORAGE/couchdb/logs/startup.log" 2>&1
 }
 
