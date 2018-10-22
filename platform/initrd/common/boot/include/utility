@@ -217,7 +217,7 @@ if [ -z "$log" ]; then
   emit()
   {
     if [ -z "$logger_suppress_messages" ]; then
-      echo "$@" >&2
+      echo -e "$@" >&2
     fi
   }
 

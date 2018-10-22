@@ -291,7 +291,7 @@ postinstall()
     warn 'A new administrative password was explicitly set via the CLI'
     warn 'The new administrative password will not be displayed'
   else
-    info "New CouchDB Administrative Password: `read_password medic`"
+    info "New CouchDB Administrative Password: \e[7m`read_password medic`"
     warn 'A new administrative password has been randomly assigned'
     warn 'This will not be displayed again; please make a note of it'
   fi
