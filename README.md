@@ -159,3 +159,10 @@ the packages currently being supervised. If a package name is provided, the comm
 the services in that package that are currently being supervised. If a package status is
 provided, only packages with that status (e.g. "running") are listed.
 
+# Copyright
+
+Copyright 2013-2018 Medic Mobile, Inc. <hello@medicmobile.org>
+
+# License
+
+The software is provided under AGPL-3.0. Contributions to this project are accepted under the same license.
