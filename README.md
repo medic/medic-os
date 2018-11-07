@@ -9,6 +9,37 @@ is in a prerelease state at this time. Check back soon for release details.
 Building Medic OS
 =================
 
+Docker
+------
+
+This will fork up an Ubuntu 16.04 LTS container and allow you to quickly build the dependencies inside.
+
+```
+docker-compose -f ubuntu_build_container.yml up -d
+docker exec -it medic-os_build_container_1 /bin/bash
+```
+
+Now run:
+```
+apt-get update
+./platform/config/debian/scripts/prepare-system
+make
+```
+
+Exit container and shut it down (if you wish).
+
+Build the docker image from your terminal:
+```
+docker build -t <tag> .
+```
+
+If you are pushing to AWS ECR, you'll need to have logged in first.
+You can fork up the kubectl-authentication container, and run:
+```
+aws ecr get-login --region=eu-west-2
+```
+and paste the output into your terminal (docker login cmd) before running `docker push`
+
 Linux
 -----
 
