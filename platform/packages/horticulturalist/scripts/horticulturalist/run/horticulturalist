@@ -40,7 +40,7 @@ start()
   export COUCH_URL="http://${PACKAGE_NAME}:${password}@localhost:5984/medic" &&
   \
   local script="src/index.js" &&
-  local run_cmd="'`which node`' '$script' --medic-os" &&
+  local run_cmd="'`which node`' '$script' --medic-os --install=3.0.0" &&
   local command_line="cd '$PACKAGE_SOFTWARE' && exec $run_cmd" &&
   \
   chown_packages 'medic-api' 'medic-sentinel' &&
