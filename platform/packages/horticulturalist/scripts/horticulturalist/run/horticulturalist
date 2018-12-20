@@ -36,11 +36,11 @@ start()
   export NODE_OPTIONS='--max_old_space_size=8192' &&
   \
   export HOME="$PACKAGE_STORAGE" &&
-  export COUCH_NODE_NAME='couchdb@localhost' &&
+  export COUCH_NODE_NAME='couchdb@127.0.0.1' &&
   export COUCH_URL="http://${PACKAGE_NAME}:${password}@localhost:5984/medic" &&
   \
   local script="src/index.js" &&
-  local run_cmd="'`which node`' '$script' --medic-os" &&
+  local run_cmd="'`which node`' '$script' --medic-os --install=3.0.0" &&
   local command_line="cd '$PACKAGE_SOFTWARE' && exec $run_cmd" &&
   \
   chown_packages 'medic-api' 'medic-sentinel' &&

@@ -31,11 +31,11 @@ bootstrap()
   \
   info 'Horticulturalist is now bootstrapping' &&
   \
-  export COUCH_NODE_NAME='couchdb@localhost' &&
+  export COUCH_NODE_NAME='couchdb@127.0.0.1' &&
   export COUCH_URL="http://${PACKAGE_NAME}:${passwd}@localhost:5984/medic" &&
   \
   local script="src/index.js" &&
-  local run_cmd="'`which node`' '$script' --medic-os --install --no-daemon" &&
+  local run_cmd="'`which node`' '$script' --medic-os --install=3.0.0 --no-daemon" &&
   \
   if [ "$DOCKER_HORTI_BOOTSTRAP" ]; then
     run_cmd="$run_cmd='$DOCKER_HORTI_BOOTSTRAP'"
