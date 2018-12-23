@@ -1,4 +1,4 @@
-couchdb, https://www-eu.apache.org/dist/couchdb/source/2.2.0/apache-couchdb-2.2.0.tar.gz
+couchdb, https://archive.apache.org/dist/couchdb/source/2.2.0/apache-couchdb-2.2.0.tar.gz
 erlang, http://erlang.org/download/otp_src_19.3.tar.gz
 js, https://ftp.mozilla.org/pub/mozilla.org/js/js185-1.0.0.tar.gz
 logrotate, https://github.com/logrotate/logrotate/releases/download/3.13.0/logrotate-3.13.0.tar.xz
