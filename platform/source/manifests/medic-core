@@ -4,8 +4,3 @@ js, https://ftp.mozilla.org/pub/mozilla.org/js/js185-1.0.0.tar.gz
 logrotate, https://github.com/logrotate/logrotate/releases/download/3.13.0/logrotate-3.13.0.tar.xz
 nginx, https://nginx.org/download/nginx-1.13.6.tar.gz
 node, https://nodejs.org/dist/v8.11.4/node-v8.11.4.tar.gz
-openssh, https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-7.7p1.tar.gz
-openssl, https://www.openssl.org/source/openssl-1.0.2p.tar.gz
-paxctl, https://pax.grsecurity.net/paxctl-0.9.tar.gz
-pv, https://www.ivarch.com/programs/sources/pv-1.6.0.tar.bz2
-rebar, https://github.com/rebar/rebar.git
