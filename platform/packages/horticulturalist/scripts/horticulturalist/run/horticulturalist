@@ -37,7 +37,7 @@ start()
   \
   export HOME="$PACKAGE_STORAGE" &&
   export COUCH_NODE_NAME='couchdb@127.0.0.1' &&
-  export COUCH_URL="http://${PACKAGE_NAME}:${password}@localhost:5984/medic" &&
+  export COUCH_URL="http://${PACKAGE_NAME}:${password}@$DOCKER_NETWORK_NAME:5984/medic" &&
   \
   local script="src/index.js" &&
   local run_cmd="'`which node`' '$script' --medic-os" &&

@@ -21,7 +21,7 @@ start()
   export NODE_OPTIONS='--max_old_space_size=8192' &&
   \
   export COUCH_NODE_NAME='couchdb@127.0.0.1' &&
-  export COUCH_URL="http://${PACKAGE_NAME}:$passwd@localhost:5984/medic" &&
+  export COUCH_URL="http://${PACKAGE_NAME}:$passwd@$DOCKER_NETWORK_NAME:5984/medic" &&
   \
   local script="$PACKAGE_SOFTWARE/current/server.js" &&
   wait_for_file "$script" &&
