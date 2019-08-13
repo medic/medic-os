@@ -15,15 +15,15 @@ get_couchdb_major_version()
 
 get_couchdb_url()
 {
-  echo "http://$DOCKER_NETWORK_NAME:5984"
+  echo "http://$DOCKER_NETWORK_NAME:5985"
 }
 
 get_couchdb_config_url()
 {
   if [ "`get_couchdb_major_version`" -gt 1 ]; then
-    echo "http://$DOCKER_NETWORK_NAME:5986"
+    echo "http://$DOCKER_NETWORK_NAME:5987"
   else
-    echo "http://$DOCKER_NETWORK_NAME:5984"
+    echo "http://$DOCKER_NETWORK_NAME:5985"
   fi
 }
 

@@ -1,6 +1,32 @@
-version: '2'
+version: '3.1'
 
 services:
   medic-os:
-    build: .
-    image: medic/medic-os:3.0.0-pre.08
+    image: 720541322708.dkr.ecr.eu-west-2.amazonaws.com/medic/medic-os:3.6.0-rc.1
+    volumes:
+      - medic-data:/srv
+    ports:
+     - 5988:5988
+    working_dir: /srv
+    depends_on:
+      - haproxy
+    networks:
+      - medic-net
+    environment:
+      - DOCKER_NETWORK_NAME=haproxy 
+
+  haproxy:
+    image: medicmobile/haproxy:rc-1.16
+    volumes:
+      - medic-data:/srv    
+    environment:
+      - COUCHDB_HOST=medic-os
+      - HA_PASSWORD=${HA_PASSWORD}
+    networks:
+      - medic-net
+
+volumes:
+  medic-data: 
+
+networks:
+  medic-net:
