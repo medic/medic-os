@@ -2,7 +2,7 @@ version: '3.1'
 
 services:
   medic-os:
-    image: 720541322708.dkr.ecr.eu-west-2.amazonaws.com/medic/medic-os:3.6.0-rc.3
+    image: 720541322708.dkr.ecr.eu-west-2.amazonaws.com/medic/medic-os:3.6.1-rc.4
     volumes:
       - medic-data:/srv
     ports:
