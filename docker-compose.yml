@@ -1,12 +1,12 @@
-version: '3.1'
+version: '3.7'
 
 services:
   medic-os:
-    image: 720541322708.dkr.ecr.eu-west-2.amazonaws.com/medic/medic-os:3.6.1-rc.4
+    container_name: medic-os
+    image: medicmobile/medic-os:3.6.1-rc.4
     volumes:
       - medic-data:/srv
     ports:
-     - 5988:5988
      - 80:80
      - 443:443
     working_dir: /srv
@@ -15,20 +15,24 @@ services:
     networks:
       - medic-net
     environment:
-      - DOCKER_NETWORK_NAME=haproxy 
+      - DOCKER_NETWORK_NAME=haproxy
+      - DOCKER_COUCHDB_ADMIN_PASSWORD=$DOCKER_COUCHDB_ADMIN_PASSWORD
 
   haproxy:
+    container_name: haproxy
     image: medicmobile/haproxy:rc-1.16
     volumes:
       - medic-data:/srv    
     environment:
       - COUCHDB_HOST=medic-os
-      - HA_PASSWORD=${HA_PASSWORD}
+      - HA_PASSWORD=$DOCKER_COUCHDB_ADMIN_PASSWORD
     networks:
       - medic-net
 
 volumes:
-  medic-data: 
+  medic-data:
+    name: medic-data
 
 networks:
   medic-net:
+    name: medic-net

@@ -34,19 +34,6 @@ bootstrap()
   export COUCH_NODE_NAME='couchdb@127.0.0.1' &&
   export COUCH_URL="http://${PACKAGE_NAME}:${passwd}@$DOCKER_NETWORK_NAME:5984/medic" &&
   \
-# below should be the correct method to work this scenario. Until it is 100%, we have to 
-# have the user run a script that changes horti on postrun to resolve divergences b/w how
-# the script acts on a container restart and container initialization 
-
- # if [ "$(ls -A $PACKAGE_SOFTWARE)" ]; then
- #      echo "Software exists, defining variable parameters as necessary..." &&
- #      local script="src/index.js" &&
- #      local run_cmd="'`which node`' '$script' --medic-os --complete-install --no-daemon"
- # else
- #     echo "No previous software found. Starting fresh install..."
- #     local script="src/index.js" &&
- #     local run_cmd="'`which node`' '$script' --medic-os --install=3.6.1 --no-daemon"
- # fi
 
   local script="src/index.js" &&
   local run_cmd="'`which node`' '$script' --medic-os --install=3.6.1 --no-daemon" &&
