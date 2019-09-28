@@ -7,7 +7,8 @@ start()
 
   source "$base/../env" &&
   merge_environment /srv || return 255
-  envsubst > /srv/scripts/medic-core/nginx/nginx.conf
+  envsubst < /srv/scripts/medic-core/nginx/nginx.conf > /srv/scripts/medic-core/nginx/nginx.conf.tmp \
+  && mv /srv/scripts/medic-core/nginx/nginx.conf.tmp /srv/scripts/medic-core/nginx/nginx.conf
 
   exec /boot/timestamp \
     "$PACKAGE_ROOT/bin/nginx" -p "$PACKAGE_STORAGE/nginx/data" \
