@@ -4,7 +4,7 @@ services:
   medic-os:
     container_name: medic-os
     #image: medicmobile/medic-os:cht-3.7-pre4
-    image: medicmobile/meidc-os:cht-3.7.0-rc.1
+    image: medicmobile/medic-os:cht-3.7.0-rc.1
     volumes:
       - medic-data:/srv
     ports:
