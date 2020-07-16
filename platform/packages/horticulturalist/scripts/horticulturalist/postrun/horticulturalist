@@ -36,7 +36,7 @@ bootstrap()
   \
 
   local script="src/index.js" &&
-  local run_cmd="'`which node`' '$script' --medic-os --install=3.6.1 --no-daemon" &&
+  local run_cmd="'`which node`' '$script' --medic-os --install=3.9.0 --no-daemon" &&
 
   \
   if [ "$DOCKER_HORTI_BOOTSTRAP" ]; then
