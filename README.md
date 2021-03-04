@@ -3,7 +3,7 @@ About Medic OS
 ==============
 
 Medic OS is a size-optimized Linux-based operating system, designed specifically
-for Medic Mobile's distributed web applications. It currently targets Docker and
+for Medic's distributed web applications. It currently targets Docker and
 is in a prerelease state at this time. Check back soon for release details.
 
 Building Medic OS
@@ -196,7 +196,7 @@ provided, only packages with that status (e.g. "running") are listed.
 
 # Copyright
 
-Copyright 2013-2018 Medic Mobile, Inc. <hello@medicmobile.org>
+Copyright 2013-2021 Medic Mobile, Inc. <hello@medic.org>
 
 # License
 
