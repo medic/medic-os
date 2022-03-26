@@ -9,7 +9,7 @@ utility. For lack of a better abbreviation, packages for Medic OS currently end
 in `.vpkg`.
 
 Inside of the Medic OS source tree, packages are currently assembled using the
-https://github.com/medic/medic-os/blob/master/platform/scripts/build-package
+https://github.com/medic/medic-os/blob/main/platform/scripts/build-package
 script.  The enclosing `ar` archive is created using GNU `ar` – specifically,
 via `ar -rcs "$package_root_dir"`. The `ar` utility can be found in the GNU
 `binutils` package on most systems.
@@ -77,7 +77,7 @@ and `PACKAGE_VERSION` environment variables. The `env` script should be
 installed to `/srv/scripts/$PACKAGE_NAME/env`.
 
 For an example of an `env` script, see
-[the Medic OS repository](https://github.com/medic/medic-os/blob/master/platform/packages/medic-core/scripts/medic-core/env)
+[the Medic OS repository](https://github.com/medic/medic-os/blob/main/platform/packages/medic-core/scripts/medic-core/env)
 on Github.
 
 The `env` file is not automatically sourced by any of the system scripts;
@@ -104,7 +104,7 @@ Placing an executable script beneath `/srv/scripts/$PACKAGE_NAME/run`
 creates a _service_ – a long-running supervised process that is
 automatically restarted upon termination, and can be controlled via the
 set of management scripts described in
-[INTERNALS.md](https://github.com/medic/medic-os/blob/master/INTERNALS.md).
+[INTERNALS.md](https://github.com/medic/medic-os/blob/main/INTERNALS.md).
 
 A service script _must_ block for the duration of the service's lifetime,
 typically by using the shell's `exec` function. Scripts placed beneath
