@@ -1,0 +1,20 @@
+#!/bin/bash -eux
+pwd="$(pwd)"
+testDir="$pwd/nginx-test"
+confDir="$testDir/conf"
+confFile="$confDir/nginx.conf"
+
+mkdir -p "$testDir" || true
+mkdir -p "$confDir" || true
+mkdir -p "$testDir/logs" || true
+
+cp -r platform/packages/medic-core/settings/medic-core/nginx/* "$confDir"
+
+sed -i.bak -E \
+		-e "s:/srv/storage/medic-core/nginx/logs:${testDir}/logs:" \
+		-e "s:/srv/settings/medic-core/nginx/private/:${pwd}/scripts/nginx-dev-keys/:" \
+		-e "/^user nobody;\s*$/d" \
+		"$confFile"
+
+echo "[nginx-dev] running nginx as root..."
+sudo nginx -c "$confFile"
