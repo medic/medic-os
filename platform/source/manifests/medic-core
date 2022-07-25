@@ -1,6 +1,6 @@
 couchdb, https://www.apache.org/dist/couchdb/source/2.3.1/apache-couchdb-2.3.1.tar.gz
 erlang, http://erlang.org/download/otp_src_19.3.tar.gz
-js, https://ftp.mozilla.org/pub/mozilla.org/js/js185-1.0.0.tar.gz
+js, https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/mozjs/1.8.5-1.0.0+dfsg-7/mozjs_1.8.5-1.0.0+dfsg.orig.tar.gz
 logrotate, https://github.com/logrotate/logrotate/releases/download/3.13.0/logrotate-3.13.0.tar.xz
 nginx, https://nginx.org/download/nginx-1.13.6.tar.gz
 node, https://nodejs.org/dist/v8.11.4/node-v8.11.4.tar.gz
